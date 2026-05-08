@@ -6,6 +6,34 @@
 <title>Dart Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit }
+  from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+import { getAuth, signInAnonymously }
+  from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+const fbCfg = {
+  apiKey: "AIzaSyBvTU5OhJnvJW-hYJYYVTro2rNcNr60aCk",
+  authDomain: "fitness-tracker-c6f97.firebaseapp.com",
+  projectId: "fitness-tracker-c6f97"
+};
+const app  = initializeApp(fbCfg);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+signInAnonymously(auth)
+  .then(()=>{
+    window.dartDB = {
+      async saveGame(data){ return addDoc(collection(db,"dart_games"), data); },
+      async loadStats(){
+        const snap = await getDocs(query(collection(db,"dart_games"), orderBy("ts","desc"), limit(200)));
+        return snap.docs.map(d=>({id:d.id,...d.data()}));
+      }
+    };
+    window.dispatchEvent(new Event("dbReady"));
+  })
+  .catch(e=>console.warn("Firebase auth failed:",e));
+</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; max-height: 100vh; background: #f5f5f0; color: #111; font-family: 'DM Sans', sans-serif; overflow: hidden; }
@@ -97,17 +125,42 @@
     font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; }
 
   /* ── Setup overrides for light bg ── */
-  #setup { background: #f5f5f0; }
+  #setup { background: #f5f5f0; overflow-y: auto; }
   .setup-card { background: #fff; border: 1px solid #ddd; }
   .field-label { color: #666; }
   .btn-toggle { background: #f0f0f0; color: #777; border: 1px solid #ddd; }
   .player-input { background: #f8f8f8; border: 1px solid #ddd; color: #111; }
+
+  /* ── Stats on setup page ── */
+  .stats-section { width: 420px; max-width: 95vw; margin-top: 20px; }
+  .stats-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: #1a1a1a; margin-bottom: 12px; text-align: center; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px 14px; text-align: center; }
+  .stat-card .s-label { font-size: 10px; color: #999; letter-spacing: 1px; margin-bottom: 4px; }
+  .stat-card .s-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: #1a1a1a; line-height: 1; }
+  .stat-card .s-sub { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .history-list { background: #fff; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; }
+  .history-header { display: grid; grid-template-columns: 1fr 60px 70px 70px; gap: 6px;
+    padding: 8px 12px; background: #f8f8f8; border-bottom: 1px solid #eee;
+    font-size: 10px; color: #999; letter-spacing: 1px; }
+  .history-row { display: grid; grid-template-columns: 1fr 60px 70px 70px; gap: 6px;
+    padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; align-items: center; }
+  .history-row:last-child { border-bottom: none; }
+  .history-row .winner-tag { font-weight: 600; color: #1a1a1a; }
+  .history-row .mode-tag { font-size: 11px; color: #888; }
+  .scatter-wrap { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .scatter-title { font-size: 10px; color: #999; letter-spacing: 1px; margin-bottom: 8px; }
+  #scatter-svg { display: block; width: 100%; border-radius: 8px; background: #1a1008; }
+  .stats-loading { text-align: center; color: #aaa; font-size: 13px; padding: 20px 0; }
+  .btn-stats-refresh { background: none; border: 1px solid #ddd; color: #888; padding: 6px 14px;
+    border-radius: 6px; font-size: 12px; margin: 0 auto 16px; display: block; }
 </style>
 </head>
 <body>
 
 <!-- ═══════════════════════ SETUP SCREEN ═══════════════════════ -->
 <div id="setup" class="screen active">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:24px 16px;overflow-y:auto;height:100vh;">
   <div class="setup-card">
     <div class="logo">
       <div class="logo-title">DART PRO</div>
@@ -136,6 +189,14 @@
     </div>
 
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
+  </div>
+
+  <!-- STATS SECTION -->
+  <div class="stats-section">
+    <div class="stats-title">📊 STATISTIKEN</div>
+    <button class="btn-stats-refresh" id="btn-stats-refresh">↻ Aktualisieren</button>
+    <div id="stats-content"><div class="stats-loading">Lade Statistiken…</div></div>
+  </div>
   </div>
 </div>
 
@@ -471,7 +532,13 @@ function startX01(){
     hitDots: cfg.players.map(()=>[]),
     bust: false,
     winner: null,
-    history: []
+    history: [],
+    // stats tracking
+    allThrows: cfg.players.map(()=>[]),  // all throw objects per player
+    turnScores: cfg.players.map(()=>[], ),// sum per turn per player
+    checkoutAttempts: cfg.players.map(()=>0),
+    checkoutHits: cfg.players.map(()=>0),
+    startTime: Date.now()
   };
   renderX01Tabs();
   clearHits(boardSVG);
@@ -555,7 +622,11 @@ function handleX01Click(e){
   const tentative=remaining-hit.score;
 
   x01.throws.push({...hit,svgX:x,svgY:y});
+  x01.allThrows[x01.current].push({...hit,svgX:x,svgY:y});
   addHitDot(boardSVG,x,y);
+
+  // Track checkout attempt (score <= 170 and needs double)
+  if(remaining <= 170 && remaining > 1) x01.checkoutAttempts[x01.current]++;
 
   if(tentative<0||tentative===1){
     x01.bust=true;
@@ -571,6 +642,9 @@ function handleX01Click(e){
     // WIN
     x01.scores[x01.current]=0;
     x01.winner=x01.current;
+    x01.checkoutHits[x01.current]++;
+    x01.turnScores[x01.current].push(x01.throws.reduce((s,t)=>s+t.score,0));
+    saveGameToFirebase(x01.current);
     showWinner(cfg.players[x01.current], x01.round);
     renderX01();
     return;
@@ -586,6 +660,7 @@ function handleX01Click(e){
 function advanceX01(){
   const spent=x01.throws.reduce((s,t)=>s+t.score,0);
   x01.history.push({scores:[...x01.scores],current:x01.current,round:x01.round,throwCount:x01.throws.length});
+  x01.turnScores[x01.current].push(spent);
   x01.scores[x01.current]-=spent;
   x01.throws=[];
   x01.bust=false;
@@ -740,6 +815,7 @@ function handleCricketClick(e){
   const maxPts=Math.max(...cr.points);
   if(allClosed&&cr.points[cr.current]>=maxPts){
     cr.winner=cr.current;
+    saveGameToFirebase(cr.current);
     showWinner(cfg.players[cr.current],cr.round);
   }
 
@@ -776,13 +852,160 @@ document.getElementById("cr-undo").addEventListener("click",()=>{
 document.getElementById("cr-back").addEventListener("click",showSetup);
 
 // ══════════════════════════════════════════════════════════════════
-// WINNER
+// WINNER + FIREBASE SAVE
 // ══════════════════════════════════════════════════════════════════
 function showWinner(name,round){
   document.getElementById("winner-name").textContent=name;
   document.getElementById("winner-round").textContent=`Runde ${round}`;
   document.getElementById("winner-overlay").classList.add("visible");
 }
+
+function saveGameToFirebase(winnerIdx){
+  if(!window.dartDB) return;
+  const isX01 = cfg.mode!=="Cricket";
+  const players = cfg.players.map((name,i)=>{
+    if(isX01){
+      const turns = x01.turnScores[i];
+      const allT  = x01.allThrows[i];
+      const avg   = turns.length ? Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10 : 0;
+      const best  = turns.length ? Math.max(...turns) : 0;
+      // Wurfstreuung: svgX/svgY per throw
+      const scatter = allT.map(t=>({x:Math.round(t.svgX),y:Math.round(t.svgY),l:t.label}));
+      return {name, avg3: avg, best3: best,
+        checkoutAtt: x01.checkoutAttempts[i], checkoutHit: x01.checkoutHits[i],
+        scatter, winner: i===winnerIdx};
+    } else {
+      return {name, points: cr.points[i], winner: i===winnerIdx, scatter:[]};
+    }
+  });
+  const doc = {
+    ts: Date.now(),
+    mode: cfg.mode,
+    rounds: isX01 ? x01.round : cr.round,
+    winner: cfg.players[winnerIdx],
+    players,
+    durationSec: isX01 ? Math.round((Date.now()-x01.startTime)/1000) : 0
+  };
+  window.dartDB.saveGame(doc).catch(e=>console.warn("Firebase save failed:",e));
+}
+
+// ── Stats rendering ───────────────────────────────────────────────
+async function loadAndRenderStats(){
+  const box=document.getElementById("stats-content");
+  box.innerHTML='<div class="stats-loading">Lade…</div>';
+  if(!window.dartDB){ box.innerHTML='<div class="stats-loading">Datenbank nicht bereit.</div>'; return; }
+  try{
+    const games = await window.dartDB.loadStats();
+    if(!games.length){ box.innerHTML='<div class="stats-loading">Noch keine Spiele gespeichert.</div>'; return; }
+
+    // ── Aggregate ─────────────────────────────────────────────────
+    let totalGames=games.length, totalRounds=0;
+    const winMap={}, avgMap={}, bestMap={}, coAtt={}, coHit={};
+    const allScatter=[];
+
+    games.forEach(g=>{
+      totalRounds+=g.rounds||0;
+      (g.players||[]).forEach(p=>{
+        if(!p.name) return;
+        if(p.winner) winMap[p.name]=(winMap[p.name]||0)+1;
+        if(p.avg3){
+          if(!avgMap[p.name]) avgMap[p.name]=[];
+          avgMap[p.name].push(p.avg3);
+        }
+        if(p.best3){
+          if(!bestMap[p.name]||p.best3>bestMap[p.name]) bestMap[p.name]=p.best3;
+        }
+        if(p.checkoutAtt){ coAtt[p.name]=(coAtt[p.name]||0)+p.checkoutAtt; }
+        if(p.checkoutHit){ coHit[p.name]=(coHit[p.name]||0)+p.checkoutHit; }
+        (p.scatter||[]).forEach(s=>allScatter.push(s));
+      });
+    });
+
+    const topWinner = Object.entries(winMap).sort((a,b)=>b[1]-a[1])[0];
+    const avgPerPlayer = Object.entries(avgMap).map(([n,arr])=>
+      [n, Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10]).sort((a,b)=>b[1]-a[1]);
+
+    // ── KPI cards ─────────────────────────────────────────────────
+    let html=`<div class="stats-grid">
+      <div class="stat-card"><div class="s-label">SPIELE GESAMT</div><div class="s-value">${totalGames}</div></div>
+      <div class="stat-card"><div class="s-label">RUNDEN ⌀</div><div class="s-value">${totalGames?Math.round(totalRounds/totalGames):0}</div></div>
+      <div class="stat-card"><div class="s-label">MEISTE SIEGE</div><div class="s-value">${topWinner?topWinner[1]:0}</div><div class="s-sub">${topWinner?topWinner[0]:"—"}</div></div>
+      <div class="stat-card"><div class="s-label">BESTER ⌀ (3 WÜRFE)</div><div class="s-value">${avgPerPlayer.length?avgPerPlayer[0][1]:0}</div><div class="s-sub">${avgPerPlayer.length?avgPerPlayer[0][0]:"—"}</div></div>
+    </div>`;
+
+    // ── Checkout rates ─────────────────────────────────────────────
+    const coRows = Object.keys(coAtt).map(n=>{
+      const rate = coAtt[n]>0 ? Math.round((coHit[n]||0)/coAtt[n]*100) : 0;
+      return `<div class="history-row"><span class="winner-tag">${n}</span><span>${coAtt[n]} Vers.</span><span>${coHit[n]||0} Treffer</span><span>${rate}%</span></div>`;
+    }).join("");
+    if(coRows){
+      html+=`<div class="history-list" style="margin-bottom:10px">
+        <div class="history-header"><span>SPIELER</span><span>VERSUCHE</span><span>GETROFFEN</span><span>QUOTE</span></div>
+        ${coRows}</div>`;
+    }
+
+    // ── Scatter heatmap on board ───────────────────────────────────
+    if(allScatter.length){
+      html+=`<div class="scatter-wrap">
+        <div class="scatter-title">WURFSTREUUNG (letzte ${Math.min(allScatter.length,500)} Würfe)</div>
+        <svg id="scatter-svg" viewBox="0 0 470 470"></svg>
+      </div>`;
+    }
+
+    // ── Last 10 games ──────────────────────────────────────────────
+    html+=`<div class="history-list">
+      <div class="history-header"><span>GEWINNER</span><span>MODUS</span><span>RUNDEN</span><span>DATUM</span></div>`;
+    games.slice(0,10).forEach(g=>{
+      const d=new Date(g.ts);
+      const ds=`${d.getDate()}.${d.getMonth()+1}.`;
+      html+=`<div class="history-row">
+        <span class="winner-tag">${g.winner||"—"}</span>
+        <span class="mode-tag">${g.mode||"—"}</span>
+        <span>${g.rounds||0}</span>
+        <span style="color:#aaa;font-size:11px">${ds}</span>
+      </div>`;
+    });
+    html+=`</div>`;
+
+    box.innerHTML=html;
+
+    // Draw scatter on board SVG
+    if(allScatter.length){
+      const svg=document.getElementById("scatter-svg");
+      if(svg){
+        // Draw mini board
+        const ns="http://www.w3.org/2000/svg";
+        function mkEl(tag,attrs){ const e=document.createElementNS(ns,tag); for(const[k,v] of Object.entries(attrs)) e.setAttribute(k,v); return e; }
+        svg.appendChild(mkEl("circle",{cx:235,cy:235,r:228,fill:"#1a1008"}));
+        const SR=[{r1:32,r2:109},{r1:109,r2:125},{r1:125,r2:186},{r1:186,r2:200}];
+        const cols=[["#1c1c1c","#f0ead6"],["#c0392b","#27ae60"],["#1c1c1c","#f0ead6"],["#c0392b","#27ae60"]];
+        const SECTS=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+        function sA(i){ return (-90-9+i*18)*Math.PI/180; }
+        function pXY(r,a){ return [235+r*Math.cos(a),235+r*Math.sin(a)]; }
+        function sPth(r1,r2,i){
+          const a1=sA(i),a2=sA(i+1);
+          const[x1,y1]=pXY(r1,a1),[x2,y2]=pXY(r2,a1),[x3,y3]=pXY(r2,a2),[x4,y4]=pXY(r1,a2);
+          return `M${x1},${y1}L${x2},${y2}A${r2},${r2} 0 0,1 ${x3},${y3}L${x4},${y4}A${r1},${r1} 0 0,0 ${x1},${y1}Z`;
+        }
+        SR.forEach(({r1,r2},ri)=>{
+          for(let i=0;i<20;i++) svg.appendChild(mkEl("path",{d:sPth(r1,r2,i),fill:cols[ri][i%2]}));
+        });
+        svg.appendChild(mkEl("circle",{cx:235,cy:235,r:32,fill:"#27ae60"}));
+        svg.appendChild(mkEl("circle",{cx:235,cy:235,r:13,fill:"#c0392b"}));
+        // Dots — use actual svgX/Y coords (recorded at 470x470 space)
+        // Scale: recorded at CX=235 space, scatter svg also 470x470 → 1:1
+        allScatter.slice(-500).forEach(s=>{
+          svg.appendChild(mkEl("circle",{cx:s.x,cy:s.y,r:"5",fill:"rgba(255,220,0,0.35)","stroke":"rgba(255,200,0,0.7)","stroke-width":"0.8"}));
+        });
+      }
+    }
+  } catch(e){
+    box.innerHTML=`<div class="stats-loading">Fehler: ${e.message}</div>`;
+  }
+}
+
+document.getElementById("btn-stats-refresh").addEventListener("click", loadAndRenderStats);
+window.addEventListener("dbReady", loadAndRenderStats);
 </script>
 </body>
 </html>
