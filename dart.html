@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Dart Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; max-height: 100vh; background: #f5f5f0; color: #111; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+  .screen { display: none; height: 100vh; overflow: hidden; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── Setup ── */
+  #setup { align-items: center; justify-content: center; }
+  .setup-card { background: #13131a; border: 1px solid #2a2a3a; border-radius: 16px; padding: 36px 32px; width: 420px; max-width: 95vw; }
+  .logo { text-align: center; margin-bottom: 28px; }
+  .logo-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; color: #e8c44a; line-height: 1; }
+  .logo-sub { color: #555; font-size: 12px; letter-spacing: 3px; margin-top: 2px; }
+  .field-label { color: #888; font-size: 11px; letter-spacing: 2px; margin-bottom: 8px; display: block; }
+  .btn-group { display: flex; gap: 8px; margin-bottom: 20px; }
+  .btn-toggle { flex: 1; padding: 12px 0; background: #1e1e2e; color: #888; border: none; border-radius: 8px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; transition: all .2s; }
+  .btn-toggle.active { background: #e8c44a; color: #000; }
+  .player-input { display: block; width: 100%; margin-bottom: 8px; padding: 10px 14px;
+    background: #1e1e2e; border: 1px solid #2a2a3a; border-radius: 8px;
+    color: #eee; font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; }
+  .btn-start { width: 100%; padding: 16px; background: #e8c44a; border: none; border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; color: #000;
+    margin-top: 12px; transition: opacity .2s; }
+  .btn-start:hover { opacity: .85; }
+
+  /* ── Game header ── */
+  .game-header { display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px; background: #1a1a1a; border-bottom: 2px solid #333; flex-shrink: 0; }
+  .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #e8c44a; letter-spacing: 2px; }
+  .btn-nav { background: none; border: 1px solid #555; color: #ccc; padding: 6px 12px; border-radius: 6px; font-size: 13px; }
+
+  /* ── Player tabs ── */
+  .player-tabs { display: flex; gap: 6px; padding: 8px 14px; overflow-x: auto; flex-shrink: 0; background: #fff; border-bottom: 1px solid #ddd; }
+  .player-tab { flex: 1; min-width: 80px; padding: 8px 10px; border-radius: 10px;
+    background: #f0f0f0; border: 1px solid #ddd; text-align: center; transition: all .2s; }
+  .player-tab.active { background: #1a1a1a; border: 2px solid #e8c44a; }
+  .player-tab .tab-name { font-size: 10px; color: #999; letter-spacing: 1px; font-weight: 500; margin-bottom: 2px; }
+  .player-tab.active .tab-name { color: #e8c44a; }
+  .player-tab .tab-score { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: #555; line-height: 1; }
+  .player-tab.active .tab-score { color: #fff; }
+
+  /* ── Game body ── */
+  .game-body { display: flex; flex: 1; gap: 16px; padding: 10px 12px 12px; min-height: 0; align-items: flex-start; background: #f5f5f0; overflow: hidden; }
+  .board-wrap { flex: 0 0 auto; width: min(75vh, 72vw); aspect-ratio: 1; position: relative; }
+  #board-svg, #board-svg-cricket { width: 100%; height: 100%; touch-action: none; user-select: none; display: block; }
+  .side-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 140px; max-width: 220px; }
+  .panel-box { background: #fff; border-radius: 10px; padding: 12px; border: 1px solid #ddd; }
+  .panel-label { font-size: 10px; color: #999; letter-spacing: 2px; margin-bottom: 8px; }
+  .throw-slots { display: flex; gap: 6px; }
+  .throw-slot { flex: 1; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #ccc;
+    background: #f0f0f0; border: 1px dashed #ccc; transition: all .2s; }
+  .throw-slot.hit { background: #e8f5ec; border: 1px solid #4caf50; color: #1a1a1a; }
+  .throw-slot.bust { background: #fdecea; border: 1px solid #e53935; }
+  .bust-label { color: #e53935; text-align: center; margin-top: 8px; font-size: 13px; font-weight: 600; }
+  .remaining-box { text-align: center; }
+  .remaining-num { font-family: 'Bebas Neue', sans-serif; font-size: 58px; color: #1a1a1a; line-height: 1.1; }
+  .checkout-label { font-size: 10px; color: #999; letter-spacing: 1px; margin-top: 4px; }
+  .checkout-suggestion { color: #2e7d32; font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .throw-sum { color: #999; font-size: 12px; text-align: center; }
+  .throw-sum span { color: #555; }
+  .btn-next { padding: 12px; border: none; border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; transition: all .2s; }
+  .btn-next.ok { background: #2e7d32; color: #fff; }
+  .btn-next.bust { background: #c62828; color: #fff; }
+
+  /* ── Cricket scoreboard ── */
+  .cricket-board { padding: 6px 14px; background: #fff; flex-shrink: 0; overflow-x: auto; border-bottom: 1px solid #ddd; }
+  .cricket-table { width: 100%; border-collapse: collapse; font-family: 'Bebas Neue', sans-serif; }
+  .cricket-table th { color: #888; text-align: center; padding: 3px 6px; font-size: 13px; font-family: 'DM Sans', sans-serif; letter-spacing: 1px; }
+  .cricket-table th.target-col { text-align: left; color: #aaa; font-size: 10px; }
+  .cricket-table th.active-player { color: #c0392b; font-weight: 700; }
+  .cricket-table td { padding: 3px 6px; font-size: 18px; text-align: center; }
+  .cricket-table td.target-cell { color: #333; font-weight: bold; font-size: 15px; text-align: left; }
+  .cricket-mark { color: #c0392b; }
+  .cricket-mark.closed { color: #27ae60; }
+  .cricket-points { color: #aaa; font-size: 20px; }
+  .cricket-points.active { color: #c0392b; font-weight: bold; }
+  .cricket-legend { font-size: 11px; color: #999; line-height: 1.7; }
+
+  /* ── Winner overlay ── */
+  .winner-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.88);
+    display: none; align-items: center; justify-content: center; z-index: 100; text-align: center; }
+  .winner-overlay.visible { display: flex; }
+  .winner-label { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #e8c44a; letter-spacing: 3px; margin-bottom: 6px; }
+  .winner-name { font-family: 'Bebas Neue', sans-serif; font-size: 60px; color: #fff; letter-spacing: 2px; }
+  .winner-round { color: #aaa; font-size: 14px; margin-top: 6px; }
+  .btn-new-game { margin-top: 28px; padding: 14px 36px; background: #e8c44a; border: none; border-radius: 10px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; }
+
+  /* ── Setup overrides for light bg ── */
+  #setup { background: #f5f5f0; }
+  .setup-card { background: #fff; border: 1px solid #ddd; }
+  .field-label { color: #666; }
+  .btn-toggle { background: #f0f0f0; color: #777; border: 1px solid #ddd; }
+  .player-input { background: #f8f8f8; border: 1px solid #ddd; color: #111; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SETUP SCREEN ═══════════════════════ -->
+<div id="setup" class="screen active">
+  <div class="setup-card">
+    <div class="logo">
+      <div class="logo-title">DART PRO</div>
+      <div class="logo-sub">SCORE TRACKER</div>
+    </div>
+
+    <label class="field-label">SPIELMODUS</label>
+    <div class="btn-group" id="mode-group">
+      <button class="btn-toggle active" data-value="501">501</button>
+      <button class="btn-toggle" data-value="301">301</button>
+      <button class="btn-toggle" data-value="Cricket">Cricket</button>
+    </div>
+
+    <label class="field-label">SPIELERANZAHL</label>
+    <div class="btn-group" id="count-group">
+      <button class="btn-toggle" data-value="1">1</button>
+      <button class="btn-toggle active" data-value="2">2</button>
+      <button class="btn-toggle" data-value="3">3</button>
+      <button class="btn-toggle" data-value="4">4</button>
+    </div>
+
+    <label class="field-label">SPIELERNAMEN</label>
+    <div id="name-inputs">
+      <input class="player-input" value="Player 1" />
+      <input class="player-input" value="Player 2" />
+    </div>
+
+    <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
+<div id="x01" class="screen">
+  <div class="game-header">
+    <button class="btn-nav" id="x01-back">← Zurück</button>
+    <div class="game-title" id="x01-title">501 · Runde 1</div>
+    <button class="btn-nav" id="x01-undo">↩ Undo</button>
+  </div>
+
+  <div class="player-tabs" id="x01-tabs"></div>
+
+  <div class="game-body">
+    <div class="board-wrap">
+      <svg id="board-svg" viewBox="0 0 470 470"></svg>
+    </div>
+    <div class="side-panel">
+      <div class="panel-box">
+        <div class="panel-label">WÜRFE</div>
+        <div class="throw-slots" id="throw-slots">
+          <div class="throw-slot" id="slot-0">—</div>
+          <div class="throw-slot" id="slot-1">—</div>
+          <div class="throw-slot" id="slot-2">—</div>
+        </div>
+        <div class="bust-label" id="bust-label" style="display:none">BUST!</div>
+      </div>
+      <div class="panel-box remaining-box">
+        <div class="panel-label">VERBLEIBEND</div>
+        <div class="remaining-num" id="remaining-num">501</div>
+        <div id="checkout-box" style="display:none">
+          <div class="checkout-label">CHECKOUT</div>
+          <div class="checkout-suggestion" id="checkout-suggestion"></div>
+        </div>
+      </div>
+      <button class="btn-next ok" id="btn-next" style="display:none">NÄCHSTER SPIELER</button>
+      <div class="throw-sum" id="throw-sum" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ CRICKET SCREEN ═══════════════════════ -->
+<div id="cricket" class="screen">
+  <div class="game-header">
+    <button class="btn-nav" id="cr-back">← Zurück</button>
+    <div class="game-title" id="cr-title">Cricket · Runde 1</div>
+    <button class="btn-nav" id="cr-undo">↩ Undo</button>
+  </div>
+
+  <div class="cricket-board">
+    <table class="cricket-table" id="cr-table"></table>
+  </div>
+
+  <div class="game-body">
+    <div class="board-wrap">
+      <svg id="board-svg-cricket" viewBox="0 0 470 470"></svg>
+    </div>
+    <div class="side-panel">
+      <div class="panel-box">
+        <div class="panel-label">WÜRFE</div>
+        <div class="throw-slots" id="cr-slots">
+          <div class="throw-slot" id="cr-slot-0">—</div>
+          <div class="throw-slot" id="cr-slot-1">—</div>
+          <div class="throw-slot" id="cr-slot-2">—</div>
+        </div>
+      </div>
+      <button class="btn-next ok" id="cr-next" style="display:none">NÄCHSTER SPIELER</button>
+      <div class="panel-box">
+        <div class="panel-label">LEGENDE</div>
+        <div class="cricket-legend">/ &nbsp;= 1 Mark<br>X &nbsp;= 2 Marks<br>● &nbsp;= Closed</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ WINNER OVERLAY ═══════════════════════ -->
+<div class="winner-overlay" id="winner-overlay">
+  <div>
+    <div class="winner-label">GEWINNER</div>
+    <div class="winner-name" id="winner-name"></div>
+    <div class="winner-round" id="winner-round"></div>
+    <button class="btn-new-game" id="btn-new-game">NEUES SPIEL</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// GEOMETRY
+// ══════════════════════════════════════════════════════════════════
+const SECTORS = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+// ViewBox 440x440, center 220,220
+// Real dartboard proportions (% of total radius ~170mm):
+//   bull=6.35, bull25=15.9, tripleIn=54.7, tripleOut=62.4, doubleIn=93.0, doubleOut=100
+// We map doubleOut → 200, then numbers in surround up to 215, board circle 220
+const R = {
+  bull:    13,
+  bull25:  32,
+  triIn:   109,
+  triOut:  125,
+  dblIn:   186,
+  dblOut:  200,
+  numR:    216,
+  board:   228
+};
+const CX=235, CY=235;
+const CRICKET_TARGETS = [20,19,18,17,16,15,25];
+
+function toRad(d){ return d*Math.PI/180; }
+function sectorAngle(i){ return toRad(-90-9+i*18); }
+function polarXY(r,a){ return [CX+r*Math.cos(a), CY+r*Math.sin(a)]; }
+
+function slicePath(rIn,rOut,i){
+  const a1=sectorAngle(i), a2=sectorAngle(i+1);
+  const [x1,y1]=polarXY(rIn,a1), [x2,y2]=polarXY(rOut,a1);
+  const [x3,y3]=polarXY(rOut,a2), [x4,y4]=polarXY(rIn,a2);
+  return `M${x1},${y1}L${x2},${y2}A${rOut},${rOut} 0 0,1 ${x3},${y3}L${x4},${y4}A${rIn},${rIn} 0 0,0 ${x1},${y1}Z`;
+}
+
+function hitFromXY(sx,sy){
+  const dx=sx-CX, dy=sy-CY;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<=R.bull)   return {score:50, label:"Bull"};
+  if(dist<=R.bull25) return {score:25, label:"Bull 25"};
+  if(dist>R.dblOut)  return null;
+  let angle=Math.atan2(dy,dx)*180/Math.PI+90+9;
+  if(angle<0) angle+=360; if(angle>=360) angle-=360;
+  const idx=Math.floor(angle/18);
+  const num=SECTORS[idx%20];
+  if(dist<=R.triIn)  return {score:num,   label:`${num}`};
+  if(dist<=R.triOut) return {score:num*3, label:`T${num}`};
+  if(dist<=R.dblIn)  return {score:num,   label:`${num}`};
+  return                    {score:num*2, label:`D${num}`};
+}
+
+function buildBoard(svgEl){
+  svgEl.innerHTML="";
+  const ns="http://www.w3.org/2000/svg";
+  function el(tag,attrs){
+    const e=document.createElementNS(ns,tag);
+    for(const [k,v] of Object.entries(attrs)) e.setAttribute(k,v);
+    return e;
+  }
+  // Dark surround
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.board,fill:"#1a1008"}));
+  // 20 sectors
+  for(let i=0;i<20;i++){
+    const even=i%2===0;
+    // inner single: bull25 → triIn
+    svgEl.appendChild(el("path",{d:slicePath(R.bull25,R.triIn,i),  fill:even?"#1c1c1c":"#f0ead6"}));
+    // triple ring: triIn → triOut
+    svgEl.appendChild(el("path",{d:slicePath(R.triIn, R.triOut,i), fill:even?"#c0392b":"#27ae60"}));
+    // outer single: triOut → dblIn
+    svgEl.appendChild(el("path",{d:slicePath(R.triOut,R.dblIn,i),  fill:even?"#1c1c1c":"#f0ead6"}));
+    // double ring: dblIn → dblOut
+    svgEl.appendChild(el("path",{d:slicePath(R.dblIn, R.dblOut,i), fill:even?"#c0392b":"#27ae60"}));
+  }
+  // Wire lines (sector dividers)
+  for(let i=0;i<20;i++){
+    const a=sectorAngle(i);
+    const [x1,y1]=polarXY(R.bull25,a),[x2,y2]=polarXY(R.dblOut,a);
+    svgEl.appendChild(el("line",{x1,y1,x2,y2,stroke:"#888","stroke-width":"1"}));
+  }
+  // Ring border circles
+  [R.bull25,R.triIn,R.triOut,R.dblIn,R.dblOut].forEach(r=>{
+    svgEl.appendChild(el("circle",{cx:CX,cy:CY,r,fill:"none",stroke:"#888","stroke-width":"1"}));
+  });
+  // Bull
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.bull25,fill:"#27ae60"}));
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.bull,  fill:"#c0392b"}));
+  // Numbers in surround
+  for(let i=0;i<20;i++){
+    const mid=sectorAngle(i)+toRad(9);
+    const [x,y]=polarXY(R.numR,mid);
+    const t=el("text",{x,y,"text-anchor":"middle","dominant-baseline":"middle",
+      fill:"#ffffff","font-size":"17","font-family":"'Bebas Neue',sans-serif"});
+    t.textContent=SECTORS[i];
+    svgEl.appendChild(t);
+  }
+  // Hits layer
+  const hitsG=document.createElementNS(ns,"g");
+  hitsG.id=svgEl.id+"-hits";
+  svgEl.appendChild(hitsG);
+  // Disabled overlay
+  const overlay=el("circle",{cx:CX,cy:CY,r:R.board,fill:"rgba(0,0,0,0)",id:svgEl.id+"-overlay"});
+  svgEl.appendChild(overlay);
+}
+
+function addHitDot(svgEl,x,y){
+  const ns="http://www.w3.org/2000/svg";
+  const g=svgEl.querySelector("#"+svgEl.id+"-hits");
+  const outer=document.createElementNS(ns,"circle");
+  outer.setAttribute("cx",x); outer.setAttribute("cy",y); outer.setAttribute("r","7");
+  outer.setAttribute("fill","rgba(255,220,0,0.25)");
+  const mid=document.createElementNS(ns,"circle");
+  mid.setAttribute("cx",x); mid.setAttribute("cy",y); mid.setAttribute("r","4");
+  mid.setAttribute("fill","#ffdd00"); mid.setAttribute("opacity","0.9");
+  const inner=document.createElementNS(ns,"circle");
+  inner.setAttribute("cx",x); inner.setAttribute("cy",y); inner.setAttribute("r","1.5");
+  inner.setAttribute("fill","#fff");
+  g.appendChild(outer); g.appendChild(mid); g.appendChild(inner);
+}
+
+function clearHits(svgEl){
+  const g=svgEl.querySelector("#"+svgEl.id+"-hits");
+  if(g) g.innerHTML="";
+}
+
+function disableBoard(svgEl,on){
+  const o=svgEl.querySelector("#"+svgEl.id+"-overlay");
+  if(o) o.setAttribute("fill",on?"rgba(0,0,0,0.45)":"rgba(0,0,0,0)");
+}
+
+function svgCoords(svgEl,e){
+  const rect=svgEl.getBoundingClientRect();
+  const scaleX=470/rect.width, scaleY=470/rect.height;
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  return {x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY};
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CHECKOUT TABLE
+// ══════════════════════════════════════════════════════════════════
+const CHECKOUTS={
+  170:"T20 T20 Bull",167:"T20 T19 Bull",164:"T20 T18 Bull",161:"T20 T17 Bull",
+  160:"T20 T20 D20",158:"T20 T20 D19",157:"T20 T19 D20",156:"T20 T20 D18",
+  155:"T20 T19 D19",154:"T20 T18 D20",153:"T20 T19 D18",152:"T20 T20 D16",
+  151:"T20 T17 D20",150:"T20 T18 D18",149:"T20 T19 D16",148:"T20 T20 D14",
+  147:"T20 T17 D18",146:"T20 T18 D16",145:"T20 T19 D14",144:"T20 T20 D12",
+  143:"T20 T17 D16",142:"T20 T18 D14",141:"T20 T19 D12",140:"T20 T20 D10",
+  139:"T20 T13 D25",138:"T20 T18 D12",137:"T20 T19 D10",136:"T20 T20 D8",
+  135:"T20 T17 D12",134:"T20 T14 D16",133:"T20 T19 D8",132:"T20 T16 D12",
+  131:"T20 T13 D16",130:"T20 T18 D8",129:"T19 T16 D12",128:"T18 T18 D10",
+  127:"T20 T17 D8",126:"T19 T19 D6",125:"T20 T15 D10",124:"T20 T16 D8",
+  123:"T19 T16 D9",122:"T18 T18 D7",121:"T20 T11 D14",120:"T20 S20 D20",
+  119:"T19 T12 D13",118:"T20 S18 D20",117:"T20 S17 D20",116:"T20 S16 D20",
+  115:"T20 S15 D20",114:"T20 S14 D20",113:"T20 S13 D20",112:"T20 S12 D20",
+  111:"T20 S11 D20",110:"T20 S10 D20",109:"T20 S9 D20",108:"T20 S8 D20",
+  107:"T19 S10 D20",106:"T20 S6 D20",105:"T20 S5 D20",104:"T20 S4 D20",
+  103:"T20 S3 D20",102:"T20 S2 D20",101:"T20 S1 D20",100:"T20 D20",
+  99:"T19 S10 D16",98:"T20 D19",97:"T19 D20",96:"T20 D18",95:"T19 D19",
+  94:"T18 D20",93:"T19 D18",92:"T20 D16",91:"T17 D20",90:"T18 D18",
+  89:"T19 D16",88:"T20 D14",87:"T17 D18",86:"T18 D16",85:"T19 D14",
+  84:"T20 D12",83:"T17 D16",82:"T14 D20",81:"T19 D12",80:"T20 D10",
+  79:"T13 D20",78:"T18 D12",77:"T19 D10",76:"T20 D8",75:"T17 D12",
+  74:"T14 D16",73:"T19 D8",72:"T16 D12",71:"T13 D16",70:"T18 D8",
+  69:"T19 D6",68:"T20 D4",67:"T17 D8",66:"T10 D18",65:"T19 D4",
+  64:"T16 D8",63:"T13 D12",62:"T10 D16",61:"T15 D8",60:"S20 D20",
+  59:"S19 D20",58:"S18 D20",57:"S17 D20",56:"S16 D20",55:"S15 D20",
+  54:"S14 D20",53:"S13 D20",52:"S12 D20",51:"S11 D20",50:"D25",
+  49:"S9 D20",48:"S8 D20",47:"S7 D20",46:"S6 D20",45:"S5 D20",
+  44:"S4 D20",43:"S3 D20",42:"S2 D20",41:"S1 D20",40:"D20",
+  38:"D19",36:"D18",34:"D17",32:"D16",30:"D15",28:"D14",26:"D13",
+  24:"D12",22:"D11",20:"D10",18:"D9",16:"D8",14:"D7",12:"D6",
+  10:"D5",8:"D4",6:"D3",4:"D2",2:"D1"
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+let cfg={};
+// x01 state
+let x01={};
+// cricket state
+let cr={};
+
+// ══════════════════════════════════════════════════════════════════
+// SETUP
+// ══════════════════════════════════════════════════════════════════
+const modeGroup=document.getElementById("mode-group");
+const countGroup=document.getElementById("count-group");
+let selectedMode="501", selectedCount=2;
+
+modeGroup.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedMode=e.target.dataset.value;
+  modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
+});
+
+countGroup.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedCount=+e.target.dataset.value;
+  countGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedCount));
+  rebuildNameInputs();
+});
+
+function rebuildNameInputs(){
+  const box=document.getElementById("name-inputs");
+  const existing=[...box.querySelectorAll("input")].map(i=>i.value);
+  box.innerHTML="";
+  for(let i=0;i<selectedCount;i++){
+    const inp=document.createElement("input");
+    inp.className="player-input";
+    inp.value=existing[i]||`Player ${i+1}`;
+    box.appendChild(inp);
+  }
+}
+
+document.getElementById("btn-start").addEventListener("click",()=>{
+  const names=[...document.querySelectorAll(".player-input")].map(i=>i.value.trim()||`Player ${[...document.querySelectorAll(".player-input")].indexOf(i)+1}`);
+  cfg={mode:selectedMode, startScore:selectedMode==="301"?301:501, players:names};
+  if(cfg.mode==="Cricket") startCricket();
+  else startX01();
+});
+
+// ══════════════════════════════════════════════════════════════════
+// SCREEN SWITCH
+// ══════════════════════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function showSetup(){
+  document.getElementById("winner-overlay").classList.remove("visible");
+  showScreen("setup");
+}
+
+document.getElementById("btn-new-game").addEventListener("click",showSetup);
+
+// ══════════════════════════════════════════════════════════════════
+// X01 GAME
+// ══════════════════════════════════════════════════════════════════
+const boardSVG=document.getElementById("board-svg");
+buildBoard(boardSVG);
+
+function startX01(){
+  x01={
+    scores: cfg.players.map(()=>cfg.startScore),
+    current: 0,
+    round: 1,
+    throws: [],
+    hitDots: cfg.players.map(()=>[]),
+    bust: false,
+    winner: null,
+    history: []
+  };
+  renderX01Tabs();
+  clearHits(boardSVG);
+  renderX01();
+  showScreen("x01");
+  document.getElementById("x01-title").textContent=`${cfg.mode} · Runde 1`;
+  disableBoard(boardSVG,false);
+}
+
+function renderX01Tabs(){
+  const tabs=document.getElementById("x01-tabs");
+  tabs.innerHTML="";
+  cfg.players.forEach((name,i)=>{
+    const div=document.createElement("div");
+    div.className="player-tab"+(i===x01.current?" active":"");
+    div.innerHTML=`<div class="tab-name">${name}</div><div class="tab-score">${x01.scores[i]}</div>`;
+    tabs.appendChild(div);
+  });
+}
+
+function renderX01(){
+  const spent=x01.throws.reduce((s,t)=>s+t.score,0);
+  const remaining=Math.max(0, x01.scores[x01.current]-spent);
+
+  // slots
+  for(let i=0;i<3;i++){
+    const slot=document.getElementById(`slot-${i}`);
+    const t=x01.throws[i];
+    slot.textContent=t?t.label:"—";
+    slot.className="throw-slot"+(t?" hit":"")+(x01.bust&&i===x01.throws.length-1?" bust":"");
+  }
+
+  // bust
+  document.getElementById("bust-label").style.display=x01.bust?"":"none";
+
+  // remaining
+  document.getElementById("remaining-num").textContent=remaining;
+
+  // checkout
+  const co=CHECKOUTS[remaining];
+  const coBox=document.getElementById("checkout-box");
+  if(co && !x01.bust && remaining<=170 && remaining>1){
+    document.getElementById("checkout-suggestion").textContent=co;
+    coBox.style.display="";
+  } else { coBox.style.display="none"; }
+
+  // next btn
+  const btn=document.getElementById("btn-next");
+  if(x01.throws.length>0 && !x01.winner){
+    btn.style.display="";
+    btn.className="btn-next"+(x01.bust?" bust":" ok");
+    btn.textContent=x01.bust?"WEITER (BUST)":x01.throws.length<3?"ZÄHLEN & WEITER":"NÄCHSTER SPIELER";
+  } else { btn.style.display="none"; }
+
+  // throw sum
+  const sumEl=document.getElementById("throw-sum");
+  if(x01.throws.length>0){
+    sumEl.style.display="";
+    sumEl.innerHTML=`Summe: <span>+${spent}</span>`;
+  } else { sumEl.style.display="none"; }
+
+  // title
+  document.getElementById("x01-title").textContent=`${cfg.mode} · Runde ${x01.round}`;
+
+  renderX01Tabs();
+  disableBoard(boardSVG,!!x01.winner||x01.bust);
+}
+
+boardSVG.addEventListener("click",handleX01Click);
+boardSVG.addEventListener("touchend",handleX01Click);
+
+function handleX01Click(e){
+  e.preventDefault();
+  if(x01.winner||x01.bust||x01.throws.length>=3) return;
+  const {x,y}=svgCoords(boardSVG,e);
+  const hit=hitFromXY(x,y);
+  if(!hit) return;
+
+  const spent=x01.throws.reduce((s,t)=>s+t.score,0);
+  const remaining=x01.scores[x01.current]-spent;
+  const tentative=remaining-hit.score;
+
+  x01.throws.push({...hit,svgX:x,svgY:y});
+  addHitDot(boardSVG,x,y);
+
+  if(tentative<0||tentative===1){
+    x01.bust=true;
+    renderX01();
+    return;
+  }
+  if(tentative===0){
+    if(!hit.label.startsWith("D")&&hit.label!=="Bull"){
+      x01.bust=true;
+      renderX01();
+      return;
+    }
+    // WIN
+    x01.scores[x01.current]=0;
+    x01.winner=x01.current;
+    showWinner(cfg.players[x01.current], x01.round);
+    renderX01();
+    return;
+  }
+
+  renderX01();
+
+  if(x01.throws.length===3){
+    setTimeout(advanceX01, 350);
+  }
+}
+
+function advanceX01(){
+  const spent=x01.throws.reduce((s,t)=>s+t.score,0);
+  x01.history.push({scores:[...x01.scores],current:x01.current,round:x01.round,throwCount:x01.throws.length});
+  x01.scores[x01.current]-=spent;
+  x01.throws=[];
+  x01.bust=false;
+  const next=(x01.current+1)%cfg.players.length;
+  x01.current=next;
+  if(next===0) x01.round++;
+  clearHits(boardSVG);
+  renderX01();
+}
+
+document.getElementById("btn-next").addEventListener("click",()=>{
+  if(x01.bust){
+    x01.history.push({scores:[...x01.scores],current:x01.current,round:x01.round,throwCount:x01.throws.length});
+    x01.throws=[];
+    x01.bust=false;
+    const next=(x01.current+1)%cfg.players.length;
+    x01.current=next;
+    if(next===0) x01.round++;
+    clearHits(boardSVG);
+    renderX01();
+  } else {
+    advanceX01();
+  }
+});
+
+document.getElementById("x01-undo").addEventListener("click",()=>{
+  if(x01.history.length===0) return;
+  const last=x01.history.pop();
+  x01.scores=last.scores;
+  x01.current=last.current;
+  x01.round=last.round;
+  x01.throws=[];
+  x01.bust=false;
+  x01.winner=null;
+  document.getElementById("winner-overlay").classList.remove("visible");
+  clearHits(boardSVG);
+  renderX01();
+});
+
+document.getElementById("x01-back").addEventListener("click",showSetup);
+
+// ══════════════════════════════════════════════════════════════════
+// CRICKET GAME
+// ══════════════════════════════════════════════════════════════════
+const boardSVGcr=document.getElementById("board-svg-cricket");
+buildBoard(boardSVGcr);
+
+function startCricket(){
+  cr={
+    marks: cfg.players.map(()=>Object.fromEntries(CRICKET_TARGETS.map(t=>[t,0]))),
+    points: cfg.players.map(()=>0),
+    current: 0,
+    round: 1,
+    throws: [],
+    winner: null,
+    history: []
+  };
+  clearHits(boardSVGcr);
+  renderCricket();
+  showScreen("cricket");
+  disableBoard(boardSVGcr,false);
+}
+
+function markDisplay(m){
+  if(m===0) return "";
+  if(m===1) return "/";
+  if(m===2) return "X";
+  return "●";
+}
+
+function renderCricketTable(){
+  const table=document.getElementById("cr-table");
+  const players=cfg.players;
+  let html=`<thead><tr><th class="target-col">ZIEL</th>`;
+  players.forEach((p,i)=>{ html+=`<th class="${i===cr.current?"active-player":""}">${p}</th>`; });
+  html+=`</tr></thead><tbody>`;
+  CRICKET_TARGETS.forEach(t=>{
+    html+=`<tr><td class="target-cell">${t===25?"BULL":t}</td>`;
+    players.forEach((_,pi)=>{
+      const m=cr.marks[pi][t];
+      const closed=m>=3;
+      html+=`<td><span class="cricket-mark${closed?" closed":""}">${markDisplay(m)}</span></td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`<tr style="border-top:1px solid #1e1e2e"><td style="color:#555;font-size:10px;font-family:'DM Sans',sans-serif;letter-spacing:1px">PTS</td>`;
+  cr.points.forEach((p,i)=>{ html+=`<td class="cricket-points${i===cr.current?" active":""}">${p}</td>`; });
+  html+=`</tr></tbody>`;
+  table.innerHTML=html;
+}
+
+function renderCricket(){
+  renderCricketTable();
+  document.getElementById("cr-title").textContent=`Cricket · Runde ${cr.round}`;
+  for(let i=0;i<3;i++){
+    const slot=document.getElementById(`cr-slot-${i}`);
+    const t=cr.throws[i];
+    slot.textContent=t?(t.miss?"·":t.label):"—";
+    slot.className="throw-slot"+(t?" hit":"");
+  }
+  const btn=document.getElementById("cr-next");
+  btn.style.display=(cr.throws.length>0&&!cr.winner)?"":"none";
+  btn.textContent=cr.throws.length<3?"ZÄHLEN & WEITER":"NÄCHSTER SPIELER";
+  disableBoard(boardSVGcr,!!cr.winner);
+}
+
+function getCricketHit(label){
+  if(label==="Bull") return {num:25,count:2};
+  if(label==="Bull 25") return {num:25,count:1};
+  const tm=label.match(/^T(\d+)$/); if(tm) return {num:+tm[1],count:3};
+  const dm=label.match(/^D(\d+)$/); if(dm) return {num:+dm[1],count:2};
+  const sm=label.match(/^(\d+)$/); if(sm) return {num:+sm[1],count:1};
+  return null;
+}
+
+boardSVGcr.addEventListener("click",handleCricketClick);
+boardSVGcr.addEventListener("touchend",handleCricketClick);
+
+function handleCricketClick(e){
+  e.preventDefault();
+  if(cr.winner||cr.throws.length>=3) return;
+  const {x,y}=svgCoords(boardSVGcr,e);
+  const hit=hitFromXY(x,y);
+  if(!hit) return;
+
+  addHitDot(boardSVGcr,x,y);
+  const cs=getCricketHit(hit.label);
+  const isCricketTarget=cs&&CRICKET_TARGETS.includes(cs.num);
+
+  if(!isCricketTarget){
+    cr.throws.push({...hit,svgX:x,svgY:y,miss:true});
+    renderCricket();
+    if(cr.throws.length===3) setTimeout(advanceCricket,350);
+    return;
+  }
+
+  const {num,count}=cs;
+  const curMark=cr.marks[cr.current][num];
+  const newMark=curMark+count;
+  cr.marks[cr.current][num]=newMark;
+
+  const overflow=Math.max(0,newMark-3);
+  if(overflow>0){
+    const allClosed=cfg.players.every((_,pi)=>pi===cr.current||cr.marks[pi][num]>=3);
+    if(!allClosed) cr.points[cr.current]+=overflow*num;
+  }
+
+  cr.throws.push({...hit,svgX:x,svgY:y});
+
+  // check win: all targets closed and points >= all others
+  const allClosed=CRICKET_TARGETS.every(t=>cr.marks[cr.current][t]>=3);
+  const maxPts=Math.max(...cr.points);
+  if(allClosed&&cr.points[cr.current]>=maxPts){
+    cr.winner=cr.current;
+    showWinner(cfg.players[cr.current],cr.round);
+  }
+
+  renderCricket();
+  if(!cr.winner&&cr.throws.length===3) setTimeout(advanceCricket,350);
+}
+
+function advanceCricket(){
+  cr.history.push({marks:cr.marks.map(m=>({...m})),points:[...cr.points],current:cr.current,round:cr.round,throwCount:cr.throws.length});
+  cr.throws=[];
+  const next=(cr.current+1)%cfg.players.length;
+  cr.current=next;
+  if(next===0) cr.round++;
+  clearHits(boardSVGcr);
+  renderCricket();
+}
+
+document.getElementById("cr-next").addEventListener("click",advanceCricket);
+
+document.getElementById("cr-undo").addEventListener("click",()=>{
+  if(cr.history.length===0) return;
+  const last=cr.history.pop();
+  cr.marks=last.marks;
+  cr.points=last.points;
+  cr.current=last.current;
+  cr.round=last.round;
+  cr.throws=[];
+  cr.winner=null;
+  document.getElementById("winner-overlay").classList.remove("visible");
+  clearHits(boardSVGcr);
+  renderCricket();
+});
+
+document.getElementById("cr-back").addEventListener("click",showSetup);
+
+// ══════════════════════════════════════════════════════════════════
+// WINNER
+// ══════════════════════════════════════════════════════════════════
+function showWinner(name,round){
+  document.getElementById("winner-name").textContent=name;
+  document.getElementById("winner-round").textContent=`Runde ${round}`;
+  document.getElementById("winner-overlay").classList.add("visible");
+}
+</script>
+</body>
+</html>
