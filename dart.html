@@ -35,6 +35,10 @@ signInAnonymously(auth)
         const snap = await getDocs(query(collection(db,"dart_players"), orderBy("name")));
         return snap.docs.map(d=>({id:d.id,...d.data()}));
       },
+      async deletePlayer(playerId){
+        const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js");
+        return deleteDoc(doc(db,"dart_players",playerId));
+      },
       async savePlayer(name){
         return addDoc(collection(db,"dart_players"),{
           name, createdAt:Date.now(),
@@ -193,6 +197,9 @@ signInAnonymously(auth)
   .player-item .pi-stats { font-size: 11px; color: #aaa; }
   .player-item .pi-order { font-family: 'Bebas Neue',sans-serif; font-size: 18px; color: #e8c44a;
     width: 20px; text-align: center; }
+  .pi-delete { background: none; border: none; color: #ccc; font-size: 16px; padding: 4px 6px;
+    border-radius: 4px; cursor: pointer; line-height: 1; transition: all .15s; flex-shrink: 0; }
+  .pi-delete:hover { background: #fdecea; color: #e53935; }
   .add-player-row { display: flex; gap: 8px; }
   .add-player-input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
     font-family: 'DM Sans',sans-serif; font-size: 14px; outline: none; background: #f8f8f8; }
@@ -635,8 +642,22 @@ function renderPlayerList(){
         <div class="pi-name">${p.name}</div>
         <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}</div>
       </div>
-      <div class="pi-order">${selected?selIdx+1:""}</div>`;
+      <div class="pi-order">${selected?selIdx+1:""}</div>
+      <button class="pi-delete" data-id="${p.id}" data-name="${p.name}" title="Spieler löschen">✕</button>`;
     div.addEventListener("click",()=>togglePlayer(p));
+
+    // Delete button — stop propagation so it doesn't toggle selection
+    const delBtn=div.querySelector(".pi-delete");
+    delBtn.addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      if(!confirm(`Spieler "${p.name}" wirklich löschen?\n\nDie Spielhistorie bleibt erhalten, der Spieler kann aber nicht mehr ausgewählt werden.`)) return;
+      try{
+        await window.dartDB.deletePlayer(p.id);
+        // Remove from selectedPlayers if selected
+        selectedPlayers=selectedPlayers.filter(s=>s.id!==p.id);
+        await loadPlayers();
+      }catch(err){ alert("Fehler beim Löschen: "+err.message); }
+    });
     list.appendChild(div);
   });
   // update hint
