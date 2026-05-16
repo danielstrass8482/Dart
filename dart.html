@@ -1587,7 +1587,7 @@ function renderX01Tabs(){
       ? `<div style="font-size:10px;color:${i===x01.current?'#e8c44a':'#aaa'};margin-top:2px">${'●'.repeat(cfg.legWins[i])}${'○'.repeat(cfg.legsToWin-cfg.legWins[i])}</div>`
       : '';
     const f9=x01.first9?.[i];
-    const f9badge=f9!==null?`<div style="font-size:9px;color:${i===x01.current?"#aaa":"#bbb"};letter-spacing:1px">First 9: ${f9}</div>`:"";
+    const f9badge=f9!==null?`<div style="font-size:9px;color:${i===x01.current?"#aaa":"#bbb"};letter-spacing:1px">First 9 Ø: ${f9}</div>`:"";
 
     div.innerHTML=`
       <div class="tab-name">${name}</div>
@@ -1807,7 +1807,7 @@ function advanceX01(){
   x01.turnScores[pi].push(spent);
   // Track first-9: sum of first 3 turns (9 darts)
   if(x01.turnScores[pi].length===3&&x01.first9[pi]===null)
-    x01.first9[pi]=x01.turnScores[pi].reduce((a,b)=>a+b,0);
+    x01.first9[pi]=Math.round(x01.turnScores[pi].reduce((a,b)=>a+b,0)/3*10)/10;
   x01.scores[pi]-=spent;
   x01.lastTurnThrows[pi]=[...x01.throws];
   x01.historicThrows[pi].push(...x01.throws.filter(t=>t.svgX!=null));
@@ -2443,7 +2443,7 @@ function showWinner(name,round){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:13px;color:#ccc">
           <span>Ø Aufnahme</span><span style="color:#fff;font-weight:600">${avg}</span>
           <span>Highscore</span><span style="color:#fff;font-weight:600">${best}</span>
-          ${f9!==null?`<span>First 9</span><span style="color:#fff;font-weight:600">${f9}</span>`:""}
+          ${f9!==null?`<span>First 9 Ø</span><span style="color:#fff;font-weight:600">${f9}</span>`:""}
           <span>Checkout</span><span style="color:#fff;font-weight:600">${coHit}/${coAtt} (${coPct}%)</span>
           <span>Aufnahmen</span><span style="color:#fff;font-weight:600">${turns.length}</span>
         </div>
@@ -2468,6 +2468,7 @@ function saveGameToFirebase(winnerIdx){
       const scatter = allT.map(t=>({x:Math.round(t.svgX),y:Math.round(t.svgY),l:t.label}));
       return {name, id:cfg.playerIds?.[i]||null, avg3:avg, best3:best,
         checkoutAtt:x01.checkoutAttempts[i], checkoutHit:x01.checkoutHits[i],
+        first9:x01.first9?.[i]||null,
         scatter, winner:i===winnerIdx};
     } else {
       return {name, id:cfg.playerIds?.[i]||null, points:cr.points[i], winner:i===winnerIdx, scatter:[]};
@@ -2503,9 +2504,11 @@ async function updateAllPlayerStats(){
       const coHits=pData.reduce((s,p)=>s+(p.checkoutHit||0),0);
       const coPct=coAtts>0?Math.round(coHits/coAtts*100):0;
       const best=pData.reduce((m,p)=>Math.max(m,p.best3||0),0);
+      const f9vals=pData.map(p=>p.first9||null).filter(v=>v!==null);
+      const f9avg=f9vals.length?Math.round(f9vals.reduce((a,b)=>a+b,0)/f9vals.length*10)/10:null;
       await window.dartDB.updatePlayerStats(pid,{
         games:pGames.length, wins, avgPerTurn:avg,
-        checkoutPct:coPct, highscore:best
+        checkoutPct:coPct, highscore:best, first9avg:f9avg
       });
     }
     allPlayers=await window.dartDB.loadPlayers();
@@ -2657,6 +2660,8 @@ async function loadAndRenderStats(){
     const coHits=pData.reduce((s,p)=>s+(p.checkoutHit||0),0);
     const coPct=coAtts>0?Math.round(coHits/coAtts*100):0;
     const best=pData.reduce((m,p)=>Math.max(m,p.best3||0),0);
+    const f9vals=pData.map(p=>p.first9||null).filter(v=>v!==null);
+    const f9avg=f9vals.length?Math.round(f9vals.reduce((a,b)=>a+b,0)/f9vals.length*10)/10:null;
     const allScatter=pData.flatMap(p=>p.scatter||[]);
     const totalRounds=games.reduce((s,g)=>s+(g.rounds||0),0);
 
@@ -2667,6 +2672,7 @@ async function loadAndRenderStats(){
       <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${totalGames}</div></div>
       <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${wins}</div><div class="s-sub">${totalGames?Math.round(wins/totalGames*100):0}% Quote</div></div>
       <div class="stat-card"><div class="s-label">⌀ AUFNAHME</div><div class="s-value">${avg||"—"}</div></div>
+      <div class="stat-card"><div class="s-label">FIRST 9 Ø</div><div class="s-value">${f9avg||"—"}</div><div class="s-sub">erste 9 Darts</div></div>
       <div class="stat-card"><div class="s-label">HIGHSCORE</div><div class="s-value">${best||"—"}</div></div>
       <div class="stat-card"><div class="s-label">CHECKOUT-QUOTE</div><div class="s-value">${coPct}%</div><div class="s-sub">${coHits}/${coAtts}</div></div>
       <div class="stat-card"><div class="s-label">⌀ RUNDEN</div><div class="s-value">${totalGames?Math.round(totalRounds/totalGames):0}</div></div>
@@ -2676,22 +2682,26 @@ async function loadAndRenderStats(){
     if(!pid && allPlayers.length>1){
       html+=`<div class="stats-section-title">SPIELER VERGLEICH</div>
         <div class="history-list">
-        <div class="history-header"><span>SPIELER</span><span>SIEGE</span><span>⌀</span><span>BEST</span><span>CO%</span></div>`;
+        <div class="history-header" style="grid-template-columns:1fr 45px 45px 45px 45px 45px">
+          <span>SPIELER</span><span>SIEGE</span><span>⌀</span><span>F9</span><span>BEST</span><span>CO%</span>
+        </div>`;
       allPlayers.forEach(p=>{
         const pd=getPlayerData(p.id);
         const pw=games.filter(g=>g.winnerId===p.id).length;
         const pa=pd.map(x=>x.avg3||0).filter(v=>v>0);
         const pavg=pa.length?Math.round(pa.reduce((a,b)=>a+b,0)/pa.length*10)/10:0;
+        const pf9v=pd.map(x=>x.first9||null).filter(v=>v!==null);
+        const pf9=pf9v.length?Math.round(pf9v.reduce((a,b)=>a+b,0)/pf9v.length*10)/10:null;
         const pb=pd.reduce((m,x)=>Math.max(m,x.best3||0),0);
         const pca=pd.reduce((s,x)=>s+(x.checkoutAtt||0),0);
         const pch=pd.reduce((s,x)=>s+(x.checkoutHit||0),0);
         const pco=pca>0?Math.round(pch/pca*100):0;
         const col=playerColor(p.name);
-        html+=`<div class="history-row">
+        html+=`<div class="history-row" style="grid-template-columns:1fr 45px 45px 45px 45px 45px">
           <span style="display:flex;align-items:center;gap:6px">
             <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>
             <strong>${p.name}</strong></span>
-          <span>${pw}</span><span>${pavg||"—"}</span><span>${pb||"—"}</span><span>${pco}%</span>
+          <span>${pw}</span><span>${pavg||"—"}</span><span>${pf9||"—"}</span><span>${pb||"—"}</span><span>${pco}%</span>
         </div>`;
       });
       html+=`</div>`;
