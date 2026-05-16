@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit }
+import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateDoc, query, orderBy, limit, where }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { getAuth, signInAnonymously }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
@@ -24,9 +24,29 @@ const auth = getAuth(app);
 signInAnonymously(auth)
   .then(()=>{
     window.dartDB = {
+      // Games
       async saveGame(data){ return addDoc(collection(db,"dart_games"), data); },
       async loadStats(){
         const snap = await getDocs(query(collection(db,"dart_games"), orderBy("ts","desc"), limit(200)));
+        return snap.docs.map(d=>({id:d.id,...d.data()}));
+      },
+      // Players
+      async loadPlayers(){
+        const snap = await getDocs(query(collection(db,"dart_players"), orderBy("name")));
+        return snap.docs.map(d=>({id:d.id,...d.data()}));
+      },
+      async savePlayer(name){
+        return addDoc(collection(db,"dart_players"),{
+          name, createdAt:Date.now(),
+          stats:{games:0,wins:0,avgPerTurn:0,checkoutPct:0,highscore:0,totalLegsWon:0}
+        });
+      },
+      async updatePlayerStats(playerId, stats){
+        return updateDoc(doc(db,"dart_players",playerId), {stats});
+      },
+      async loadPlayerGames(playerId){
+        const snap = await getDocs(query(collection(db,"dart_games"),
+          where("playerIds","array-contains",playerId), orderBy("ts","desc"), limit(100)));
         return snap.docs.map(d=>({id:d.id,...d.data()}));
       }
     };
@@ -162,6 +182,24 @@ signInAnonymously(auth)
   .btn-toggle { background: #f0f0f0; color: #777; border: 1px solid #ddd; }
   .player-input { background: #f8f8f8; border: 1px solid #ddd; color: #111; }
 
+  /* ── Player management ── */
+  .player-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
+  .player-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    border-radius: 8px; border: 2px solid #eee; background: #fafafa; cursor: pointer; transition: all .15s; }
+  .player-item.selected { border-color: #e8c44a; background: #fffbea; }
+  .player-item .pi-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-family: 'Bebas Neue',sans-serif; font-size: 16px; color: #fff; flex-shrink: 0; }
+  .player-item .pi-name { font-weight: 600; font-size: 14px; flex: 1; }
+  .player-item .pi-stats { font-size: 11px; color: #aaa; }
+  .player-item .pi-order { font-family: 'Bebas Neue',sans-serif; font-size: 18px; color: #e8c44a;
+    width: 20px; text-align: center; }
+  .add-player-row { display: flex; gap: 8px; }
+  .add-player-input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+    font-family: 'DM Sans',sans-serif; font-size: 14px; outline: none; background: #f8f8f8; }
+  .btn-add-player { padding: 8px 14px; background: #1a1a1a; color: #e8c44a; border: none;
+    border-radius: 8px; font-family: 'Bebas Neue',sans-serif; font-size: 16px; cursor: pointer; }
+  .player-sel-hint { font-size: 11px; color: #aaa; text-align: center; margin-bottom: 6px; }
+
   /* ── Stats on setup page ── */
   .stats-section { width: 420px; max-width: 95vw; margin-top: 20px; }
   .stats-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: #1a1a1a; margin-bottom: 12px; text-align: center; }
@@ -205,21 +243,17 @@ signInAnonymously(auth)
       <button class="btn-toggle" data-value="Cricket">Cricket</button>
     </div>
 
-    <label class="field-label">SPIELERANZAHL</label>
-    <div class="btn-group" id="count-group">
-      <button class="btn-toggle" data-value="1">1</button>
-      <button class="btn-toggle active" data-value="2">2</button>
-      <button class="btn-toggle" data-value="3">3</button>
-      <button class="btn-toggle" data-value="4">4</button>
+    <label class="field-label">SPIELER AUSWÄHLEN</label>
+    <div class="player-sel-hint" id="sel-hint">Tippe Spieler an um sie auszuwählen (Reihenfolge = Startreihenfolge)</div>
+    <div class="player-list" id="player-list">
+      <div style="color:#aaa;font-size:12px;text-align:center;padding:12px">Lade Spieler…</div>
+    </div>
+    <div class="add-player-row">
+      <input class="add-player-input" id="new-player-input" placeholder="Neuer Spieler…" />
+      <button class="btn-add-player" id="btn-add-player">+ ADD</button>
     </div>
 
-    <label class="field-label">SPIELERNAMEN</label>
-    <div id="name-inputs">
-      <input class="player-input" value="Player 1" />
-      <input class="player-input" value="Player 2" />
-    </div>
-
-    <label class="field-label">ANZAHL LEGS (Best of)</label>
+    <label class="field-label" style="margin-top:16px">ANZAHL LEGS (Best of)</label>
     <div class="btn-group" id="legs-group">
       <button class="btn-toggle active" data-value="1">1</button>
       <button class="btn-toggle" data-value="3">3</button>
@@ -553,12 +587,15 @@ let x01={};
 let cr={};
 
 // ══════════════════════════════════════════════════════════════════
-// SETUP
+// SETUP — PLAYER MANAGEMENT
 // ══════════════════════════════════════════════════════════════════
 const modeGroup=document.getElementById("mode-group");
-const countGroup=document.getElementById("count-group");
 const legsGroup=document.getElementById("legs-group");
-let selectedMode="501", selectedCount=2, selectedLegs=1;
+let selectedMode="501", selectedLegs=1;
+let allPlayers=[];       // [{id, name, stats}] from Firebase
+let selectedPlayers=[];  // ordered list of selected player objects
+
+const AVATAR_COLORS=["#e53935","#1e88e5","#43a047","#fb8c00","#8e24aa","#00897b","#e91e63","#546e7a"];
 
 modeGroup.addEventListener("click",e=>{
   if(!e.target.dataset.value) return;
@@ -572,33 +609,95 @@ legsGroup.addEventListener("click",e=>{
   legsGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedLegs));
 });
 
-
-  if(!e.target.dataset.value) return;
-  selectedCount=+e.target.dataset.value;
-  countGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedCount));
-  rebuildNameInputs();
-});
-
-function rebuildNameInputs(){
-  const box=document.getElementById("name-inputs");
-  const existing=[...box.querySelectorAll("input")].map(i=>i.value);
-  box.innerHTML="";
-  for(let i=0;i<selectedCount;i++){
-    const inp=document.createElement("input");
-    inp.className="player-input";
-    inp.value=existing[i]||`Player ${i+1}`;
-    box.appendChild(inp);
-  }
+function playerColor(name){
+  let h=0; for(const c of name) h=(h*31+c.charCodeAt(0))%AVATAR_COLORS.length;
+  return AVATAR_COLORS[h];
 }
 
+function renderPlayerList(){
+  const list=document.getElementById("player-list");
+  if(!allPlayers.length){
+    list.innerHTML=`<div style="color:#aaa;font-size:12px;text-align:center;padding:12px">Noch keine Spieler — füge welche hinzu!</div>`;
+    return;
+  }
+  list.innerHTML="";
+  allPlayers.forEach(p=>{
+    const selIdx=selectedPlayers.findIndex(s=>s.id===p.id);
+    const selected=selIdx>=0;
+    const div=document.createElement("div");
+    div.className="player-item"+(selected?" selected":"");
+    const avg=p.stats?.avgPerTurn?.toFixed(1)||"0.0";
+    const co=p.stats?.checkoutPct?.toFixed(0)||"0";
+    const hi=p.stats?.highscore||0;
+    div.innerHTML=`
+      <div class="pi-avatar" style="background:${playerColor(p.name)}">${p.name[0].toUpperCase()}</div>
+      <div style="flex:1">
+        <div class="pi-name">${p.name}</div>
+        <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}</div>
+      </div>
+      <div class="pi-order">${selected?selIdx+1:""}</div>`;
+    div.addEventListener("click",()=>togglePlayer(p));
+    list.appendChild(div);
+  });
+  // update hint
+  document.getElementById("sel-hint").textContent=
+    selectedPlayers.length
+      ? `${selectedPlayers.length} Spieler gewählt: ${selectedPlayers.map(p=>p.name).join(", ")}`
+      : "Tippe Spieler an — Reihenfolge = Startreihenfolge";
+}
+
+function togglePlayer(p){
+  const idx=selectedPlayers.findIndex(s=>s.id===p.id);
+  if(idx>=0) selectedPlayers.splice(idx,1);
+  else selectedPlayers.push(p);
+  renderPlayerList();
+}
+
+async function loadPlayers(){
+  if(!window.dartDB) return;
+  try{
+    allPlayers=await window.dartDB.loadPlayers();
+    renderPlayerList();
+  }catch(e){ console.warn("loadPlayers failed",e); }
+}
+
+document.getElementById("btn-add-player").addEventListener("click", async ()=>{
+  const input=document.getElementById("new-player-input");
+  const name=input.value.trim();
+  if(!name) return;
+  if(allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){
+    alert("Spieler existiert bereits!"); return;
+  }
+  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  try{
+    await window.dartDB.savePlayer(name);
+    input.value="";
+    await loadPlayers();
+  }catch(e){ alert("Fehler: "+e.message); }
+});
+
+document.getElementById("new-player-input").addEventListener("keydown",e=>{
+  if(e.key==="Enter") document.getElementById("btn-add-player").click();
+});
+
 document.getElementById("btn-start").addEventListener("click",()=>{
-  const names=[...document.querySelectorAll(".player-input")].map(i=>i.value.trim()||`Player ${[...document.querySelectorAll(".player-input")].indexOf(i)+1}`);
-  cfg={mode:selectedMode, startScore:selectedMode==="301"?301:501, players:names,
-       totalLegs:selectedLegs, legsToWin:Math.ceil(selectedLegs/2),
-       legWins:names.map(()=>0), currentLeg:1};
+  if(selectedPlayers.length<1){ alert("Bitte mindestens 1 Spieler auswählen!"); return; }
+  cfg={
+    mode:selectedMode,
+    startScore:selectedMode==="301"?301:501,
+    players:selectedPlayers.map(p=>p.name),
+    playerIds:selectedPlayers.map(p=>p.id),
+    playerObjects:[...selectedPlayers],
+    totalLegs:selectedLegs,
+    legsToWin:Math.ceil(selectedLegs/2),
+    legWins:selectedPlayers.map(()=>0),
+    currentLeg:1
+  };
   if(cfg.mode==="Cricket") startCricket();
   else startX01();
 });
+
+window.addEventListener("dbReady", loadPlayers);
 
 // ══════════════════════════════════════════════════════════════════
 // SCREEN SWITCH
@@ -1124,24 +1223,51 @@ function saveGameToFirebase(winnerIdx){
       const allT  = x01.allThrows[i];
       const avg   = turns.length ? Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10 : 0;
       const best  = turns.length ? Math.max(...turns) : 0;
-      // Wurfstreuung: svgX/svgY per throw
       const scatter = allT.map(t=>({x:Math.round(t.svgX),y:Math.round(t.svgY),l:t.label}));
-      return {name, avg3: avg, best3: best,
-        checkoutAtt: x01.checkoutAttempts[i], checkoutHit: x01.checkoutHits[i],
-        scatter, winner: i===winnerIdx};
+      return {name, id:cfg.playerIds?.[i]||null, avg3:avg, best3:best,
+        checkoutAtt:x01.checkoutAttempts[i], checkoutHit:x01.checkoutHits[i],
+        scatter, winner:i===winnerIdx};
     } else {
-      return {name, points: cr.points[i], winner: i===winnerIdx, scatter:[]};
+      return {name, id:cfg.playerIds?.[i]||null, points:cr.points[i], winner:i===winnerIdx, scatter:[]};
     }
   });
-  const doc = {
+  const gameDoc = {
     ts: Date.now(),
     mode: cfg.mode,
     rounds: isX01 ? x01.round : cr.round,
     winner: cfg.players[winnerIdx],
+    winnerId: cfg.playerIds?.[winnerIdx]||null,
+    playerIds: cfg.playerIds||[],
     players,
     durationSec: isX01 ? Math.round((Date.now()-x01.startTime)/1000) : 0
   };
-  window.dartDB.saveGame(doc).catch(e=>console.warn("Firebase save failed:",e));
+  window.dartDB.saveGame(gameDoc)
+    .then(()=>updateAllPlayerStats())
+    .catch(e=>console.warn("Firebase save failed:",e));
+}
+
+async function updateAllPlayerStats(){
+  if(!window.dartDB||!cfg.playerIds?.length) return;
+  try{
+    const allGames=await window.dartDB.loadStats();
+    for(let i=0;i<cfg.players.length;i++){
+      const pid=cfg.playerIds[i]; if(!pid) continue;
+      const pGames=allGames.filter(g=>(g.playerIds||[]).includes(pid));
+      const pData=pGames.map(g=>(g.players||[]).find(p=>p.id===pid)).filter(Boolean);
+      const wins=pGames.filter(g=>g.winnerId===pid).length;
+      const avgs=pData.map(p=>p.avg3||0).filter(v=>v>0);
+      const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
+      const coAtts=pData.reduce((s,p)=>s+(p.checkoutAtt||0),0);
+      const coHits=pData.reduce((s,p)=>s+(p.checkoutHit||0),0);
+      const coPct=coAtts>0?Math.round(coHits/coAtts*100):0;
+      const best=pData.reduce((m,p)=>Math.max(m,p.best3||0),0);
+      await window.dartDB.updatePlayerStats(pid,{
+        games:pGames.length, wins, avgPerTurn:avg,
+        checkoutPct:coPct, highscore:best
+      });
+    }
+    allPlayers=await window.dartDB.loadPlayers();
+  }catch(e){ console.warn("updatePlayerStats failed",e); }
 }
 
 // ── Stats rendering ───────────────────────────────────────────────
