@@ -74,14 +74,42 @@ signInAnonymously(auth)
   .player-tab.active .tab-name { color: #e8c44a; }
   .player-tab .tab-score { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: #555; line-height: 1; }
   .player-tab.active .tab-score { color: #fff; }
+  .player-tab .tab-throws { display: flex; gap: 4px; justify-content: center; margin-top: 5px; min-height: 20px; flex-wrap: wrap; }
+  .tab-throw-chip { font-family: 'Bebas Neue', sans-serif; font-size: 13px; padding: 2px 6px; border-radius: 4px;
+    background: #ddd; color: #444; letter-spacing: 0.5px; }
+  .player-tab.active .tab-throw-chip { background: #333; color: #ccc; }
+  .tab-throw-chip.miss { background: #fcd; color: #c00; }
+  .player-tab.active .tab-throw-chip.miss { background: #3a1010; color: #ff6666; }
+  .tab-throw-chip.triple { background: #c8ecd4; color: #1a6b35; }
+  .player-tab.active .tab-throw-chip.triple { background: #1a3a1a; color: #6bba8a; }
+  .tab-throw-chip.double { background: #c8dff0; color: #1a4a7a; }
+  .player-tab.active .tab-throw-chip.double { background: #1a2a3a; color: #6aaada; }
 
   /* ── Game body ── */
   .game-body { display: flex; flex: 1; gap: 16px; padding: 10px 12px 12px; min-height: 0; align-items: flex-start; background: #f5f5f0; overflow: hidden; }
   .board-wrap { flex: 0 0 auto; width: min(75vh, 72vw); aspect-ratio: 1; position: relative; }
   #board-svg, #board-svg-cricket { width: 100%; height: 100%; touch-action: none; user-select: none; display: block; }
-  .side-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 140px; max-width: 220px; }
+  .side-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 140px; max-width: 320px; overflow-y: auto; }
   .panel-box { background: #fff; border-radius: 10px; padding: 12px; border: 1px solid #ddd; }
   .panel-label { font-size: 10px; color: #999; letter-spacing: 2px; margin-bottom: 8px; }
+
+  /* ── Turn history table ── */
+  .turn-table-wrap { background: #fff; border-radius: 10px; border: 1px solid #ddd; overflow: hidden; flex: 1; }
+  .turn-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .turn-table th { background: #f8f8f8; padding: 5px 6px; font-size: 9px; color: #999;
+    letter-spacing: 1px; font-weight: 500; border-bottom: 1px solid #eee; white-space: nowrap; }
+  .turn-table th.player-header { color: #1a1a1a; font-size: 10px; font-weight: 700; }
+  .turn-table td { padding: 4px 6px; border-bottom: 1px solid #f5f5f5; text-align: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #333; }
+  .turn-table td.turn-num { color: #bbb; font-size: 11px; font-family: 'DM Sans', sans-serif; text-align: left; padding-left: 8px; }
+  .turn-table td.turn-score { position: relative; }
+  .turn-table td.score-low { color: #e53935; }
+  .turn-table td.score-mid { color: #333; }
+  .turn-table td.score-high { color: #2e7d32; }
+  .turn-table td.score-great { color: #1565c0; font-size: 17px; }
+  .turn-table tr.current-turn td { background: #fffbea; }
+  .turn-table tr:last-child td { border-bottom: none; }
+  .turn-emoji { font-size: 11px; margin-left: 2px; }
   .throw-slots { display: flex; gap: 6px; }
   .throw-slot { flex: 1; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
     font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #ccc;
@@ -99,6 +127,9 @@ signInAnonymously(auth)
     font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; transition: all .2s; }
   .btn-next.ok { background: #2e7d32; color: #fff; }
   .btn-next.bust { background: #c62828; color: #fff; }
+  .btn-miss { width: 100%; padding: 10px; border: 2px dashed #ccc; border-radius: 10px; background: #fff;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; color: #aaa; transition: all .2s; }
+  .btn-miss:active { background: #fdecea; border-color: #e53935; color: #e53935; }
 
   /* ── Cricket scoreboard ── */
   .cricket-board { padding: 6px 14px; background: #fff; flex-shrink: 0; overflow-x: auto; border-bottom: 1px solid #ddd; }
@@ -188,6 +219,14 @@ signInAnonymously(auth)
       <input class="player-input" value="Player 2" />
     </div>
 
+    <label class="field-label">ANZAHL LEGS (Best of)</label>
+    <div class="btn-group" id="legs-group">
+      <button class="btn-toggle active" data-value="1">1</button>
+      <button class="btn-toggle" data-value="3">3</button>
+      <button class="btn-toggle" data-value="5">5</button>
+      <button class="btn-toggle" data-value="7">7</button>
+    </div>
+
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
   </div>
 
@@ -212,7 +251,7 @@ signInAnonymously(auth)
 
   <div class="game-body">
     <div class="board-wrap">
-      <svg id="board-svg" viewBox="0 0 470 470"></svg>
+      <svg id="board-svg" viewBox="0 0 530 530"></svg>
     </div>
     <div class="side-panel">
       <div class="panel-box">
@@ -235,6 +274,10 @@ signInAnonymously(auth)
       <button class="btn-next ok" id="btn-next" style="display:none">NÄCHSTER SPIELER</button>
       <div class="throw-sum" id="throw-sum" style="display:none"></div>
     </div>
+    <!-- Turn history table -->
+    <div class="turn-table-wrap">
+      <div id="turn-table-container"></div>
+    </div>
   </div>
 </div>
 
@@ -252,7 +295,7 @@ signInAnonymously(auth)
 
   <div class="game-body">
     <div class="board-wrap">
-      <svg id="board-svg-cricket" viewBox="0 0 470 470"></svg>
+      <svg id="board-svg-cricket" viewBox="0 0 530 530"></svg>
     </div>
     <div class="side-panel">
       <div class="panel-box">
@@ -282,6 +325,17 @@ signInAnonymously(auth)
   </div>
 </div>
 
+<!-- ═══════════════════════ LEG WINNER OVERLAY ═══════════════════════ -->
+<div class="winner-overlay" id="leg-overlay">
+  <div>
+    <div class="winner-label" id="leg-label">LEG 1 GEWONNEN</div>
+    <div class="winner-name" id="leg-winner-name"></div>
+    <div id="leg-score-display" style="color:#e8c44a;font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-top:8px"></div>
+    <div style="color:#555;font-size:13px;margin-top:6px" id="leg-to-win"></div>
+    <button class="btn-new-game" id="btn-next-leg" style="margin-top:24px">NÄCHSTES LEG ▶</button>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════════════════════
 // GEOMETRY
@@ -299,9 +353,10 @@ const R = {
   dblIn:   186,
   dblOut:  200,
   numR:    216,
-  board:   228
+  board:   228,
+  miss:    258   // clickable miss zone outer edge
 };
-const CX=235, CY=235;
+const CX=265, CY=265;
 const CRICKET_TARGETS = [20,19,18,17,16,15,25];
 
 function toRad(d){ return d*Math.PI/180; }
@@ -320,7 +375,8 @@ function hitFromXY(sx,sy){
   const dist=Math.sqrt(dx*dx+dy*dy);
   if(dist<=R.bull)   return {score:50, label:"Bull"};
   if(dist<=R.bull25) return {score:25, label:"Bull 25"};
-  if(dist>R.dblOut)  return null;
+  if(dist>R.miss)    return null; // completely outside
+  if(dist>R.dblOut)  return {score:0, label:"Miss", miss:true}; // surround = miss
   let angle=Math.atan2(dy,dx)*180/Math.PI+90+9;
   if(angle<0) angle+=360; if(angle>=360) angle-=360;
   const idx=Math.floor(angle/18);
@@ -339,7 +395,17 @@ function buildBoard(svgEl){
     for(const [k,v] of Object.entries(attrs)) e.setAttribute(k,v);
     return e;
   }
-  // Dark surround
+  // Miss zone (clickable surround outside double ring)
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.miss,fill:"#1a0a0a"}));
+  // Subtle dashed border showing miss zone
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.miss-1,fill:"none",
+    stroke:"#5a2020","stroke-width":"1.5","stroke-dasharray":"4 3"}));
+  // "MISS" label hint at bottom of miss zone
+  const missLabel=el("text",{x:CX,y:CY+R.miss-8,"text-anchor":"middle","dominant-baseline":"middle",
+    fill:"#5a2020","font-size":"9","font-family":"'DM Sans',sans-serif","letter-spacing":"3"});
+  missLabel.textContent="MISS ZONE";
+  svgEl.appendChild(missLabel);
+  // Dark surround (board itself on top of miss zone bg)
   svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.board,fill:"#1a1008"}));
   // 20 sectors
   for(let i=0;i<20;i++){
@@ -380,23 +446,46 @@ function buildBoard(svgEl){
   hitsG.id=svgEl.id+"-hits";
   svgEl.appendChild(hitsG);
   // Disabled overlay
-  const overlay=el("circle",{cx:CX,cy:CY,r:R.board,fill:"rgba(0,0,0,0)",id:svgEl.id+"-overlay"});
+  const overlay=el("circle",{cx:CX,cy:CY,r:R.miss,fill:"rgba(0,0,0,0)",id:svgEl.id+"-overlay"});
   svgEl.appendChild(overlay);
 }
 
-function addHitDot(svgEl,x,y){
+function addHitDot(svgEl, x, y, faded=false, isMiss=false){
   const ns="http://www.w3.org/2000/svg";
   const g=svgEl.querySelector("#"+svgEl.id+"-hits");
-  const outer=document.createElementNS(ns,"circle");
-  outer.setAttribute("cx",x); outer.setAttribute("cy",y); outer.setAttribute("r","7");
-  outer.setAttribute("fill","rgba(255,220,0,0.25)");
-  const mid=document.createElementNS(ns,"circle");
-  mid.setAttribute("cx",x); mid.setAttribute("cy",y); mid.setAttribute("r","4");
-  mid.setAttribute("fill","#ffdd00"); mid.setAttribute("opacity","0.9");
-  const inner=document.createElementNS(ns,"circle");
-  inner.setAttribute("cx",x); inner.setAttribute("cy",y); inner.setAttribute("r","1.5");
-  inner.setAttribute("fill","#fff");
-  g.appendChild(outer); g.appendChild(mid); g.appendChild(inner);
+  if(isMiss){
+    // Red cross/dot for miss
+    const op = faded ? 0.15 : 0.85;
+    const outer=document.createElementNS(ns,"circle");
+    outer.setAttribute("cx",x); outer.setAttribute("cy",y); outer.setAttribute("r","7");
+    outer.setAttribute("fill",`rgba(220,50,50,${faded?0.08:0.2})`);
+    const mid=document.createElementNS(ns,"circle");
+    mid.setAttribute("cx",x); mid.setAttribute("cy",y); mid.setAttribute("r","4");
+    mid.setAttribute("fill","#e53935"); mid.setAttribute("opacity",op);
+    const inner=document.createElementNS(ns,"circle");
+    inner.setAttribute("cx",x); inner.setAttribute("cy",y); inner.setAttribute("r","1.5");
+    inner.setAttribute("fill","#fff"); inner.setAttribute("opacity",faded?"0.2":"0.8");
+    g.appendChild(outer); g.appendChild(mid); g.appendChild(inner);
+  } else {
+    const op = faded ? 0.12 : 0.9;
+    const outer=document.createElementNS(ns,"circle");
+    outer.setAttribute("cx",x); outer.setAttribute("cy",y); outer.setAttribute("r","7");
+    outer.setAttribute("fill",`rgba(255,220,0,${faded?0.08:0.25})`);
+    const mid=document.createElementNS(ns,"circle");
+    mid.setAttribute("cx",x); mid.setAttribute("cy",y); mid.setAttribute("r","4");
+    mid.setAttribute("fill","#ffdd00"); mid.setAttribute("opacity",op);
+    const inner=document.createElementNS(ns,"circle");
+    inner.setAttribute("cx",x); inner.setAttribute("cy",y); inner.setAttribute("r","1.5");
+    inner.setAttribute("fill","#fff"); inner.setAttribute("opacity",faded?"0.2":"1");
+    g.appendChild(outer); g.appendChild(mid); g.appendChild(inner);
+  }
+}
+
+function redrawAllHits(svgEl, allThrows, currentThrows){
+  const g=svgEl.querySelector("#"+svgEl.id+"-hits");
+  if(g) g.innerHTML="";
+  allThrows.forEach(t=>{ if(t.svgX!=null) addHitDot(svgEl, t.svgX, t.svgY, true, t.miss||false); });
+  currentThrows.forEach(t=>{ if(t.svgX!=null) addHitDot(svgEl, t.svgX, t.svgY, false, t.miss||false); });
 }
 
 function clearHits(svgEl){
@@ -411,7 +500,7 @@ function disableBoard(svgEl,on){
 
 function svgCoords(svgEl,e){
   const rect=svgEl.getBoundingClientRect();
-  const scaleX=470/rect.width, scaleY=470/rect.height;
+  const scaleX=530/rect.width, scaleY=530/rect.height;
   const clientX=e.touches?e.touches[0].clientX:e.clientX;
   const clientY=e.touches?e.touches[0].clientY:e.clientY;
   return {x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY};
@@ -468,7 +557,8 @@ let cr={};
 // ══════════════════════════════════════════════════════════════════
 const modeGroup=document.getElementById("mode-group");
 const countGroup=document.getElementById("count-group");
-let selectedMode="501", selectedCount=2;
+const legsGroup=document.getElementById("legs-group");
+let selectedMode="501", selectedCount=2, selectedLegs=1;
 
 modeGroup.addEventListener("click",e=>{
   if(!e.target.dataset.value) return;
@@ -476,7 +566,13 @@ modeGroup.addEventListener("click",e=>{
   modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
 });
 
-countGroup.addEventListener("click",e=>{
+legsGroup.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedLegs=+e.target.dataset.value;
+  legsGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedLegs));
+});
+
+
   if(!e.target.dataset.value) return;
   selectedCount=+e.target.dataset.value;
   countGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedCount));
@@ -497,7 +593,9 @@ function rebuildNameInputs(){
 
 document.getElementById("btn-start").addEventListener("click",()=>{
   const names=[...document.querySelectorAll(".player-input")].map(i=>i.value.trim()||`Player ${[...document.querySelectorAll(".player-input")].indexOf(i)+1}`);
-  cfg={mode:selectedMode, startScore:selectedMode==="301"?301:501, players:names};
+  cfg={mode:selectedMode, startScore:selectedMode==="301"?301:501, players:names,
+       totalLegs:selectedLegs, legsToWin:Math.ceil(selectedLegs/2),
+       legWins:names.map(()=>0), currentLeg:1};
   if(cfg.mode==="Cricket") startCricket();
   else startX01();
 });
@@ -523,10 +621,10 @@ document.getElementById("btn-new-game").addEventListener("click",showSetup);
 const boardSVG=document.getElementById("board-svg");
 buildBoard(boardSVG);
 
-function startX01(){
+function startX01(starter=0){
   x01={
     scores: cfg.players.map(()=>cfg.startScore),
-    current: 0,
+    current: starter,
     round: 1,
     throws: [],
     hitDots: cfg.players.map(()=>[]),
@@ -535,6 +633,8 @@ function startX01(){
     history: [],
     // stats tracking
     allThrows: cfg.players.map(()=>[]),  // all throw objects per player
+    historicThrows: cfg.players.map(()=>[]),  // past throws per player for persistent display
+    lastTurnThrows: cfg.players.map(()=>[]),  // last completed turn per player
     turnScores: cfg.players.map(()=>[], ),// sum per turn per player
     checkoutAttempts: cfg.players.map(()=>0),
     checkoutHits: cfg.players.map(()=>0),
@@ -554,7 +654,27 @@ function renderX01Tabs(){
   cfg.players.forEach((name,i)=>{
     const div=document.createElement("div");
     div.className="player-tab"+(i===x01.current?" active":"");
-    div.innerHTML=`<div class="tab-name">${name}</div><div class="tab-score">${x01.scores[i]}</div>`;
+
+    // Active player: show live current throws; others: show their last completed turn
+    const throws = i===x01.current
+      ? x01.throws
+      : (x01.lastTurnThrows && x01.lastTurnThrows[i]) ? x01.lastTurnThrows[i] : [];
+    const chipsHtml = throws.length ? throws.map(t=>{
+      let cls="tab-throw-chip";
+      if(t.label==="Miss") cls+=" miss";
+      else if(t.label&&t.label.startsWith("T")) cls+=" triple";
+      else if(t.label&&t.label.startsWith("D")) cls+=" double";
+      return `<span class="${cls}">${t.label}</span>`;
+    }).join("") : "";
+
+    const legBadge = cfg.totalLegs>1
+      ? `<div style="font-size:10px;color:${i===x01.current?'#e8c44a':'#aaa'};margin-top:2px">${'●'.repeat(cfg.legWins[i])}${'○'.repeat(cfg.legsToWin-cfg.legWins[i])}</div>`
+      : '';
+    div.innerHTML=`
+      <div class="tab-name">${name}</div>
+      <div class="tab-score">${x01.scores[i]}</div>
+      ${legBadge}
+      <div class="tab-throws">${chipsHtml}</div>`;
     tabs.appendChild(div);
   });
 }
@@ -568,7 +688,7 @@ function renderX01(){
     const slot=document.getElementById(`slot-${i}`);
     const t=x01.throws[i];
     slot.textContent=t?t.label:"—";
-    slot.className="throw-slot"+(t?" hit":"")+(x01.bust&&i===x01.throws.length-1?" bust":"");
+    slot.className="throw-slot"+(t?" hit":"")+(x01.bust&&i===x01.throws.length-1?" bust":"")+(t&&t.label==="Miss"?" bust":"");
   }
 
   // bust
@@ -601,10 +721,65 @@ function renderX01(){
   } else { sumEl.style.display="none"; }
 
   // title
-  document.getElementById("x01-title").textContent=`${cfg.mode} · Runde ${x01.round}`;
+  const legInfo = cfg.totalLegs>1 ? ` · Leg ${cfg.currentLeg}/${cfg.totalLegs}` : '';
+  document.getElementById("x01-title").textContent=`${cfg.mode}${legInfo} · Runde ${x01.round}`;
 
   renderX01Tabs();
+  renderTurnTable();
   disableBoard(boardSVG,!!x01.winner||x01.bust);
+}
+
+function scoreEmoji(s){
+  if(s>=100) return '<span class="turn-emoji">😃</span>';
+  if(s>=60)  return '<span class="turn-emoji">👍</span>';
+  if(s<10)   return '<span class="turn-emoji">😢</span>';
+  return '';
+}
+function scoreCls(s){
+  if(s>=100) return 'score-great';
+  if(s>=60)  return 'score-high';
+  if(s<10)   return 'score-low';
+  return 'score-mid';
+}
+function renderTurnTable(){
+  const box=document.getElementById("turn-table-container");
+  if(!box) return;
+  const starts=cfg.players.map(()=>cfg.startScore);
+  const maxRounds=Math.max(...x01.turnScores.map(a=>a.length),1);
+
+  let html=`<table class="turn-table"><thead><tr><th>WURF</th>`;
+  cfg.players.forEach(p=>{ html+=`<th class="player-header" colspan="2">${p}</th>`; });
+  html+=`</tr><tr><th></th>`;
+  cfg.players.forEach(()=>{ html+=`<th>Aufnahme</th><th>Rest</th>`; });
+  html+=`</tr></thead><tbody>`;
+
+  for(let r=0;r<maxRounds;r++){
+    // figure out if this is the last active row
+    const isLast = r===maxRounds-1;
+    html+=`<tr${isLast?' class="current-turn"':''}>`;
+    html+=`<td class="turn-num">${r+1}</td>`;
+    cfg.players.forEach((_,pi)=>{
+      const ts=x01.turnScores[pi];
+      if(r<ts.length){
+        const sc=ts[r];
+        starts[pi]-=sc;
+        html+=`<td class="turn-score ${scoreCls(sc)}">${sc}${scoreEmoji(sc)}</td>`;
+        html+=`<td style="color:#bbb;font-size:13px;font-family:'Bebas Neue',sans-serif">${starts[pi]}</td>`;
+      } else if(r===ts.length && pi===x01.current && x01.throws.length>0){
+        const live=x01.throws.reduce((s,t)=>s+t.score,0);
+        html+=`<td class="turn-score" style="color:#e8a800">${live}</td>`;
+        html+=`<td style="color:#bbb;font-size:13px;font-family:'Bebas Neue',sans-serif">${starts[pi]-live}</td>`;
+      } else {
+        html+=`<td style="color:#ddd;font-size:13px">—</td><td style="color:#ddd;font-size:13px">—</td>`;
+      }
+    });
+    html+=`</tr>`;
+  }
+  html+=`</tbody></table>`;
+  box.innerHTML=html;
+  // Auto-scroll to bottom so latest turn is always visible
+  const wrap=box.parentElement;
+  if(wrap) wrap.scrollTop=wrap.scrollHeight;
 }
 
 boardSVG.addEventListener("click",handleX01Click);
@@ -617,69 +792,109 @@ function handleX01Click(e){
   const hit=hitFromXY(x,y);
   if(!hit) return;
 
+  // Save full state before this throw for single-throw undo
+  x01.history.push({
+    scores:[...x01.scores],
+    current:x01.current,
+    round:x01.round,
+    throws:[...x01.throws],
+    bust:x01.bust,
+    historicLens:x01.historicThrows.map(a=>a.length),
+    lastTurnThrows:x01.lastTurnThrows.map(a=>[...a]),
+    turnScores:x01.turnScores.map(a=>[...a])
+  });
+
+  const throwObj={...hit,svgX:x,svgY:y};
+  x01.throws.push(throwObj);
+  x01.allThrows[x01.current].push(throwObj);
+  redrawAllHits(boardSVG, x01.historicThrows[x01.current], x01.throws);
+
+  if(hit.miss){
+    renderX01();
+    if(x01.throws.length===3) setTimeout(advanceX01, 350);
+    return;
+  }
+
   const spent=x01.throws.reduce((s,t)=>s+t.score,0);
-  const remaining=x01.scores[x01.current]-spent;
-  const tentative=remaining-hit.score;
+  const prevSpent=spent-hit.score;
+  const prevRemaining=x01.scores[x01.current]-prevSpent;
+  const tent=prevRemaining-hit.score;
 
-  x01.throws.push({...hit,svgX:x,svgY:y});
-  x01.allThrows[x01.current].push({...hit,svgX:x,svgY:y});
-  addHitDot(boardSVG,x,y);
+  if(prevRemaining<=170&&prevRemaining>1) x01.checkoutAttempts[x01.current]++;
 
-  // Track checkout attempt (score <= 170 and needs double)
-  if(remaining <= 170 && remaining > 1) x01.checkoutAttempts[x01.current]++;
-
-  if(tentative<0||tentative===1){
+  if(tent<0||tent===1){
     x01.bust=true;
     renderX01();
     return;
   }
-  if(tentative===0){
+  if(tent===0){
     if(!hit.label.startsWith("D")&&hit.label!=="Bull"){
       x01.bust=true;
       renderX01();
       return;
     }
-    // WIN
     x01.scores[x01.current]=0;
     x01.winner=x01.current;
     x01.checkoutHits[x01.current]++;
     x01.turnScores[x01.current].push(x01.throws.reduce((s,t)=>s+t.score,0));
     saveGameToFirebase(x01.current);
-    showWinner(cfg.players[x01.current], x01.round);
+    handleLegWin(x01.current);
     renderX01();
     return;
   }
 
   renderX01();
-
-  if(x01.throws.length===3){
-    setTimeout(advanceX01, 350);
-  }
+  if(x01.throws.length===3) setTimeout(advanceX01, 350);
 }
 
 function advanceX01(){
   const spent=x01.throws.reduce((s,t)=>s+t.score,0);
-  x01.history.push({scores:[...x01.scores],current:x01.current,round:x01.round,throwCount:x01.throws.length});
-  x01.turnScores[x01.current].push(spent);
-  x01.scores[x01.current]-=spent;
+  const pi=x01.current;
+  // Save state before advancing (so undo can come back to end of this turn)
+  x01.history.push({
+    scores:[...x01.scores],
+    current:pi,
+    round:x01.round,
+    throws:[...x01.throws],
+    bust:false,
+    historicLens:x01.historicThrows.map(a=>a.length),
+    lastTurnThrows:x01.lastTurnThrows.map(a=>[...a]),
+    turnScores:x01.turnScores.map(a=>[...a])
+  });
+  x01.turnScores[pi].push(spent);
+  x01.scores[pi]-=spent;
+  x01.lastTurnThrows[pi]=[...x01.throws];
+  x01.historicThrows[pi].push(...x01.throws.filter(t=>t.svgX!=null));
   x01.throws=[];
   x01.bust=false;
-  const next=(x01.current+1)%cfg.players.length;
+  const next=(pi+1)%cfg.players.length;
   x01.current=next;
   if(next===0) x01.round++;
-  clearHits(boardSVG);
+  redrawAllHits(boardSVG, x01.historicThrows[next], []);
   renderX01();
 }
 
 document.getElementById("btn-next").addEventListener("click",()=>{
   if(x01.bust){
-    x01.history.push({scores:[...x01.scores],current:x01.current,round:x01.round,throwCount:x01.throws.length});
+    const pi=x01.current;
+    x01.history.push({
+      scores:[...x01.scores],
+      current:pi,
+      round:x01.round,
+      throws:[...x01.throws],
+      bust:true,
+      historicLens:x01.historicThrows.map(a=>a.length),
+      lastTurnThrows:x01.lastTurnThrows.map(a=>[...a]),
+      turnScores:x01.turnScores.map(a=>[...a])
+    });
+    x01.lastTurnThrows[pi]=[...x01.throws];
+    x01.historicThrows[pi].push(...x01.throws.filter(t=>t.svgX!=null));
     x01.throws=[];
     x01.bust=false;
-    const next=(x01.current+1)%cfg.players.length;
+    const next=(pi+1)%cfg.players.length;
     x01.current=next;
     if(next===0) x01.round++;
-    clearHits(boardSVG);
+    redrawAllHits(boardSVG, x01.historicThrows[next], []);
     renderX01();
   } else {
     advanceX01();
@@ -692,11 +907,14 @@ document.getElementById("x01-undo").addEventListener("click",()=>{
   x01.scores=last.scores;
   x01.current=last.current;
   x01.round=last.round;
-  x01.throws=[];
-  x01.bust=false;
+  x01.throws=last.throws;
+  x01.bust=last.bust;
   x01.winner=null;
+  x01.historicThrows=x01.historicThrows.map((a,i)=>a.slice(0,last.historicLens[i]||0));
+  x01.lastTurnThrows=last.lastTurnThrows;
+  x01.turnScores=last.turnScores;
   document.getElementById("winner-overlay").classList.remove("visible");
-  clearHits(boardSVG);
+  redrawAllHits(boardSVG, x01.historicThrows[x01.current], x01.throws);
   renderX01();
 });
 
@@ -715,6 +933,7 @@ function startCricket(){
     current: 0,
     round: 1,
     throws: [],
+    historicThrows: cfg.players.map(()=>[]),
     winner: null,
     history: []
   };
@@ -786,12 +1005,13 @@ function handleCricketClick(e){
   const hit=hitFromXY(x,y);
   if(!hit) return;
 
-  addHitDot(boardSVGcr,x,y);
+  const throwObj={...hit,svgX:x,svgY:y};
+  redrawAllHits(boardSVGcr, cr.historicThrows[cr.current], cr.throws);
   const cs=getCricketHit(hit.label);
   const isCricketTarget=cs&&CRICKET_TARGETS.includes(cs.num);
 
-  if(!isCricketTarget){
-    cr.throws.push({...hit,svgX:x,svgY:y,miss:true});
+  if(hit.miss||!isCricketTarget){
+    cr.throws.push({...throwObj,miss:true});
     renderCricket();
     if(cr.throws.length===3) setTimeout(advanceCricket,350);
     return;
@@ -808,8 +1028,7 @@ function handleCricketClick(e){
     if(!allClosed) cr.points[cr.current]+=overflow*num;
   }
 
-  cr.throws.push({...hit,svgX:x,svgY:y});
-
+  cr.throws.push(throwObj);
   // check win: all targets closed and points >= all others
   const allClosed=CRICKET_TARGETS.every(t=>cr.marks[cr.current][t]>=3);
   const maxPts=Math.max(...cr.points);
@@ -824,12 +1043,14 @@ function handleCricketClick(e){
 }
 
 function advanceCricket(){
-  cr.history.push({marks:cr.marks.map(m=>({...m})),points:[...cr.points],current:cr.current,round:cr.round,throwCount:cr.throws.length});
+  const pi=cr.current;
+  cr.history.push({marks:cr.marks.map(m=>({...m})),points:[...cr.points],current:pi,round:cr.round,throwCount:cr.throws.length,historicLens:cr.historicThrows.map(a=>a.length)});
+  cr.historicThrows[pi].push(...cr.throws.filter(t=>t.svgX!=null));
   cr.throws=[];
-  const next=(cr.current+1)%cfg.players.length;
+  const next=(pi+1)%cfg.players.length;
   cr.current=next;
   if(next===0) cr.round++;
-  clearHits(boardSVGcr);
+  redrawAllHits(boardSVGcr, cr.historicThrows[next], []);
   renderCricket();
 }
 
@@ -844,8 +1065,9 @@ document.getElementById("cr-undo").addEventListener("click",()=>{
   cr.round=last.round;
   cr.throws=[];
   cr.winner=null;
+  if(last.historicLens) cr.historicThrows=cr.historicThrows.map((a,i)=>a.slice(0,last.historicLens[i]||0));
   document.getElementById("winner-overlay").classList.remove("visible");
-  clearHits(boardSVGcr);
+  redrawAllHits(boardSVGcr, cr.historicThrows[cr.current], []);
   renderCricket();
 });
 
@@ -854,9 +1076,42 @@ document.getElementById("cr-back").addEventListener("click",showSetup);
 // ══════════════════════════════════════════════════════════════════
 // WINNER + FIREBASE SAVE
 // ══════════════════════════════════════════════════════════════════
+function handleLegWin(winnerIdx){
+  cfg.legWins[winnerIdx]++;
+  const name=cfg.players[winnerIdx];
+
+  // Check match winner
+  if(cfg.legWins[winnerIdx]>=cfg.legsToWin){
+    showWinner(name, x01.round);
+    return;
+  }
+
+  // Show leg winner overlay
+  const legNum=cfg.currentLeg;
+  document.getElementById("leg-label").textContent=`LEG ${legNum} GEWONNEN!`;
+  document.getElementById("leg-winner-name").textContent=name;
+  const scoreHtml=cfg.players.map((p,i)=>
+    `${p}: <strong>${cfg.legWins[i]}</strong>`).join(" &nbsp;|&nbsp; ");
+  document.getElementById("leg-score-display").innerHTML=scoreHtml;
+  document.getElementById("leg-to-win").textContent=
+    `Noch ${cfg.legsToWin-cfg.legWins[winnerIdx]} Leg(s) zum Sieg`;
+  document.getElementById("leg-overlay").classList.add("visible");
+}
+
+document.getElementById("btn-next-leg").addEventListener("click",()=>{
+  document.getElementById("leg-overlay").classList.remove("visible");
+  cfg.currentLeg++;
+  // Leg winner starts next leg (standard dart rule)
+  const legStarter = x01.winner;
+  startX01(legStarter);
+});
+
 function showWinner(name,round){
   document.getElementById("winner-name").textContent=name;
-  document.getElementById("winner-round").textContent=`Runde ${round}`;
+  const legInfo = cfg.totalLegs>1
+    ? `${cfg.legWins.map((w,i)=>cfg.players[i]+": "+w+" Legs").join(" | ")}`
+    : `Runde ${round}`;
+  document.getElementById("winner-round").textContent=legInfo;
   document.getElementById("winner-overlay").classList.add("visible");
 }
 
