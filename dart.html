@@ -210,7 +210,7 @@ signInAnonymously(auth)
     font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; }
 
   /* ── Setup overrides for light bg ── */
-  #setup { background: #f5f5f0; overflow-y: auto; }
+  #setup { background: #f5f5f0; overflow: hidden; display: flex; flex-direction: column; }
   .setup-card { background: #fff; border: 1px solid #ddd; }
   .field-label { color: #666; }
   .btn-toggle { background: #f0f0f0; color: #777; border: 1px solid #ddd; }
@@ -297,7 +297,7 @@ signInAnonymously(auth)
   <div class="home-tabs">
     <button class="home-tab active" data-tab="play">🎯 Spiel</button>
     <button class="home-tab" data-tab="stats">📊 Statistiken</button>
-    <button class="home-tab" data-tab="studio">🎙️ Studio</button>
+    <button class="home-tab" data-tab="studio" style="display:none">🎙️ Studio</button>
   </div>
 
   <!-- TAB: PLAY -->
