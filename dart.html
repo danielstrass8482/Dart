@@ -210,7 +210,9 @@ signInAnonymously(auth)
     font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; }
 
   /* ── Setup overrides for light bg ── */
-  #setup { background: #f5f5f0; overflow: hidden; display: flex; flex-direction: column; }
+  #setup { background: #f5f5f0; overflow: hidden; }
+  #tab-play { overflow-y: auto; flex: 1; }
+  #tab-stats { overflow-y: auto; flex: 1; }
   .setup-card { background: #fff; border: 1px solid #ddd; }
   .field-label { color: #666; }
   .btn-toggle { background: #f0f0f0; color: #777; border: 1px solid #ddd; }
@@ -238,12 +240,13 @@ signInAnonymously(auth)
   .player-sel-hint { font-size: 11px; color: #aaa; text-align: center; margin-bottom: 6px; }
 
   /* ── Home tabs ── */
-  .home-tabs { display: flex; background: #1a1a1a; flex-shrink: 0; }
-  .home-tab { flex: 1; padding: 12px; border: none; background: none; color: #666;
-    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer; transition: all .2s; }
+  .home-tabs { display: flex; background: #1a1a1a; flex-shrink: 0; width: 100%; }
+  .home-tab { flex: 1; padding: 12px 0; border: none; background: none; color: #666;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer;
+    transition: all .2s; white-space: nowrap; }
   .home-tab.active { color: #e8c44a; border-bottom: 2px solid #e8c44a; }
-  .home-tab-content { display: none; }
-  .home-tab-content.active { display: block; }
+  .home-tab-content { display: none; flex: 1; min-height: 0; }
+  .home-tab-content.active { display: flex; flex-direction: column; }
 
   /* ── Stats controls ── */
   .stats-player-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -284,9 +287,11 @@ signInAnonymously(auth)
     border-radius: 6px; font-size: 12px; margin: 0 auto 16px; display: block; }
   .chart-kpi-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .chart-kpi-btn { padding: 5px 10px; border-radius: 6px; border: 2px solid #ddd;
-    background: #fff; cursor: pointer; font-size: 12px; color: #666; transition: all .15s; }
+    background: #fff; cursor: pointer; font-size: 12px; color: #666; transition: background .15s, color .15s;
+    font-family: 'DM Sans', sans-serif; line-height: 1.2; }
   .chart-kpi-btn.active { color: #fff; border-color: transparent; }
-  .chart-wrap { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 14px; }
+  .chart-wrap { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 14px; overflow: hidden; }
+  #trend-canvas { display: block; width: 100%; height: 180px; }
 </style>
 </head>
 <body>
@@ -302,7 +307,7 @@ signInAnonymously(auth)
 
   <!-- TAB: PLAY -->
   <div class="home-tab-content active" id="tab-play">
-  <div style="display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto;height:calc(100vh - 48px);">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto;flex:1">
   <div class="setup-card">
     <div class="logo">
       <div class="logo-title">DART PRO</div>
@@ -413,7 +418,7 @@ signInAnonymously(auth)
 
   </div>
   </div>
-  <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
+  <div style="flex:1;overflow-y:auto;padding:16px;background:#f5f5f0">
 
     <!-- Player selector -->
     <div class="stats-player-bar" id="stats-player-bar"></div>
@@ -3128,111 +3133,103 @@ async function loadAndRenderStats(){
 
       let activeKPIs=["avg"];
 
-      function drawChart(){
+      setTimeout(()=>{
         const canvas=document.getElementById("trend-canvas");
         if(!canvas) return;
-        const W=canvas.offsetWidth||600;
-        canvas.width=W*2; canvas.height=360;
-        canvas.style.height="180px";
-        const ctx=canvas.getContext("2d");
-        ctx.scale(2,2);
-        const w=W, h=180, pad={t:20,r:20,b:30,l:40};
-        ctx.clearRect(0,0,w,h);
 
-        // Background
-        ctx.fillStyle="#fff";
-        ctx.fillRect(0,0,w,h);
+        function drawChart(){
+          const W=canvas.parentElement.clientWidth-24||500;
+          canvas.width=W*2; canvas.height=360;
+          canvas.style.width="100%"; canvas.style.height="180px";
+          const ctx=canvas.getContext("2d");
+          ctx.scale(2,2);
+          const w=W, h=180, pad={t:24,r:48,b:28,l:38};
+          ctx.clearRect(0,0,w,h);
+          ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
 
-        // Grid lines
-        ctx.strokeStyle="#f0f0f0"; ctx.lineWidth=1;
-        for(let i=0;i<=4;i++){
-          const y=pad.t+(h-pad.t-pad.b)*i/4;
-          ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
-        }
-
-        // X labels (dates)
-        const step=Math.max(1,Math.floor(chartGames.length/6));
-        ctx.fillStyle="#bbb"; ctx.font="10px DM Sans,sans-serif"; ctx.textAlign="center";
-        chartGames.forEach((g,i)=>{
-          if(i%step!==0&&i!==chartGames.length-1) return;
-          const x=pad.l+(w-pad.l-pad.r)*i/(chartGames.length-1);
-          const d=new Date(g.ts);
-          ctx.fillText(`${d.getDate()}.${d.getMonth()+1}`,x,h-8);
-        });
-
-        // Draw each active KPI
-        activeKPIs.forEach(kpiKey=>{
-          const kpi=KPI_DEFS[kpiKey];
-          const vals=chartGames.map(g=>kpi.extract(g,pid));
-          const validVals=vals.filter(v=>v!==null);
-          if(!validVals.length) return;
-          const minV=Math.min(...validVals)*0.9;
-          const maxV=Math.max(...validVals)*1.1||1;
-
-          const toX=i=>pad.l+(w-pad.l-pad.r)*i/(chartGames.length-1);
-          const toY=v=>pad.t+(h-pad.t-pad.b)*(1-(v-minV)/(maxV-minV));
-
-          // Line
-          ctx.strokeStyle=kpi.color; ctx.lineWidth=2.5;
-          ctx.beginPath();
-          let first=true;
-          vals.forEach((v,i)=>{
-            if(v===null) return;
-            if(first){ ctx.moveTo(toX(i),toY(v)); first=false; }
-            else ctx.lineTo(toX(i),toY(v));
-          });
-          ctx.stroke();
-
-          // Dots
-          ctx.fillStyle=kpi.color;
-          vals.forEach((v,i)=>{
-            if(v===null) return;
-            ctx.beginPath();
-            ctx.arc(toX(i),toY(v),3,0,Math.PI*2);
-            ctx.fill();
-          });
-
-          // Y label (latest value)
-          const lastVal=vals.filter(v=>v!==null).pop();
-          if(lastVal!==null){
-            ctx.fillStyle=kpi.color;
-            ctx.font="bold 11px DM Sans,sans-serif";
-            ctx.textAlign="left";
-            ctx.fillText(lastVal,w-pad.r+2,toY(lastVal)+4);
+          // Grid
+          ctx.strokeStyle="#f0f0f0"; ctx.lineWidth=1;
+          for(let i=0;i<=4;i++){
+            const y=pad.t+(h-pad.t-pad.b)*i/4;
+            ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
           }
-        });
 
-        // Y axis label
-        ctx.fillStyle="#bbb"; ctx.font="10px DM Sans,sans-serif"; ctx.textAlign="right";
-        ctx.fillText(activeKPIs.map(k=>KPI_DEFS[k]?.label).join(" / "),pad.l-2,pad.t-6);
-      }
+          // X labels
+          const step=Math.max(1,Math.floor(chartGames.length/6));
+          ctx.fillStyle="#bbb"; ctx.font="9px 'DM Sans',sans-serif"; ctx.textAlign="center";
+          chartGames.forEach((g,i)=>{
+            if(i%step!==0&&i!==chartGames.length-1) return;
+            const x=pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1);
+            const d=new Date(g.ts);
+            ctx.fillText(`${d.getDate()}.${d.getMonth()+1}`,x,h-6);
+          });
 
-      setTimeout(()=>{
-        drawChart();
-        // KPI button toggle
-        const bar=document.getElementById("chart-kpi-bar");
-        if(bar){
-          const COLORS=["#1e88e5","#e53935","#43a047","#fb8c00","#8e24aa"];
-          bar.querySelectorAll(".chart-kpi-btn").forEach(btn=>{
-            btn.addEventListener("click",()=>{
-              const kpi=btn.dataset.kpi;
-              if(activeKPIs.includes(kpi)){
-                if(activeKPIs.length===1) return; // keep at least 1
-                activeKPIs=activeKPIs.filter(k=>k!==kpi);
-                btn.classList.remove("active");
-                btn.style.background=""; btn.style.borderColor="#ddd"; btn.style.color="#666";
-              } else {
-                if(activeKPIs.length>=3) return; // max 3
-                activeKPIs.push(kpi);
-                btn.classList.add("active");
-                const col=COLORS[["avg","f9","best","co","rounds"].indexOf(kpi)];
-                btn.style.background=col; btn.style.borderColor=col; btn.style.color="#fff";
-              }
-              drawChart();
+          // Each KPI line
+          activeKPIs.forEach((kpiKey,ki)=>{
+            const kpi=KPI_DEFS[kpiKey];
+            const vals=chartGames.map(g=>kpi.extract(g,pid));
+            const validVals=vals.filter(v=>v!==null);
+            if(!validVals.length) return;
+            const minV=Math.min(...validVals);
+            const maxV=Math.max(...validVals);
+            const range=maxV-minV||1;
+            const toX=i=>pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1);
+            const toY=v=>pad.t+(h-pad.t-pad.b)*(1-(v-minV)/range);
+
+            ctx.strokeStyle=kpi.color; ctx.lineWidth=2.5;
+            ctx.beginPath();
+            let first=true;
+            vals.forEach((v,i)=>{
+              if(v===null) return;
+              first?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v));
+              first=false;
             });
+            ctx.stroke();
+
+            // Dots
+            ctx.fillStyle=kpi.color;
+            vals.forEach((v,i)=>{
+              if(v===null) return;
+              ctx.beginPath(); ctx.arc(toX(i),toY(v),3,0,Math.PI*2); ctx.fill();
+            });
+
+            // Latest value label on right
+            const lastV=validVals[validVals.length-1];
+            const lastIdx=vals.lastIndexOf(lastV);
+            ctx.fillStyle=kpi.color;
+            ctx.font=`bold 10px 'DM Sans',sans-serif`;
+            ctx.textAlign="left";
+            ctx.fillText(lastV, toX(lastIdx)+5, toY(lastV)+4+(ki*12));
           });
         }
-      },50);
+
+        drawChart();
+
+        // KPI toggle buttons
+        const COLORS=["#1e88e5","#e53935","#43a047","#fb8c00","#8e24aa"];
+        const kpiKeys=["avg","f9","best","co","rounds"];
+        document.querySelectorAll(".chart-kpi-btn").forEach(btn=>{
+          btn.addEventListener("click",()=>{
+            const kpi=btn.dataset.kpi;
+            if(activeKPIs.includes(kpi)){
+              if(activeKPIs.length===1) return;
+              activeKPIs=activeKPIs.filter(k=>k!==kpi);
+              btn.classList.remove("active");
+              btn.style.background=""; btn.style.color="#666"; btn.style.borderColor="#ddd";
+            } else {
+              if(activeKPIs.length>=3) return;
+              activeKPIs.push(kpi);
+              btn.classList.add("active");
+              const col=COLORS[kpiKeys.indexOf(kpi)];
+              btn.style.background=col; btn.style.color="#fff"; btn.style.borderColor=col;
+            }
+            drawChart();
+          });
+        });
+
+        // Redraw on resize
+        window.addEventListener("resize",drawChart,{passive:true});
+      },100);
     }
 
   }catch(e){
