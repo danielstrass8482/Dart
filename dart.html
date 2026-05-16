@@ -344,7 +344,15 @@ signInAnonymously(auth)
       <button class="btn-add-player" id="btn-add-player">+ ADD</button>
     </div>
 
-    <label class="field-label" style="margin-top:16px">ANZAHL LEGS (Best of)</label>
+    <label class="field-label" style="margin-top:16px">SETS (Best of)</label>
+    <div class="btn-group" id="sets-group">
+      <button class="btn-toggle active" data-value="1">1 Set</button>
+      <button class="btn-toggle" data-value="3">3 Sets</button>
+      <button class="btn-toggle" data-value="5">5 Sets</button>
+      <button class="btn-toggle" data-value="7">7 Sets</button>
+    </div>
+
+    <label class="field-label" style="margin-top:4px">LEGS PRO SET (Best of)</label>
     <div class="btn-group" id="legs-group">
       <button class="btn-toggle active" data-value="1">1</button>
       <button class="btn-toggle" data-value="3">3</button>
@@ -548,6 +556,17 @@ signInAnonymously(auth)
     <div class="winner-round" id="winner-round"></div>
     <div id="winner-summary" style="display:none;margin:16px 0 0"></div>
     <button class="btn-new-game" id="btn-new-game" style="margin-top:20px">NEUES SPIEL</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SET WINNER OVERLAY ═══════════════════════ -->
+<div class="winner-overlay" id="set-overlay">
+  <div style="text-align:center;padding:32px 24px">
+    <div class="winner-label" id="set-label">SET 1 GEWONNEN</div>
+    <div class="winner-name" id="set-winner-name" style="font-size:48px"></div>
+    <div id="set-score-display" style="color:#e8c44a;font-family:'Bebas Neue',sans-serif;font-size:24px;margin-top:8px"></div>
+    <div style="color:#555;font-size:13px;margin-top:6px" id="set-to-win"></div>
+    <button class="btn-new-game" id="btn-next-set" style="margin-top:24px">NÄCHSTES SET ▶</button>
   </div>
 </div>
 
@@ -1207,9 +1226,9 @@ let cr={};
 // ══════════════════════════════════════════════════════════════════
 const modeGroup=document.getElementById("mode-group");
 const legsGroup=document.getElementById("legs-group");
-let selectedMode="501", selectedLegs=1;
-let allPlayers=[];       // [{id, name, stats}] from Firebase
-let selectedPlayers=[];  // ordered list of selected player objects
+let selectedMode="501";
+let allPlayers=[];
+let selectedPlayers=[];
 
 const AVATAR_COLORS=["#e53935","#1e88e5","#43a047","#fb8c00","#8e24aa","#00897b","#e91e63","#546e7a"];
 
@@ -1239,6 +1258,15 @@ document.getElementById("extra-mode-group").addEventListener("click",e=>{
   modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.remove("active"));
   document.querySelectorAll("#extra-mode-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
   document.getElementById("rounds-selector").style.display=selectedMode==="Highscore"?"block":"none";
+});
+
+let selectedLegs=1;
+let selectedSets=1;
+
+document.getElementById("sets-group").addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedSets=+e.target.dataset.value;
+  document.querySelectorAll("#sets-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedSets));
 });
 
 legsGroup.addEventListener("click",e=>{
@@ -1370,6 +1398,12 @@ document.getElementById("btn-start").addEventListener("click",()=>{
     playerObjects:[...selectedPlayers],
     isBot,
     botLevel:selectedBot,
+    // Sets
+    totalSets:selectedSets,
+    setsToWin:Math.ceil(selectedSets/2),
+    setWins:players.map(()=>0),
+    currentSet:1,
+    // Legs per set
     totalLegs:selectedLegs,
     legsToWin:Math.ceil(selectedLegs/2),
     legWins:players.map(()=>0),
@@ -1394,6 +1428,8 @@ function showScreen(id){
 
 function showSetup(){
   document.getElementById("winner-overlay").classList.remove("visible");
+  document.getElementById("set-overlay").classList.remove("visible");
+  document.getElementById("leg-overlay").classList.remove("visible");
   showScreen("setup");
   loadPlayers();
 }
@@ -1640,8 +1676,12 @@ function renderX01Tabs(){
       return `<span class="${cls}">${t.label}</span>`;
     }).join("") : "";
 
+    const setDots = cfg.totalSets>1
+      ? `<div style="font-size:10px;color:${i===x01.current?'#e8c44a':'#aaa'};margin-top:1px">
+          ${'▪'.repeat(cfg.setWins[i])}${'▫'.repeat(Math.max(0,cfg.setsToWin-cfg.setWins[i]))} Set${cfg.setWins[i]!==1?'s':''}
+        </div>` : '';
     const legBadge = cfg.totalLegs>1
-      ? `<div style="font-size:10px;color:${i===x01.current?'#e8c44a':'#aaa'};margin-top:2px">${'●'.repeat(cfg.legWins[i])}${'○'.repeat(cfg.legsToWin-cfg.legWins[i])}</div>`
+      ? `<div style="font-size:10px;color:${i===x01.current?'#e8c44a':'#aaa'};margin-top:1px">${'●'.repeat(cfg.legWins[i])}${'○'.repeat(Math.max(0,cfg.legsToWin-cfg.legWins[i]))} Leg${cfg.legWins[i]!==1?'s':''}</div>`
       : '';
     const f9=x01.first9?.[i];
     const f9badge=f9!==null?`<div style="font-size:9px;color:${i===x01.current?"#aaa":"#bbb"};letter-spacing:1px">First 9 Ø: ${f9}</div>`:"";
@@ -1649,6 +1689,7 @@ function renderX01Tabs(){
     div.innerHTML=`
       <div class="tab-name">${name}</div>
       <div class="tab-score">${x01.scores[i]}</div>
+      ${setDots}
       ${legBadge}
       ${f9badge}
       <div class="tab-throws">${chipsHtml}</div>`;
@@ -1698,8 +1739,13 @@ function renderX01(){
   } else { sumEl.style.display="none"; }
 
   // title
-  const legInfo = cfg.totalLegs>1 ? ` · Leg ${cfg.currentLeg}/${cfg.totalLegs}` : '';
-  document.getElementById("x01-title").textContent=`${cfg.mode}${legInfo} · Runde ${x01.round}`;
+  const legInfo = cfg.totalSets>1
+    ? `Set ${cfg.currentSet}/${cfg.totalSets} · Leg ${cfg.currentLeg}/${cfg.totalLegs}`
+    : cfg.totalLegs>1
+      ? `Leg ${cfg.currentLeg}/${cfg.totalLegs}`
+      : '';
+  const legSep = legInfo ? ' · ' : '';
+  document.getElementById("x01-title").textContent=`${cfg.mode}${legSep}${legInfo} · Runde ${x01.round}`;
 
   renderX01Tabs();
   renderTurnTable();
@@ -1833,17 +1879,19 @@ function handleX01Click(e){
   }
 
   // Sound based on score
-    if(x01.throws.length===3){
-      if(turnScore<=9) soundLow();
-      else if(turnScore>=100) soundApplause();
-      else soundHit();
-      speakScoreWithCustom(turnScore);
-    } else {
-      soundHit();
-    }
+  const turnScore=x01.throws.reduce((s,t)=>s+t.score,0);
+  if(x01.throws.length===3){
+    if(turnScore<=9) soundLow();
+    else if(turnScore>=100) soundApplause();
+    else soundHit();
+    // Speak then advance — don't await, just fire and let advance happen normally
+    speakScoreWithCustom(turnScore);
+  } else {
+    soundHit();
+  }
 
   renderX01();
-  if(x01.throws.length===3) setTimeout(advanceX01, 350);
+  if(x01.throws.length===3) setTimeout(advanceX01, 800);
 }
 
 function advanceX01(){
@@ -2444,40 +2492,70 @@ function handleLegWin(winnerIdx){
   cfg.legWins[winnerIdx]++;
   const name=cfg.players[winnerIdx];
 
-  // Always save the completed leg
+  // Save this leg to Firebase
   saveGameToFirebase(winnerIdx);
 
-  // Check match winner
+  // Check if this player won the set
   if(cfg.legWins[winnerIdx]>=cfg.legsToWin){
-    showWinner(name, x01.round);
+    cfg.setWins[winnerIdx]++;
+
+    // Check match winner
+    if(cfg.setWins[winnerIdx]>=cfg.setsToWin){
+      showWinner(name, x01.round);
+      return;
+    }
+
+    // Show set winner overlay
+    document.getElementById("set-label").textContent=
+      `SET ${cfg.currentSet} GEWONNEN!`;
+    document.getElementById("set-winner-name").textContent=name;
+    const setScoreHtml=cfg.players.map((p,i)=>
+      `${p}: <strong>${cfg.setWins[i]}</strong>`).join(" &nbsp;|&nbsp; ");
+    document.getElementById("set-score-display").innerHTML=setScoreHtml;
+    document.getElementById("set-to-win").textContent=
+      `Noch ${cfg.setsToWin-cfg.setWins[winnerIdx]} Set(s) zum Sieg`;
+    document.getElementById("set-overlay").classList.add("visible");
     return;
   }
 
-  // Show leg winner overlay
+  // Leg won but set not yet decided — show leg overlay
   const legNum=cfg.currentLeg;
-  document.getElementById("leg-label").textContent=`LEG ${legNum} GEWONNEN!`;
+  document.getElementById("leg-label").textContent=
+    cfg.totalSets>1
+      ? `SET ${cfg.currentSet} · LEG ${legNum} GEWONNEN!`
+      : `LEG ${legNum} GEWONNEN!`;
   document.getElementById("leg-winner-name").textContent=name;
   const scoreHtml=cfg.players.map((p,i)=>
-    `${p}: <strong>${cfg.legWins[i]}</strong>`).join(" &nbsp;|&nbsp; ");
+    `${p}: <strong>${cfg.legWins[i]}</strong> Leg${cfg.legWins[i]!==1?"s":""}`).join(" &nbsp;|&nbsp; ");
   document.getElementById("leg-score-display").innerHTML=scoreHtml;
   document.getElementById("leg-to-win").textContent=
-    `Noch ${cfg.legsToWin-cfg.legWins[winnerIdx]} Leg(s) zum Sieg`;
+    `Noch ${cfg.legsToWin-cfg.legWins[winnerIdx]} Leg(s) zum Set`;
   document.getElementById("leg-overlay").classList.add("visible");
 }
+
+document.getElementById("btn-next-set").addEventListener("click",()=>{
+  document.getElementById("set-overlay").classList.remove("visible");
+  cfg.currentSet++;
+  cfg.currentLeg=1;
+  cfg.legWins=cfg.players.map(()=>0); // reset leg wins for new set
+  const legStarter=x01.winner;
+  startX01(legStarter);
+});
 
 document.getElementById("btn-next-leg").addEventListener("click",()=>{
   document.getElementById("leg-overlay").classList.remove("visible");
   cfg.currentLeg++;
   const legStarter=x01.winner;
   startX01(legStarter);
-  // bot start handled inside startX01
 });
 
 function showWinner(name,round){
   document.getElementById("winner-name").textContent=name;
-  const legInfo = cfg.totalLegs>1
-    ? `${cfg.legWins.map((w,i)=>cfg.players[i]+": "+w+" Legs").join(" | ")}`
-    : `Runde ${round}`;
+  const legInfo = cfg.totalSets>1
+    ? `${cfg.players.map((p,i)=>`${p}: ${cfg.setWins[i]} Set${cfg.setWins[i]!==1?'s':''}`).join(' | ')}`
+    : cfg.totalLegs>1
+      ? `${cfg.legWins.map((w,i)=>cfg.players[i]+": "+w+" Leg"+( w!==1?"s":"")).join(" | ")}`
+      : `Runde ${round}`;
   document.getElementById("winner-round").textContent=legInfo;
 
   // Session summary
