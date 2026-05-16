@@ -800,7 +800,7 @@ function initMic(){
     return;
   }
   recognition=new SpeechRec();
-  recognition.lang="en-US";
+  recognition.lang="de-DE";
   recognition.continuous=false;
   recognition.interimResults=true;
   recognition.maxAlternatives=5;
@@ -850,59 +850,72 @@ function setVoiceFeedback(text){
 
 // ── Voice parser ──────────────────────────────────────────────────
 const NUM_WORDS={
+  // English
   "one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,
   "nine":9,"ten":10,"eleven":11,"twelve":12,"thirteen":13,"fourteen":14,
   "fifteen":15,"sixteen":16,"seventeen":17,"eighteen":18,"nineteen":19,
   "twenty":20,"twenty one":21,"twenty two":22,"twenty three":23,"twenty four":24,
-  "twenty five":25
+  "twenty five":25,
+  // German
+  "eins":1,"zwei":2,"drei":3,"vier":4,"fünf":5,"sechs":6,"sieben":7,"acht":8,
+  "neun":9,"zehn":10,"elf":11,"zwölf":12,"dreizehn":13,"vierzehn":14,
+  "fünfzehn":15,"sechzehn":16,"siebzehn":17,"achtzehn":18,"neunzehn":19,
+  "zwanzig":20,"einundzwanzig":21,"zweiundzwanzig":22,"dreiundzwanzig":23,
+  "vierundzwanzig":24,"fünfundzwanzig":25,
+  // German with spaces (speech recognition often splits them)
+  "ein und zwanzig":21,"zwei und zwanzig":22,"drei und zwanzig":23,
+  "vier und zwanzig":24,"fünf und zwanzig":25
 };
 
 function wordToNum(s){
-  s=s.trim();
+  s=s.trim().toLowerCase();
   if(NUM_WORDS[s]!==undefined) return NUM_WORDS[s];
   const m=s.match(/^(\d+)$/);
   if(m) return parseInt(m[1]);
-  // "twenty-one" → "twenty one"
-  return NUM_WORDS[s.replace(/-/g," ")]??null;
+  // "twenty-one" → "twenty one", "dreiundzwanzig" already in map
+  const dashed=s.replace(/-/g," ");
+  if(NUM_WORDS[dashed]!==undefined) return NUM_WORDS[dashed];
+  return null;
 }
 
 function parseVoiceThrow(text){
   text=text.replace(/[.,!?]/g,"").trim();
 
-  // Miss / outside
-  if(/\b(miss|outside|no score|zero)\b/.test(text))
+  // Miss — DE + EN
+  if(/\b(miss|daneben|vorbei|außen|outside|no score|zero|null)\b/.test(text))
     return {score:0, label:"Miss", miss:true, svgX:null, svgY:null};
 
-  // Bull's eye / double bull / bull
-  if(/bull.?s.?eye|double bull|inner bull/.test(text))
+  // Bull's eye / double bull — DE + EN
+  if(/bull.?s.?eye|double bull|inner bull|volles bull|bulls eye/.test(text))
     return {score:50, label:"Bull", svgX:null, svgY:null};
-  if(/\b(outer bull|bull twenty.?five|twenty.?five bull)\b/.test(text))
+  if(/\b(outer bull|bull twenty.?five|twenty.?five bull|außen bull|einfach bull)\b/.test(text))
     return {score:25, label:"Bull 25", svgX:null, svgY:null};
   if(/^bull$/.test(text))
     return {score:50, label:"Bull", svgX:null, svgY:null};
 
-  // Triple / treble
-  const triM=text.match(/\b(?:triple|treble|tri)\s+([a-z\s\d-]+)/);
+  // Triple — DE: dreifach, triple, treble
+  const triM=text.match(/\b(?:triple|treble|tri|dreifach|drei.?fach)\s+([a-zäöüß\s\d-]+)/);
   if(triM){
     const n=wordToNum(triM[1].trim());
-    if(n&&n>=1&&n<=20) return {score:n*3,label:`T${n}`,svgX:null,svgY:null};
+    if(n&&n>=1&&n<=20) return {score:n*3, label:`T${n}`, svgX:null, svgY:null};
   }
 
-  // Double
-  const dblM=text.match(/\b(?:double|dbl)\s+([a-z\s\d-]+)/);
+  // Double — DE: doppel, doppelt
+  const dblM=text.match(/\b(?:double|dbl|doppel|doppelt)\s+([a-zäöüß\s\d-]+)/);
   if(dblM){
     const raw=dblM[1].trim();
-    if(/bull|twenty.?five|25/.test(raw)) return {score:50,label:"Bull",svgX:null,svgY:null};
+    if(/bull|twenty.?five|25|fünfundzwanzig/.test(raw))
+      return {score:50, label:"Bull", svgX:null, svgY:null};
     const n=wordToNum(raw);
-    if(n&&n>=1&&n<=20) return {score:n*2,label:`D${n}`,svgX:null,svgY:null};
+    if(n&&n>=1&&n<=20) return {score:n*2, label:`D${n}`, svgX:null, svgY:null};
   }
 
-  // Single (explicit or bare number)
-  const sinM=text.match(/\b(?:single|sin)?\s*([a-z\s\d-]+)$/);
+  // Single — DE: einfach, einzel
+  const sinM=text.match(/\b(?:single|sin|einfach|einzel)?\s*([a-zäöüß\s\d-]+)$/);
   if(sinM){
     const n=wordToNum(sinM[1].trim());
-    if(n===25) return {score:25,label:"Bull 25",svgX:null,svgY:null};
-    if(n!==null&&n>=1&&n<=20) return {score:n,label:`${n}`,svgX:null,svgY:null};
+    if(n===25) return {score:25, label:"Bull 25", svgX:null, svgY:null};
+    if(n!==null&&n>=1&&n<=20) return {score:n, label:`${n}`, svgX:null, svgY:null};
   }
 
   return null;
