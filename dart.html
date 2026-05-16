@@ -17,7 +17,8 @@ import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
 const fbCfg = {
   apiKey: "AIzaSyBvTU5OhJnvJW-hYJYYVTro2rNcNr60aCk",
   authDomain: "fitness-tracker-c6f97.firebaseapp.com",
-  projectId: "fitness-tracker-c6f97"
+  projectId: "fitness-tracker-c6f97",
+  storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
 };
 const app  = initializeApp(fbCfg);
 const db   = getFirestore(app);
