@@ -83,12 +83,18 @@ signInAnonymously(auth)
 </script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; max-height: 100vh; background: #f5f5f0; color: #111; font-family: 'DM Sans', sans-serif; overflow: hidden; }
-  .screen { display: none; height: 100vh; overflow: hidden; }
-  .screen.active { display: flex; flex-direction: column; }
+  html, body { height: 100%; background: #f5f5f0; color: #111; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+  .screen { display: none; height: 100vh; flex-direction: column; overflow: hidden; }
+  .screen.active { display: flex; }
 
-  /* ── Setup ── */
-  #setup { align-items: center; justify-content: center; }
+  /* ── Home tabs ── */
+  .home-tabs { display: flex; background: #1a1a1a; flex-shrink: 0; width: 100%; }
+  .home-tab { flex: 1; padding: 12px 0; border: none; background: none; color: #666;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer;
+    transition: all .2s; white-space: nowrap; }
+  .home-tab.active { color: #e8c44a; border-bottom: 3px solid #e8c44a; }
+  .home-tab-content { display: none; flex: 1; min-height: 0; overflow-y: auto; }
+  .home-tab-content.active { display: block; }
   .setup-card { background: #13131a; border: 1px solid #2a2a3a; border-radius: 16px; padding: 36px 32px; width: 420px; max-width: 95vw; }
   .logo { text-align: center; margin-bottom: 28px; }
   .logo-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; color: #e8c44a; line-height: 1; }
@@ -209,10 +215,10 @@ signInAnonymously(auth)
   .btn-new-game { margin-top: 28px; padding: 14px 36px; background: #e8c44a; border: none; border-radius: 10px;
     font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; }
 
-  /* ── Setup overrides for light bg ── */
-  #setup { background: #f5f5f0; overflow: hidden; }
-  #tab-play { overflow-y: auto; flex: 1; }
-  #tab-stats { overflow-y: auto; flex: 1; }
+  /* ── Setup overrides ── */
+  #setup { background: #f5f5f0; }
+  #tab-play { padding: 0; }
+  #tab-stats { background: #f5f5f0; }
   .setup-card { background: #fff; border: 1px solid #ddd; }
   .field-label { color: #666; }
   .btn-toggle { background: #f0f0f0; color: #777; border: 1px solid #ddd; }
