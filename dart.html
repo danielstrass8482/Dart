@@ -207,15 +207,36 @@ signInAnonymously(auth)
     border-radius: 8px; font-family: 'Bebas Neue',sans-serif; font-size: 16px; cursor: pointer; }
   .player-sel-hint { font-size: 11px; color: #aaa; text-align: center; margin-bottom: 6px; }
 
-  /* ── Stats on setup page ── */
-  .stats-section { width: 420px; max-width: 95vw; margin-top: 20px; }
-  .stats-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: #1a1a1a; margin-bottom: 12px; text-align: center; }
+  /* ── Home tabs ── */
+  .home-tabs { display: flex; background: #1a1a1a; flex-shrink: 0; }
+  .home-tab { flex: 1; padding: 12px; border: none; background: none; color: #666;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer; transition: all .2s; }
+  .home-tab.active { color: #e8c44a; border-bottom: 2px solid #e8c44a; }
+  .home-tab-content { display: none; }
+  .home-tab-content.active { display: block; }
+
+  /* ── Stats controls ── */
+  .stats-player-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .stats-player-btn { padding: 6px 12px; border-radius: 20px; border: 2px solid #ddd;
+    background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s;
+    display: flex; align-items: center; gap: 6px; }
+  .stats-player-btn.active { border-color: #e8c44a; background: #fffbea; }
+  .stats-player-btn .spb-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .stats-time-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .time-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid #ddd;
+    background: #fff; cursor: pointer; font-size: 12px; color: #666; transition: all .15s; }
+  .time-btn.active { background: #1a1a1a; color: #e8c44a; border-color: #1a1a1a; }
+  .custom-date-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .date-input { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none; }
+
+  /* ── Stats cards ── */
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
   .stat-card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px 14px; text-align: center; }
   .stat-card .s-label { font-size: 10px; color: #999; letter-spacing: 1px; margin-bottom: 4px; }
   .stat-card .s-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: #1a1a1a; line-height: 1; }
   .stat-card .s-sub { font-size: 11px; color: #aaa; margin-top: 2px; }
-  .history-list { background: #fff; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; }
+  .history-list { background: #fff; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
   .history-header { display: grid; grid-template-columns: 1fr 60px 70px 70px; gap: 6px;
     padding: 8px 12px; background: #f8f8f8; border-bottom: 1px solid #eee;
     font-size: 10px; color: #999; letter-spacing: 1px; }
@@ -224,9 +245,10 @@ signInAnonymously(auth)
   .history-row:last-child { border-bottom: none; }
   .history-row .winner-tag { font-weight: 600; color: #1a1a1a; }
   .history-row .mode-tag { font-size: 11px; color: #888; }
-  .scatter-wrap { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .scatter-wrap { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 14px; }
   .scatter-title { font-size: 10px; color: #999; letter-spacing: 1px; margin-bottom: 8px; }
-  #scatter-svg { display: block; width: 100%; border-radius: 8px; background: #1a1008; }
+  .stats-section-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px;
+    color: #555; margin: 16px 0 8px; }
   .stats-loading { text-align: center; color: #aaa; font-size: 13px; padding: 20px 0; }
   .btn-stats-refresh { background: none; border: 1px solid #ddd; color: #888; padding: 6px 14px;
     border-radius: 6px; font-size: 12px; margin: 0 auto 16px; display: block; }
@@ -234,9 +256,17 @@ signInAnonymously(auth)
 </head>
 <body>
 
-<!-- ═══════════════════════ SETUP SCREEN ═══════════════════════ -->
+<!-- ═══════════════════════ HOME SCREEN ═══════════════════════ -->
 <div id="setup" class="screen active">
-  <div style="display:flex;flex-direction:column;align-items:center;padding:24px 16px;overflow-y:auto;height:100vh;">
+  <!-- Tab bar -->
+  <div class="home-tabs">
+    <button class="home-tab active" data-tab="play">🎯 Spiel</button>
+    <button class="home-tab" data-tab="stats">📊 Statistiken</button>
+  </div>
+
+  <!-- TAB: PLAY -->
+  <div class="home-tab-content active" id="tab-play">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto;height:calc(100vh - 48px);">
   <div class="setup-card">
     <div class="logo">
       <div class="logo-title">DART PRO</div>
@@ -270,11 +300,35 @@ signInAnonymously(auth)
 
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
   </div>
+  </div>
+  </div>
 
-  <!-- STATS SECTION -->
-  <div class="stats-section">
-    <div class="stats-title">📊 STATISTIKEN</div>
-    <button class="btn-stats-refresh" id="btn-stats-refresh">↻ Aktualisieren</button>
+  <!-- TAB: STATS -->
+  <div class="home-tab-content" id="tab-stats">
+  <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
+
+    <!-- Player selector -->
+    <div class="stats-player-bar" id="stats-player-bar"></div>
+
+    <!-- Time range -->
+    <div class="stats-time-bar">
+      <button class="time-btn active" data-range="today">Heute</button>
+      <button class="time-btn" data-range="7d">7 Tage</button>
+      <button class="time-btn" data-range="30d">Monat</button>
+      <button class="time-btn" data-range="90d">3 Monate</button>
+      <button class="time-btn" data-range="180d">6 Monate</button>
+      <button class="time-btn" data-range="all">Alles</button>
+      <button class="time-btn" data-range="custom">📅</button>
+    </div>
+
+    <!-- Custom date picker (hidden by default) -->
+    <div class="custom-date-row" id="custom-date-row" style="display:none">
+      <input type="date" id="date-from" class="date-input" />
+      <span style="color:#999;font-size:13px">bis</span>
+      <input type="date" id="date-to" class="date-input" />
+      <button class="btn-add-player" id="btn-apply-dates" style="padding:6px 12px;font-size:13px">OK</button>
+    </div>
+
     <div id="stats-content"><div class="stats-loading">Lade Statistiken…</div></div>
   </div>
   </div>
@@ -731,9 +785,7 @@ function showScreen(id){
 function showSetup(){
   document.getElementById("winner-overlay").classList.remove("visible");
   showScreen("setup");
-  // Reload players so stats are fresh
   loadPlayers();
-  loadAndRenderStats();
 }
 
 document.getElementById("btn-new-game").addEventListener("click",showSetup);
@@ -1296,77 +1348,209 @@ async function updateAllPlayerStats(){
   }catch(e){ console.warn("updatePlayerStats failed",e); }
 }
 
-// ── Stats rendering ───────────────────────────────────────────────
+// ── Stats state ───────────────────────────────────────────────────
+let statsSelectedPlayer = null; // null = all players
+let statsRange = 'all';
+let statsFrom = null, statsTo = null;
+let allGamesCache = [];
+
+// ── Tab switching ─────────────────────────────────────────────────
+document.querySelectorAll(".home-tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".home-tab").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".home-tab-content").forEach(c=>c.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
+    if(btn.dataset.tab==="stats") loadAndRenderStats();
+  });
+});
+
+// ── Time range buttons ────────────────────────────────────────────
+document.querySelectorAll(".time-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".time-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    statsRange=btn.dataset.range;
+    const customRow=document.getElementById("custom-date-row");
+    customRow.style.display=statsRange==="custom"?"flex":"none";
+    if(statsRange!=="custom") loadAndRenderStats();
+  });
+});
+
+document.getElementById("btn-apply-dates").addEventListener("click",()=>{
+  statsFrom=document.getElementById("date-from").value;
+  statsTo=document.getElementById("date-to").value;
+  if(statsFrom&&statsTo) loadAndRenderStats();
+});
+
+function getTimeRange(){
+  const now=Date.now();
+  const day=86400000;
+  if(statsRange==="today")  return {from:new Date().setHours(0,0,0,0), to:now+day};
+  if(statsRange==="7d")     return {from:now-7*day, to:now+day};
+  if(statsRange==="30d")    return {from:now-30*day, to:now+day};
+  if(statsRange==="90d")    return {from:now-90*day, to:now+day};
+  if(statsRange==="180d")   return {from:now-180*day, to:now+day};
+  if(statsRange==="custom"&&statsFrom&&statsTo)
+    return {from:new Date(statsFrom).getTime(), to:new Date(statsTo).getTime()+day};
+  return {from:0, to:now+day};
+}
+
+// ── Player selector bar ───────────────────────────────────────────
+function renderStatsPlayerBar(){
+  const bar=document.getElementById("stats-player-bar");
+  if(!bar) return;
+  let html=`<button class="stats-player-btn${statsSelectedPlayer===null?" active":""}" data-pid="all">
+    Alle Spieler</button>`;
+  allPlayers.forEach(p=>{
+    const col=playerColor(p.name);
+    const active=statsSelectedPlayer===p.id?" active":"";
+    html+=`<button class="stats-player-btn${active}" data-pid="${p.id}">
+      <span class="spb-dot" style="background:${col}"></span>${p.name}</button>`;
+  });
+  bar.innerHTML=html;
+  bar.querySelectorAll(".stats-player-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      statsSelectedPlayer=btn.dataset.pid==="all"?null:btn.dataset.pid;
+      renderStatsPlayerBar();
+      loadAndRenderStats();
+    });
+  });
+}
+
+// ── Mini board draw helper ────────────────────────────────────────
+function drawMiniBoard(svgEl, dots){
+  const ns="http://www.w3.org/2000/svg";
+  svgEl.innerHTML="";
+  function mkEl(tag,attrs){ const e=document.createElementNS(ns,tag); for(const[k,v] of Object.entries(attrs)) e.setAttribute(k,v); return e; }
+  const cx=265,cy=265;
+  svgEl.appendChild(mkEl("circle",{cx,cy,r:228,fill:"#1a1008"}));
+  const SR=[{r1:32,r2:109},{r1:109,r2:125},{r1:125,r2:186},{r1:186,r2:200}];
+  const cols=[["#1c1c1c","#f0ead6"],["#c0392b","#27ae60"],["#1c1c1c","#f0ead6"],["#c0392b","#27ae60"]];
+  function sA(i){ return (-90-9+i*18)*Math.PI/180; }
+  function pXY(r,a){ return [cx+r*Math.cos(a),cy+r*Math.sin(a)]; }
+  function sPth(r1,r2,i){
+    const a1=sA(i),a2=sA(i+1);
+    const[x1,y1]=pXY(r1,a1),[x2,y2]=pXY(r2,a1),[x3,y3]=pXY(r2,a2),[x4,y4]=pXY(r1,a2);
+    return `M${x1},${y1}L${x2},${y2}A${r2},${r2} 0 0,1 ${x3},${y3}L${x4},${y4}A${r1},${r1} 0 0,0 ${x1},${y1}Z`;
+  }
+  SR.forEach(({r1,r2},ri)=>{
+    for(let i=0;i<20;i++) svgEl.appendChild(mkEl("path",{d:sPth(r1,r2,i),fill:cols[ri][i%2]}));
+  });
+  svgEl.appendChild(mkEl("circle",{cx,cy,r:32,fill:"#27ae60"}));
+  svgEl.appendChild(mkEl("circle",{cx,cy,r:13,fill:"#c0392b"}));
+  // Scale dots: recorded in 470x470 (CX=235), display board CX=265 → offset +30
+  const offset=cx-235;
+  dots.slice(-600).forEach(s=>{
+    const isMiss=s.l==="Miss";
+    svgEl.appendChild(mkEl("circle",{
+      cx:s.x+offset, cy:s.y+offset, r:"5",
+      fill: isMiss?"rgba(220,50,50,0.4)":"rgba(255,220,0,0.4)",
+      stroke: isMiss?"rgba(200,30,30,0.8)":"rgba(255,200,0,0.8)",
+      "stroke-width":"0.8"
+    }));
+  });
+}
+
+// ── Main stats renderer ───────────────────────────────────────────
 async function loadAndRenderStats(){
   const box=document.getElementById("stats-content");
+  if(!box) return;
   box.innerHTML='<div class="stats-loading">Lade…</div>';
   if(!window.dartDB){ box.innerHTML='<div class="stats-loading">Datenbank nicht bereit.</div>'; return; }
+
+  renderStatsPlayerBar();
+
   try{
-    const games = await window.dartDB.loadStats();
-    if(!games.length){ box.innerHTML='<div class="stats-loading">Noch keine Spiele gespeichert.</div>'; return; }
+    // Load and cache all games
+    allGamesCache=await window.dartDB.loadStats();
+    const {from,to}=getTimeRange();
 
-    // ── Aggregate ─────────────────────────────────────────────────
-    let totalGames=games.length, totalRounds=0;
-    const winMap={}, avgMap={}, bestMap={}, coAtt={}, coHit={};
-    const allScatter=[];
+    // Filter by time
+    let games=allGamesCache.filter(g=>g.ts>=from&&g.ts<=to);
 
-    games.forEach(g=>{
-      totalRounds+=g.rounds||0;
-      (g.players||[]).forEach(p=>{
-        if(!p.name) return;
-        if(p.winner) winMap[p.name]=(winMap[p.name]||0)+1;
-        if(p.avg3){
-          if(!avgMap[p.name]) avgMap[p.name]=[];
-          avgMap[p.name].push(p.avg3);
-        }
-        if(p.best3){
-          if(!bestMap[p.name]||p.best3>bestMap[p.name]) bestMap[p.name]=p.best3;
-        }
-        if(p.checkoutAtt){ coAtt[p.name]=(coAtt[p.name]||0)+p.checkoutAtt; }
-        if(p.checkoutHit){ coHit[p.name]=(coHit[p.name]||0)+p.checkoutHit; }
-        (p.scatter||[]).forEach(s=>allScatter.push(s));
-      });
-    });
-
-    const topWinner = Object.entries(winMap).sort((a,b)=>b[1]-a[1])[0];
-    const avgPerPlayer = Object.entries(avgMap).map(([n,arr])=>
-      [n, Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10]).sort((a,b)=>b[1]-a[1]);
-
-    // ── KPI cards ─────────────────────────────────────────────────
-    let html=`<div class="stats-grid">
-      <div class="stat-card"><div class="s-label">SPIELE GESAMT</div><div class="s-value">${totalGames}</div></div>
-      <div class="stat-card"><div class="s-label">RUNDEN ⌀</div><div class="s-value">${totalGames?Math.round(totalRounds/totalGames):0}</div></div>
-      <div class="stat-card"><div class="s-label">MEISTE SIEGE</div><div class="s-value">${topWinner?topWinner[1]:0}</div><div class="s-sub">${topWinner?topWinner[0]:"—"}</div></div>
-      <div class="stat-card"><div class="s-label">BESTER ⌀ (3 WÜRFE)</div><div class="s-value">${avgPerPlayer.length?avgPerPlayer[0][1]:0}</div><div class="s-sub">${avgPerPlayer.length?avgPerPlayer[0][0]:"—"}</div></div>
-    </div>`;
-
-    // ── Checkout rates ─────────────────────────────────────────────
-    const coRows = Object.keys(coAtt).map(n=>{
-      const rate = coAtt[n]>0 ? Math.round((coHit[n]||0)/coAtt[n]*100) : 0;
-      return `<div class="history-row"><span class="winner-tag">${n}</span><span>${coAtt[n]} Vers.</span><span>${coHit[n]||0} Treffer</span><span>${rate}%</span></div>`;
-    }).join("");
-    if(coRows){
-      html+=`<div class="history-list" style="margin-bottom:10px">
-        <div class="history-header"><span>SPIELER</span><span>VERSUCHE</span><span>GETROFFEN</span><span>QUOTE</span></div>
-        ${coRows}</div>`;
+    // Filter by player
+    if(statsSelectedPlayer){
+      games=games.filter(g=>(g.playerIds||[]).includes(statsSelectedPlayer));
     }
 
-    // ── Scatter heatmap on board ───────────────────────────────────
+    if(!games.length){
+      box.innerHTML='<div class="stats-loading">Keine Spiele im gewählten Zeitraum.</div>'; return;
+    }
+
+    // ── Collect player data from filtered games ────────────────────
+    // Get all player entries matching filter
+    const getPlayerData=(pid)=>games.flatMap(g=>
+      (g.players||[]).filter(p=>pid?p.id===pid:true));
+
+    const pid=statsSelectedPlayer;
+    const pData=getPlayerData(pid);
+    const totalGames=games.length;
+    const wins=games.filter(g=>pid?g.winnerId===pid:true).length;
+    const avgs=pData.map(p=>p.avg3||0).filter(v=>v>0);
+    const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
+    const coAtts=pData.reduce((s,p)=>s+(p.checkoutAtt||0),0);
+    const coHits=pData.reduce((s,p)=>s+(p.checkoutHit||0),0);
+    const coPct=coAtts>0?Math.round(coHits/coAtts*100):0;
+    const best=pData.reduce((m,p)=>Math.max(m,p.best3||0),0);
+    const allScatter=pData.flatMap(p=>p.scatter||[]);
+    const totalRounds=games.reduce((s,g)=>s+(g.rounds||0),0);
+
+    // ── KPI cards ─────────────────────────────────────────────────
+    const playerName=pid?(allPlayers.find(p=>p.id===pid)?.name||"?"):"Alle";
+    let html=`<div class="stats-section-title">${playerName} · ${totalGames} Spiel${totalGames!==1?"e":""}</div>`;
+    html+=`<div class="stats-grid">
+      <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${totalGames}</div></div>
+      <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${wins}</div><div class="s-sub">${totalGames?Math.round(wins/totalGames*100):0}% Quote</div></div>
+      <div class="stat-card"><div class="s-label">⌀ AUFNAHME</div><div class="s-value">${avg||"—"}</div></div>
+      <div class="stat-card"><div class="s-label">HIGHSCORE</div><div class="s-value">${best||"—"}</div></div>
+      <div class="stat-card"><div class="s-label">CHECKOUT-QUOTE</div><div class="s-value">${coPct}%</div><div class="s-sub">${coHits}/${coAtts}</div></div>
+      <div class="stat-card"><div class="s-label">⌀ RUNDEN</div><div class="s-value">${totalGames?Math.round(totalRounds/totalGames):0}</div></div>
+    </div>`;
+
+    // ── Per-player breakdown if "all" selected ─────────────────────
+    if(!pid && allPlayers.length>1){
+      html+=`<div class="stats-section-title">SPIELER VERGLEICH</div>
+        <div class="history-list">
+        <div class="history-header"><span>SPIELER</span><span>SIEGE</span><span>⌀</span><span>BEST</span><span>CO%</span></div>`;
+      allPlayers.forEach(p=>{
+        const pd=getPlayerData(p.id);
+        const pw=games.filter(g=>g.winnerId===p.id).length;
+        const pa=pd.map(x=>x.avg3||0).filter(v=>v>0);
+        const pavg=pa.length?Math.round(pa.reduce((a,b)=>a+b,0)/pa.length*10)/10:0;
+        const pb=pd.reduce((m,x)=>Math.max(m,x.best3||0),0);
+        const pca=pd.reduce((s,x)=>s+(x.checkoutAtt||0),0);
+        const pch=pd.reduce((s,x)=>s+(x.checkoutHit||0),0);
+        const pco=pca>0?Math.round(pch/pca*100):0;
+        const col=playerColor(p.name);
+        html+=`<div class="history-row">
+          <span style="display:flex;align-items:center;gap:6px">
+            <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>
+            <strong>${p.name}</strong></span>
+          <span>${pw}</span><span>${pavg||"—"}</span><span>${pb||"—"}</span><span>${pco}%</span>
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+
+    // ── Scatter heatmap ───────────────────────────────────────────
     if(allScatter.length){
-      html+=`<div class="scatter-wrap">
-        <div class="scatter-title">WURFSTREUUNG (letzte ${Math.min(allScatter.length,500)} Würfe)</div>
-        <svg id="scatter-svg" viewBox="0 0 470 470"></svg>
-      </div>`;
+      html+=`<div class="stats-section-title">TREFFERBILD (${Math.min(allScatter.length,600)} Würfe)</div>
+        <div class="scatter-wrap">
+          <svg id="scatter-svg" viewBox="0 0 530 530" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
+        </div>`;
     }
 
     // ── Last 10 games ──────────────────────────────────────────────
-    html+=`<div class="history-list">
+    html+=`<div class="stats-section-title">LETZTE SPIELE</div>
+      <div class="history-list">
       <div class="history-header"><span>GEWINNER</span><span>MODUS</span><span>RUNDEN</span><span>DATUM</span></div>`;
-    games.slice(0,10).forEach(g=>{
+    games.slice(0,15).forEach(g=>{
       const d=new Date(g.ts);
-      const ds=`${d.getDate()}.${d.getMonth()+1}.`;
+      const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}`;
+      const isWin=pid?g.winnerId===pid:true;
       html+=`<div class="history-row">
-        <span class="winner-tag">${g.winner||"—"}</span>
+        <span class="winner-tag" style="color:${isWin&&pid?"#2e7d32":"#1a1a1a"}">${g.winner||"—"}</span>
         <span class="mode-tag">${g.mode||"—"}</span>
         <span>${g.rounds||0}</span>
         <span style="color:#aaa;font-size:11px">${ds}</span>
@@ -1376,43 +1560,20 @@ async function loadAndRenderStats(){
 
     box.innerHTML=html;
 
-    // Draw scatter on board SVG
+    // Draw scatter board
     if(allScatter.length){
       const svg=document.getElementById("scatter-svg");
-      if(svg){
-        // Draw mini board
-        const ns="http://www.w3.org/2000/svg";
-        function mkEl(tag,attrs){ const e=document.createElementNS(ns,tag); for(const[k,v] of Object.entries(attrs)) e.setAttribute(k,v); return e; }
-        svg.appendChild(mkEl("circle",{cx:235,cy:235,r:228,fill:"#1a1008"}));
-        const SR=[{r1:32,r2:109},{r1:109,r2:125},{r1:125,r2:186},{r1:186,r2:200}];
-        const cols=[["#1c1c1c","#f0ead6"],["#c0392b","#27ae60"],["#1c1c1c","#f0ead6"],["#c0392b","#27ae60"]];
-        const SECTS=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
-        function sA(i){ return (-90-9+i*18)*Math.PI/180; }
-        function pXY(r,a){ return [235+r*Math.cos(a),235+r*Math.sin(a)]; }
-        function sPth(r1,r2,i){
-          const a1=sA(i),a2=sA(i+1);
-          const[x1,y1]=pXY(r1,a1),[x2,y2]=pXY(r2,a1),[x3,y3]=pXY(r2,a2),[x4,y4]=pXY(r1,a2);
-          return `M${x1},${y1}L${x2},${y2}A${r2},${r2} 0 0,1 ${x3},${y3}L${x4},${y4}A${r1},${r1} 0 0,0 ${x1},${y1}Z`;
-        }
-        SR.forEach(({r1,r2},ri)=>{
-          for(let i=0;i<20;i++) svg.appendChild(mkEl("path",{d:sPth(r1,r2,i),fill:cols[ri][i%2]}));
-        });
-        svg.appendChild(mkEl("circle",{cx:235,cy:235,r:32,fill:"#27ae60"}));
-        svg.appendChild(mkEl("circle",{cx:235,cy:235,r:13,fill:"#c0392b"}));
-        // Dots — use actual svgX/Y coords (recorded at 470x470 space)
-        // Scale: recorded at CX=235 space, scatter svg also 470x470 → 1:1
-        allScatter.slice(-500).forEach(s=>{
-          svg.appendChild(mkEl("circle",{cx:s.x,cy:s.y,r:"5",fill:"rgba(255,220,0,0.35)","stroke":"rgba(255,200,0,0.7)","stroke-width":"0.8"}));
-        });
-      }
+      if(svg) drawMiniBoard(svg, allScatter);
     }
-  } catch(e){
+  }catch(e){
     box.innerHTML=`<div class="stats-loading">Fehler: ${e.message}</div>`;
+    console.error(e);
   }
 }
 
-document.getElementById("btn-stats-refresh").addEventListener("click", loadAndRenderStats);
-window.addEventListener("dbReady", loadAndRenderStats);
+window.addEventListener("dbReady", ()=>{
+  loadPlayers().then(()=>renderStatsPlayerBar());
+});
 </script>
 </body>
 </html>
