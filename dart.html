@@ -2650,27 +2650,23 @@ async function updateAllPlayerStats(){
 }
 
 // ── Custom audio cache ────────────────────────────────────────────
-const voiceCache={}; // key → AudioBuffer
+const voiceURLCache={}; // key → download URL
 
 async function playCustomAudio(key){
   if(!window.dartDB) return false;
   try{
-    // Check cache first
-    if(!voiceCache[key]){
+    if(!voiceURLCache[key]){
       const url=await window.dartDB.getVoiceSampleURL(key);
       if(!url) return false;
-      const ctx=getAudio();
-      const resp=await fetch(url);
-      const arrBuf=await resp.arrayBuffer();
-      voiceCache[key]=await ctx.decodeAudioData(arrBuf);
+      voiceURLCache[key]=url;
     }
-    const ctx=getAudio();
-    const src=ctx.createBufferSource();
-    src.buffer=voiceCache[key];
-    src.connect(ctx.destination);
-    src.start();
+    const audio=new Audio(voiceURLCache[key]);
+    audio.play();
     return true;
-  }catch(e){ return false; }
+  }catch(e){
+    console.warn("Custom audio failed for",key,e);
+    return false;
+  }
 }
 
 // Updated speakScore — tries custom audio first, falls back to TTS
@@ -2824,7 +2820,7 @@ document.getElementById("studio-save-btn").addEventListener("click",async()=>{
   try{
     await window.dartDB.uploadVoiceSample(item.key, studioBlob);
     studioRecorded.add(item.key);
-    delete voiceCache[item.key]; // clear cache so new file is loaded
+    delete voiceURLCache[item.key]; // clear cache so new URL is fetched
     document.getElementById("studio-status").textContent="✓ Gespeichert!";
     document.getElementById("studio-delete-btn").style.display="";
     document.getElementById("studio-save-btn").disabled=false;
@@ -2850,7 +2846,7 @@ document.getElementById("studio-delete-btn").addEventListener("click",async()=>{
   if(!confirm(`Aufnahme für "${item.label}" löschen?`)) return;
   await window.dartDB.deleteVoiceSample(item.key);
   studioRecorded.delete(item.key);
-  delete voiceCache[item.key];
+  delete voiceURLCache[item.key];
   document.getElementById("studio-delete-btn").style.display="none";
   document.getElementById("studio-status").textContent="Gelöscht";
   renderStudioGrid();
