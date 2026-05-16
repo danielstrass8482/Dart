@@ -731,6 +731,9 @@ function showScreen(id){
 function showSetup(){
   document.getElementById("winner-overlay").classList.remove("visible");
   showScreen("setup");
+  // Reload players so stats are fresh
+  loadPlayers();
+  loadAndRenderStats();
 }
 
 document.getElementById("btn-new-game").addEventListener("click",showSetup);
@@ -957,7 +960,6 @@ function handleX01Click(e){
     x01.winner=x01.current;
     x01.checkoutHits[x01.current]++;
     x01.turnScores[x01.current].push(x01.throws.reduce((s,t)=>s+t.score,0));
-    saveGameToFirebase(x01.current);
     handleLegWin(x01.current);
     renderX01();
     return;
@@ -1199,6 +1201,9 @@ document.getElementById("cr-back").addEventListener("click",showSetup);
 function handleLegWin(winnerIdx){
   cfg.legWins[winnerIdx]++;
   const name=cfg.players[winnerIdx];
+
+  // Always save the completed leg
+  saveGameToFirebase(winnerIdx);
 
   // Check match winner
   if(cfg.legWins[winnerIdx]>=cfg.legsToWin){
