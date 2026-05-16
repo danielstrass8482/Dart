@@ -485,11 +485,12 @@ signInAnonymously(auth)
   </div>
 </div>
 <div class="winner-overlay" id="winner-overlay">
-  <div>
+  <div style="max-width:380px;width:90vw;max-height:90vh;overflow-y:auto;padding:32px 24px;text-align:center">
     <div class="winner-label">GEWINNER</div>
     <div class="winner-name" id="winner-name"></div>
     <div class="winner-round" id="winner-round"></div>
-    <button class="btn-new-game" id="btn-new-game">NEUES SPIEL</button>
+    <div id="winner-summary" style="display:none;margin:16px 0 0"></div>
+    <button class="btn-new-game" id="btn-new-game" style="margin-top:20px">NEUES SPIEL</button>
   </div>
 </div>
 
@@ -864,46 +865,73 @@ function initMic(){
   }
   recognition=new SpeechRec();
   recognition.lang="de-DE";
-  recognition.continuous=false;
+  recognition.continuous=true;
   recognition.interimResults=true;
   recognition.maxAlternatives=5;
 
   recognition.onstart=()=>{
     micActive=true;
-    document.getElementById("btn-mic").classList.add("listening");
-    setVoiceFeedback("Listening…");
+    const btn=document.getElementById("btn-mic");
+    if(btn) btn.classList.add("listening");
+    setVoiceFeedback("🎤 Spreche…");
   };
 
   recognition.onend=()=>{
     micActive=false;
-    document.getElementById("btn-mic").classList.remove("listening");
-    setVoiceFeedback("");
+    const btn=document.getElementById("btn-mic");
+    if(btn) btn.classList.remove("listening");
+    // Auto-restart if game still active and throws < 3
+    if(micEnabled && !x01.winner && !x01.bust && x01.throws.length<3){
+      try{ recognition.start(); }catch(e){}
+    } else {
+      setVoiceFeedback("");
+    }
   };
 
   recognition.onerror=(e)=>{
+    if(e.error==="aborted"||e.error==="no-speech") return; // ignore, will auto-restart
     micActive=false;
-    document.getElementById("btn-mic").classList.remove("listening");
-    setVoiceFeedback(e.error==="no-speech"?"(nichts gehört)":"Fehler: "+e.error);
+    setVoiceFeedback("Fehler: "+e.error);
     setTimeout(()=>setVoiceFeedback(""),2000);
   };
 
   recognition.onresult=(e)=>{
-    // Try all alternatives, pick first that parses
-    const results=[...e.results[e.results.length-1]].map(r=>r.transcript.toLowerCase().trim());
-    setVoiceFeedback('"'+results[0]+'"');
-    if(!e.results[e.results.length-1].isFinal) return;
-
-    for(const text of results){
+    const result=e.results[e.results.length-1];
+    const texts=[...result].map(r=>r.transcript.toLowerCase().trim());
+    if(!result.isFinal){
+      setVoiceFeedback("🎤 "+texts[0]);
+      return;
+    }
+    for(const text of texts){
       const hit=parseVoiceThrow(text);
       if(hit){
         setVoiceFeedback("✓ "+hit.label);
         handleVoiceHit(hit);
+        // Stop after 3rd throw — advance will restart if needed
+        if(x01.throws.length>=3||x01.bust||x01.winner) stopMic();
         return;
       }
     }
-    setVoiceFeedback("❓ nicht erkannt: "+results[0]);
-    setTimeout(()=>setVoiceFeedback(""),2500);
+    setVoiceFeedback("❓ "+texts[0]);
+    setTimeout(()=>setVoiceFeedback(micActive?"🎤 Spreche…":""),1500);
   };
+}
+
+let micEnabled=false; // tracks if user wants mic on
+
+function startMic(){
+  if(!recognition) initMic();
+  if(!recognition) return;
+  micEnabled=true;
+  if(!micActive){ try{ recognition.start(); }catch(e){} }
+}
+
+function stopMic(){
+  micEnabled=false;
+  if(micActive){ try{ recognition.stop(); }catch(e){} }
+  const btn=document.getElementById("btn-mic");
+  if(btn) btn.classList.remove("listening");
+  setVoiceFeedback("");
 }
 
 function setVoiceFeedback(text){
@@ -1042,13 +1070,18 @@ function handleVoiceHit(hit){
 }
 
 document.getElementById("btn-mic").addEventListener("click",()=>{
-  if(!recognition){ initMic(); }
+  if(!recognition) initMic();
   if(!recognition) return;
-  if(x01.winner||x01.bust||x01.throws.length>=3) return;
-  if(micActive){ recognition.stop(); return; }
-  try{ recognition.start(); }
-  catch(e){ setVoiceFeedback("Fehler: "+e.message); }
+  if(micEnabled){ stopMic(); }
+  else { startMic(); }
 });
+
+// Restart mic after player advance if micEnabled
+function maybeRestartMic(){
+  if(micEnabled&&!cfg.isBot?.[x01.current]&&!x01.winner){
+    setTimeout(()=>{ if(!micActive) try{ recognition.start(); }catch(e){} },400);
+  }
+}
 
 // Init mic on load
 window.addEventListener("load",initMic);
@@ -1517,6 +1550,7 @@ function startX01(starter=0){
     historicThrows: cfg.players.map(()=>[]),  // past throws per player for persistent display
     lastTurnThrows: cfg.players.map(()=>[]),  // last completed turn per player
     turnScores: cfg.players.map(()=>[], ),// sum per turn per player
+    first9: cfg.players.map(()=>null),    // first 3 turns sum per player (null = not yet complete)
     checkoutAttempts: cfg.players.map(()=>0),
     checkoutHits: cfg.players.map(()=>0),
     startTime: Date.now()
@@ -1552,10 +1586,14 @@ function renderX01Tabs(){
     const legBadge = cfg.totalLegs>1
       ? `<div style="font-size:10px;color:${i===x01.current?'#e8c44a':'#aaa'};margin-top:2px">${'●'.repeat(cfg.legWins[i])}${'○'.repeat(cfg.legsToWin-cfg.legWins[i])}</div>`
       : '';
+    const f9=x01.first9?.[i];
+    const f9badge=f9!==null?`<div style="font-size:9px;color:${i===x01.current?"#aaa":"#bbb"};letter-spacing:1px">First 9: ${f9}</div>`:"";
+
     div.innerHTML=`
       <div class="tab-name">${name}</div>
       <div class="tab-score">${x01.scores[i]}</div>
       ${legBadge}
+      ${f9badge}
       <div class="tab-throws">${chipsHtml}</div>`;
     tabs.appendChild(div);
   });
@@ -1767,6 +1805,9 @@ function advanceX01(){
     turnScores:x01.turnScores.map(a=>[...a])
   });
   x01.turnScores[pi].push(spent);
+  // Track first-9: sum of first 3 turns (9 darts)
+  if(x01.turnScores[pi].length===3&&x01.first9[pi]===null)
+    x01.first9[pi]=x01.turnScores[pi].reduce((a,b)=>a+b,0);
   x01.scores[pi]-=spent;
   x01.lastTurnThrows[pi]=[...x01.throws];
   x01.historicThrows[pi].push(...x01.throws.filter(t=>t.svgX!=null));
@@ -1778,6 +1819,7 @@ function advanceX01(){
   if(next===0) x01.round++;
   redrawAllHits(boardSVG, x01.historicThrows[next], []);
   renderX01();
+  maybeRestartMic();
   if(cfg.isBot?.[next]) setTimeout(runBotTurn,800);
 }
 
@@ -2381,6 +2423,36 @@ function showWinner(name,round){
     ? `${cfg.legWins.map((w,i)=>cfg.players[i]+": "+w+" Legs").join(" | ")}`
     : `Runde ${round}`;
   document.getElementById("winner-round").textContent=legInfo;
+
+  // Session summary
+  const sumEl=document.getElementById("winner-summary");
+  if(sumEl&&cfg.mode!=="Cricket"&&x01.turnScores){
+    let html="";
+    cfg.players.forEach((p,i)=>{
+      if(cfg.isBot?.[i]) return;
+      const turns=x01.turnScores[i];
+      if(!turns.length) return;
+      const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
+      const best=Math.max(...turns);
+      const f9=x01.first9?.[i];
+      const coAtt=x01.checkoutAttempts?.[i]||0;
+      const coHit=x01.checkoutHits?.[i]||0;
+      const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
+      html+=`<div style="margin-bottom:10px;text-align:left;background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#e8c44a;letter-spacing:1px;margin-bottom:6px">${p}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:13px;color:#ccc">
+          <span>Ø Aufnahme</span><span style="color:#fff;font-weight:600">${avg}</span>
+          <span>Highscore</span><span style="color:#fff;font-weight:600">${best}</span>
+          ${f9!==null?`<span>First 9</span><span style="color:#fff;font-weight:600">${f9}</span>`:""}
+          <span>Checkout</span><span style="color:#fff;font-weight:600">${coHit}/${coAtt} (${coPct}%)</span>
+          <span>Aufnahmen</span><span style="color:#fff;font-weight:600">${turns.length}</span>
+        </div>
+      </div>`;
+    });
+    sumEl.innerHTML=html;
+    sumEl.style.display=html?"block":"none";
+  }
+
   document.getElementById("winner-overlay").classList.add("visible");
 }
 
