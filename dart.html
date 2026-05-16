@@ -95,18 +95,18 @@ signInAnonymously(auth)
   .home-tab.active { color: #e8c44a; border-bottom: 3px solid #e8c44a; }
   .home-tab-content { display: none; }
   .home-tab-content.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
-  .setup-card { background: #13131a; border: 1px solid #2a2a3a; border-radius: 16px; padding: 36px 32px; width: 420px; max-width: 95vw; }
+  .setup-card { background: #fff; border: 1px solid #ddd; border-radius: 16px; padding: 36px 32px; width: 420px; max-width: 95vw; }
   .logo { text-align: center; margin-bottom: 28px; }
   .logo-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; color: #e8c44a; line-height: 1; }
-  .logo-sub { color: #555; font-size: 12px; letter-spacing: 3px; margin-top: 2px; }
-  .field-label { color: #888; font-size: 11px; letter-spacing: 2px; margin-bottom: 8px; display: block; }
+  .logo-sub { color: #999; font-size: 12px; letter-spacing: 3px; margin-top: 2px; }
+  .field-label { color: #666; font-size: 11px; letter-spacing: 2px; margin-bottom: 8px; display: block; }
   .btn-group { display: flex; gap: 8px; margin-bottom: 20px; }
-  .btn-toggle { flex: 1; padding: 12px 0; background: #1e1e2e; color: #888; border: none; border-radius: 8px;
+  .btn-toggle { flex: 1; padding: 12px 0; background: #f0f0f0; color: #777; border: 1px solid #ddd; border-radius: 8px;
     font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; transition: all .2s; }
-  .btn-toggle.active { background: #e8c44a; color: #000; }
+  .btn-toggle.active { background: #e8c44a; color: #000; border-color: #e8c44a; }
   .player-input { display: block; width: 100%; margin-bottom: 8px; padding: 10px 14px;
-    background: #1e1e2e; border: 1px solid #2a2a3a; border-radius: 8px;
-    color: #eee; font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; }
+    background: #f8f8f8; border: 1px solid #ddd; border-radius: 8px;
+    color: #111; font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; }
   .btn-start { width: 100%; padding: 16px; background: #e8c44a; border: none; border-radius: 10px;
     font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; color: #000;
     margin-top: 12px; transition: opacity .2s; }
@@ -311,8 +311,7 @@ signInAnonymously(auth)
 
   <!-- TAB: PLAY -->
   <div class="home-tab-content active" id="tab-play">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto">
-  <div class="setup-card" style="width:100%;max-width:480px">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto;flex:1">
   <div class="setup-card">
     <div class="logo">
       <div class="logo-title">DART PRO</div>
