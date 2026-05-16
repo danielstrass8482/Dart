@@ -1844,7 +1844,12 @@ function handleX01Click(e){
   if(hit.miss){
     soundHit();
     renderX01();
-    if(x01.throws.length===3) setTimeout(advanceX01, 350);
+    if(x01.throws.length===3){
+      const turnScore=x01.throws.reduce((s,t)=>s+t.score,0);
+      if(turnScore<=9) soundLow();
+      speakScoreWithCustom(turnScore);
+      setTimeout(advanceX01, 800);
+    }
     return;
   }
 
