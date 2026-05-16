@@ -12,6 +12,8 @@ import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateD
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { getAuth, signInAnonymously }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
+  from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
 const fbCfg = {
   apiKey: "AIzaSyBvTU5OhJnvJW-hYJYYVTro2rNcNr60aCk",
   authDomain: "fitness-tracker-c6f97.firebaseapp.com",
@@ -20,6 +22,7 @@ const fbCfg = {
 const app  = initializeApp(fbCfg);
 const db   = getFirestore(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 signInAnonymously(auth)
   .then(()=>{
@@ -52,6 +55,25 @@ signInAnonymously(auth)
         const snap = await getDocs(query(collection(db,"dart_games"),
           where("playerIds","array-contains",playerId), orderBy("ts","desc"), limit(100)));
         return snap.docs.map(d=>({id:d.id,...d.data()}));
+      },
+      // Voice samples
+      async uploadVoiceSample(key, blob){
+        const r=ref(storage,`dart_voice/${key}.webm`);
+        await uploadBytes(r, blob, {contentType:"audio/webm"});
+        return getDownloadURL(r);
+      },
+      async getVoiceSampleURL(key){
+        try{ return await getDownloadURL(ref(storage,`dart_voice/${key}.webm`)); }
+        catch(e){ return null; }
+      },
+      async deleteVoiceSample(key){
+        try{ await deleteObject(ref(storage,`dart_voice/${key}.webm`)); }catch(e){}
+      },
+      async listVoiceSamples(){
+        try{
+          const list=await listAll(ref(storage,"dart_voice"));
+          return list.items.map(i=>i.name.replace(".webm",""));
+        }catch(e){ return []; }
       }
     };
     window.dispatchEvent(new Event("dbReady"));
@@ -269,6 +291,7 @@ signInAnonymously(auth)
   <div class="home-tabs">
     <button class="home-tab active" data-tab="play">🎯 Spiel</button>
     <button class="home-tab" data-tab="stats">📊 Statistiken</button>
+    <button class="home-tab" data-tab="studio">🎙️ Studio</button>
   </div>
 
   <!-- TAB: PLAY -->
@@ -341,8 +364,41 @@ signInAnonymously(auth)
   </div>
   </div>
 
-  <!-- TAB: STATS -->
-  <div class="home-tab-content" id="tab-stats">
+  <!-- TAB: STUDIO -->
+  <div class="home-tab-content" id="tab-studio">
+  <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
+
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#1a1a1a;margin-bottom:4px">🎙️ STIMM-STUDIO</div>
+    <div style="font-size:12px;color:#999;margin-bottom:16px">Nimm deine eigene Stimme für die Ansagen auf. Alle aufgenommenen Zahlen ersetzen die synthetische Stimme.</div>
+
+    <!-- Progress bar -->
+    <div style="background:#f0f0f0;border-radius:6px;height:8px;margin-bottom:6px">
+      <div id="studio-progress-bar" style="background:#e8c44a;height:8px;border-radius:6px;width:0%;transition:width .3s"></div>
+    </div>
+    <div style="font-size:12px;color:#999;margin-bottom:16px" id="studio-progress-text">0 von 0 aufgenommen</div>
+
+    <!-- Current recording UI -->
+    <div id="studio-recorder" style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
+      <div style="font-size:11px;color:#999;letter-spacing:2px;margin-bottom:8px">AKTUELLE AUFNAHME</div>
+      <div id="studio-current-label" style="font-family:'Bebas Neue',sans-serif;font-size:64px;color:#1a1a1a;line-height:1">—</div>
+      <div id="studio-current-hint" style="font-size:12px;color:#aaa;margin-bottom:16px"></div>
+
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button id="studio-rec-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:#e53935;border-radius:10px" disabled>⏺ Aufnehmen</button>
+        <button id="studio-play-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:#555;border-radius:10px;display:none">▶ Anhören</button>
+        <button id="studio-save-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:#2e7d32;border-radius:10px;display:none">✓ Speichern</button>
+        <button id="studio-skip-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:#888;border-radius:10px">→ Überspringen</button>
+        <button id="studio-delete-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:#c62828;border-radius:10px;display:none">🗑 Löschen</button>
+      </div>
+      <div id="studio-status" style="font-size:12px;color:#aaa;margin-top:12px;min-height:16px"></div>
+    </div>
+
+    <!-- Grid of all scores -->
+    <div style="font-size:11px;color:#999;letter-spacing:2px;margin-bottom:8px">ALLE ANSAGEN</div>
+    <div id="studio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px"></div>
+
+  </div>
+  </div>
   <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
 
     <!-- Player selector -->
@@ -1494,11 +1550,11 @@ function runBotTurn(){
             x01.checkoutHits[botIdx]++;
             x01.turnScores[botIdx].push(spent);
             soundApplause();
-            speakScore(spent);
+            speakScoreWithCustom(spent);
             handleLegWin(botIdx);
             renderX01();
           } else if(newRem>0){
-            speakScore(spent);
+            speakScoreWithCustom(spent);
             if(spent>=100) soundApplause();
             else if(spent<=9) soundLow();
             advanceX01();
@@ -1754,14 +1810,14 @@ function handleX01Click(e){
 
   if(tent<0||tent===1){
     x01.bust=true;
-    soundBust(); speak("Bust!");
+    soundBust(); speakKeyWithCustom("bust","Bust!");
     renderX01();
     return;
   }
   if(tent===0){
     if(!hit.label.startsWith("D")&&hit.label!=="Bull"){
       x01.bust=true;
-      soundBust(); speak("Bust!");
+      soundBust(); speakKeyWithCustom("bust","Bust!");
       renderX01();
       return;
     }
@@ -1776,15 +1832,14 @@ function handleX01Click(e){
   }
 
   // Sound based on score
-  const turnScore=x01.throws.reduce((s,t)=>s+t.score,0);
-  if(x01.throws.length===3){
-    if(turnScore<=9) soundLow();
-    else if(turnScore>=100) soundApplause();
-    else soundHit();
-    speakScore(turnScore);
-  } else {
-    soundHit();
-  }
+    if(x01.throws.length===3){
+      if(turnScore<=9) soundLow();
+      else if(turnScore>=100) soundApplause();
+      else soundHit();
+      speakScoreWithCustom(turnScore);
+    } else {
+      soundHit();
+    }
 
   renderX01();
   if(x01.throws.length===3) setTimeout(advanceX01, 350);
@@ -2515,7 +2570,212 @@ async function updateAllPlayerStats(){
   }catch(e){ console.warn("updatePlayerStats failed",e); }
 }
 
-// ── Stats state ───────────────────────────────────────────────────
+// ── Custom audio cache ────────────────────────────────────────────
+const voiceCache={}; // key → AudioBuffer
+
+async function playCustomAudio(key){
+  if(!window.dartDB) return false;
+  try{
+    // Check cache first
+    if(!voiceCache[key]){
+      const url=await window.dartDB.getVoiceSampleURL(key);
+      if(!url) return false;
+      const ctx=getAudio();
+      const resp=await fetch(url);
+      const arrBuf=await resp.arrayBuffer();
+      voiceCache[key]=await ctx.decodeAudioData(arrBuf);
+    }
+    const ctx=getAudio();
+    const src=ctx.createBufferSource();
+    src.buffer=voiceCache[key];
+    src.connect(ctx.destination);
+    src.start();
+    return true;
+  }catch(e){ return false; }
+}
+
+// Updated speakScore — tries custom audio first, falls back to TTS
+async function speakScoreWithCustom(score){
+  const key=`score_${score}`;
+  const played=await playCustomAudio(key);
+  if(!played) speakScore(score);
+}
+
+// Updated speak for bust/special
+async function speakKeyWithCustom(key, fallbackText){
+  const played=await playCustomAudio(key);
+  if(!played) speak(fallbackText);
+}
+
+// ── Studio engine ─────────────────────────────────────────────────
+// All possible scores that need to be announced
+function getAllStudioKeys(){
+  const keys=[];
+  // Turn scores 0–180 (all achievable with 3 darts)
+  // Pre-computed set of valid 3-dart scores
+  const valid=new Set();
+  for(let a=0;a<=60;a++){
+    for(let b=0;b<=60;b++){
+      const c=a+b;
+      if(c<=180) valid.add(a+b);
+      valid.add(a); valid.add(b);
+    }
+  }
+  // Simpler: all 0-180
+  for(let i=0;i<=180;i++) keys.push({key:`score_${i}`,label:`${i}`,hint:i===180?"Maximum!":i===0?"Daneben / Bust":""});
+  // Special
+  keys.push({key:"bust",label:"BUST",hint:"Wenn zu viele Punkte"});
+  return keys;
+}
+
+let studioKeys=[];
+let studioIdx=0;
+let studioRecorded=new Set();
+let studioMediaRecorder=null;
+let studioChunks=[];
+let studioBlob=null;
+let studioAudioEl=null;
+
+async function initStudio(){
+  if(!window.dartDB){ document.getElementById("studio-status").textContent="Datenbank nicht bereit"; return; }
+  studioKeys=getAllStudioKeys();
+  // Load which keys already exist
+  const existing=await window.dartDB.listVoiceSamples();
+  studioRecorded=new Set(existing);
+  // Clear cache so fresh downloads happen
+  Object.keys(voiceCache).forEach(k=>delete voiceCache[k]);
+  renderStudioGrid();
+  // Find first unrecorded
+  const firstMissing=studioKeys.findIndex(k=>!studioRecorded.has(k.key));
+  selectStudioItem(firstMissing>=0?firstMissing:0);
+}
+
+function renderStudioGrid(){
+  const grid=document.getElementById("studio-grid");
+  const recorded=studioRecorded.size;
+  const total=studioKeys.length;
+  document.getElementById("studio-progress-bar").style.width=`${Math.round(recorded/total*100)}%`;
+  document.getElementById("studio-progress-text").textContent=`${recorded} von ${total} aufgenommen`;
+
+  grid.innerHTML=studioKeys.map((k,i)=>{
+    const done=studioRecorded.has(k.key);
+    const active=i===studioIdx;
+    return `<button onclick="selectStudioItem(${i})" style="
+      padding:8px 4px;border-radius:8px;border:2px solid ${active?"#e8c44a":done?"#2e7d32":"#eee"};
+      background:${active?"#fffbea":done?"#f0fff4":"#fafafa"};
+      font-family:'Bebas Neue',sans-serif;font-size:15px;
+      color:${active?"#1a1a1a":done?"#2e7d32":"#bbb"};cursor:pointer;
+      position:relative">
+      ${k.label}
+      ${done?'<span style="position:absolute;top:1px;right:3px;font-size:8px">✓</span>':""}
+    </button>`;
+  }).join("");
+}
+
+window.selectStudioItem=function(idx){
+  studioIdx=idx;
+  studioBlob=null;
+  studioChunks=[];
+  const item=studioKeys[idx];
+  if(!item) return;
+
+  document.getElementById("studio-current-label").textContent=item.label;
+  document.getElementById("studio-current-hint").textContent=item.hint||"";
+  document.getElementById("studio-status").textContent="";
+  document.getElementById("studio-play-btn").style.display="none";
+  document.getElementById("studio-save-btn").style.display="none";
+  document.getElementById("studio-rec-btn").disabled=false;
+  document.getElementById("studio-rec-btn").textContent="⏺ Aufnehmen";
+  document.getElementById("studio-rec-btn").style.background="#e53935";
+
+  const hasSample=studioRecorded.has(item.key);
+  document.getElementById("studio-delete-btn").style.display=hasSample?"":"none";
+  renderStudioGrid();
+};
+
+// Request mic permission once
+let studioStream=null;
+async function getStudioStream(){
+  if(studioStream&&studioStream.active) return studioStream;
+  studioStream=await navigator.mediaDevices.getUserMedia({audio:true});
+  return studioStream;
+}
+
+document.getElementById("studio-rec-btn").addEventListener("click",async()=>{
+  const btn=document.getElementById("studio-rec-btn");
+  if(studioMediaRecorder&&studioMediaRecorder.state==="recording"){
+    studioMediaRecorder.stop();
+    return;
+  }
+  try{
+    const stream=await getStudioStream();
+    studioChunks=[];
+    studioMediaRecorder=new MediaRecorder(stream,{mimeType:"audio/webm"});
+    studioMediaRecorder.ondataavailable=e=>{ if(e.data.size>0) studioChunks.push(e.data); };
+    studioMediaRecorder.onstop=()=>{
+      studioBlob=new Blob(studioChunks,{type:"audio/webm"});
+      const url=URL.createObjectURL(studioBlob);
+      studioAudioEl=new Audio(url);
+      btn.textContent="⏺ Nochmal";
+      btn.style.background="#e53935";
+      document.getElementById("studio-play-btn").style.display="";
+      document.getElementById("studio-save-btn").style.display="";
+      document.getElementById("studio-status").textContent="Aufnahme bereit — anhören oder speichern";
+    };
+    studioMediaRecorder.start();
+    btn.textContent="⏹ Stop";
+    btn.style.background="#555";
+    document.getElementById("studio-status").textContent="🔴 Aufnahme läuft…";
+    document.getElementById("studio-play-btn").style.display="none";
+    document.getElementById("studio-save-btn").style.display="none";
+  }catch(e){
+    document.getElementById("studio-status").textContent="Mikrofon-Fehler: "+e.message;
+  }
+});
+
+document.getElementById("studio-play-btn").addEventListener("click",()=>{
+  if(studioAudioEl){ studioAudioEl.currentTime=0; studioAudioEl.play(); }
+});
+
+document.getElementById("studio-save-btn").addEventListener("click",async()=>{
+  if(!studioBlob) return;
+  const item=studioKeys[studioIdx];
+  document.getElementById("studio-status").textContent="Speichere…";
+  document.getElementById("studio-save-btn").disabled=true;
+  try{
+    await window.dartDB.uploadVoiceSample(item.key, studioBlob);
+    studioRecorded.add(item.key);
+    delete voiceCache[item.key]; // clear cache so new file is loaded
+    document.getElementById("studio-status").textContent="✓ Gespeichert!";
+    document.getElementById("studio-delete-btn").style.display="";
+    document.getElementById("studio-save-btn").disabled=false;
+    // Auto-advance to next unrecorded
+    setTimeout(()=>{
+      const next=studioKeys.findIndex((k,i)=>i>studioIdx&&!studioRecorded.has(k.key));
+      selectStudioItem(next>=0?next:studioIdx);
+    },600);
+  }catch(e){
+    document.getElementById("studio-status").textContent="Fehler: "+e.message;
+    document.getElementById("studio-save-btn").disabled=false;
+  }
+});
+
+document.getElementById("studio-skip-btn").addEventListener("click",()=>{
+  const next=studioKeys.findIndex((k,i)=>i>studioIdx&&!studioRecorded.has(k.key));
+  if(next>=0) selectStudioItem(next);
+  else selectStudioItem((studioIdx+1)%studioKeys.length);
+});
+
+document.getElementById("studio-delete-btn").addEventListener("click",async()=>{
+  const item=studioKeys[studioIdx];
+  if(!confirm(`Aufnahme für "${item.label}" löschen?`)) return;
+  await window.dartDB.deleteVoiceSample(item.key);
+  studioRecorded.delete(item.key);
+  delete voiceCache[item.key];
+  document.getElementById("studio-delete-btn").style.display="none";
+  document.getElementById("studio-status").textContent="Gelöscht";
+  renderStudioGrid();
+});
 let statsSelectedPlayer = null; // null = all players
 let statsRange = 'all';
 let statsFrom = null, statsTo = null;
@@ -2529,6 +2789,7 @@ document.querySelectorAll(".home-tab").forEach(btn=>{
     btn.classList.add("active");
     document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
     if(btn.dataset.tab==="stats") loadAndRenderStats();
+    if(btn.dataset.tab==="studio") initStudio();
   });
 });
 
