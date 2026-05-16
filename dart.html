@@ -286,6 +286,29 @@ signInAnonymously(auth)
       <button class="btn-toggle" data-value="301">301</button>
       <button class="btn-toggle" data-value="Cricket">Cricket</button>
     </div>
+    <div id="extra-modes-wrap" style="margin-bottom:12px">
+      <button id="btn-extra-modes" style="background:none;border:1px solid #ddd;color:#888;
+        padding:6px 14px;border-radius:6px;font-size:12px;width:100%;cursor:pointer;
+        font-family:'DM Sans',sans-serif;letter-spacing:1px">▼ WEITERE MODI</button>
+      <div id="extra-modes" style="display:none;margin-top:8px">
+        <div class="btn-group" id="extra-mode-group" style="flex-wrap:wrap">
+          <button class="btn-toggle" data-value="AtC">Clock</button>
+          <button class="btn-toggle" data-value="Shanghai">Shanghai</button>
+          <button class="btn-toggle" data-value="Highscore">Highscore</button>
+          <button class="btn-toggle" data-value="Killer">Killer</button>
+          <button class="btn-toggle" data-value="Elimination">Elimination</button>
+        </div>
+      </div>
+    </div>
+    <!-- Highscore rounds selector -->
+    <div id="rounds-selector" style="display:none">
+      <label class="field-label">ANZAHL RUNDEN</label>
+      <div class="btn-group" id="rounds-group">
+        <button class="btn-toggle" data-value="5">5</button>
+        <button class="btn-toggle active" data-value="8">8</button>
+        <button class="btn-toggle" data-value="10">10</button>
+      </div>
+    </div>
 
     <label class="field-label">SPIELER AUSWÄHLEN</label>
     <div class="player-sel-hint" id="sel-hint">Tippe Spieler an um sie auszuwählen (Reihenfolge = Startreihenfolge)</div>
@@ -303,6 +326,14 @@ signInAnonymously(auth)
       <button class="btn-toggle" data-value="3">3</button>
       <button class="btn-toggle" data-value="5">5</button>
       <button class="btn-toggle" data-value="7">7</button>
+    </div>
+
+    <label class="field-label" style="margin-top:4px">BOT-GEGNER</label>
+    <div class="btn-group" id="bot-group">
+      <button class="btn-toggle active" data-value="none">Kein Bot</button>
+      <button class="btn-toggle" data-value="easy">🤖 Anfänger</button>
+      <button class="btn-toggle" data-value="medium">🤖 Mittel</button>
+      <button class="btn-toggle" data-value="pro">🤖 Profi</button>
     </div>
 
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
@@ -420,7 +451,39 @@ signInAnonymously(auth)
   </div>
 </div>
 
-<!-- ═══════════════════════ WINNER OVERLAY ═══════════════════════ -->
+<!-- ═══════════════════════ PARTY GAME SCREEN ═══════════════════════ -->
+<div id="party" class="screen">
+  <div class="game-header">
+    <button class="btn-nav" id="party-back">← Zurück</button>
+    <div class="game-title" id="party-title">Around the Clock</div>
+    <button class="btn-nav" id="party-undo">↩ Undo</button>
+  </div>
+
+  <div class="player-tabs" id="party-tabs"></div>
+
+  <!-- Mode info bar -->
+  <div id="party-info-bar" style="padding:6px 16px;background:#fff;border-bottom:1px solid #eee;font-size:13px;color:#555;flex-shrink:0;text-align:center"></div>
+
+  <div class="game-body">
+    <div class="board-wrap">
+      <svg id="board-svg-party" viewBox="0 0 530 530"></svg>
+    </div>
+    <div class="side-panel">
+      <div class="panel-box">
+        <div class="panel-label">WÜRFE</div>
+        <div class="throw-slots" id="party-slots">
+          <div class="throw-slot" id="pslot-0">—</div>
+          <div class="throw-slot" id="pslot-1">—</div>
+          <div class="throw-slot" id="pslot-2">—</div>
+        </div>
+        <div class="bust-label" id="party-bust-label" style="display:none"></div>
+      </div>
+      <!-- Scoreboard for party games -->
+      <div class="panel-box" id="party-scoreboard" style="flex:1;overflow-y:auto"></div>
+      <button class="btn-next ok" id="party-next" style="display:none">NÄCHSTER SPIELER</button>
+    </div>
+  </div>
+</div>
 <div class="winner-overlay" id="winner-overlay">
   <div>
     <div class="winner-label">GEWINNER</div>
@@ -1063,7 +1126,29 @@ const AVATAR_COLORS=["#e53935","#1e88e5","#43a047","#fb8c00","#8e24aa","#00897b"
 modeGroup.addEventListener("click",e=>{
   if(!e.target.dataset.value) return;
   selectedMode=e.target.dataset.value;
+  // Deselect extra modes
+  document.querySelectorAll("#extra-mode-group .btn-toggle").forEach(b=>b.classList.remove("active"));
   modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
+  document.getElementById("rounds-selector").style.display="none";
+});
+
+// Extra modes toggle button
+document.getElementById("btn-extra-modes").addEventListener("click",()=>{
+  const panel=document.getElementById("extra-modes");
+  const btn=document.getElementById("btn-extra-modes");
+  const open=panel.style.display==="none";
+  panel.style.display=open?"block":"none";
+  btn.textContent=open?"▲ WEITERE MODI":"▼ WEITERE MODI";
+});
+
+// Extra mode group
+document.getElementById("extra-mode-group").addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedMode=e.target.dataset.value;
+  // Deselect main modes
+  modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll("#extra-mode-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
+  document.getElementById("rounds-selector").style.display=selectedMode==="Highscore"?"block":"none";
 });
 
 legsGroup.addEventListener("click",e=>{
@@ -1157,20 +1242,53 @@ document.getElementById("new-player-input").addEventListener("keydown",e=>{
   if(e.key==="Enter") document.getElementById("btn-add-player").click();
 });
 
+let selectedRounds=8;
+document.getElementById("rounds-group")?.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedRounds=+e.target.dataset.value;
+  document.querySelectorAll("#rounds-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedRounds));
+});
+
+let selectedBot="none";
+document.getElementById("bot-group").addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedBot=e.target.dataset.value;
+  document.querySelectorAll("#bot-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedBot));
+});
+
 document.getElementById("btn-start").addEventListener("click",()=>{
   if(selectedPlayers.length<1){ alert("Bitte mindestens 1 Spieler auswählen!"); return; }
+  if(selectedMode==="Killer"&&selectedPlayers.length<2&&selectedBot==="none"){ alert("Killer braucht mindestens 2 Spieler!"); return; }
+
+  const players=[...selectedPlayers.map(p=>p.name)];
+  const playerIds=[...selectedPlayers.map(p=>p.id)];
+  const isBot=[];
+  isBot.length=players.length; isBot.fill(false);
+
+  if(selectedBot!=="none"){
+    const botName=selectedBot==="easy"?"Bot (Anfänger)":selectedBot==="medium"?"Bot (Mittel)":"Bot (Profi)";
+    players.push(botName);
+    playerIds.push(null);
+    isBot.push(true);
+  }
+
   cfg={
     mode:selectedMode,
     startScore:selectedMode==="301"?301:501,
-    players:selectedPlayers.map(p=>p.name),
-    playerIds:selectedPlayers.map(p=>p.id),
+    players,
+    playerIds,
     playerObjects:[...selectedPlayers],
+    isBot,
+    botLevel:selectedBot,
     totalLegs:selectedLegs,
     legsToWin:Math.ceil(selectedLegs/2),
-    legWins:selectedPlayers.map(()=>0),
-    currentLeg:1
+    legWins:players.map(()=>0),
+    currentLeg:1,
+    rounds:selectedRounds
   };
+  const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
   if(cfg.mode==="Cricket") startCricket();
+  else if(partyModes.includes(cfg.mode)) startParty();
   else startX01();
 });
 
@@ -1193,8 +1311,194 @@ function showSetup(){
 document.getElementById("btn-new-game").addEventListener("click",showSetup);
 
 // ══════════════════════════════════════════════════════════════════
-// X01 GAME
+// BOT ENGINE
 // ══════════════════════════════════════════════════════════════════
+
+// Accuracy per level: probability of hitting intended segment
+const BOT_ACCURACY={ easy:0.22, medium:0.52, pro:0.82 };
+
+// Optimal target selection for x01
+function botChooseTarget(remaining, level){
+  // Checkout phase (≤170): use checkout table, aim for the first dart
+  if(remaining<=170 && CHECKOUTS[remaining]){
+    const parts=CHECKOUTS[remaining].split(" ");
+    return parseTargetString(parts[0]);
+  }
+  // Standard phase
+  if(level==="pro"){
+    // Pro: T20 unless remaining makes T19 or T17 better for setup
+    if(remaining===85||remaining===87||remaining===89||remaining===91||remaining===93||remaining===95)
+      return {num:19,ring:"triple"};
+    if(remaining>=62) return {num:20,ring:"triple"};
+    if(remaining>=41) return {num:remaining<=60?Math.floor((remaining-1)/2):20,ring:"double"};
+    return {num:remaining<=40?remaining/2:20,ring:"double"};
+  }
+  if(level==="medium"){
+    if(remaining>=61) return {num:20,ring:"triple"};
+    if(remaining>40)  return {num:20,ring:"single"};
+    return {num:remaining/2,ring:"double"};
+  }
+  // easy: just aim at biggest single
+  return {num:20,ring:"single"};
+}
+
+function parseTargetString(s){
+  if(s==="Bull"||s==="D25") return {num:25,ring:"bull"};
+  if(s.startsWith("T")) return {num:parseInt(s.slice(1)),ring:"triple"};
+  if(s.startsWith("D")) return {num:parseInt(s.slice(1)),ring:"double"};
+  if(s.startsWith("S")) return {num:parseInt(s.slice(1)),ring:"single"};
+  return {num:parseInt(s)||20,ring:"single"};
+}
+
+// Simulate a single bot throw given a target and accuracy
+function botThrow(remaining, level){
+  const acc=BOT_ACCURACY[level]||0.5;
+  const target=botChooseTarget(remaining, level);
+  const rand=Math.random();
+
+  if(rand<acc){
+    // Hit intended target
+    return makeBotHit(target);
+  }
+
+  // Miss — land somewhere nearby or random
+  const missRand=Math.random();
+  if(missRand<0.5){
+    // Adjacent sector
+    const idx=SECTORS.indexOf(target.num);
+    const adj=SECTORS[(idx+(Math.random()<0.5?1:-1)+20)%20];
+    return makeBotHit({num:adj,ring:target.ring==="triple"?"single":target.ring});
+  } else if(missRand<0.75){
+    // Same sector, wrong ring
+    const rings=["single","single","double","triple"];
+    const ring=rings[Math.floor(Math.random()*rings.length)];
+    return makeBotHit({num:target.num,ring});
+  } else {
+    // Random segment, single
+    return makeBotHit({num:SECTORS[Math.floor(Math.random()*20)],ring:"single"});
+  }
+}
+
+function makeBotHit(target){
+  const {num,ring}=target;
+  if(ring==="bull")    return {score:50,label:"Bull",svgX:null,svgY:null};
+  if(ring==="bull25")  return {score:25,label:"Bull 25",svgX:null,svgY:null};
+  if(ring==="triple")  return {score:num*3,label:`T${num}`,svgX:null,svgY:null};
+  if(ring==="double")  return {score:num*2,label:`D${num}`,svgX:null,svgY:null};
+  return {score:num,label:`${num}`,svgX:null,svgY:null};
+}
+
+// Check if a bot throw busts
+function wouldBust(remaining, throwScore){
+  const after=remaining-throwScore;
+  return after<0||after===1;
+}
+
+// Generate a full bot turn (3 throws), respecting bust rules
+function botTakeTurn(remaining, level){
+  const throws=[];
+  let rem=remaining;
+  for(let i=0;i<3;i++){
+    const t=botThrow(rem,level);
+    // Bust check
+    const after=rem-t.score;
+    if(after<0||after===1){
+      // Try double-only safe throw if in checkout range
+      if(rem<=40&&rem%2===0){
+        const safeHit=makeBotHit({num:rem/2,ring:"double"});
+        if(Math.random()<BOT_ACCURACY[level]){
+          throws.push(safeHit); break; // checkout!
+        }
+      }
+      // Miss intentionally to avoid bust
+      throws.push({score:0,label:"Miss",svgX:null,svgY:null,miss:true});
+      break;
+    }
+    throws.push(t);
+    rem=after;
+    if(rem===0) break; // won!
+  }
+  return throws;
+}
+
+// Animate bot turn with delays so it feels natural
+function runBotTurn(){
+  const botIdx=x01.current;
+  const level=cfg.botLevel||"medium";
+  let rem=x01.scores[botIdx];
+
+  disableBoard(boardSVG,true);
+
+  const turns=botTakeTurn(rem,level);
+  let delay=600;
+
+  turns.forEach((t,i)=>{
+    setTimeout(()=>{
+      // Save state for undo
+      x01.history.push({
+        scores:[...x01.scores],current:x01.current,round:x01.round,
+        throws:[...x01.throws],bust:x01.bust,
+        historicLens:x01.historicThrows.map(a=>a.length),
+        lastTurnThrows:x01.lastTurnThrows.map(a=>[...a]),
+        turnScores:x01.turnScores.map(a=>[...a])
+      });
+
+      x01.throws.push(t);
+      x01.allThrows[botIdx].push(t);
+      soundHit();
+      renderX01();
+
+      // Last throw of the turn
+      if(i===turns.length-1){
+        const spent=x01.throws.reduce((s,t2)=>s+t2.score,0);
+        const prevRem=x01.scores[botIdx];
+        const newRem=prevRem-spent;
+
+        setTimeout(()=>{
+          if(newRem===0){
+            x01.scores[botIdx]=0;
+            x01.winner=botIdx;
+            x01.checkoutHits[botIdx]++;
+            x01.turnScores[botIdx].push(spent);
+            soundApplause();
+            speakScore(spent);
+            handleLegWin(botIdx);
+            renderX01();
+          } else if(newRem>0){
+            speakScore(spent);
+            if(spent>=100) soundApplause();
+            else if(spent<=9) soundLow();
+            advanceX01();
+          } else {
+            // bust
+            x01.bust=true;
+            soundBust();
+            renderX01();
+            setTimeout(()=>{
+              x01.history.push({scores:[...x01.scores],current:x01.current,round:x01.round,
+                throws:[...x01.throws],bust:true,
+                historicLens:x01.historicThrows.map(a=>a.length),
+                lastTurnThrows:x01.lastTurnThrows.map(a=>[...a]),
+                turnScores:x01.turnScores.map(a=>[...a])});
+              x01.lastTurnThrows[botIdx]=[...x01.throws];
+              x01.historicThrows[botIdx].push(...x01.throws.filter(t2=>t2.svgX!=null));
+              x01.throws=[];x01.bust=false;
+              clearCheckout(boardSVG);
+              const next=(botIdx+1)%cfg.players.length;
+              x01.current=next;
+              if(next===0) x01.round++;
+              redrawAllHits(boardSVG,x01.historicThrows[next],[]);
+              renderX01();
+              // Trigger next bot turn if needed
+              if(cfg.isBot?.[next]) setTimeout(runBotTurn,800);
+            },700);
+          }
+        },350);
+      }
+    },delay);
+    delay+=550;
+  });
+}
 const boardSVG=document.getElementById("board-svg");
 buildBoard(boardSVG);
 
@@ -1221,8 +1525,9 @@ function startX01(starter=0){
   clearHits(boardSVG);
   renderX01();
   showScreen("x01");
-  document.getElementById("x01-title").textContent=`${cfg.mode} · Runde 1`;
   disableBoard(boardSVG,false);
+  // If bot goes first
+  if(cfg.isBot?.[x01.current]) setTimeout(runBotTurn,800);
 }
 
 function renderX01Tabs(){
@@ -1473,6 +1778,7 @@ function advanceX01(){
   if(next===0) x01.round++;
   redrawAllHits(boardSVG, x01.historicThrows[next], []);
   renderX01();
+  if(cfg.isBot?.[next]) setTimeout(runBotTurn,800);
 }
 
 document.getElementById("btn-next").addEventListener("click",()=>{
@@ -1497,6 +1803,7 @@ document.getElementById("btn-next").addEventListener("click",()=>{
     if(next===0) x01.round++;
     redrawAllHits(boardSVG, x01.historicThrows[next], []);
     renderX01();
+    if(cfg.isBot?.[next]) setTimeout(runBotTurn,800);
   } else {
     advanceX01();
   }
@@ -1675,6 +1982,364 @@ document.getElementById("cr-undo").addEventListener("click",()=>{
 document.getElementById("cr-back").addEventListener("click",showSetup);
 
 // ══════════════════════════════════════════════════════════════════
+// PARTY GAMES ENGINE
+// ══════════════════════════════════════════════════════════════════
+const boardSVGparty=document.getElementById("board-svg-party");
+buildBoard(boardSVGparty);
+
+let pg={}; // party game state
+
+function startParty(){
+  const n=cfg.players.length;
+  pg={
+    mode: cfg.mode,
+    current: 0,
+    throws: [],
+    history: [],
+    historicThrows: cfg.players.map(()=>[]),
+    winner: null,
+    // Around the Clock
+    atcTarget: cfg.players.map(()=>1),       // current target per player (1-20)
+    // Shanghai
+    shanghaiRound: 1,                         // current number (1-7)
+    shanghaiScores: cfg.players.map(()=>0),
+    // Highscore
+    hsScores: cfg.players.map(()=>0),
+    hsRound: 1,
+    hsMaxRounds: cfg.rounds||8,
+    // Killer
+    killerNumbers: assignKillerNumbers(n),    // random number per player
+    killerIsKiller: cfg.players.map(()=>false),
+    killerLives: cfg.players.map(()=>3),
+    killerEliminated: cfg.players.map(()=>false),
+    // Elimination (reuses x01 logic via wrapper)
+    elimScores: cfg.players.map(()=>501),
+  };
+  clearHits(boardSVGparty);
+  renderParty();
+  showScreen("party");
+  disableBoard(boardSVGparty,false);
+}
+
+function assignKillerNumbers(n){
+  const nums=[...Array(20)].map((_,i)=>i+1);
+  // shuffle
+  for(let i=nums.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [nums[i],nums[j]]=[nums[j],nums[i]]; }
+  return nums.slice(0,n);
+}
+
+function partyTargetHighlight(){
+  clearCheckout(boardSVGparty);
+  const g=boardSVGparty.querySelector("#board-svg-party-checkout");
+  if(!g) return;
+  const ns="http://www.w3.org/2000/svg";
+  function mkPath(d){ const p=document.createElementNS(ns,"path"); p.setAttribute("d",d);
+    p.setAttribute("fill","rgba(80,200,255,0.35)"); p.setAttribute("stroke","#00ccff");
+    p.setAttribute("stroke-width","2.5");
+    p.innerHTML=`<animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/>`;
+    g.appendChild(p); }
+  function mkCircle(r1,r2){ const c=document.createElementNS(ns,"circle"); c.setAttribute("cx",CX); c.setAttribute("cy",CY); c.setAttribute("r",r1);
+    c.setAttribute("fill","rgba(80,200,255,0.35)"); c.setAttribute("stroke","#00ccff"); c.setAttribute("stroke-width","2");
+    c.innerHTML=`<animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite"/>`;
+    g.appendChild(c); }
+
+  if(pg.mode==="AtC"){
+    const t=pg.atcTarget[pg.current];
+    if(t>=1&&t<=20){ const idx=SECTORS.indexOf(t); if(idx>=0) mkPath(slicePath(R.bull25,R.dblOut,idx)); }
+  } else if(pg.mode==="Shanghai"){
+    const t=pg.shanghaiRound;
+    if(t===25){ mkCircle(R.bull25); return; }
+    if(t>=1&&t<=20){ const idx=SECTORS.indexOf(t); if(idx>=0) mkPath(slicePath(R.bull25,R.dblOut,idx)); }
+  } else if(pg.mode==="Killer"){
+    const pi=pg.current;
+    if(!pg.killerIsKiller[pi]){
+      // highlight own number (need double)
+      const t=pg.killerNumbers[pi];
+      const idx=SECTORS.indexOf(t); if(idx>=0) mkPath(slicePath(R.dblIn,R.dblOut,idx));
+    }
+  }
+}
+
+function renderPartyTabs(){
+  const tabs=document.getElementById("party-tabs");
+  tabs.innerHTML="";
+  cfg.players.forEach((name,i)=>{
+    const div=document.createElement("div");
+    const isActive=i===pg.current&&!pg.winner;
+    div.className="player-tab"+(isActive?" active":"");
+    let sub="";
+    if(pg.mode==="AtC") sub=`→ ${pg.atcTarget[i]===21?"✓":pg.atcTarget[i]}`;
+    else if(pg.mode==="Shanghai") sub=`${pg.shanghaiScores[i]}pts`;
+    else if(pg.mode==="Highscore") sub=`${pg.hsScores[i]}pts`;
+    else if(pg.mode==="Killer"){
+      const lives="❤️".repeat(pg.killerLives[i]);
+      const num=pg.killerNumbers[i];
+      const isK=pg.killerIsKiller[i];
+      sub=`${num}${isK?" ☠️":""} ${lives}`;
+    }
+    else if(pg.mode==="Elimination") sub=`${pg.elimScores[i]}`;
+    div.innerHTML=`<div class="tab-name">${name}</div><div class="tab-score" style="font-size:16px">${sub}</div>`;
+    tabs.appendChild(div);
+  });
+}
+
+function renderPartyScoreboard(){
+  const box=document.getElementById("party-scoreboard");
+  if(pg.mode==="AtC"){
+    box.innerHTML=`<div class="panel-label">FORTSCHRITT</div>`+
+      cfg.players.map((p,i)=>`<div style="margin-bottom:6px">
+        <div style="font-size:11px;color:#999">${p}</div>
+        <div style="font-size:20px;font-family:'Bebas Neue',sans-serif;color:${i===pg.current?"#e8c44a":"#555"}">
+          ${pg.atcTarget[i]===21?"FERTIG ✓":`Ziel: ${pg.atcTarget[i]}`}</div>
+      </div>`).join("");
+  } else if(pg.mode==="Shanghai"){
+    box.innerHTML=`<div class="panel-label">RUNDE ${pg.shanghaiRound} · ZIEL: ${pg.shanghaiRound}</div>`+
+      cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
+        <span style="font-size:13px;color:${i===pg.current?"#1a1a1a":"#999"}">${p}</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${i===pg.current?"#e8c44a":"#555"}">${pg.shanghaiScores[i]}</span>
+      </div>`).join("");
+  } else if(pg.mode==="Highscore"){
+    box.innerHTML=`<div class="panel-label">RUNDE ${pg.hsRound}/${pg.hsMaxRounds}</div>`+
+      cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
+        <span style="font-size:13px;color:${i===pg.current?"#1a1a1a":"#999"}">${p}</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${i===pg.current?"#e8c44a":"#555"}">${pg.hsScores[i]}</span>
+      </div>`).join("");
+  } else if(pg.mode==="Killer"){
+    box.innerHTML=`<div class="panel-label">KILLER</div>`+
+      cfg.players.map((p,i)=>{
+        if(pg.killerEliminated[i]) return `<div style="margin-bottom:4px;color:#ccc;text-decoration:line-through;font-size:13px">${p} — OUT</div>`;
+        const isK=pg.killerIsKiller[i];
+        return `<div style="margin-bottom:6px">
+          <div style="font-size:12px;color:${i===pg.current?"#1a1a1a":"#999"}">${p} · Zahl: <strong>${pg.killerNumbers[i]}</strong>${isK?" ☠️":""}</div>
+          <div style="font-size:18px">❤️</div>
+        </div>`;
+      }).join("");
+  } else if(pg.mode==="Elimination"){
+    box.innerHTML=`<div class="panel-label">ELIMINATION 501</div>`+
+      cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
+        <span style="font-size:13px;color:${i===pg.current?"#1a1a1a":"#999"}">${p}</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${i===pg.current?"#e8c44a":"#555"}">${pg.elimScores[i]}</span>
+      </div>`).join("");
+  }
+}
+
+function renderParty(){
+  // Slots
+  for(let i=0;i<3;i++){
+    const slot=document.getElementById(`pslot-${i}`);
+    const t=pg.throws[i];
+    slot.textContent=t?t.label:"—";
+    slot.className="throw-slot"+(t?" hit":"");
+  }
+  renderPartyTabs();
+  renderPartyScoreboard();
+  partyTargetHighlight();
+
+  // Info bar
+  const info=document.getElementById("party-info-bar");
+  if(pg.mode==="AtC") info.textContent=`Treffe alle Felder 1–20 der Reihe nach`;
+  else if(pg.mode==="Shanghai") info.textContent=`Runde ${pg.shanghaiRound}: Treffe die ${pg.shanghaiRound} · Shanghai = sofortiger Sieg`;
+  else if(pg.mode==="Highscore") info.textContent=`${pg.hsMaxRounds} Runden · Höchste Gesamtpunktzahl gewinnt`;
+  else if(pg.mode==="Killer") info.textContent=`Erst eigene Zahl per Double treffen, dann andere eliminieren`;
+  else if(pg.mode==="Elimination") info.textContent=`501 · Triffst du exakt den Score eines Gegners → er startet neu`;
+
+  // Title
+  const modeNames={AtC:"Around the Clock",Shanghai:"Shanghai",Highscore:"Highscore",Killer:"Killer",Elimination:"Elimination"};
+  document.getElementById("party-title").textContent=modeNames[pg.mode]||pg.mode;
+
+  // Next button
+  const btn=document.getElementById("party-next");
+  btn.style.display=(pg.throws.length>0&&!pg.winner)?"":"none";
+  btn.textContent=pg.throws.length<3?"ZÄHLEN & WEITER":"NÄCHSTER SPIELER";
+
+  disableBoard(boardSVGparty,!!pg.winner);
+}
+
+boardSVGparty.addEventListener("click",handlePartyClick);
+boardSVGparty.addEventListener("touchend",handlePartyClick);
+
+function handlePartyClick(e){
+  e.preventDefault();
+  if(pg.winner||pg.throws.length>=3) return;
+  const {x,y}=svgCoords(boardSVGparty,e);
+  const hit=hitFromXY(x,y);
+  if(!hit) return;
+
+  // Save history
+  pg.history.push(JSON.parse(JSON.stringify({
+    current:pg.current,throws:[...pg.throws],
+    atcTarget:[...pg.atcTarget],shanghaiScores:[...pg.shanghaiScores],shanghaiRound:pg.shanghaiRound,
+    hsScores:[...pg.hsScores],hsRound:pg.hsRound,
+    killerIsKiller:[...pg.killerIsKiller],killerLives:[...pg.killerLives],killerEliminated:[...pg.killerEliminated],
+    elimScores:[...pg.elimScores],historicLens:pg.historicThrows.map(a=>a.length)
+  })));
+
+  pg.throws.push({...hit,svgX:x,svgY:y});
+  pg.historicThrows[pg.current].push({...hit,svgX:x,svgY:y});
+  redrawAllHits(boardSVGparty,pg.historicThrows[pg.current],pg.throws);
+  soundHit();
+
+  let scored=false;
+
+  if(pg.mode==="AtC"){
+    const target=pg.atcTarget[pg.current];
+    if(target<=20){
+      const hitNum=hit.score===50?25:(hit.label.match(/\d+/)?parseInt(hit.label.match(/\d+/)[0]):0);
+      if(hitNum===target){
+        pg.atcTarget[pg.current]++;
+        soundApplause();
+        if(pg.atcTarget[pg.current]>20){
+          partyWin(pg.current); return;
+        }
+      }
+    }
+  }
+
+  else if(pg.mode==="Shanghai"){
+    const target=pg.shanghaiRound;
+    const hitNum=hit.label==="Bull"?50:hit.label==="Bull 25"?25:(parseInt(hit.label.replace(/[TD]/,""))||0);
+    const baseNum=hit.label.startsWith("T")?hitNum/3:hit.label.startsWith("D")?hitNum/2:hitNum;
+    if(baseNum===target){
+      pg.shanghaiScores[pg.current]+=hit.score;
+      // Check Shanghai (all three segments of the target in one turn)
+      const turnHits=pg.throws.map(t=>{
+        const b=t.label==="Bull"?50:t.label==="Bull 25"?25:(parseInt(t.label.replace(/[TD]/,""))||0);
+        const bn=t.label.startsWith("T")?b/3:t.label.startsWith("D")?b/2:b;
+        return bn===target?t.label[0]||"S":"";
+      }).filter(Boolean);
+      const hasSingle=pg.throws.some(t=>{ const b=parseInt(t.label)||0; return b===target&&!t.label.startsWith("T")&&!t.label.startsWith("D"); });
+      const hasDouble=pg.throws.some(t=>t.label===`D${target}`);
+      const hasTriple=pg.throws.some(t=>t.label===`T${target}`);
+      if(hasSingle&&hasDouble&&hasTriple){ speak("Shanghai!"); soundApplause(); partyWin(pg.current); return; }
+    }
+  }
+
+  else if(pg.mode==="Highscore"){
+    pg.hsScores[pg.current]+=hit.score;
+    if(hit.score>=100) soundApplause();
+  }
+
+  else if(pg.mode==="Killer"){
+    const pi=pg.current;
+    const hitNum=parseInt(hit.label.replace(/[TD]/,""))||0;
+    if(!pg.killerIsKiller[pi]){
+      // Must hit own number on double to become killer
+      if(hit.label===`D${pg.killerNumbers[pi]}`){
+        pg.killerIsKiller[pi]=true; speak("Killer!"); soundApplause();
+      }
+    } else {
+      // Hit other players' numbers to reduce their lives
+      cfg.players.forEach((_,oi)=>{
+        if(oi===pi||pg.killerEliminated[oi]) return;
+        if(hitNum===pg.killerNumbers[oi]){
+          const hits=hit.label.startsWith("T")?3:hit.label.startsWith("D")?2:1;
+          pg.killerLives[oi]=Math.max(0,pg.killerLives[oi]-hits);
+          if(pg.killerLives[oi]<=0){ pg.killerEliminated[oi]=true; speak("Out!"); }
+        }
+      });
+      const alive=cfg.players.filter((_,i)=>!pg.killerEliminated[i]);
+      if(alive.length===1){
+        const winIdx=cfg.players.findIndex((_,i)=>!pg.killerEliminated[i]);
+        partyWin(winIdx); return;
+      }
+    }
+  }
+
+  else if(pg.mode==="Elimination"){
+    const spent=pg.throws.reduce((s,t)=>s+t.score,0);
+    const newScore=pg.elimScores[pg.current]-spent;
+    if(newScore<0){ /* bust — handled on advance */ }
+    else {
+      // Check elimination after each throw
+      cfg.players.forEach((_,oi)=>{
+        if(oi===pg.current) return;
+        if(pg.elimScores[pg.current]-pg.throws.reduce((s,t)=>s+t.score,0)===pg.elimScores[oi]&&pg.elimScores[oi]>0){
+          pg.elimScores[oi]=501; speak("Eliminated!");
+        }
+      });
+      if(newScore===0&&hit.label.startsWith("D")){ partyWin(pg.current); return; }
+    }
+  }
+
+  renderParty();
+  if(pg.throws.length===3) setTimeout(advanceParty,350);
+}
+
+function advanceParty(){
+  const pi=pg.current;
+
+  // Mode-specific end-of-turn logic
+  if(pg.mode==="Shanghai"){
+    // After all players done this round, advance shanghaiRound
+    if(pi===cfg.players.length-1){
+      if(pg.shanghaiRound>=7){
+        // Game over — highest score wins
+        const maxScore=Math.max(...pg.shanghaiScores);
+        const winIdx=pg.shanghaiScores.indexOf(maxScore);
+        partyWin(winIdx); return;
+      }
+      pg.shanghaiRound++;
+    }
+  } else if(pg.mode==="Highscore"){
+    if(pi===cfg.players.length-1){
+      if(pg.hsRound>=pg.hsMaxRounds){
+        const maxScore=Math.max(...pg.hsScores);
+        const winIdx=pg.hsScores.indexOf(maxScore);
+        partyWin(winIdx); return;
+      }
+      pg.hsRound++;
+    }
+  } else if(pg.mode==="Elimination"){
+    const spent=pg.throws.reduce((s,t)=>s+t.score,0);
+    const newScore=pg.elimScores[pi]-spent;
+    if(newScore>=0) pg.elimScores[pi]=newScore;
+    // bust = no change
+  }
+
+  // Announce turn score for Shanghai/Highscore
+  if(["Shanghai","Highscore"].includes(pg.mode)){
+    const ts=pg.throws.reduce((s,t)=>s+t.score,0);
+    speakScore(ts);
+  }
+
+  pg.throws=[];
+
+  // Find next non-eliminated player
+  let next=(pi+1)%cfg.players.length;
+  if(pg.mode==="Killer"){
+    let tries=0;
+    while(pg.killerEliminated[next]&&tries<cfg.players.length){ next=(next+1)%cfg.players.length; tries++; }
+  }
+  pg.current=next;
+
+  redrawAllHits(boardSVGparty,pg.historicThrows[pg.current],[]);
+  renderParty();
+}
+
+function partyWin(winnerIdx){
+  pg.winner=winnerIdx;
+  soundApplause();
+  showWinner(cfg.players[winnerIdx],0);
+  saveGameToFirebase(winnerIdx);
+}
+
+document.getElementById("party-next").addEventListener("click",advanceParty);
+
+document.getElementById("party-undo").addEventListener("click",()=>{
+  if(pg.history.length===0) return;
+  const last=pg.history.pop();
+  Object.assign(pg,last);
+  pg.historicThrows=pg.historicThrows.map((a,i)=>a.slice(0,last.historicLens[i]||0));
+  pg.throws=last.throws;
+  pg.winner=null;
+  document.getElementById("winner-overlay").classList.remove("visible");
+  redrawAllHits(boardSVGparty,pg.historicThrows[pg.current],pg.throws);
+  renderParty();
+});
+
+document.getElementById("party-back").addEventListener("click",showSetup);
+
+// ══════════════════════════════════════════════════════════════════
 // WINNER + FIREBASE SAVE
 // ══════════════════════════════════════════════════════════════════
 function handleLegWin(winnerIdx){
@@ -1705,9 +2370,9 @@ function handleLegWin(winnerIdx){
 document.getElementById("btn-next-leg").addEventListener("click",()=>{
   document.getElementById("leg-overlay").classList.remove("visible");
   cfg.currentLeg++;
-  // Leg winner starts next leg (standard dart rule)
-  const legStarter = x01.winner;
+  const legStarter=x01.winner;
   startX01(legStarter);
+  // bot start handled inside startX01
 });
 
 function showWinner(name,round){
