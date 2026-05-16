@@ -136,27 +136,27 @@ signInAnonymously(auth)
   .game-body { display: flex; flex: 1; gap: 16px; padding: 10px 12px 12px; min-height: 0; align-items: flex-start; background: #f5f5f0; overflow: hidden; }
   .board-wrap { flex: 0 0 auto; width: min(75vh, 72vw); aspect-ratio: 1; position: relative; }
   #board-svg, #board-svg-cricket { width: 100%; height: 100%; touch-action: none; user-select: none; display: block; }
-  .side-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 140px; max-width: 320px; overflow-y: auto; }
+  .side-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 180px; max-width: 380px; overflow-y: auto; }
   .panel-box { background: #fff; border-radius: 10px; padding: 12px; border: 1px solid #ddd; }
   .panel-label { font-size: 10px; color: #999; letter-spacing: 2px; margin-bottom: 8px; }
 
   /* ── Turn history table ── */
   .turn-table-wrap { background: #fff; border-radius: 10px; border: 1px solid #ddd; overflow: hidden; flex: 1; }
-  .turn-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .turn-table th { background: #f8f8f8; padding: 5px 6px; font-size: 9px; color: #999;
-    letter-spacing: 1px; font-weight: 500; border-bottom: 1px solid #eee; white-space: nowrap; }
-  .turn-table th.player-header { color: #1a1a1a; font-size: 10px; font-weight: 700; }
-  .turn-table td { padding: 4px 6px; border-bottom: 1px solid #f5f5f5; text-align: center;
-    font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #333; }
-  .turn-table td.turn-num { color: #bbb; font-size: 11px; font-family: 'DM Sans', sans-serif; text-align: left; padding-left: 8px; }
+  .turn-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .turn-table th { background: #f8f8f8; padding: 6px 8px; font-size: 11px; color: #999;
+    letter-spacing: 1px; font-weight: 600; border-bottom: 1px solid #eee; white-space: nowrap; }
+  .turn-table th.player-header { color: #1a1a1a; font-size: 12px; font-weight: 700; }
+  .turn-table td { padding: 5px 8px; border-bottom: 1px solid #f5f5f5; text-align: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 19px; color: #333; }
+  .turn-table td.turn-num { color: #bbb; font-size: 13px; font-family: 'DM Sans', sans-serif; text-align: left; padding-left: 10px; }
   .turn-table td.turn-score { position: relative; }
   .turn-table td.score-low { color: #e53935; }
   .turn-table td.score-mid { color: #333; }
   .turn-table td.score-high { color: #2e7d32; }
-  .turn-table td.score-great { color: #1565c0; font-size: 17px; }
+  .turn-table td.score-great { color: #1565c0; font-size: 21px; }
   .turn-table tr.current-turn td { background: #fffbea; }
   .turn-table tr:last-child td { border-bottom: none; }
-  .turn-emoji { font-size: 11px; margin-left: 2px; }
+  .turn-emoji { font-size: 13px; margin-left: 2px; }
   .throw-slots { display: flex; gap: 6px; }
   .throw-slot { flex: 1; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
     font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #ccc;
@@ -282,6 +282,11 @@ signInAnonymously(auth)
   .stats-loading { text-align: center; color: #aaa; font-size: 13px; padding: 20px 0; }
   .btn-stats-refresh { background: none; border: 1px solid #ddd; color: #888; padding: 6px 14px;
     border-radius: 6px; font-size: 12px; margin: 0 auto 16px; display: block; }
+  .chart-kpi-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chart-kpi-btn { padding: 5px 10px; border-radius: 6px; border: 2px solid #ddd;
+    background: #fff; cursor: pointer; font-size: 12px; color: #666; transition: all .15s; }
+  .chart-kpi-btn.active { color: #fff; border-color: transparent; }
+  .chart-wrap { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 14px; }
 </style>
 </head>
 <body>
@@ -3048,6 +3053,23 @@ async function loadAndRenderStats(){
       html+=`</div>`;
     }
 
+    // ── Trend chart ───────────────────────────────────────────────
+    // Build per-game data points (chronological)
+    const chartGames=[...games].reverse(); // oldest first
+    if(chartGames.length>=2){
+      html+=`<div class="stats-section-title">VERLAUF</div>
+        <div class="chart-kpi-bar" id="chart-kpi-bar">
+          <button class="chart-kpi-btn active" data-kpi="avg" style="background:#1e88e5;border-color:#1e88e5">⌀ Aufnahme</button>
+          <button class="chart-kpi-btn" data-kpi="f9" style="">First 9 Ø</button>
+          <button class="chart-kpi-btn" data-kpi="best" style="">Highscore</button>
+          <button class="chart-kpi-btn" data-kpi="co" style="">Checkout %</button>
+          <button class="chart-kpi-btn" data-kpi="rounds" style="">Runden</button>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="trend-canvas" height="180"></canvas>
+        </div>`;
+    }
+
     // ── Scatter heatmap ───────────────────────────────────────────
     if(allScatter.length){
       html+=`<div class="stats-section-title">TREFFERBILD (${Math.min(allScatter.length,600)} Würfe)</div>
@@ -3080,6 +3102,139 @@ async function loadAndRenderStats(){
       const svg=document.getElementById("scatter-svg");
       if(svg) drawMiniBoard(svg, allScatter);
     }
+
+    // Draw trend chart
+    if(chartGames.length>=2){
+      const KPI_DEFS={
+        avg:  {label:"⌀ Aufnahme", color:"#1e88e5", extract:(g,pid)=>{
+          const p=(g.players||[]).find(x=>pid?x.id===pid:true);
+          return p?.avg3||null;
+        }},
+        f9:   {label:"First 9 Ø", color:"#e53935", extract:(g,pid)=>{
+          const p=(g.players||[]).find(x=>pid?x.id===pid:true);
+          return p?.first9||null;
+        }},
+        best: {label:"Highscore", color:"#43a047", extract:(g,pid)=>{
+          const p=(g.players||[]).find(x=>pid?x.id===pid:true);
+          return p?.best3||null;
+        }},
+        co:   {label:"Checkout %", color:"#fb8c00", extract:(g,pid)=>{
+          const p=(g.players||[]).find(x=>pid?x.id===pid:true);
+          if(!p||!p.checkoutAtt) return null;
+          return Math.round(p.checkoutHit/p.checkoutAtt*100);
+        }},
+        rounds:{label:"Runden", color:"#8e24aa", extract:(g)=>g.rounds||null}
+      };
+
+      let activeKPIs=["avg"];
+
+      function drawChart(){
+        const canvas=document.getElementById("trend-canvas");
+        if(!canvas) return;
+        const W=canvas.offsetWidth||600;
+        canvas.width=W*2; canvas.height=360;
+        canvas.style.height="180px";
+        const ctx=canvas.getContext("2d");
+        ctx.scale(2,2);
+        const w=W, h=180, pad={t:20,r:20,b:30,l:40};
+        ctx.clearRect(0,0,w,h);
+
+        // Background
+        ctx.fillStyle="#fff";
+        ctx.fillRect(0,0,w,h);
+
+        // Grid lines
+        ctx.strokeStyle="#f0f0f0"; ctx.lineWidth=1;
+        for(let i=0;i<=4;i++){
+          const y=pad.t+(h-pad.t-pad.b)*i/4;
+          ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
+        }
+
+        // X labels (dates)
+        const step=Math.max(1,Math.floor(chartGames.length/6));
+        ctx.fillStyle="#bbb"; ctx.font="10px DM Sans,sans-serif"; ctx.textAlign="center";
+        chartGames.forEach((g,i)=>{
+          if(i%step!==0&&i!==chartGames.length-1) return;
+          const x=pad.l+(w-pad.l-pad.r)*i/(chartGames.length-1);
+          const d=new Date(g.ts);
+          ctx.fillText(`${d.getDate()}.${d.getMonth()+1}`,x,h-8);
+        });
+
+        // Draw each active KPI
+        activeKPIs.forEach(kpiKey=>{
+          const kpi=KPI_DEFS[kpiKey];
+          const vals=chartGames.map(g=>kpi.extract(g,pid));
+          const validVals=vals.filter(v=>v!==null);
+          if(!validVals.length) return;
+          const minV=Math.min(...validVals)*0.9;
+          const maxV=Math.max(...validVals)*1.1||1;
+
+          const toX=i=>pad.l+(w-pad.l-pad.r)*i/(chartGames.length-1);
+          const toY=v=>pad.t+(h-pad.t-pad.b)*(1-(v-minV)/(maxV-minV));
+
+          // Line
+          ctx.strokeStyle=kpi.color; ctx.lineWidth=2.5;
+          ctx.beginPath();
+          let first=true;
+          vals.forEach((v,i)=>{
+            if(v===null) return;
+            if(first){ ctx.moveTo(toX(i),toY(v)); first=false; }
+            else ctx.lineTo(toX(i),toY(v));
+          });
+          ctx.stroke();
+
+          // Dots
+          ctx.fillStyle=kpi.color;
+          vals.forEach((v,i)=>{
+            if(v===null) return;
+            ctx.beginPath();
+            ctx.arc(toX(i),toY(v),3,0,Math.PI*2);
+            ctx.fill();
+          });
+
+          // Y label (latest value)
+          const lastVal=vals.filter(v=>v!==null).pop();
+          if(lastVal!==null){
+            ctx.fillStyle=kpi.color;
+            ctx.font="bold 11px DM Sans,sans-serif";
+            ctx.textAlign="left";
+            ctx.fillText(lastVal,w-pad.r+2,toY(lastVal)+4);
+          }
+        });
+
+        // Y axis label
+        ctx.fillStyle="#bbb"; ctx.font="10px DM Sans,sans-serif"; ctx.textAlign="right";
+        ctx.fillText(activeKPIs.map(k=>KPI_DEFS[k]?.label).join(" / "),pad.l-2,pad.t-6);
+      }
+
+      setTimeout(()=>{
+        drawChart();
+        // KPI button toggle
+        const bar=document.getElementById("chart-kpi-bar");
+        if(bar){
+          const COLORS=["#1e88e5","#e53935","#43a047","#fb8c00","#8e24aa"];
+          bar.querySelectorAll(".chart-kpi-btn").forEach(btn=>{
+            btn.addEventListener("click",()=>{
+              const kpi=btn.dataset.kpi;
+              if(activeKPIs.includes(kpi)){
+                if(activeKPIs.length===1) return; // keep at least 1
+                activeKPIs=activeKPIs.filter(k=>k!==kpi);
+                btn.classList.remove("active");
+                btn.style.background=""; btn.style.borderColor="#ddd"; btn.style.color="#666";
+              } else {
+                if(activeKPIs.length>=3) return; // max 3
+                activeKPIs.push(kpi);
+                btn.classList.add("active");
+                const col=COLORS[["avg","f9","best","co","rounds"].indexOf(kpi)];
+                btn.style.background=col; btn.style.borderColor=col; btn.style.color="#fff";
+              }
+              drawChart();
+            });
+          });
+        }
+      },50);
+    }
+
   }catch(e){
     box.innerHTML=`<div class="stats-loading">Fehler: ${e.message}</div>`;
     console.error(e);
