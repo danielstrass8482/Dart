@@ -360,6 +360,19 @@ function updateAuthUI(user){
   .chart-kpi-btn.active { color: #fff; border-color: transparent; }
   .chart-wrap { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 14px; overflow: hidden; }
   #trend-canvas { display: block; width: 100%; height: 180px; }
+
+  /* ── Coach ── */
+  .coach-btn { width:100%; padding:14px; border:none; border-radius:10px; cursor:pointer;
+    font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px;
+    background:linear-gradient(135deg,#1a1a2e,#16213e); color:#e8c44a;
+    display:flex; align-items:center; justify-content:center; gap:10px; transition:opacity .2s; }
+  .coach-btn:hover { opacity:.88; }
+  .coach-btn:disabled { opacity:.4; cursor:default; }
+  .coach-box { background:#fff; border:2px solid #e8c44a; border-radius:12px; padding:18px;
+    margin-top:12px; font-size:14px; line-height:1.7; color:#1a1a1a; position:relative; }
+  .coach-box .coach-header { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
+    color:#e8c44a; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+  .coach-limit { font-size:11px; color:#aaa; text-align:center; margin-top:6px; }
 </style>
 </head>
 <body>
@@ -700,12 +713,18 @@ function updateAuthUI(user){
   </div>
 </div>
 <div class="winner-overlay" id="winner-overlay">
-  <div style="max-width:380px;width:90vw;max-height:90vh;overflow-y:auto;padding:32px 24px;text-align:center">
+  <div style="max-width:440px;width:90vw;max-height:90vh;overflow-y:auto;padding:32px 24px;text-align:center">
     <div class="winner-label">GEWINNER</div>
     <div class="winner-name" id="winner-name"></div>
     <div class="winner-round" id="winner-round"></div>
     <div id="winner-summary" style="display:none;margin:16px 0 0"></div>
-    <button class="btn-new-game" id="btn-new-game" style="margin-top:20px">NEUES SPIEL</button>
+    <!-- Coach button in winner overlay -->
+    <button class="coach-btn" id="btn-coach-winner" style="margin-top:16px">
+      🧠 COACH-ANALYSE
+    </button>
+    <div id="coach-output-winner"></div>
+    <div class="coach-limit" id="coach-limit-winner"></div>
+    <button class="btn-new-game" id="btn-new-game" style="margin-top:16px">NEUES SPIEL</button>
   </div>
 </div>
 
@@ -2772,6 +2791,7 @@ function showWinner(name,round){
   }
 
   document.getElementById("winner-overlay").classList.add("visible");
+  updateCoachLimitDisplay();
 }
 
 function saveGameToFirebase(winnerIdx){
@@ -3052,7 +3072,161 @@ document.getElementById("studio-delete-btn").addEventListener("click",async()=>{
   document.getElementById("studio-status").textContent="Gelöscht";
   renderStudioGrid();
 });
-let statsSelectedPlayer = null;
+// ══════════════════════════════════════════════════════════════════
+// DART COACH (Claude API)
+// ══════════════════════════════════════════════════════════════════
+const COACH_DAILY_LIMIT = 3;
+const COACH_STORAGE_KEY = "dart_coach_usage";
+
+function getCoachUsage(){
+  try{
+    const raw = localStorage.getItem(COACH_STORAGE_KEY);
+    if(!raw) return {date:"", count:0};
+    return JSON.parse(raw);
+  }catch(e){ return {date:"",count:0}; }
+}
+
+function recordCoachUsage(){
+  const today = new Date().toISOString().slice(0,10);
+  const usage = getCoachUsage();
+  const count = usage.date===today ? usage.count+1 : 1;
+  localStorage.setItem(COACH_STORAGE_KEY, JSON.stringify({date:today, count}));
+  return count;
+}
+
+function coachCallsLeft(){
+  const today = new Date().toISOString().slice(0,10);
+  const usage = getCoachUsage();
+  if(usage.date!==today) return COACH_DAILY_LIMIT;
+  return Math.max(0, COACH_DAILY_LIMIT - usage.count);
+}
+
+function buildCoachPrompt(stats, sessionStats){
+  const lines = [
+    "Du bist ein erfahrener Dart-Coach. Analysiere die folgenden Spielerstatistiken und gib konkretes, actionables Feedback auf Deutsch.",
+    "Sei direkt, freundlich und spezifisch. Max. 4-5 Sätze. Fokus auf die wichtigste Schwäche und eine konkrete Verbesserungsempfehlung.",
+    "",
+    "=== GESAMTSTATISTIKEN ==="
+  ];
+  if(stats){
+    lines.push(`Spiele gesamt: ${stats.games||0}`);
+    lines.push(`Siegquote: ${stats.games?Math.round((stats.wins||0)/stats.games*100):0}%`);
+    lines.push(`Ø Aufnahme: ${stats.avgPerTurn||0}`);
+    lines.push(`First-9 Ø: ${stats.first9avg||"—"}`);
+    lines.push(`Checkout-Quote: ${stats.checkoutPct||0}%`);
+    lines.push(`Highscore: ${stats.highscore||0}`);
+    if(stats.cricketGames>0){
+      lines.push(`Cricket-Spiele: ${stats.cricketGames}, Ø Marks/Aufnahme: ${stats.cricketAvgMarks||0}`);
+    }
+  }
+  if(sessionStats){
+    lines.push("","=== LETZTE PARTIE ===");
+    lines.push(`Modus: ${sessionStats.mode}`);
+    lines.push(`Runden: ${sessionStats.rounds}`);
+    sessionStats.players.forEach(p=>{
+      if(p.id===null) return; // skip bot
+      lines.push(`${p.name}: Ø ${p.avg3||0}, Best ${p.best3||0}, Checkout ${p.checkoutHit||0}/${p.checkoutAtt||0}`);
+      if(p.first9) lines.push(`  First-9 Ø: ${p.first9}`);
+      if(p.winner) lines.push(`  → GEWONNEN`);
+    });
+  }
+  lines.push("","Antworte NUR mit dem Coach-Feedback, keine Einleitung.");
+  return lines.join("\n");
+}
+
+async function callCoach(prompt, outputEl, limitEl, btnEl){
+  // Check rate limit
+  const left = coachCallsLeft();
+  if(left<=0){
+    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header">🧠 COACH</div>Du hast heute dein Limit (${COACH_DAILY_LIMIT} Analysen) erreicht. Morgen wieder!</div>`;
+    btnEl.disabled=true;
+    return;
+  }
+
+  btnEl.disabled=true;
+  btnEl.textContent="⏳ Analysiere…";
+  outputEl.innerHTML=`<div class="coach-box"><div class="coach-header">🧠 COACH</div><span style="color:#aaa">Coach denkt nach…</span></div>`;
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.[0]?.text || "Keine Antwort erhalten.";
+    const count = recordCoachUsage();
+    const newLeft = COACH_DAILY_LIMIT - count;
+
+    outputEl.innerHTML=`<div class="coach-box">
+      <div class="coach-header">🧠 COACH-ANALYSE</div>
+      ${text.replace(/\n/g,"<br>")}
+    </div>`;
+    if(limitEl) limitEl.textContent=`${newLeft} von ${COACH_DAILY_LIMIT} Analysen heute verbleibend`;
+    btnEl.textContent="🧠 NEUE ANALYSE";
+    btnEl.disabled = newLeft<=0;
+  }catch(e){
+    outputEl.innerHTML=`<div class="coach-box" style="border-color:#e53935">Fehler: ${e.message}</div>`;
+    btnEl.disabled=false;
+    btnEl.textContent="🧠 COACH-ANALYSE";
+  }
+}
+
+// Winner overlay coach button
+document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
+  const btn=document.getElementById("btn-coach-winner");
+  const outputEl=document.getElementById("coach-output-winner");
+  const limitEl=document.getElementById("coach-limit-winner");
+
+  // Get player stats from Firebase for the winner
+  let playerStats=null;
+  if(window.dartDB&&cfg.playerIds){
+    const winnerIdx=cfg.players.indexOf(document.getElementById("winner-name").textContent);
+    const pid=cfg.playerIds?.[winnerIdx];
+    if(pid){
+      const players=await window.dartDB.loadPlayers();
+      const p=players.find(x=>x.id===pid);
+      if(p) playerStats=p.stats;
+    }
+  }
+
+  // Build session stats from last game
+  const sessionStats={
+    mode:cfg.mode,
+    rounds:cfg.mode!=="Cricket"?x01.round:cr.round,
+    players:cfg.players.map((name,i)=>{
+      const turns=x01.turnScores?.[i]||[];
+      const avg=turns.length?Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10:0;
+      const best=turns.length?Math.max(...turns):0;
+      return {
+        name,id:cfg.playerIds?.[i]||null,
+        avg3:avg, best3:best,
+        checkoutAtt:x01.checkoutAttempts?.[i]||0,
+        checkoutHit:x01.checkoutHits?.[i]||0,
+        first9:x01.first9?.[i]||null,
+        winner:document.getElementById("winner-name").textContent===name
+      };
+    })
+  };
+
+  const prompt=buildCoachPrompt(playerStats, sessionStats);
+  await callCoach(prompt, outputEl, limitEl, btn);
+});
+
+// Update coach limit display when winner overlay opens
+function updateCoachLimitDisplay(){
+  const left=coachCallsLeft();
+  const limitEl=document.getElementById("coach-limit-winner");
+  const btn=document.getElementById("btn-coach-winner");
+  if(limitEl) limitEl.textContent=`${left} von ${COACH_DAILY_LIMIT} Analysen heute verfügbar`;
+  if(btn) btn.disabled=left<=0;
+  const outputEl=document.getElementById("coach-output-winner");
+  if(outputEl) outputEl.innerHTML="";
+}
 let statsRange = 'all';
 let statsFrom = null, statsTo = null;
 let allGamesCache = [];
@@ -3440,7 +3614,16 @@ async function loadAndRenderStats(){
         </div>`;
     }
 
-    // ── Last 10 games ──────────────────────────────────────────────
+    // ── Coach button in stats tab ─────────────────────────────────
+    const coachLeft=coachCallsLeft();
+    html+=`<div class="stats-section-title">🧠 DART COACH</div>
+      <button class="coach-btn" id="btn-coach-stats" ${coachLeft<=0?'disabled':''}>
+        🧠 COACH-ANALYSE STARTEN
+      </button>
+      <div id="coach-output-stats"></div>
+      <div class="coach-limit" id="coach-limit-stats">${coachLeft} von ${COACH_DAILY_LIMIT} Analysen heute verfügbar</div>`;
+
+    // ── Last games ────────────────────────────────────────────────
     html+=`<div class="stats-section-title">LETZTE SPIELE</div>
       <div class="history-list">
       <div class="history-header"><span>GEWINNER</span><span>MODUS</span><span>RUNDEN</span><span>DATUM</span></div>`;
@@ -3458,6 +3641,30 @@ async function loadAndRenderStats(){
     html+=`</div>`;
 
     box.innerHTML=html;
+
+    // Wire coach button
+    const coachStatsBtn=document.getElementById("btn-coach-stats");
+    if(coachStatsBtn){
+      coachStatsBtn.addEventListener("click",async()=>{
+        let playerStats=null;
+        if(statsSelectedPlayer){
+          const p=allPlayers.find(x=>x.id===statsSelectedPlayer);
+          if(p) playerStats=p.stats;
+        } else {
+          playerStats={
+            games:games.length, wins:x01Games.filter(g=>true).length,
+            avgPerTurn:avg, first9avg:f9avg,
+            checkoutPct:coPct, highscore:best,
+            cricketGames:crGames.length, cricketAvgMarks:crAvg
+          };
+        }
+        const prompt=buildCoachPrompt(playerStats, null);
+        await callCoach(prompt,
+          document.getElementById("coach-output-stats"),
+          document.getElementById("coach-limit-stats"),
+          coachStatsBtn);
+      });
+    }
 
     // Draw scatter board
     if(allScatter.length){
