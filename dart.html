@@ -8,78 +8,142 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateDoc, query, orderBy, limit, where }
+import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateDoc,
+         onSnapshot, deleteDoc as fsDeleteDoc, query, orderBy, limit, where }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-import { getAuth, signInAnonymously }
+import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+
 const fbCfg = {
   apiKey: "AIzaSyBvTU5OhJnvJW-hYJYYVTro2rNcNr60aCk",
   authDomain: "fitness-tracker-c6f97.firebaseapp.com",
   projectId: "fitness-tracker-c6f97",
   storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
 };
-const app  = initializeApp(fbCfg);
-const db   = getFirestore(app);
-const auth = getAuth(app);
+const app     = initializeApp(fbCfg);
+const db      = getFirestore(app);
+const auth    = getAuth(app);
 const storage = getStorage(app);
+const gProvider = new GoogleAuthProvider();
 
-signInAnonymously(auth)
-  .then(()=>{
-    window.dartDB = {
-      // Games
-      async saveGame(data){ return addDoc(collection(db,"dart_games"), data); },
-      async loadStats(){
-        const snap = await getDocs(query(collection(db,"dart_games"), orderBy("ts","desc"), limit(200)));
-        return snap.docs.map(d=>({id:d.id,...d.data()}));
-      },
-      // Players
-      async loadPlayers(){
-        const snap = await getDocs(query(collection(db,"dart_players"), orderBy("name")));
-        return snap.docs.map(d=>({id:d.id,...d.data()}));
-      },
-      async deletePlayer(playerId){
-        const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js");
-        return deleteDoc(doc(db,"dart_players",playerId));
-      },
-      async savePlayer(name){
-        return addDoc(collection(db,"dart_players"),{
-          name, createdAt:Date.now(),
-          stats:{games:0,wins:0,avgPerTurn:0,checkoutPct:0,highscore:0,totalLegsWon:0}
-        });
-      },
-      async updatePlayerStats(playerId, stats){
-        return updateDoc(doc(db,"dart_players",playerId), {stats});
-      },
-      async loadPlayerGames(playerId){
-        const snap = await getDocs(query(collection(db,"dart_games"),
-          where("playerIds","array-contains",playerId), orderBy("ts","desc"), limit(100)));
-        return snap.docs.map(d=>({id:d.id,...d.data()}));
-      },
-      // Voice samples
-      async uploadVoiceSample(key, blob){
-        const r=ref(storage,`dart_voice/${key}.webm`);
-        await uploadBytes(r, blob, {contentType:"audio/webm"});
-        return getDownloadURL(r);
-      },
-      async getVoiceSampleURL(key){
-        try{ return await getDownloadURL(ref(storage,`dart_voice/${key}.webm`)); }
-        catch(e){ return null; }
-      },
-      async deleteVoiceSample(key){
-        try{ await deleteObject(ref(storage,`dart_voice/${key}.webm`)); }catch(e){}
-      },
-      async listVoiceSamples(){
-        try{
-          const list=await listAll(ref(storage,"dart_voice"));
-          return list.items.map(i=>i.name.replace(".webm",""));
-        }catch(e){ return []; }
-      }
-    };
-    window.dispatchEvent(new Event("dbReady"));
-  })
-  .catch(e=>console.warn("Firebase auth failed:",e));
+// ── Auth state ────────────────────────────────────────────────────
+window.currentUser = null;
+
+function initDartDB(){
+  window.dartDB = {
+    // Games
+    async saveGame(data){ return addDoc(collection(db,"dart_games"), data); },
+    async loadStats(){
+      const snap = await getDocs(query(collection(db,"dart_games"), orderBy("ts","desc"), limit(200)));
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
+    },
+    // Players
+    async loadPlayers(){
+      const snap = await getDocs(query(collection(db,"dart_players"), orderBy("name")));
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
+    },
+    async deletePlayer(playerId){
+      return fsDeleteDoc(doc(db,"dart_players",playerId));
+    },
+    async savePlayer(name){
+      return addDoc(collection(db,"dart_players"),{
+        name, createdAt:Date.now(),
+        stats:{games:0,wins:0,avgPerTurn:0,checkoutPct:0,highscore:0}
+      });
+    },
+    async updatePlayerStats(playerId, stats){
+      return updateDoc(doc(db,"dart_players",playerId), {stats});
+    },
+    async loadPlayerGames(playerId){
+      const snap = await getDocs(query(collection(db,"dart_games"),
+        where("playerIds","array-contains",playerId), orderBy("ts","desc"), limit(100)));
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
+    },
+    // Voice samples
+    async uploadVoiceSample(key, blob){
+      const r=ref(storage,`dart_voice/${key}.webm`);
+      await uploadBytes(r, blob, {contentType:"audio/webm"});
+      return getDownloadURL(r);
+    },
+    async getVoiceSampleURL(key){
+      try{ return await getDownloadURL(ref(storage,`dart_voice/${key}.webm`)); }
+      catch(e){ return null; }
+    },
+    async deleteVoiceSample(key){
+      try{ await deleteObject(ref(storage,`dart_voice/${key}.webm`)); }catch(e){}
+    },
+    async listVoiceSamples(){
+      try{
+        const list=await listAll(ref(storage,"dart_voice"));
+        return list.items.map(i=>i.name.replace(".webm",""));
+      }catch(e){ return []; }
+    },
+    // ── Multiplayer rooms ────────────────────────────────────────
+    async createRoom(roomData){
+      const code=Math.random().toString(36).substring(2,8).toUpperCase();
+      await setDoc(doc(db,"dart_rooms",code),{...roomData, code, createdAt:Date.now(), status:"waiting"});
+      return code;
+    },
+    async joinRoom(code){
+      const snap=await getDoc(doc(db,"dart_rooms",code));
+      if(!snap.exists()) throw new Error("Raum nicht gefunden");
+      return snap.data();
+    },
+    async updateRoom(code, data){
+      return updateDoc(doc(db,"dart_rooms",code), data);
+    },
+    watchRoom(code, cb){
+      return onSnapshot(doc(db,"dart_rooms",code), snap=>{
+        if(snap.exists()) cb(snap.data());
+      });
+    },
+    async deleteRoom(code){
+      try{ await fsDeleteDoc(doc(db,"dart_rooms",code)); }catch(e){}
+    }
+  };
+  window.dispatchEvent(new Event("dbReady"));
+}
+
+// Google sign-in
+window.signInWithGoogle = async function(){
+  try{
+    const result = await signInWithPopup(auth, gProvider);
+    return result.user;
+  }catch(e){
+    // Fallback to anonymous if popup blocked
+    await signInAnonymously(auth);
+    return auth.currentUser;
+  }
+};
+
+window.signOutUser = async function(){
+  await auth.signOut();
+};
+
+onAuthStateChanged(auth, user=>{
+  window.currentUser = user;
+  if(user){
+    initDartDB();
+    updateAuthUI(user);
+  } else {
+    // Auto anonymous sign-in for first load
+    signInAnonymously(auth).catch(e=>console.warn("Auth failed:",e));
+  }
+});
+
+function updateAuthUI(user){
+  const bar=document.getElementById("auth-bar");
+  if(!bar) return;
+  if(user && !user.isAnonymous){
+    bar.innerHTML=`<span style="font-size:12px;color:#aaa">${user.displayName||user.email}</span>
+      <button onclick="signOutUser()" style="background:none;border:1px solid #444;color:#888;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">Abmelden</button>`;
+  } else {
+    bar.innerHTML=`<button onclick="signInWithGoogle()" style="background:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px"> Mit Google anmelden</button>`;
+  }
+}
 </script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -306,6 +370,7 @@ signInAnonymously(auth)
   <div class="home-tabs">
     <button class="home-tab active" data-tab="play">🎯 Spiel</button>
     <button class="home-tab" data-tab="stats">📊 Statistiken</button>
+    <button class="home-tab" data-tab="online">🌐 Online</button>
     <button class="home-tab" data-tab="studio" style="display:none">🎙️ Studio</button>
   </div>
 
@@ -387,7 +452,76 @@ signInAnonymously(auth)
   </div><!-- end inner scroll -->
   </div><!-- end tab-play -->
 
-  <!-- TAB: STUDIO -->
+  <!-- TAB: ONLINE -->
+  <div class="home-tab-content" id="tab-online">
+  <div style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;align-items:center">
+
+    <!-- Auth bar -->
+    <div id="auth-bar" style="width:100%;max-width:480px;margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:10px"></div>
+
+    <div style="width:100%;max-width:480px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#1a1a1a;margin-bottom:4px">🌐 ONLINE SPIELEN</div>
+      <div style="font-size:13px;color:#999;margin-bottom:24px">Spiele gegen Freunde auf anderen Geräten in Echtzeit</div>
+
+      <!-- Create room -->
+      <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px">RAUM ERSTELLEN</div>
+        <div style="font-size:12px;color:#999;margin-bottom:10px">Wähle Modus und Einstellungen, dann teile den Code mit deinem Gegner</div>
+        <div class="btn-group" id="online-mode-group" style="margin-bottom:12px">
+          <button class="btn-toggle active" data-value="501">501</button>
+          <button class="btn-toggle" data-value="301">301</button>
+          <button class="btn-toggle" data-value="Cricket">Cricket</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="flex:1">
+            <label class="field-label">LEGS</label>
+            <div class="btn-group" id="online-legs-group" style="margin-bottom:0">
+              <button class="btn-toggle active" data-value="1">1</button>
+              <button class="btn-toggle" data-value="3">3</button>
+              <button class="btn-toggle" data-value="5">5</button>
+            </div>
+          </div>
+          <div style="flex:1">
+            <label class="field-label">SETS</label>
+            <div class="btn-group" id="online-sets-group" style="margin-bottom:0">
+              <button class="btn-toggle active" data-value="1">1</button>
+              <button class="btn-toggle" data-value="3">3</button>
+              <button class="btn-toggle" data-value="5">5</button>
+            </div>
+          </div>
+        </div>
+        <input class="add-player-input" id="online-myname" placeholder="Dein Name im Spiel" style="width:100%;margin-bottom:10px">
+        <button class="btn-start" id="btn-create-room" style="font-size:18px;padding:12px">RAUM ERSTELLEN</button>
+      </div>
+
+      <!-- Join room -->
+      <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px">RAUM BEITRETEN</div>
+        <input class="add-player-input" id="online-join-name" placeholder="Dein Name im Spiel" style="width:100%;margin-bottom:8px">
+        <div style="display:flex;gap:8px">
+          <input class="add-player-input" id="online-room-code" placeholder="6-stelliger Code (z.B. ABC123)"
+            style="flex:1;text-transform:uppercase;letter-spacing:3px;font-family:'Bebas Neue',sans-serif;font-size:20px">
+          <button class="btn-add-player" id="btn-join-room" style="padding:10px 20px;font-size:16px">BEITRETEN</button>
+        </div>
+      </div>
+
+      <div id="online-status" style="text-align:center;color:#aaa;font-size:13px;min-height:20px"></div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ═══ ONLINE WAITING SCREEN ═══ -->
+  <div id="online-wait" class="screen">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:20px;text-align:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#e8c44a;letter-spacing:3px;margin-bottom:8px">RAUM-CODE</div>
+      <div id="online-room-display" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:#1a1a1a;letter-spacing:8px;margin-bottom:8px"></div>
+      <div style="font-size:13px;color:#999;margin-bottom:24px">Teile diesen Code mit deinem Gegner</div>
+      <div id="online-players-list" style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;width:100%;max-width:320px;margin-bottom:20px"></div>
+      <div id="online-wait-status" style="font-size:13px;color:#aaa;margin-bottom:16px">Warte auf Mitspieler…</div>
+      <button id="btn-start-online" class="btn-start" style="display:none;width:320px">SPIEL STARTEN</button>
+      <button id="btn-cancel-room" style="background:none;border:1px solid #ddd;color:#999;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:10px">Abbrechen</button>
+    </div>
+  </div>
   <div class="home-tab-content" id="tab-studio">
   <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
 
@@ -1856,6 +1990,8 @@ function handleX01Click(e){
   x01.throws.push(throwObj);
   x01.allThrows[x01.current].push(throwObj);
   redrawAllHits(boardSVG, x01.historicThrows[x01.current], x01.throws);
+  // Push to online room if multiplayer
+  if(cfg.online) pushThrowToRoom(hit);
 
   if(hit.miss){
     soundHit();
@@ -2010,7 +2146,14 @@ function startCricket(){
     throws: [],
     historicThrows: cfg.players.map(()=>[]),
     winner: null,
-    history: []
+    history: [],
+    startTime: Date.now(),
+    // Stats tracking
+    totalMarks: cfg.players.map(()=>0),      // total marks scored
+    totalThrows: cfg.players.map(()=>0),     // total darts thrown
+    firstClosed: cfg.players.map(()=>null),  // which target closed first
+    closedOrder: cfg.players.map(()=>[]),    // order targets were closed
+    turnScores: cfg.players.map(()=>[]),     // marks per turn
   };
   clearHits(boardSVGcr);
   renderCricket();
@@ -2097,6 +2240,17 @@ function handleCricketClick(e){
   const newMark=curMark+count;
   cr.marks[cr.current][num]=newMark;
 
+  // Track stats
+  const actualMarks=Math.min(count, Math.max(0, 3-curMark)); // marks that count toward closing
+  cr.totalMarks[cr.current]+=actualMarks;
+  cr.totalThrows[cr.current]++;
+
+  // Track first closure
+  if(curMark<3&&newMark>=3){
+    if(cr.firstClosed[cr.current]===null) cr.firstClosed[cr.current]=num;
+    cr.closedOrder[cr.current].push(num);
+  }
+
   const overflow=Math.max(0,newMark-3);
   if(overflow>0){
     const allClosed=cfg.players.every((_,pi)=>pi===cr.current||cr.marks[pi][num]>=3);
@@ -2119,6 +2273,15 @@ function handleCricketClick(e){
 
 function advanceCricket(){
   const pi=cr.current;
+  // Track marks this turn
+  const turnMarks=cr.throws.filter(t=>!t.miss).reduce((s,t)=>{
+    const cs=getCricketHit(t.label);
+    if(!cs||!CRICKET_TARGETS.includes(cs.num)) return s;
+    const prev=cr.marks[pi][cs.num]-cs.count;
+    return s+Math.min(cs.count,Math.max(0,3-Math.max(0,prev)));
+  },0);
+  cr.turnScores[pi].push(turnMarks);
+  cr.totalThrows[pi]+=cr.throws.filter(t=>!t.miss).length;
   cr.history.push({marks:cr.marks.map(m=>({...m})),points:[...cr.points],current:pi,round:cr.round,throwCount:cr.throws.length,historicLens:cr.historicThrows.map(a=>a.length)});
   cr.historicThrows[pi].push(...cr.throws.filter(t=>t.svgX!=null));
   cr.throws=[];
@@ -2626,7 +2789,17 @@ function saveGameToFirebase(winnerIdx){
         first9:x01.first9?.[i]||null,
         scatter, winner:i===winnerIdx};
     } else {
-      return {name, id:cfg.playerIds?.[i]||null, points:cr.points[i], winner:i===winnerIdx, scatter:[]};
+      // Cricket stats
+      const turns=cr.turnScores?.[i]||[];
+      const avgMarks=turns.length?Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10:0;
+      return {name, id:cfg.playerIds?.[i]||null,
+        points:cr.points[i], winner:i===winnerIdx, scatter:[],
+        cricketAvgMarks:avgMarks,
+        cricketClosed:cr.closedOrder?.[i]||[],
+        cricketFirstClosed:cr.firstClosed?.[i]||null,
+        cricketRounds:cr.round,
+        durationSec:Math.round((Date.now()-cr.startTime)/1000)
+      };
     }
   });
   const gameDoc = {
@@ -2652,18 +2825,25 @@ async function updateAllPlayerStats(){
       const pid=cfg.playerIds[i]; if(!pid) continue;
       const pGames=allGames.filter(g=>(g.playerIds||[]).includes(pid));
       const pData=pGames.map(g=>(g.players||[]).find(p=>p.id===pid)).filter(Boolean);
-      const wins=pGames.filter(g=>g.winnerId===pid).length;
-      const avgs=pData.map(p=>p.avg3||0).filter(v=>v>0);
+      const x01Games=pGames.filter(g=>g.mode!=="Cricket");
+      const crGames=pGames.filter(g=>g.mode==="Cricket");
+      const x01Data=pData.filter(p=>p.avg3!==undefined);
+      const crData=pData.filter(p=>p.cricketAvgMarks!==undefined);
+      const playerWins=pGames.filter(g=>g.winnerId===pid).length;
+      const avgs=x01Data.map(p=>p.avg3||0).filter(v=>v>0);
       const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
-      const coAtts=pData.reduce((s,p)=>s+(p.checkoutAtt||0),0);
-      const coHits=pData.reduce((s,p)=>s+(p.checkoutHit||0),0);
+      const coAtts=x01Data.reduce((s,p)=>s+(p.checkoutAtt||0),0);
+      const coHits=x01Data.reduce((s,p)=>s+(p.checkoutHit||0),0);
       const coPct=coAtts>0?Math.round(coHits/coAtts*100):0;
-      const best=pData.reduce((m,p)=>Math.max(m,p.best3||0),0);
-      const f9vals=pData.map(p=>p.first9||null).filter(v=>v!==null);
+      const best=x01Data.reduce((m,p)=>Math.max(m,p.best3||0),0);
+      const f9vals=x01Data.map(p=>p.first9||null).filter(v=>v!==null);
       const f9avg=f9vals.length?Math.round(f9vals.reduce((a,b)=>a+b,0)/f9vals.length*10)/10:null;
+      const crAvgs=crData.map(p=>p.cricketAvgMarks||0).filter(v=>v>0);
+      const crAvg=crAvgs.length?Math.round(crAvgs.reduce((a,b)=>a+b,0)/crAvgs.length*10)/10:0;
       await window.dartDB.updatePlayerStats(pid,{
-        games:pGames.length, wins, avgPerTurn:avg,
-        checkoutPct:coPct, highscore:best, first9avg:f9avg
+        games:pGames.length, wins:playerWins, avgPerTurn:avg, first9avg:f9avg,
+        checkoutPct:coPct, highscore:best,
+        cricketGames:crGames.length, cricketAvgMarks:crAvg
       });
     }
     allPlayers=await window.dartDB.loadPlayers();
@@ -2872,10 +3052,147 @@ document.getElementById("studio-delete-btn").addEventListener("click",async()=>{
   document.getElementById("studio-status").textContent="Gelöscht";
   renderStudioGrid();
 });
-let statsSelectedPlayer = null; // null = all players
+let statsSelectedPlayer = null;
 let statsRange = 'all';
 let statsFrom = null, statsTo = null;
 let allGamesCache = [];
+
+// ══════════════════════════════════════════════════════════════════
+// ONLINE MULTIPLAYER
+// ══════════════════════════════════════════════════════════════════
+let onlineMode="501", onlineLegs=1, onlineSets=1;
+let currentRoomCode=null, roomUnsubscribe=null;
+let isRoomHost=false, myOnlineName="";
+
+document.getElementById("online-mode-group").addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  onlineMode=e.target.dataset.value;
+  document.querySelectorAll("#online-mode-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===onlineMode));
+});
+document.getElementById("online-legs-group").addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  onlineLegs=+e.target.dataset.value;
+  document.querySelectorAll("#online-legs-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==onlineLegs));
+});
+document.getElementById("online-sets-group").addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  onlineSets=+e.target.dataset.value;
+  document.querySelectorAll("#online-sets-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==onlineSets));
+});
+
+document.getElementById("btn-create-room").addEventListener("click",async()=>{
+  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  myOnlineName=document.getElementById("online-myname").value.trim()||"Host";
+  try{
+    document.getElementById("online-status").textContent="Erstelle Raum…";
+    currentRoomCode=await window.dartDB.createRoom({
+      mode:onlineMode, legs:onlineLegs, sets:onlineSets,
+      host:myOnlineName, players:[myOnlineName], status:"waiting", state:null
+    });
+    isRoomHost=true;
+    showWaitingScreen(currentRoomCode);
+  }catch(e){ document.getElementById("online-status").textContent="Fehler: "+e.message; }
+});
+
+document.getElementById("btn-join-room").addEventListener("click",async()=>{
+  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  const code=document.getElementById("online-room-code").value.trim().toUpperCase();
+  myOnlineName=document.getElementById("online-join-name").value.trim()||"Gast";
+  if(code.length!==6){ alert("Bitte einen 6-stelligen Code eingeben"); return; }
+  try{
+    document.getElementById("online-status").textContent="Verbinde…";
+    const room=await window.dartDB.joinRoom(code);
+    if(room.status!=="waiting"){ alert("Dieser Raum ist bereits gestartet"); return; }
+    currentRoomCode=code; isRoomHost=false;
+    await window.dartDB.updateRoom(code,{players:[...room.players,myOnlineName]});
+    showWaitingScreen(code);
+  }catch(e){ document.getElementById("online-status").textContent="Fehler: "+e.message; }
+});
+
+function showWaitingScreen(code){
+  showScreen("online-wait");
+  document.getElementById("online-room-display").textContent=code;
+  document.getElementById("online-status").textContent="";
+  if(roomUnsubscribe){ roomUnsubscribe(); }
+  roomUnsubscribe=window.dartDB.watchRoom(code,room=>{
+    const list=document.getElementById("online-players-list");
+    list.innerHTML=`<div style="font-size:11px;color:#999;letter-spacing:1px;margin-bottom:8px">SPIELER</div>`+
+      (room.players||[]).map((p,i)=>`<div style="padding:5px 0;font-size:15px;font-weight:${p===myOnlineName?700:400};color:${p===myOnlineName?"#e8c44a":"#333"}">
+        ${i===0?"👑":"👤"} ${p}${p===myOnlineName?" (du)":""}
+      </div>`).join("");
+    const startBtn=document.getElementById("btn-start-online");
+    const waitStatus=document.getElementById("online-wait-status");
+    if(isRoomHost&&(room.players||[]).length>=2){
+      startBtn.style.display=""; waitStatus.textContent=`${room.players.length} Spieler bereit — du kannst starten`;
+    } else {
+      startBtn.style.display="none";
+      waitStatus.textContent=(room.players||[]).length===1?"Warte auf Mitspieler…":`${(room.players||[]).length} Spieler verbunden`;
+    }
+    if(!isRoomHost&&room.status==="started"&&room.config){
+      const idx=(room.config.players||[]).indexOf(myOnlineName);
+      startOnlineGame(room.config, idx>=0?idx:1);
+    }
+  });
+}
+
+document.getElementById("btn-start-online").addEventListener("click",async()=>{
+  if(!currentRoomCode) return;
+  const room=await window.dartDB.joinRoom(currentRoomCode);
+  const gameCfg={
+    mode:onlineMode, startScore:onlineMode==="301"?301:501,
+    players:room.players, playerIds:room.players.map(()=>null),
+    isBot:room.players.map(()=>false), botLevel:"none",
+    totalSets:onlineSets, setsToWin:Math.ceil(onlineSets/2), setWins:room.players.map(()=>0), currentSet:1,
+    totalLegs:onlineLegs, legsToWin:Math.ceil(onlineLegs/2), legWins:room.players.map(()=>0), currentLeg:1,
+    rounds:8, online:true, roomCode:currentRoomCode, hostName:myOnlineName
+  };
+  await window.dartDB.updateRoom(currentRoomCode,{status:"started",config:gameCfg,
+    state:{scores:room.players.map(()=>gameCfg.startScore),current:0,round:1,lastThrow:null}});
+  startOnlineGame(gameCfg,0);
+});
+
+document.getElementById("btn-cancel-room").addEventListener("click",()=>{
+  if(roomUnsubscribe){ roomUnsubscribe(); roomUnsubscribe=null; }
+  if(isRoomHost&&currentRoomCode) window.dartDB.deleteRoom(currentRoomCode);
+  currentRoomCode=null;
+  showSetup();
+  document.querySelectorAll(".home-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab==="online"));
+  document.querySelectorAll(".home-tab-content").forEach(c=>c.classList.toggle("active",c.id==="tab-online"));
+});
+
+let onlineUnsubscribe=null;
+let myPlayerIdx=0;
+
+function startOnlineGame(gameCfg, playerIdx){
+  if(roomUnsubscribe){ roomUnsubscribe(); roomUnsubscribe=null; }
+  myPlayerIdx=playerIdx;
+  cfg={...gameCfg};
+  startX01(0);
+  if(onlineUnsubscribe){ onlineUnsubscribe(); }
+  onlineUnsubscribe=window.dartDB.watchRoom(gameCfg.roomCode, room=>{
+    if(!room.state||!room.state.lastThrow) return;
+    const lt=room.state.lastThrow;
+    if(lt.by===myOnlineName) return; // own throw
+    if(x01.current===myPlayerIdx) return; // not their turn locally
+    applyRemoteThrow(lt);
+  });
+}
+
+async function pushThrowToRoom(hit){
+  if(!cfg.online||!cfg.roomCode) return;
+  try{
+    await window.dartDB.updateRoom(cfg.roomCode,{"state.lastThrow":{...hit,by:myOnlineName,ts:Date.now()},"state.current":x01.current,"state.round":x01.round});
+  }catch(e){}
+}
+
+function applyRemoteThrow(hit){
+  if(x01.winner||x01.bust||x01.throws.length>=3||x01.current===myPlayerIdx) return;
+  x01.throws.push({...hit,svgX:null,svgY:null});
+  x01.allThrows[x01.current].push({...hit,svgX:null,svgY:null});
+  soundHit();
+  renderX01();
+  if(x01.throws.length===3) setTimeout(advanceX01,800);
+}
 
 // ── Tab switching ─────────────────────────────────────────────────
 document.querySelectorAll(".home-tab").forEach(btn=>{
@@ -2883,9 +3200,11 @@ document.querySelectorAll(".home-tab").forEach(btn=>{
     document.querySelectorAll(".home-tab").forEach(b=>b.classList.remove("active"));
     document.querySelectorAll(".home-tab-content").forEach(c=>c.classList.remove("active"));
     btn.classList.add("active");
-    document.getElementById("tab-"+btn.dataset.tab).classList.add("active");
+    const tabEl=document.getElementById("tab-"+btn.dataset.tab);
+    if(tabEl) tabEl.classList.add("active");
     if(btn.dataset.tab==="stats") loadAndRenderStats();
     if(btn.dataset.tab==="studio") initStudio();
+    if(btn.dataset.tab==="online") updateAuthUI(window.currentUser);
   });
 });
 
@@ -3009,56 +3328,87 @@ async function loadAndRenderStats(){
 
     const pid=statsSelectedPlayer;
     const pData=getPlayerData(pid);
-    const totalGames=games.length;
-    const wins=games.filter(g=>pid?g.winnerId===pid:true).length;
-    const avgs=pData.map(p=>p.avg3||0).filter(v=>v>0);
-    const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
-    const coAtts=pData.reduce((s,p)=>s+(p.checkoutAtt||0),0);
-    const coHits=pData.reduce((s,p)=>s+(p.checkoutHit||0),0);
+    // ── Split by mode ─────────────────────────────────────────────
+    const x01Games=games.filter(g=>g.mode!=="Cricket");
+    const crGames=games.filter(g=>g.mode==="Cricket");
+    const x01Data=pData.filter(p=>p.avg3!==undefined);
+    const crData=pData.filter(p=>p.cricketAvgMarks!==undefined);
+
+    const coAtts=x01Data.reduce((s,p)=>s+(p.checkoutAtt||0),0);
+    const coHits=x01Data.reduce((s,p)=>s+(p.checkoutHit||0),0);
     const coPct=coAtts>0?Math.round(coHits/coAtts*100):0;
-    const best=pData.reduce((m,p)=>Math.max(m,p.best3||0),0);
-    const f9vals=pData.map(p=>p.first9||null).filter(v=>v!==null);
+    const best=x01Data.reduce((m,p)=>Math.max(m,p.best3||0),0);
+    const f9vals=x01Data.map(p=>p.first9||null).filter(v=>v!==null);
     const f9avg=f9vals.length?Math.round(f9vals.reduce((a,b)=>a+b,0)/f9vals.length*10)/10:null;
     const allScatter=pData.flatMap(p=>p.scatter||[]);
     const totalRounds=games.reduce((s,g)=>s+(g.rounds||0),0);
 
-    // ── KPI cards ─────────────────────────────────────────────────
+    // Cricket aggregates
+    const crAvgs=crData.map(p=>p.cricketAvgMarks||0).filter(v=>v>0);
+    const crAvg=crAvgs.length?Math.round(crAvgs.reduce((a,b)=>a+b,0)/crAvgs.length*10)/10:0;
+    const crWins=crGames.filter(g=>pid?g.winnerId===pid:true).length;
+
+    const avgs=x01Data.map(p=>p.avg3||0).filter(v=>v>0);
+    const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
+    const wins=x01Games.filter(g=>pid?g.winnerId===pid:true).length;
+
+    // ── KPI cards — X01 ───────────────────────────────────────────
     const playerName=pid?(allPlayers.find(p=>p.id===pid)?.name||"?"):"Alle";
-    let html=`<div class="stats-section-title">${playerName} · ${totalGames} Spiel${totalGames!==1?"e":""}</div>`;
-    html+=`<div class="stats-grid">
-      <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${totalGames}</div></div>
-      <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${wins}</div><div class="s-sub">${totalGames?Math.round(wins/totalGames*100):0}% Quote</div></div>
-      <div class="stat-card"><div class="s-label">⌀ AUFNAHME</div><div class="s-value">${avg||"—"}</div></div>
-      <div class="stat-card"><div class="s-label">FIRST 9 Ø</div><div class="s-value">${f9avg||"—"}</div><div class="s-sub">erste 9 Darts</div></div>
-      <div class="stat-card"><div class="s-label">HIGHSCORE</div><div class="s-value">${best||"—"}</div></div>
-      <div class="stat-card"><div class="s-label">CHECKOUT-QUOTE</div><div class="s-value">${coPct}%</div><div class="s-sub">${coHits}/${coAtts}</div></div>
-      <div class="stat-card"><div class="s-label">⌀ RUNDEN</div><div class="s-value">${totalGames?Math.round(totalRounds/totalGames):0}</div></div>
-    </div>`;
+    let html=`<div class="stats-section-title">${playerName} · ${games.length} Spiel${games.length!==1?"e":""}</div>`;
+
+    if(x01Games.length>0){
+      html+=`<div class="stats-section-title" style="font-size:13px;color:#aaa">501 / 301</div>`;
+      html+=`<div class="stats-grid">
+        <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${x01Games.length}</div></div>
+        <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${wins}</div><div class="s-sub">${x01Games.length?Math.round(wins/x01Games.length*100):0}% Quote</div></div>
+        <div class="stat-card"><div class="s-label">⌀ AUFNAHME</div><div class="s-value">${avg||"—"}</div></div>
+        <div class="stat-card"><div class="s-label">FIRST 9 Ø</div><div class="s-value">${f9avg||"—"}</div><div class="s-sub">erste 9 Darts</div></div>
+        <div class="stat-card"><div class="s-label">HIGHSCORE</div><div class="s-value">${best||"—"}</div></div>
+        <div class="stat-card"><div class="s-label">CHECKOUT-QUOTE</div><div class="s-value">${coPct}%</div><div class="s-sub">${coHits}/${coAtts}</div></div>
+        <div class="stat-card"><div class="s-label">⌀ RUNDEN</div><div class="s-value">${x01Games.length?Math.round(x01Games.reduce((s,g)=>s+(g.rounds||0),0)/x01Games.length):0}</div></div>
+      </div>`;
+    }
+
+    // ── KPI cards — Cricket ───────────────────────────────────────
+    if(crGames.length>0){
+      html+=`<div class="stats-section-title" style="font-size:13px;color:#aaa">CRICKET</div>`;
+      html+=`<div class="stats-grid">
+        <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${crGames.length}</div></div>
+        <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${crWins}</div><div class="s-sub">${crGames.length?Math.round(crWins/crGames.length*100):0}% Quote</div></div>
+        <div class="stat-card"><div class="s-label">⌀ MARKS/AUFNAHME</div><div class="s-value">${crAvg||"—"}</div></div>
+        <div class="stat-card"><div class="s-label">⌀ RUNDEN</div><div class="s-value">${crGames.length?Math.round(crGames.reduce((s,g)=>s+(g.rounds||0),0)/crGames.length):0}</div></div>
+      </div>`;
+    }
 
     // ── Per-player breakdown if "all" selected ─────────────────────
     if(!pid && allPlayers.length>1){
       html+=`<div class="stats-section-title">SPIELER VERGLEICH</div>
         <div class="history-list">
-        <div class="history-header" style="grid-template-columns:1fr 45px 45px 45px 45px 45px">
-          <span>SPIELER</span><span>SIEGE</span><span>⌀</span><span>F9</span><span>BEST</span><span>CO%</span>
+        <div class="history-header" style="grid-template-columns:1fr 45px 45px 45px 45px 45px 55px">
+          <span>SPIELER</span><span>SIEGE</span><span>⌀</span><span>F9</span><span>BEST</span><span>CO%</span><span>CR ⌀M</span>
         </div>`;
       allPlayers.forEach(p=>{
         const pd=getPlayerData(p.id);
-        const pw=games.filter(g=>g.winnerId===p.id).length;
-        const pa=pd.map(x=>x.avg3||0).filter(v=>v>0);
+        const pgames=games.filter(g=>(g.playerIds||[]).includes(p.id));
+        const pw=pgames.filter(g=>g.winnerId===p.id).length;
+        const px01=pd.filter(x=>x.avg3!==undefined);
+        const pa=px01.map(x=>x.avg3||0).filter(v=>v>0);
         const pavg=pa.length?Math.round(pa.reduce((a,b)=>a+b,0)/pa.length*10)/10:0;
-        const pf9v=pd.map(x=>x.first9||null).filter(v=>v!==null);
+        const pf9v=px01.map(x=>x.first9||null).filter(v=>v!==null);
         const pf9=pf9v.length?Math.round(pf9v.reduce((a,b)=>a+b,0)/pf9v.length*10)/10:null;
-        const pb=pd.reduce((m,x)=>Math.max(m,x.best3||0),0);
-        const pca=pd.reduce((s,x)=>s+(x.checkoutAtt||0),0);
-        const pch=pd.reduce((s,x)=>s+(x.checkoutHit||0),0);
+        const pb=px01.reduce((m,x)=>Math.max(m,x.best3||0),0);
+        const pca=px01.reduce((s,x)=>s+(x.checkoutAtt||0),0);
+        const pch=px01.reduce((s,x)=>s+(x.checkoutHit||0),0);
         const pco=pca>0?Math.round(pch/pca*100):0;
+        const pcr=pd.filter(x=>x.cricketAvgMarks!==undefined);
+        const pcrv=pcr.map(x=>x.cricketAvgMarks||0).filter(v=>v>0);
+        const pcrAvg=pcrv.length?Math.round(pcrv.reduce((a,b)=>a+b,0)/pcrv.length*10)/10:null;
         const col=playerColor(p.name);
-        html+=`<div class="history-row" style="grid-template-columns:1fr 45px 45px 45px 45px 45px">
+        html+=`<div class="history-row" style="grid-template-columns:1fr 45px 45px 45px 45px 45px 55px">
           <span style="display:flex;align-items:center;gap:6px">
             <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>
             <strong>${p.name}</strong></span>
-          <span>${pw}</span><span>${pavg||"—"}</span><span>${pf9||"—"}</span><span>${pb||"—"}</span><span>${pco}%</span>
+          <span>${pw}</span><span>${pavg||"—"}</span><span>${pf9||"—"}</span><span>${pb||"—"}</span><span>${pco}%</span><span>${pcrAvg||"—"}</span>
         </div>`;
       });
       html+=`</div>`;
@@ -3070,11 +3420,12 @@ async function loadAndRenderStats(){
     if(chartGames.length>=2){
       html+=`<div class="stats-section-title">VERLAUF</div>
         <div class="chart-kpi-bar" id="chart-kpi-bar">
-          <button class="chart-kpi-btn active" data-kpi="avg" style="background:#1e88e5;border-color:#1e88e5">⌀ Aufnahme</button>
-          <button class="chart-kpi-btn" data-kpi="f9" style="">First 9 Ø</button>
-          <button class="chart-kpi-btn" data-kpi="best" style="">Highscore</button>
-          <button class="chart-kpi-btn" data-kpi="co" style="">Checkout %</button>
-          <button class="chart-kpi-btn" data-kpi="rounds" style="">Runden</button>
+          <button class="chart-kpi-btn active" data-kpi="avg" style="background:#1e88e5;border-color:#1e88e5;color:#fff">⌀ Aufnahme</button>
+          <button class="chart-kpi-btn" data-kpi="f9">First 9 Ø</button>
+          <button class="chart-kpi-btn" data-kpi="best">Highscore</button>
+          <button class="chart-kpi-btn" data-kpi="co">Checkout %</button>
+          <button class="chart-kpi-btn" data-kpi="rounds">Runden</button>
+          <button class="chart-kpi-btn" data-kpi="crmarks">Cricket ⌀M</button>
         </div>
         <div class="chart-wrap">
           <canvas id="trend-canvas" height="180"></canvas>
@@ -3134,8 +3485,14 @@ async function loadAndRenderStats(){
           if(!p||!p.checkoutAtt) return null;
           return Math.round(p.checkoutHit/p.checkoutAtt*100);
         }},
-        rounds:{label:"Runden", color:"#8e24aa", extract:(g)=>g.rounds||null}
+        rounds:{label:"Runden", color:"#8e24aa", extract:(g)=>g.rounds||null},
+        crmarks:{label:"Cricket ⌀M", color:"#00897b", extract:(g,pid)=>{
+          const p=(g.players||[]).find(x=>pid?x.id===pid:true);
+          return p?.cricketAvgMarks||null;
+        }}
       };
+        const kpiKeys=["avg","f9","best","co","rounds","crmarks"];
+        const COLORS=["#1e88e5","#e53935","#43a047","#fb8c00","#8e24aa","#00897b"];
 
       let activeKPIs=["avg"];
 
@@ -3212,8 +3569,6 @@ async function loadAndRenderStats(){
         drawChart();
 
         // KPI toggle buttons
-        const COLORS=["#1e88e5","#e53935","#43a047","#fb8c00","#8e24aa"];
-        const kpiKeys=["avg","f9","best","co","rounds"];
         document.querySelectorAll(".chart-kpi-btn").forEach(btn=>{
           btn.addEventListener("click",()=>{
             const kpi=btn.dataset.kpi;
