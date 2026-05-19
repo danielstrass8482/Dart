@@ -1094,25 +1094,31 @@ function speakScore(score){
                score===100 ? "One Hundred!" :
                score===50  ? "Bull's Eye!" :
                numToWords(score)+"!";
-  const utt=new SpeechSynthesisUtterance(text);
-  utt.lang="en-GB"; utt.rate=0.95; utt.pitch=1.1; utt.volume=1;
-  // Pick a good voice if available
-  const voices=speechSynthesis.getVoices();
-  const en=voices.find(v=>v.lang.startsWith("en")&&v.name.includes("Google"))
-         ||voices.find(v=>v.lang.startsWith("en-GB"))
-         ||voices.find(v=>v.lang.startsWith("en"));
-  if(en) utt.voice=en;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utt);
+  doSpeak(text, "en-GB");
 }
 
 function speakBust(){ speak("Bust!"); }
+
 function speak(text){
   if(!window.speechSynthesis) return;
-  const utt=new SpeechSynthesisUtterance(text);
-  utt.lang="en-GB"; utt.rate=0.95; utt.pitch=1.0; utt.volume=1;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utt);
+  doSpeak(text, "en-GB");
+}
+
+function doSpeak(text, lang){
+  if(!window.speechSynthesis) return;
+  const trySpeak=()=>{
+    const utt=new SpeechSynthesisUtterance(text);
+    utt.lang=lang; utt.rate=0.95; utt.pitch=1.1; utt.volume=1;
+    const voices=speechSynthesis.getVoices();
+    const en=voices.find(v=>v.lang.startsWith("en")&&v.name.includes("Google"))
+           ||voices.find(v=>v.lang.startsWith("en-GB"))
+           ||voices.find(v=>v.lang.startsWith("en"));
+    if(en) utt.voice=en;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utt);
+  };
+  if(speechSynthesis.getVoices().length>0){ trySpeak(); }
+  else{ speechSynthesis.addEventListener("voiceschanged",trySpeak,{once:true}); }
 }
 
 // ── Voice Recognition ─────────────────────────────────────────────
@@ -2890,7 +2896,35 @@ async function updateAllPlayerStats(){
   }catch(e){ console.warn("updatePlayerStats failed",e); }
 }
 
-// ── Custom audio cache ────────────────────────────────────────────
+// ── Audio unlock for mobile ───────────────────────────────────────
+// Android Chrome blocks audio until first user gesture
+let audioUnlocked=false;
+async function unlockAudio(){
+  if(audioUnlocked) return;
+  audioUnlocked=true;
+  // Unlock Web Audio
+  try{
+    const ctx=getAudio();
+    if(ctx.state==="suspended") await ctx.resume();
+    // Play silent buffer
+    const buf=ctx.createBuffer(1,1,22050);
+    const src=ctx.createBufferSource();
+    src.buffer=buf; src.connect(ctx.destination); src.start(0);
+  }catch(e){}
+  // Warm up speechSynthesis
+  try{
+    const utt=new SpeechSynthesisUtterance("");
+    utt.volume=0;
+    window.speechSynthesis.speak(utt);
+    window.speechSynthesis.cancel();
+    // Pre-load voices
+    window.speechSynthesis.getVoices();
+  }catch(e){}
+}
+
+// Unlock on first tap anywhere
+document.addEventListener("pointerdown", unlockAudio, {once:true});
+document.addEventListener("touchstart", unlockAudio, {once:true, passive:true});
 const voiceURLCache={}; // key → download URL
 
 async function playCustomAudio(key){
@@ -2902,10 +2936,12 @@ async function playCustomAudio(key){
       voiceURLCache[key]=url;
     }
     const audio=new Audio(voiceURLCache[key]);
-    audio.play();
+    audio.volume=1;
+    const p=audio.play();
+    if(p) await p;
     return true;
   }catch(e){
-    console.warn("Custom audio failed for",key,e);
+    console.warn("Custom audio failed:",key,e.message);
     return false;
   }
 }
