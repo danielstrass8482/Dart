@@ -30,6 +30,7 @@ const gProvider = new GoogleAuthProvider();
 
 // ── Auth state ────────────────────────────────────────────────────
 window.currentUser = null;
+window.fbAuth = auth;
 
 function initDartDB(){
   window.dartDB = {
@@ -1356,8 +1357,9 @@ function disableBoard(svgEl,on){
 function svgCoords(svgEl,e){
   const rect=svgEl.getBoundingClientRect();
   const scaleX=530/rect.width, scaleY=530/rect.height;
-  const clientX=e.touches?e.touches[0].clientX:e.clientX;
-  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  // PointerEvent has clientX/Y directly; fallback for changedTouches
+  const clientX=e.clientX!==undefined?e.clientX:(e.changedTouches?.[0]||e.touches?.[0])?.clientX||0;
+  const clientY=e.clientY!==undefined?e.clientY:(e.changedTouches?.[0]||e.touches?.[0])?.clientY||0;
   return {x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY};
 }
 
@@ -2000,11 +2002,12 @@ function renderTurnTable(){
   if(wrap) wrap.scrollTop=wrap.scrollHeight;
 }
 
-boardSVG.addEventListener("click",handleX01Click);
-boardSVG.addEventListener("touchend",handleX01Click);
+boardSVG.addEventListener("pointerup",handleX01Click);
 
 function handleX01Click(e){
   e.preventDefault();
+  // Only handle left mouse button or touch/pen
+  if(e.pointerType==="mouse"&&e.button!==0) return;
   if(x01.winner||x01.bust||x01.throws.length>=3) return;
   const {x,y}=svgCoords(boardSVG,e);
   const hit=hitFromXY(x,y);
@@ -2249,11 +2252,11 @@ function getCricketHit(label){
   return null;
 }
 
-boardSVGcr.addEventListener("click",handleCricketClick);
-boardSVGcr.addEventListener("touchend",handleCricketClick);
+boardSVGcr.addEventListener("pointerup",handleCricketClick);
 
 function handleCricketClick(e){
   e.preventDefault();
+  if(e.pointerType==="mouse"&&e.button!==0) return;
   if(cr.winner||cr.throws.length>=3) return;
   const {x,y}=svgCoords(boardSVGcr,e);
   const hit=hitFromXY(x,y);
@@ -2521,11 +2524,11 @@ function renderParty(){
   disableBoard(boardSVGparty,!!pg.winner);
 }
 
-boardSVGparty.addEventListener("click",handlePartyClick);
-boardSVGparty.addEventListener("touchend",handlePartyClick);
+boardSVGparty.addEventListener("pointerup",handlePartyClick);
 
 function handlePartyClick(e){
   e.preventDefault();
+  if(e.pointerType==="mouse"&&e.button!==0) return;
   if(pg.winner||pg.throws.length>=3) return;
   const {x,y}=svgCoords(boardSVGparty,e);
   const hit=hitFromXY(x,y);
@@ -3165,16 +3168,7 @@ async function callCoach(prompt, outputEl, limitEl, btnEl){
   outputEl.innerHTML=`<div class="coach-box"><div class="coach-header">🧠 COACH</div><span style="color:#aaa">Coach denkt nach…</span></div>`;
 
   try{
-    const response = await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        messages:[{role:"user",content:prompt}]
-      })
-    });
-    const data = await response.json();
+    const data = await callClaudeViaProxy([{role:"user",content:prompt}]);
     const text = data.content?.[0]?.text || "Keine Antwort erhalten.";
     const count = recordCoachUsage();
     const newLeft = COACH_DAILY_LIMIT - count;
@@ -3193,7 +3187,24 @@ async function callCoach(prompt, outputEl, limitEl, btnEl){
   }
 }
 
-// Winner overlay coach button
+// ── Cloud Function URL ────────────────────────────────────────────
+const COACH_FUNCTION_URL="https://dartcoach-fitness-tracker-c6f97.europe-west1.run.app";
+
+async function callClaudeViaProxy(messages){
+  const user=window.fbAuth?.currentUser;
+  const token=user?await user.getIdToken():"";
+  const response=await fetch(COACH_FUNCTION_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+    body:JSON.stringify({
+      model:"claude-sonnet-4-20250514",
+      max_tokens:1000,
+      messages
+    })
+  });
+  if(!response.ok) throw new Error(`API Fehler: ${response.status}`);
+  return response.json();
+}
 document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
   const btn=document.getElementById("btn-coach-winner");
   const outputEl=document.getElementById("coach-output-winner");
@@ -3517,17 +3528,7 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
       {type:"text", text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}
     ];
 
-    const response=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        messages:[{role:"user", content}]
-      })
-    });
-
-    const data=await response.json();
+    const data=await callClaudeViaProxy([{role:"user", content}]);
     const text=data.content?.[0]?.text||"Keine Antwort erhalten.";
     recordVideoCoachUsage();
     const newLeft=videoCoachCallsLeft();
