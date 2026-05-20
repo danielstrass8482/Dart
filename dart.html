@@ -203,11 +203,56 @@ function updateAuthUI(user){
   .tab-throw-chip.double { background: #c8dff0; color: #1a4a7a; }
   .player-tab.active .tab-throw-chip.double { background: #1a2a3a; color: #6aaada; }
 
-  /* ── Game body ── */
-  .game-body { display: flex; flex: 1; gap: 16px; padding: 10px 12px 12px; min-height: 0; align-items: flex-start; background: #f5f5f0; overflow: hidden; }
-  .board-wrap { flex: 0 0 auto; width: min(88vh, 62vw, 860px); aspect-ratio: 1; position: relative; }
-  #board-svg, #board-svg-cricket { width: 100%; height: 100%; touch-action: none; user-select: none; display: block; }
-  .side-panel { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 180px; max-width: 380px; overflow-y: auto; }
+  /* ── Game body — Landscape (default) ── */
+  .game-body { display: flex; flex: 1; gap: 12px; padding: 8px 12px 10px; min-height: 0; align-items: flex-start; background: #f5f5f0; overflow: hidden; }
+  .board-wrap { flex: 0 0 auto; width: min(84vh, 56vw, 800px); aspect-ratio: 1; position: relative; }
+  #board-svg, #board-svg-cricket, #board-svg-party { width: 100%; height: 100%; touch-action: none; user-select: none; display: block; }
+  .side-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 160px; max-width: 360px; overflow-y: auto; height: 100%; }
+
+  /* ── Controls bar (throws + remaining + mic) ── */
+  .controls-bar { display: flex; gap: 8px; align-items: stretch; flex-shrink: 0; }
+  .controls-bar .panel-box { flex: 1; }
+
+  /* ── Portrait mode: board centered, controls top bar ── */
+  @media (orientation: portrait) {
+    .game-body { flex-direction: column; align-items: center; overflow-y: auto; padding: 8px; }
+    .board-wrap { width: min(92vw, 78vh); flex: 0 0 auto; }
+    .side-panel { flex: 0 0 auto; width: 100%; max-width: 100%; flex-direction: column; overflow-y: visible; }
+    /* Controls inline in portrait */
+    .portrait-controls { display: flex !important; gap: 8px; width: 100%; flex-wrap: wrap; }
+    .portrait-controls .panel-box { flex: 1; min-width: 140px; }
+    .turn-table-wrap { max-height: 220px; overflow-y: auto; width: 100%; }
+  }
+
+  /* ── Landscape: tighter board ── */
+  @media (orientation: landscape) and (max-height: 600px) {
+    .board-wrap { width: min(80vh, 54vw, 700px); }
+    .game-header { padding: 5px 12px; }
+    .player-tabs { padding: 4px 10px; }
+    .player-tab .tab-score { font-size: 22px; }
+  }
+
+  .portrait-controls { display: none; }
+  .landscape-only { display: block; }
+
+  @media (orientation: portrait) {
+    .game-body { flex-direction: column; align-items: center; overflow-y: auto; padding: 6px 8px; gap: 8px; }
+    .board-wrap { width: min(94vw, 72vh); flex: 0 0 auto; }
+    .side-panel { flex: 0 0 auto; width: 100%; max-width: 100%; flex-direction: row; overflow-y: visible; flex-wrap: wrap; gap: 6px; }
+    .portrait-controls { display: flex !important; width: 100%; gap: 6px; align-items: stretch; }
+    .landscape-only { display: none !important; }
+    .turn-table-wrap { width: 100%; max-height: 200px; overflow-y: auto; flex: none; }
+    .voice-feedback { width: 100%; text-align: center; }
+  }
+
+  @media (orientation: landscape) and (max-height: 620px) {
+    .board-wrap { width: min(80vh, 52vw, 680px); }
+    .game-header { padding: 5px 12px; }
+    .player-tabs { padding: 4px 10px; }
+    .player-tab { padding: 4px 8px; }
+    .player-tab .tab-score { font-size: 22px; }
+    .game-body { padding: 6px 8px; gap: 8px; }
+  }
   .panel-box { background: #fff; border-radius: 10px; padding: 12px; border: 1px solid #ddd; }
   .panel-label { font-size: 10px; color: #999; letter-spacing: 2px; margin-bottom: 8px; }
 
@@ -616,7 +661,28 @@ function updateAuthUI(user){
       <svg id="board-svg" viewBox="0 0 530 530"></svg>
     </div>
     <div class="side-panel">
-      <div class="panel-box">
+      <!-- Portrait: controls in one compact row -->
+      <div class="portrait-controls">
+        <div class="panel-box" style="min-width:0">
+          <div class="panel-label">WÜRFE</div>
+          <div class="throw-slots" id="throw-slots-p">
+            <div class="throw-slot" id="pslot-x0">—</div>
+            <div class="throw-slot" id="pslot-x1">—</div>
+            <div class="throw-slot" id="pslot-x2">—</div>
+          </div>
+          <div class="bust-label" id="bust-label-p" style="display:none">BUST!</div>
+        </div>
+        <div class="panel-box remaining-box" style="min-width:80px;text-align:center">
+          <div class="panel-label">REST</div>
+          <div class="remaining-num" id="remaining-num-p" style="font-size:36px">501</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;justify-content:center">
+          <button class="btn-next ok" id="btn-next-p" style="display:none;padding:8px 12px;font-size:14px">WEITER</button>
+          <button class="btn-mic" id="btn-mic-p" title="Wurf ansagen" style="padding:10px">🎤</button>
+        </div>
+      </div>
+      <!-- Landscape: normal panel -->
+      <div class="panel-box landscape-only">
         <div class="panel-label">WÜRFE</div>
         <div class="throw-slots" id="throw-slots">
           <div class="throw-slot" id="slot-0">—</div>
@@ -625,7 +691,7 @@ function updateAuthUI(user){
         </div>
         <div class="bust-label" id="bust-label" style="display:none">BUST!</div>
       </div>
-      <div class="panel-box remaining-box">
+      <div class="panel-box remaining-box landscape-only">
         <div class="panel-label">VERBLEIBEND</div>
         <div class="remaining-num" id="remaining-num">501</div>
         <div id="checkout-box" style="display:none">
@@ -633,10 +699,9 @@ function updateAuthUI(user){
           <div class="checkout-suggestion" id="checkout-suggestion"></div>
         </div>
       </div>
-      <button class="btn-next ok" id="btn-next" style="display:none">NÄCHSTER SPIELER</button>
-      <div class="throw-sum" id="throw-sum" style="display:none"></div>
-      <!-- Voice input -->
-      <button class="btn-mic" id="btn-mic" title="Wurf ansagen">🎤</button>
+      <button class="btn-next ok landscape-only" id="btn-next" style="display:none">NÄCHSTER SPIELER</button>
+      <div class="throw-sum landscape-only" id="throw-sum" style="display:none"></div>
+      <button class="btn-mic landscape-only" id="btn-mic" title="Wurf ansagen">🎤</button>
       <div class="voice-feedback" id="voice-feedback"></div>
     </div>
     <!-- Turn history table -->
@@ -1941,8 +2006,22 @@ function renderX01(){
   const legSep = legInfo ? ' · ' : '';
   document.getElementById("x01-title").textContent=`${cfg.mode}${legSep}${legInfo} · Runde ${x01.round}`;
 
-  renderX01Tabs();
-  renderTurnTable();
+  // Sync portrait slots
+  for(let i=0;i<3;i++){
+    const ps=document.getElementById(`pslot-x${i}`);
+    const t=x01.throws[i];
+    if(ps){ ps.textContent=t?t.label:"—"; ps.className="throw-slot"+(t?" hit":"")+(x01.bust&&i===x01.throws.length-1?" bust":"")+(t&&t.label==="Miss"?" bust":""); }
+  }
+  const pBust=document.getElementById("bust-label-p");
+  if(pBust) pBust.style.display=x01.bust?"":"none";
+  const pRem=document.getElementById("remaining-num-p");
+  if(pRem) pRem.textContent=Math.max(0,x01.scores[x01.current]-x01.throws.reduce((s,t)=>s+t.score,0));
+  const pNext=document.getElementById("btn-next-p");
+  if(pNext){
+    pNext.style.display=(x01.throws.length>0&&!x01.winner)?"":"none";
+    pNext.className="btn-next"+(x01.bust?" bust":" ok");
+    pNext.textContent=x01.bust?"BUST!":"WEITER";
+  }
   // Checkout highlight on board
   const spent2=x01.throws.reduce((s,t)=>s+t.score,0);
   const rem2=x01.scores[x01.current]-spent2;
@@ -2175,6 +2254,12 @@ document.getElementById("x01-undo").addEventListener("click",()=>{
 });
 
 document.getElementById("x01-back").addEventListener("click",showSetup);
+
+// Portrait mode buttons mirror landscape
+document.getElementById("btn-next-p")?.addEventListener("click",()=>
+  document.getElementById("btn-next").click());
+document.getElementById("btn-mic-p")?.addEventListener("click",()=>
+  document.getElementById("btn-mic").click());
 
 // ══════════════════════════════════════════════════════════════════
 // CRICKET GAME
