@@ -3320,7 +3320,7 @@ async function callClaudeViaProxy(messages){
   const response=await fetch(COACH_FUNCTION_URL,{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages})
+    body:JSON.stringify({model:"claude-sonnet-4-5-20251001",max_tokens:1000,messages})
   });
   if(!response.ok){
     const err=await response.text();
