@@ -3312,18 +3312,20 @@ async function callCoach(prompt, outputEl, limitEl, btnEl){
 const COACH_FUNCTION_URL="https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartCoach";
 
 async function callClaudeViaProxy(messages){
-  const user=window.fbAuth?.currentUser;
-  const token=user?await user.getIdToken():"";
+  let token="anonymous";
+  try{
+    const user=window.fbAuth?.currentUser;
+    if(user) token=await user.getIdToken();
+  }catch(e){}
   const response=await fetch(COACH_FUNCTION_URL,{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:JSON.stringify({
-      model:"claude-sonnet-4-20250514",
-      max_tokens:1000,
-      messages
-    })
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages})
   });
-  if(!response.ok) throw new Error(`API Fehler: ${response.status}`);
+  if(!response.ok){
+    const err=await response.text();
+    throw new Error(`API Fehler ${response.status}: ${err}`);
+  }
   return response.json();
 }
 document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
