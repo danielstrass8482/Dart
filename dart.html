@@ -3522,6 +3522,31 @@ document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
   }
 });
 
+async function loadCoachHistoryStats(pid){
+  const container=document.getElementById("coach-history-stats");
+  if(!container||!window.dartDB) return;
+  const analyses=await window.dartDB.loadCoachAnalyses(pid);
+  if(!analyses.length){ container.innerHTML=""; return; }
+  container.innerHTML=`
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#555;margin-bottom:8px;cursor:pointer"
+      onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?this.textContent.replace('▼','▲'):this.textContent.replace('▲','▼')">
+      📋 GESPEICHERTE ANALYSEN (${analyses.length}) ▼
+    </div>
+    <div style="display:none">
+      ${analyses.map(a=>{
+        const d=new Date(a.ts);
+        const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
+        return `<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="font-size:10px;color:#aaa;margin-bottom:6px;display:flex;justify-content:space-between">
+            <span>${ds}</span>
+            <span>${a.mode||""} ${a.avgPerTurn?`· Ø ${a.avgPerTurn}`:""}</span>
+          </div>
+          <div style="font-size:13px;color:#333;line-height:1.7">${(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").trim()}</div>
+        </div>`;
+      }).join("")}
+    </div>`;
+}
+
 async function loadCoachHistory(pid){
   if(!window.dartDB) return;
   const analyses=await window.dartDB.loadCoachAnalyses(pid);
@@ -4147,7 +4172,8 @@ async function loadAndRenderStats(){
         🧠 COACH-ANALYSE STARTEN
       </button>
       <div id="coach-output-stats"></div>
-      <div class="coach-limit" id="coach-limit-stats">${coachLeft} von ${COACH_DAILY_LIMIT} Analysen heute verfügbar</div>`;
+      <div class="coach-limit" id="coach-limit-stats">${coachLeft} von ${COACH_DAILY_LIMIT} Analysen heute verfügbar</div>
+      <div id="coach-history-stats" style="margin-top:12px"></div>`;
 
     // ── Last games ────────────────────────────────────────────────
     html+=`<div class="stats-section-title">LETZTE SPIELE</div>
@@ -4189,8 +4215,26 @@ async function loadAndRenderStats(){
           document.getElementById("coach-output-stats"),
           document.getElementById("coach-limit-stats"),
           coachStatsBtn);
+        // Save and reload history
+        const outputEl=document.getElementById("coach-output-stats");
+        if(outputEl?.querySelector(".coach-box")&&window.dartDB&&statsSelectedPlayer){
+          const text=outputEl.querySelector(".coach-box").innerText;
+          if(text&&!text.includes("Fehler")&&!text.includes("Limit")){
+            const p=allPlayers.find(x=>x.id===statsSelectedPlayer);
+            await window.dartDB.saveCoachAnalysis({
+              playerId:statsSelectedPlayer,
+              playerName:p?.name||"?",
+              type:"text", text,
+              avgPerTurn:avg
+            });
+            loadCoachHistoryStats(statsSelectedPlayer);
+          }
+        }
       });
     }
+
+    // Load saved analyses for selected player
+    loadCoachHistoryStats(statsSelectedPlayer);
 
     // Draw scatter board
     if(allScatter.length){
