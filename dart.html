@@ -3249,7 +3249,7 @@ document.getElementById("studio-delete-btn").addEventListener("click",async()=>{
 // ══════════════════════════════════════════════════════════════════
 // DART COACH (Claude API)
 // ══════════════════════════════════════════════════════════════════
-const COACH_DAILY_LIMIT = 3;
+const COACH_DAILY_LIMIT = 999;
 const COACH_STORAGE_KEY = "dart_coach_usage";
 
 function getCoachUsage(){
@@ -3593,7 +3593,7 @@ function applyRemoteThrow(hit){
 }
 
 // ── Video Coach ───────────────────────────────────────────────────
-const VIDEO_COACH_LIMIT=2; // per day, costs more
+const VIDEO_COACH_LIMIT=999;
 const VIDEO_COACH_KEY="dart_video_coach_usage";
 
 function getVideoCoachUsage(){
