@@ -62,6 +62,19 @@ function initDartDB(){
         where("playerIds","array-contains",playerId), orderBy("ts","desc"), limit(100)));
       return snap.docs.map(d=>({id:d.id,...d.data()}));
     },
+    // Coach analyses
+    async saveCoachAnalysis(data){
+      return addDoc(collection(db,"dart_coach_analyses"), {...data, ts:Date.now()});
+    },
+    async loadCoachAnalyses(playerId){
+      try{
+        const q=playerId
+          ? query(collection(db,"dart_coach_analyses"), where("playerId","==",playerId), orderBy("ts","desc"), limit(20))
+          : query(collection(db,"dart_coach_analyses"), orderBy("ts","desc"), limit(20));
+        const snap=await getDocs(q);
+        return snap.docs.map(d=>({id:d.id,...d.data()}));
+      }catch(e){ return []; }
+    },
     // Voice samples
     async uploadVoiceSample(key, blob){
       const r=ref(storage,`dart_voice/${key}.webm`);
@@ -807,16 +820,30 @@ function updateAuthUI(user){
     <div class="winner-name" id="winner-name"></div>
     <div class="winner-round" id="winner-round"></div>
     <div id="winner-summary" style="display:none;margin:16px 0 0"></div>
-    <!-- Text Coach -->
-    <button class="coach-btn" id="btn-coach-winner" style="margin-top:16px">
-      🧠 STATISTIK-ANALYSE
-    </button>
-    <div id="coach-output-winner"></div>
-    <div class="coach-limit" id="coach-limit-winner"></div>
+
+    <!-- Text Coach with player selector -->
+    <div style="margin-top:16px">
+      <div id="coach-player-selector" style="display:none;margin-bottom:10px">
+        <div style="font-size:11px;color:#999;letter-spacing:1px;margin-bottom:6px">ANALYSE FÜR</div>
+        <div id="coach-player-btns" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
+      </div>
+      <button class="coach-btn" id="btn-coach-winner">🧠 STATISTIK-ANALYSE</button>
+      <div id="coach-output-winner"></div>
+      <div class="coach-limit" id="coach-limit-winner"></div>
+    </div>
+
+    <!-- Saved analyses -->
+    <div id="coach-history-wrap" style="display:none;margin-top:12px;text-align:left">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#999;margin-bottom:6px;cursor:pointer" id="btn-toggle-history">
+        📋 GESPEICHERTE ANALYSEN ▼
+      </div>
+      <div id="coach-history-list" style="display:none"></div>
+    </div>
+
     <!-- Video Coach -->
     <div style="margin-top:12px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;text-align:left">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px">🎥 WURF-ANALYSE (VIDEO)</div>
-      <div style="font-size:12px;color:#999;margin-bottom:10px">Lade ein kurzes Video (3-5 Sek.) deines Wurfs hoch — von der Seite, Hüfthöhe. Claude analysiert Haltung, Arm und Followthrough.</div>
+      <div style="font-size:12px;color:#999;margin-bottom:10px">Lade ein kurzes Video (3-5 Sek.) deines Wurfs hoch — von der Seite, Hüfthöhe.</div>
       <input type="file" id="video-upload" accept="video/*" style="display:none">
       <button id="btn-video-select" style="width:100%;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666;margin-bottom:8px">
         📁 Video auswählen
@@ -2946,6 +2973,11 @@ function showWinner(name,round){
 
   document.getElementById("winner-overlay").classList.add("visible");
   updateCoachLimitDisplay();
+  buildCoachPlayerSelector();
+  // Load history for winner
+  const winnerIdx=cfg.players.indexOf(name);
+  const winnerPid=cfg.playerIds?.[winnerIdx]||null;
+  if(winnerPid) loadCoachHistory(winnerPid);
 }
 
 function saveGameToFirebase(winnerIdx){
@@ -3411,45 +3443,108 @@ async function callClaudeViaProxy(messages){
   }
   return response.json();
 }
+// Winner overlay coach — player selector + save analysis
+let coachSelectedPlayerIdx=0;
+
+function buildCoachPlayerSelector(){
+  const humanPlayers=cfg.players.filter((_,i)=>!cfg.isBot?.[i]);
+  const sel=document.getElementById("coach-player-selector");
+  const btns=document.getElementById("coach-player-btns");
+  if(!sel||!btns) return;
+  if(humanPlayers.length<=1){ sel.style.display="none"; coachSelectedPlayerIdx=0; return; }
+  sel.style.display="";
+  btns.innerHTML="";
+  humanPlayers.forEach((name,hi)=>{
+    const realIdx=cfg.players.indexOf(name);
+    const col=playerColor(name);
+    const btn=document.createElement("button");
+    btn.style.cssText=`padding:6px 14px;border-radius:20px;border:2px solid ${col};background:${hi===0?"#fffbea":"#fff"};cursor:pointer;font-size:13px;font-weight:600;color:#1a1a1a`;
+    btn.textContent=name;
+    btn.addEventListener("click",()=>{
+      coachSelectedPlayerIdx=realIdx;
+      btns.querySelectorAll("button").forEach((b,bi)=>{
+        b.style.background=bi===hi?"#fffbea":"#fff";
+        b.style.borderWidth=bi===hi?"2px":"1px";
+      });
+    });
+    btns.appendChild(btn);
+  });
+  // Default: winner
+  const winnerName=document.getElementById("winner-name").textContent;
+  coachSelectedPlayerIdx=cfg.players.indexOf(winnerName);
+}
+
 document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
   const btn=document.getElementById("btn-coach-winner");
   const outputEl=document.getElementById("coach-output-winner");
   const limitEl=document.getElementById("coach-limit-winner");
+  const i=coachSelectedPlayerIdx;
+  const playerName=cfg.players[i]||cfg.players[0];
 
-  // Get player stats from Firebase for the winner
   let playerStats=null;
-  let pid=null;
-  if(window.dartDB&&cfg.playerIds){
-    const winnerIdx=cfg.players.indexOf(document.getElementById("winner-name").textContent);
-    pid=cfg.playerIds?.[winnerIdx]||null;
-    if(pid){
-      const players=await window.dartDB.loadPlayers();
-      const p=players.find(x=>x.id===pid);
-      if(p) playerStats=p.stats;
-    }
+  let pid=cfg.playerIds?.[i]||null;
+  if(window.dartDB&&pid){
+    const players=await window.dartDB.loadPlayers();
+    const p=players.find(x=>x.id===pid);
+    if(p) playerStats=p.stats;
   }
 
-  // Build session stats from last game
+  const turns=x01.turnScores?.[i]||[];
+  const avg=turns.length?Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10:0;
+  const best=turns.length?Math.max(...turns):0;
   const sessionStats={
     mode:cfg.mode,
     rounds:cfg.mode!=="Cricket"?x01.round:cr.round,
-    players:cfg.players.map((name,i)=>{
-      const turns=x01.turnScores?.[i]||[];
-      const avg=turns.length?Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10:0;
-      const best=turns.length?Math.max(...turns):0;
-      return {
-        name,id:cfg.playerIds?.[i]||null,
-        avg3:avg, best3:best,
-        checkoutAtt:x01.checkoutAttempts?.[i]||0,
-        checkoutHit:x01.checkoutHits?.[i]||0,
-        first9:x01.first9?.[i]||null,
-        winner:document.getElementById("winner-name").textContent===name
-      };
-    })
+    players:[{
+      name:playerName, id:pid,
+      avg3:avg, best3:best,
+      checkoutAtt:x01.checkoutAttempts?.[i]||0,
+      checkoutHit:x01.checkoutHits?.[i]||0,
+      first9:x01.first9?.[i]||null,
+      winner:document.getElementById("winner-name").textContent===playerName
+    }]
   };
 
   const prompt=buildCoachPrompt(playerStats, sessionStats, allGamesCache, pid);
   await callCoach(prompt, outputEl, limitEl, btn);
+
+  // Save analysis to Firebase after successful response
+  if(outputEl.querySelector(".coach-box")&&window.dartDB){
+    const text=outputEl.querySelector(".coach-box").innerText;
+    if(text&&!text.includes("Fehler")&&!text.includes("Limit")){
+      await window.dartDB.saveCoachAnalysis({
+        playerId:pid, playerName,
+        type:"text", text,
+        mode:cfg.mode, avgPerTurn:avg
+      });
+      loadCoachHistory(pid);
+    }
+  }
+});
+
+async function loadCoachHistory(pid){
+  if(!window.dartDB) return;
+  const analyses=await window.dartDB.loadCoachAnalyses(pid);
+  const wrap=document.getElementById("coach-history-wrap");
+  const list=document.getElementById("coach-history-list");
+  if(!wrap||!list||!analyses.length){ if(wrap) wrap.style.display="none"; return; }
+  wrap.style.display="";
+  list.innerHTML=analyses.map(a=>{
+    const d=new Date(a.ts);
+    const ds=`${d.getDate()}.${d.getMonth()+1}. ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
+    return `<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px">
+      <div style="font-size:10px;color:#aaa;margin-bottom:4px">${ds} · ${a.mode||""} · Ø ${a.avgPerTurn||0}</div>
+      <div style="color:#333;line-height:1.6">${(a.text||"").replace("🧠 COACH-ANALYSE","").trim()}</div>
+    </div>`;
+  }).join("");
+}
+
+document.getElementById("btn-toggle-history")?.addEventListener("click",()=>{
+  const list=document.getElementById("coach-history-list");
+  const btn=document.getElementById("btn-toggle-history");
+  const open=list.style.display==="none";
+  list.style.display=open?"":"none";
+  btn.textContent=`📋 GESPEICHERTE ANALYSEN ${open?"▲":"▼"}`;
 });
 
 // Update coach limit display when winner overlay opens
@@ -3999,7 +4094,53 @@ async function loadAndRenderStats(){
         </div>`;
     }
 
-    // ── Coach button in stats tab ─────────────────────────────────
+    // ── Double field stats (aggregate from all games) ─────────────
+    const doubleAgg={};
+    x01Data.forEach(p=>{
+      if(!p.doubleStats) return;
+      Object.entries(p.doubleStats).forEach(([field,v])=>{
+        if(!doubleAgg[field]) doubleAgg[field]={att:0,hit:0};
+        doubleAgg[field].att+=v.att||0;
+        doubleAgg[field].hit+=v.hit||0;
+      });
+    });
+    const doubleEntries=Object.entries(doubleAgg)
+      .map(([f,v])=>({field:f,att:v.att,hit:v.hit,pct:v.att>0?Math.round(v.hit/v.att*100):0}))
+      .filter(e=>e.att>=1)
+      .sort((a,b)=>b.att-a.att);
+
+    const bestDouble=doubleEntries.filter(e=>e.att>=3).sort((a,b)=>b.pct-a.pct)[0];
+    const worstDouble=doubleEntries.filter(e=>e.att>=3).sort((a,b)=>a.pct-b.pct)[0];
+    const mostTriedDouble=doubleEntries[0];
+
+    // ── Double field stats ────────────────────────────────────────
+    if(doubleEntries.length>0){
+      html+=`<div class="stats-section-title">🎯 DOPPELFELD-STATISTIK</div>`;
+      html+=`<div class="stats-grid" style="margin-bottom:10px">
+        ${bestDouble?`<div class="stat-card"><div class="s-label">BESTES DOPPEL</div><div class="s-value">${bestDouble.field}</div><div class="s-sub">${bestDouble.pct}% (${bestDouble.hit}/${bestDouble.att})</div></div>`:""}
+        ${worstDouble&&worstDouble.field!==bestDouble?.field?`<div class="stat-card"><div class="s-label">SCHWÄCHSTES DOPPEL</div><div class="s-value">${worstDouble.field}</div><div class="s-sub">${worstDouble.pct}% (${worstDouble.hit}/${worstDouble.att})</div></div>`:""}
+        ${mostTriedDouble?`<div class="stat-card"><div class="s-label">MEIST GESPIELT</div><div class="s-value">${mostTriedDouble.field}</div><div class="s-sub">${mostTriedDouble.att} Versuche</div></div>`:""}
+      </div>
+      <div class="history-list" style="margin-bottom:14px">
+        <div class="history-header" style="grid-template-columns:1fr 70px 70px 70px"><span>FELD</span><span>VERSUCHE</span><span>TREFFER</span><span>QUOTE</span></div>`;
+      doubleEntries.forEach(e=>{
+        const color=e.pct>=50?"#2e7d32":e.pct>=25?"#fb8c00":"#e53935";
+        const barW=Math.round(e.pct/100*80);
+        html+=`<div class="history-row" style="grid-template-columns:1fr 70px 70px 70px">
+          <span style="display:flex;align-items:center;gap:8px">
+            <strong>${e.field}</strong>
+            <span style="flex:1;height:6px;background:#f0f0f0;border-radius:3px;max-width:80px;display:inline-block">
+              <span style="display:block;height:6px;width:${barW}%;background:${color};border-radius:3px"></span>
+            </span>
+          </span>
+          <span>${e.att}</span><span>${e.hit}</span>
+          <span style="font-weight:700;color:${color}">${e.pct}%</span>
+        </div>`;
+      });
+      html+=`</div>`;
+    }
+
+    // ── Coach button ──────────────────────────────────────────────
     const coachLeft=coachCallsLeft();
     html+=`<div class="stats-section-title">🧠 DART COACH</div>
       <button class="coach-btn" id="btn-coach-stats" ${coachLeft<=0?'disabled':''}>
