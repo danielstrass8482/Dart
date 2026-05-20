@@ -3309,7 +3309,7 @@ async function callCoach(prompt, outputEl, limitEl, btnEl){
 }
 
 // ── Cloud Function URL ────────────────────────────────────────────
-const COACH_FUNCTION_URL="https://dartcoach-fitness-tracker-c6f97.europe-west1.run.app";
+const COACH_FUNCTION_URL="https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartCoach";
 
 async function callClaudeViaProxy(messages){
   const user=window.fbAuth?.currentUser;
