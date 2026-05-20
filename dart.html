@@ -1905,6 +1905,8 @@ function startX01(starter=0){
     first9: cfg.players.map(()=>null),    // first 3 turns sum per player (null = not yet complete)
     checkoutAttempts: cfg.players.map(()=>0),
     checkoutHits: cfg.players.map(()=>0),
+    // Double field tracking: {D16: {att:3, hit:1}, D20: {att:5, hit:2}, ...}
+    doubleStats: cfg.players.map(()=>({})),
     startTime: Date.now()
   };
   renderX01Tabs();
@@ -2087,6 +2089,32 @@ function renderTurnTable(){
   if(wrap) wrap.scrollTop=wrap.scrollHeight;
 }
 
+// ── Double field tracking ─────────────────────────────────────────
+// Called before each throw when remaining ≤ 40 and even
+// targetDouble = the double field the player should be aiming at
+function trackDoubleAttempt(playerIdx, remaining, hit){
+  // Only track when remaining ≤ 40 and even → clear double attempt
+  if(remaining<=0||remaining>40||remaining%2!==0) return;
+  const targetDouble=remaining/2;
+  const key=`D${targetDouble}`;
+  if(!x01.doubleStats[playerIdx][key])
+    x01.doubleStats[playerIdx][key]={att:0,hit:0};
+  x01.doubleStats[playerIdx][key].att++;
+  // Hit if they scored exactly remaining (double) or bull for 50
+  if(hit.score===remaining&&(hit.label===`D${targetDouble}`||hit.label==="Bull"))
+    x01.doubleStats[playerIdx][key].hit++;
+}
+
+function getDoubleStatsForCoach(playerIdx){
+  const ds=x01.doubleStats[playerIdx];
+  if(!Object.keys(ds).length) return null;
+  const entries=Object.entries(ds)
+    .map(([k,v])=>({field:k,att:v.att,hit:v.hit,pct:v.att>0?Math.round(v.hit/v.att*100):0}))
+    .filter(e=>e.att>=2) // only meaningful data
+    .sort((a,b)=>b.att-a.att); // most attempted first
+  return entries;
+}
+
 boardSVG.addEventListener("pointerup",handleX01Click);
 
 function handleX01Click(e){
@@ -2135,6 +2163,10 @@ function handleX01Click(e){
   const tent=prevRemaining-hit.score;
 
   if(prevRemaining<=170&&prevRemaining>1) x01.checkoutAttempts[x01.current]++;
+
+  // Track double attempt when remaining ≤ 40 and even
+  if(prevRemaining<=40&&prevRemaining%2===0&&prevRemaining>1)
+    trackDoubleAttempt(x01.current, prevRemaining, hit);
 
   if(tent<0||tent===1){
     x01.bust=true;
@@ -2918,6 +2950,7 @@ function saveGameToFirebase(winnerIdx){
       return {name, id:cfg.playerIds?.[i]||null, avg3:avg, best3:best,
         checkoutAtt:x01.checkoutAttempts[i], checkoutHit:x01.checkoutHits[i],
         first9:x01.first9?.[i]||null,
+        doubleStats:x01.doubleStats?.[i]||{},
         scatter, winner:i===winnerIdx};
     } else {
       // Cricket stats
@@ -3242,36 +3275,75 @@ function coachCallsLeft(){
   return Math.max(0, COACH_DAILY_LIMIT - usage.count);
 }
 
-function buildCoachPrompt(stats, sessionStats){
-  const lines = [
+function buildCoachPrompt(stats, sessionStats, allGames, playerId){
+  const lines=[
     "Du bist ein erfahrener Dart-Coach. Analysiere die folgenden Spielerstatistiken und gib konkretes, actionables Feedback auf Deutsch.",
-    "Sei direkt, freundlich und spezifisch. Max. 4-5 Sätze. Fokus auf die wichtigste Schwäche und eine konkrete Verbesserungsempfehlung.",
-    "",
-    "=== GESAMTSTATISTIKEN ==="
+    "Sei direkt, freundlich und spezifisch. Max. 5-6 Sätze. Fokus auf die wichtigsten Schwächen und konkrete Verbesserungsempfehlungen.",
+    ""
   ];
+
   if(stats){
+    lines.push("=== GESAMTSTATISTIKEN ===");
     lines.push(`Spiele gesamt: ${stats.games||0}`);
-    lines.push(`Siegquote: ${stats.games?Math.round((stats.wins||0)/stats.games*100):0}%`);
-    lines.push(`Ø Aufnahme: ${stats.avgPerTurn||0}`);
+    lines.push(`Siege: ${stats.wins||0} (${stats.games?Math.round((stats.wins||0)/stats.games*100):0}%)`);
+    lines.push(`Ø Aufnahme (gesamt): ${stats.avgPerTurn||0}`);
     lines.push(`First-9 Ø: ${stats.first9avg||"—"}`);
     lines.push(`Checkout-Quote: ${stats.checkoutPct||0}%`);
     lines.push(`Highscore: ${stats.highscore||0}`);
-    if(stats.cricketGames>0){
-      lines.push(`Cricket-Spiele: ${stats.cricketGames}, Ø Marks/Aufnahme: ${stats.cricketAvgMarks||0}`);
+    if(stats.cricketGames>0) lines.push(`Cricket: ${stats.cricketGames} Spiele, Ø ${stats.cricketAvgMarks||0} Marks/Aufnahme`);
+  }
+
+  // Trend: last 5 vs previous 5 games
+  if(allGames&&playerId){
+    const pGames=allGames.filter(g=>(g.playerIds||[]).includes(playerId));
+    if(pGames.length>=6){
+      const getAvg=games=>{
+        const vals=games.flatMap(g=>(g.players||[]).filter(p=>p.id===playerId).map(p=>p.avg3||0)).filter(v=>v>0);
+        return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10:0;
+      };
+      const getCo=games=>{
+        const att=games.flatMap(g=>(g.players||[]).filter(p=>p.id===playerId)).reduce((s,p)=>s+(p.checkoutAtt||0),0);
+        const hit=games.flatMap(g=>(g.players||[]).filter(p=>p.id===playerId)).reduce((s,p)=>s+(p.checkoutHit||0),0);
+        return att>0?Math.round(hit/att*100):0;
+      };
+      const last5=pGames.slice(0,5);
+      const prev5=pGames.slice(5,10);
+      const avgLast=getAvg(last5), avgPrev=getAvg(prev5);
+      const coLast=getCo(last5), coPrev=getCo(prev5);
+      lines.push("","=== TREND (letzte 5 vs. vorherige 5 Spiele) ===");
+      lines.push(`Ø Aufnahme: ${avgLast} (${avgLast>=avgPrev?"+":""}${Math.round((avgLast-avgPrev)*10)/10} vs. vorher)`);
+      lines.push(`Checkout-Quote: ${coLast}% (${coLast>=coPrev?"+":""}${coLast-coPrev}% vs. vorher)`);
+      if(avgLast>avgPrev&&coLast>coPrev) lines.push("→ Klare Verbesserung in beiden Bereichen");
+      else if(avgLast<avgPrev||coLast<coPrev) lines.push("→ Leichter Rückgang — mögliche Ermüdung oder Technikfehler");
     }
   }
+
+  // Double stats from current session
+  if(sessionStats){
+    const pi=cfg.players.indexOf(sessionStats.players?.[0]?.name);
+    const ds=pi>=0?getDoubleStatsForCoach(pi):null;
+    if(ds&&ds.length>0){
+      lines.push("","=== DOPPELFELD-STATISTIK (aktuelle Session) ===");
+      ds.forEach(e=>{
+        lines.push(`${e.field}: ${e.hit}/${e.att} (${e.pct}%)`);
+      });
+      const worst=ds.filter(e=>e.att>=3).sort((a,b)=>a.pct-b.pct)[0];
+      const best=ds.filter(e=>e.att>=3).sort((a,b)=>b.pct-a.pct)[0];
+      if(worst) lines.push(`→ Schwächstes Doppel: ${worst.field} (${worst.pct}%)`);
+      if(best) lines.push(`→ Stärkstes Doppel: ${best.field} (${best.pct}%)`);
+    }
+  }
+
   if(sessionStats){
     lines.push("","=== LETZTE PARTIE ===");
-    lines.push(`Modus: ${sessionStats.mode}`);
-    lines.push(`Runden: ${sessionStats.rounds}`);
+    lines.push(`Modus: ${sessionStats.mode}, Runden: ${sessionStats.rounds}`);
     sessionStats.players.forEach(p=>{
-      if(p.id===null) return; // skip bot
-      lines.push(`${p.name}: Ø ${p.avg3||0}, Best ${p.best3||0}, Checkout ${p.checkoutHit||0}/${p.checkoutAtt||0}`);
-      if(p.first9) lines.push(`  First-9 Ø: ${p.first9}`);
-      if(p.winner) lines.push(`  → GEWONNEN`);
+      if(p.id===null) return;
+      lines.push(`${p.name}: Ø ${p.avg3||0}, Best ${p.best3||0}, Checkout ${p.checkoutHit||0}/${p.checkoutAtt||0}${p.first9?`, First-9: ${p.first9}`:""}${p.winner?" → GEWONNEN":""}`);
     });
   }
-  lines.push("","Antworte NUR mit dem Coach-Feedback, keine Einleitung.");
+
+  lines.push("","Antworte NUR mit dem Coach-Feedback, keine Einleitung, keine Überschriften.");
   return lines.join("\n");
 }
 
@@ -3364,7 +3436,7 @@ document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
     })
   };
 
-  const prompt=buildCoachPrompt(playerStats, sessionStats);
+  const prompt=buildCoachPrompt(playerStats, sessionStats, allGamesCache, pid);
   await callCoach(prompt, outputEl, limitEl, btn);
 });
 
@@ -3959,7 +4031,7 @@ async function loadAndRenderStats(){
             cricketGames:crGames.length, cricketAvgMarks:crAvg
           };
         }
-        const prompt=buildCoachPrompt(playerStats, null);
+        const prompt=buildCoachPrompt(playerStats, null, allGamesCache, statsSelectedPlayer);
         await callCoach(prompt,
           document.getElementById("coach-output-stats"),
           document.getElementById("coach-limit-stats"),
