@@ -205,7 +205,7 @@ function updateAuthUI(user){
 
   /* ── Game body — Landscape (default) ── */
   .game-body { display: flex; flex: 1; gap: 12px; padding: 8px 12px 10px; min-height: 0; align-items: flex-start; background: #f5f5f0; overflow: hidden; }
-  .board-wrap { flex: 0 0 auto; width: min(84vh, 56vw, 800px); aspect-ratio: 1; position: relative; }
+  .board-wrap { flex: 0 0 auto; width: min(82vh, 54vw, 780px); aspect-ratio: 1; position: relative; }
   #board-svg, #board-svg-cricket, #board-svg-party { width: 100%; height: 100%; touch-action: none; user-select: none; display: block; }
   .side-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 160px; max-width: 360px; overflow-y: auto; height: 100%; }
 
@@ -2043,6 +2043,8 @@ function renderX01(){
     clearCheckout(boardSVG);
   }
   disableBoard(boardSVG,!!x01.winner||x01.bust);
+  renderX01Tabs();
+  renderTurnTable();
 }
 
 function scoreEmoji(s){
@@ -3416,9 +3418,10 @@ document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
 
   // Get player stats from Firebase for the winner
   let playerStats=null;
+  let pid=null;
   if(window.dartDB&&cfg.playerIds){
     const winnerIdx=cfg.players.indexOf(document.getElementById("winner-name").textContent);
-    const pid=cfg.playerIds?.[winnerIdx];
+    pid=cfg.playerIds?.[winnerIdx]||null;
     if(pid){
       const players=await window.dartDB.loadPlayers();
       const p=players.find(x=>x.id===pid);
