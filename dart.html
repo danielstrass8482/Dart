@@ -192,112 +192,90 @@ function updateAuthUI(user){
 
   /* ── Game header ── */
   .game-header { display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 16px; background: #1a1a1a; border-bottom: 2px solid #333; flex-shrink: 0; }
-  .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #e8c44a; letter-spacing: 2px; }
-  .btn-nav { background: none; border: 1px solid #555; color: #ccc; padding: 6px 12px; border-radius: 6px; font-size: 13px; }
+    padding: 6px 12px; background: #1a1a1a; border-bottom: 1px solid #333; flex-shrink: 0; }
+  .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #e8c44a; letter-spacing: 2px; }
+  .btn-nav { background: none; border: 1px solid #555; color: #ccc; padding: 5px 10px; border-radius: 6px; font-size: 13px; }
 
-  /* ── Player tabs ── */
-  .player-tabs { display: flex; gap: 6px; padding: 8px 14px; overflow-x: auto; flex-shrink: 0; background: #fff; border-bottom: 1px solid #ddd; }
-  .player-tab { flex: 1; min-width: 80px; padding: 8px 10px; border-radius: 10px;
-    background: #f0f0f0; border: 1px solid #ddd; text-align: center; transition: all .2s; }
-  .player-tab.active { background: #1a1a1a; border: 2px solid #e8c44a; }
-  .player-tab .tab-name { font-size: 10px; color: #999; letter-spacing: 1px; font-weight: 500; margin-bottom: 2px; }
-  .player-tab.active .tab-name { color: #e8c44a; }
-  .player-tab .tab-score { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: #555; line-height: 1; }
-  .player-tab.active .tab-score { color: #fff; }
-  .player-tab .tab-throws { display: flex; gap: 4px; justify-content: center; margin-top: 5px; min-height: 20px; flex-wrap: wrap; }
-  .tab-throw-chip { font-family: 'Bebas Neue', sans-serif; font-size: 13px; padding: 2px 6px; border-radius: 4px;
-    background: #ddd; color: #444; letter-spacing: 0.5px; }
-  .player-tab.active .tab-throw-chip { background: #333; color: #ccc; }
-  .tab-throw-chip.miss { background: #fcd; color: #c00; }
-  .player-tab.active .tab-throw-chip.miss { background: #3a1010; color: #ff6666; }
-  .tab-throw-chip.triple { background: #c8ecd4; color: #1a6b35; }
-  .player-tab.active .tab-throw-chip.triple { background: #1a3a1a; color: #6bba8a; }
-  .tab-throw-chip.double { background: #c8dff0; color: #1a4a7a; }
-  .player-tab.active .tab-throw-chip.double { background: #1a2a3a; color: #6aaada; }
+  /* ── PORTRAIT: Scoreboard rows above/below board ── */
+  .game-body { display: flex; flex: 1; min-height: 0; overflow: hidden; background: #111; }
 
-  /* ── Game body — Landscape (default) ── */
-  .game-body { display: flex; flex: 1; gap: 12px; padding: 8px 12px 10px; min-height: 0; align-items: flex-start; background: #f5f5f0; overflow: hidden; }
-  .board-wrap { flex: 0 0 auto; width: min(82vh, 54vw, 780px); aspect-ratio: 1; position: relative; }
-  #board-svg, #board-svg-cricket, #board-svg-party { width: 100%; height: 100%; touch-action: none; user-select: none; display: block; }
-  .side-panel { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 160px; max-width: 360px; overflow-y: auto; height: 100%; }
+  /* Portrait default */
+  .game-body { flex-direction: column; align-items: stretch; }
+  .board-wrap { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 4px; }
+  .board-wrap svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; touch-action: none; user-select: none; display: block; }
+  #board-svg, #board-svg-cricket, #board-svg-party { width: 100%; height: 100%; touch-action: none; user-select: none; }
 
-  /* Portrait/Landscape visibility helpers */
-  .portrait-only { display: none; }
-  .landscape-only { display: block; }
+  /* ── Scoreboard strip (portrait top) ── */
+  .score-strip { display: flex; background: #1a1a1a; flex-shrink: 0; }
+  .score-cell { flex: 1; padding: 6px 10px; border-right: 1px solid #333; }
+  .score-cell:last-child { border-right: none; }
+  .score-cell.active { background: #111; border-bottom: 3px solid #e8c44a; }
+  .score-cell .sc-name { font-size: 10px; color: #888; letter-spacing: 1px; margin-bottom: 1px; }
+  .score-cell.active .sc-name { color: #e8c44a; }
+  .score-cell .sc-score { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: #fff; line-height: 1; }
+  .score-cell .sc-throws { font-size: 11px; color: #666; margin-top: 2px; min-height: 14px; }
+  .score-cell .sc-sub { font-size: 10px; color: #666; }
 
-  /* ── Portrait mode ── */
-  @media (orientation: portrait) {
-    /* Game body stacks vertically, no scroll — board + controls bar + table */
-    .game-body {
-      flex-direction: column;
-      align-items: stretch;
-      overflow: hidden;
-      padding: 6px 8px;
-      gap: 6px;
-    }
-    /* Board takes available space but max ~55% of viewport height */
-    .board-wrap {
-      width: min(96vw, 54vh);
-      align-self: center;
-      flex: 0 0 auto;
-    }
-    /* Side panel becomes a compact horizontal controls bar */
-    .side-panel {
-      flex: 0 0 auto;
-      width: 100%;
-      max-width: 100%;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      overflow: visible;
-      height: auto;
-      gap: 6px;
-      align-items: stretch;
-    }
-    /* Turn table fills remaining space */
-    .turn-table-wrap {
-      flex: 1;
-      min-height: 80px;
-      max-height: none;
-      width: 100%;
-      overflow-y: auto;
-    }
-    .portrait-only { display: flex; }
-    .landscape-only { display: none !important; }
-    .voice-feedback { display: none; }
+  /* ── Bottom controls bar (portrait) ── */
+  .bottom-bar { display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+    background: #1a1a1a; flex-shrink: 0; border-top: 1px solid #333; }
+  .bottom-remaining { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: #fff;
+    min-width: 80px; text-align: center; line-height: 1; }
+  .bottom-checkout { font-size: 11px; color: #e8c44a; text-align: center; }
+  .bottom-throws { display: flex; gap: 4px; flex: 1; }
+  .bottom-slot { flex: 1; height: 38px; border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; background: #2a2a2a; border: 1px solid #333;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #666; }
+  .bottom-slot.hit { background: #2a3a2a; border-color: #4a7a4a; color: #fff; }
+  .bottom-slot.bust { background: #3a1a1a; border-color: #7a3a3a; color: #e53935; }
+  .bottom-btn { padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; flex-shrink: 0; }
+  .bottom-btn.ok { background: #e8c44a; color: #000; }
+  .bottom-btn.bust { background: #e53935; color: #fff; }
+  .bottom-btn.mic { background: #333; color: #fff; font-size: 18px; }
+  .bottom-btn.mic.listening { background: #c62828; animation: pulse-mic 1s infinite; }
+
+  /* ── Landscape: side-by-side ── */
+  @media (orientation: landscape) {
+    .game-body { flex-direction: row; }
+    .board-wrap { flex: 0 0 auto; width: min(88vh, 62vw); height: 100%; padding: 6px; }
+    .score-strip { display: none; }
+    .bottom-bar { display: none; }
+    .landscape-panel { display: flex !important; }
   }
 
-  /* ── Landscape compact (tablets) ── */
-  @media (orientation: landscape) and (max-height: 620px) {
-    .board-wrap { width: min(80vh, 52vw, 680px); }
-    .game-header { padding: 5px 12px; }
-    .player-tabs { padding: 4px 10px; }
-    .player-tab { padding: 4px 8px; }
-    .player-tab .tab-score { font-size: 22px; }
-    .game-body { padding: 6px 8px; gap: 8px; }
-  }
-  .panel-box { background: #fff; border-radius: 10px; padding: 12px; border: 1px solid #ddd; }
-  .panel-label { font-size: 10px; color: #999; letter-spacing: 2px; margin-bottom: 8px; }
+  /* ── Landscape panel (right side) ── */
+  .landscape-panel { display: none; flex-direction: column; flex: 1; min-width: 160px; max-width: 320px;
+    background: #1a1a1a; overflow-y: auto; gap: 0; }
+  .lp-player { padding: 10px 14px; border-bottom: 1px solid #2a2a2a; }
+  .lp-player.active { background: #111; border-left: 3px solid #e8c44a; }
+  .lp-player .lp-name { font-size: 10px; color: #888; letter-spacing: 1px; }
+  .lp-player.active .lp-name { color: #e8c44a; }
+  .lp-player .lp-score { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: #fff; line-height: 1; }
+  .lp-player .lp-throws { font-size: 11px; color: #666; margin-top: 2px; }
+  .lp-player .lp-sub { font-size: 10px; color: #555; }
+  .lp-controls { padding: 10px 12px; border-bottom: 1px solid #2a2a2a; display: flex; flex-direction: column; gap: 6px; }
+  .lp-remaining { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: #fff; text-align: center; line-height: 1; }
+  .lp-checkout { font-size: 12px; color: #e8c44a; text-align: center; min-height: 16px; }
+  .lp-slots { display: flex; gap: 4px; }
+  .lp-slot { flex: 1; height: 40px; border-radius: 6px; background: #2a2a2a; border: 1px solid #333;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #555; }
+  .lp-slot.hit { background: #1a2a1a; border-color: #3a6a3a; color: #fff; }
+  .lp-slot.bust { background: #2a1a1a; border-color: #6a3a3a; color: #e53935; }
+  .lp-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+  .lp-btn.ok { background: #e8c44a; color: #000; }
+  .lp-btn.bust { background: #e53935; color: #fff; }
+  .lp-history { flex: 1; overflow-y: auto; }
+  .lp-mic { width: 100%; padding: 10px; border: none; border-radius: 8px; background: #2a2a2a;
+    color: #fff; font-size: 20px; cursor: pointer; }
+  .lp-mic.listening { background: #c62828; animation: pulse-mic 1s infinite; }
 
-  /* ── Turn history table ── */
-  .turn-table-wrap { background: #fff; border-radius: 10px; border: 1px solid #ddd; overflow: hidden; flex: 1; }
-  .turn-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .turn-table th { background: #f8f8f8; padding: 6px 8px; font-size: 11px; color: #999;
-    letter-spacing: 1px; font-weight: 600; border-bottom: 1px solid #eee; white-space: nowrap; }
-  .turn-table th.player-header { color: #1a1a1a; font-size: 12px; font-weight: 700; }
-  .turn-table td { padding: 5px 8px; border-bottom: 1px solid #f5f5f5; text-align: center;
-    font-family: 'Bebas Neue', sans-serif; font-size: 19px; color: #333; }
-  .turn-table td.turn-num { color: #bbb; font-size: 13px; font-family: 'DM Sans', sans-serif; text-align: left; padding-left: 10px; }
-  .turn-table td.turn-score { position: relative; }
-  .turn-table td.score-low { color: #e53935; }
-  .turn-table td.score-mid { color: #333; }
-  .turn-table td.score-high { color: #2e7d32; }
-  .turn-table td.score-great { color: #1565c0; font-size: 21px; }
-  .turn-table tr.current-turn td { background: #fffbea; }
-  .turn-table tr:last-child td { border-bottom: none; }
-  .turn-emoji { font-size: 13px; margin-left: 2px; }
-  .throw-slots { display: flex; gap: 6px; }
-  .throw-slot { flex: 1; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  /* ── Player tabs — hide in new layout ── */
+  .player-tabs { display: none; }
+  .side-panel { display: none; }
+  .turn-table-wrap { display: none; }
     font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: #ccc;
     background: #f0f0f0; border: 1px dashed #ccc; transition: all .2s; }
   .throw-slot.hit { background: #e8f5ec; border: 1px solid #4caf50; color: #1a1a1a; }
@@ -670,80 +648,57 @@ function updateAuthUI(user){
 </div>
 
 <!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
-<div id="x01" class="screen">
+<div id="x01" class="screen" style="background:#111;display:none;flex-direction:column">
   <div class="game-header">
     <button class="btn-nav" id="x01-back">← Zurück</button>
     <div class="game-title" id="x01-title">501 · Runde 1</div>
     <button class="btn-nav" id="x01-undo">↩ Undo</button>
   </div>
 
-  <div class="player-tabs" id="x01-tabs"></div>
+  <!-- Score strip (portrait: top, landscape: hidden) -->
+  <div class="score-strip" id="score-strip"></div>
 
   <div class="game-body">
+    <!-- Board — takes all available space -->
     <div class="board-wrap">
       <svg id="board-svg" viewBox="0 0 530 530"></svg>
     </div>
 
-    <!-- ── Portrait controls bar ── -->
-    <div class="side-panel">
-      <!-- PORTRAIT: compact single row -->
-      <div class="portrait-only" style="flex:1;gap:6px;align-items:stretch;width:100%">
-        <!-- Throws -->
-        <div class="panel-box" style="flex:1;min-width:0;padding:8px">
-          <div class="panel-label" style="margin-bottom:4px">WÜRFE</div>
-          <div class="throw-slots" id="throw-slots" style="gap:4px">
-            <div class="throw-slot" id="slot-0">—</div>
-            <div class="throw-slot" id="slot-1">—</div>
-            <div class="throw-slot" id="slot-2">—</div>
-          </div>
-          <div class="bust-label" id="bust-label" style="display:none">BUST!</div>
+    <!-- Landscape right panel -->
+    <div class="landscape-panel" id="landscape-panel">
+      <div id="lp-players"></div>
+      <div class="lp-controls">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:#666;letter-spacing:1px;margin-bottom:2px">VERBLEIBEND</div>
+          <div class="lp-remaining" id="lp-remaining">501</div>
+          <div class="lp-checkout" id="lp-checkout"></div>
         </div>
-        <!-- Rest + Checkout -->
-        <div class="panel-box remaining-box" style="flex:0 0 auto;min-width:90px;padding:8px;text-align:center">
-          <div class="panel-label" style="margin-bottom:2px">REST</div>
-          <div class="remaining-num" id="remaining-num" style="font-size:32px;line-height:1">501</div>
-          <div id="checkout-box" style="display:none;margin-top:2px">
-            <div class="checkout-label" style="font-size:9px">CHECKOUT</div>
-            <div class="checkout-suggestion" id="checkout-suggestion" style="font-size:12px"></div>
-          </div>
+        <div class="lp-slots">
+          <div class="lp-slot" id="lp-slot-0">—</div>
+          <div class="lp-slot" id="lp-slot-1">—</div>
+          <div class="lp-slot" id="lp-slot-2">—</div>
         </div>
-        <!-- Next + Mic -->
-        <div style="display:flex;flex-direction:column;gap:4px;justify-content:center;flex:0 0 auto">
-          <button class="btn-next ok" id="btn-next" style="display:none;padding:8px 10px;font-size:13px;white-space:nowrap">WEITER ▶</button>
-          <div class="throw-sum" id="throw-sum" style="display:none;font-size:11px;text-align:center"></div>
-          <button class="btn-mic" id="btn-mic" title="Wurf ansagen" style="padding:10px 14px;font-size:18px">🎤</button>
-          <div class="voice-feedback" id="voice-feedback" style="font-size:10px;text-align:center;min-height:12px"></div>
-        </div>
+        <button class="lp-btn ok" id="lp-next" style="display:none">NÄCHSTER SPIELER</button>
+        <button class="lp-mic" id="lp-mic">🎤</button>
+        <div id="voice-feedback" style="color:#555;font-size:11px;text-align:center;min-height:14px;padding:2px 0"></div>
       </div>
-
-      <!-- LANDSCAPE: full panel (hidden in portrait) -->
-      <div class="panel-box landscape-only">
-        <div class="panel-label">WÜRFE</div>
-        <div class="throw-slots" id="throw-slots-ls">
-          <div class="throw-slot" id="slot-ls-0">—</div>
-          <div class="throw-slot" id="slot-ls-1">—</div>
-          <div class="throw-slot" id="slot-ls-2">—</div>
-        </div>
-        <div class="bust-label" id="bust-label-ls" style="display:none">BUST!</div>
-      </div>
-      <div class="panel-box remaining-box landscape-only">
-        <div class="panel-label">VERBLEIBEND</div>
-        <div class="remaining-num" id="remaining-num-ls">501</div>
-        <div id="checkout-box-ls" style="display:none">
-          <div class="checkout-label">CHECKOUT</div>
-          <div class="checkout-suggestion" id="checkout-suggestion-ls"></div>
-        </div>
-      </div>
-      <button class="btn-next ok landscape-only" id="btn-next-ls" style="display:none">NÄCHSTER SPIELER</button>
-      <div class="throw-sum landscape-only" id="throw-sum-ls" style="display:none"></div>
-      <button class="btn-mic landscape-only" id="btn-mic-ls" title="Wurf ansagen">🎤</button>
-      <div class="voice-feedback landscape-only" id="voice-feedback-ls"></div>
+      <div class="lp-history" id="lp-history"></div>
     </div>
+  </div>
 
-    <!-- Turn history table -->
-    <div class="turn-table-wrap">
-      <div id="turn-table-container"></div>
+  <!-- Bottom bar (portrait) -->
+  <div class="bottom-bar" id="bottom-bar">
+    <div style="text-align:center;flex-shrink:0;min-width:70px">
+      <div class="bottom-remaining" id="bottom-remaining">501</div>
+      <div class="bottom-checkout" id="bottom-checkout"></div>
     </div>
+    <div class="bottom-throws">
+      <div class="bottom-slot" id="bs-0">—</div>
+      <div class="bottom-slot" id="bs-1">—</div>
+      <div class="bottom-slot" id="bs-2">—</div>
+    </div>
+    <button class="bottom-btn ok" id="bottom-next" style="display:none;white-space:nowrap">WEITER</button>
+    <button class="bottom-btn mic" id="bottom-mic">🎤</button>
   </div>
 </div>
 
@@ -874,12 +829,14 @@ function updateAuthUI(user){
 
 <!-- ═══════════════════════ LEG WINNER OVERLAY ═══════════════════════ -->
 <div class="winner-overlay" id="leg-overlay">
-  <div>
+  <div style="max-width:400px;width:90vw;padding:28px 24px;text-align:center">
     <div class="winner-label" id="leg-label">LEG 1 GEWONNEN</div>
     <div class="winner-name" id="leg-winner-name"></div>
     <div id="leg-score-display" style="color:#e8c44a;font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-top:8px"></div>
     <div style="color:#555;font-size:13px;margin-top:6px" id="leg-to-win"></div>
-    <button class="btn-new-game" id="btn-next-leg" style="margin-top:24px">NÄCHSTES LEG ▶</button>
+    <!-- Leg stats per player -->
+    <div id="leg-stats-summary" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
+    <button class="btn-new-game" id="btn-next-leg" style="margin-top:20px">NÄCHSTES LEG ▶</button>
   </div>
 </div>
 
@@ -1222,6 +1179,8 @@ function speak(text){
 function doSpeak(text, lang){
   if(!window.speechSynthesis) return;
   const trySpeak=()=>{
+    // Resume if suspended (happens after orientation change)
+    if(window.speechSynthesis.paused) window.speechSynthesis.resume();
     const utt=new SpeechSynthesisUtterance(text);
     utt.lang=lang; utt.rate=0.95; utt.pitch=1.1; utt.volume=1;
     const voices=speechSynthesis.getVoices();
@@ -1229,12 +1188,27 @@ function doSpeak(text, lang){
            ||voices.find(v=>v.lang.startsWith("en-GB"))
            ||voices.find(v=>v.lang.startsWith("en"));
     if(en) utt.voice=en;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utt);
+    window.speechSynthesis.cancel();
+    // Small delay after cancel so Android doesn't block
+    setTimeout(()=>window.speechSynthesis.speak(utt), 50);
   };
   if(speechSynthesis.getVoices().length>0){ trySpeak(); }
   else{ speechSynthesis.addEventListener("voiceschanged",trySpeak,{once:true}); }
 }
+
+// Re-init speech on orientation change
+window.addEventListener("orientationchange",()=>{
+  setTimeout(()=>{
+    if(window.speechSynthesis){
+      window.speechSynthesis.cancel();
+      // Warm up again
+      const utt=new SpeechSynthesisUtterance("");
+      utt.volume=0;
+      window.speechSynthesis.speak(utt);
+      window.speechSynthesis.cancel();
+    }
+  }, 500);
+});
 
 // ── Voice Recognition ─────────────────────────────────────────────
 const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1255,15 +1229,13 @@ function initMic(){
 
   recognition.onstart=()=>{
     micActive=true;
-    const btn=document.getElementById("btn-mic");
-    if(btn) btn.classList.add("listening");
+    document.querySelectorAll("#lp-mic,#bottom-mic").forEach(b=>b?.classList.add("listening"));
     setVoiceFeedback("🎤 Spreche…");
   };
 
   recognition.onend=()=>{
     micActive=false;
-    const btn=document.getElementById("btn-mic");
-    if(btn) btn.classList.remove("listening");
+    document.querySelectorAll("#lp-mic,#bottom-mic").forEach(b=>b?.classList.remove("listening"));
     // Auto-restart if game still active and throws < 3
     if(micEnabled && !x01.winner && !x01.bust && x01.throws.length<3){
       try{ recognition.start(); }catch(e){}
@@ -1313,8 +1285,7 @@ function startMic(){
 function stopMic(){
   micEnabled=false;
   if(micActive){ try{ recognition.stop(); }catch(e){} }
-  const btn=document.getElementById("btn-mic");
-  if(btn) btn.classList.remove("listening");
+  document.querySelectorAll("#lp-mic,#bottom-mic").forEach(b=>b?.classList.remove("listening"));
   setVoiceFeedback("");
 }
 
@@ -1453,12 +1424,7 @@ function handleVoiceHit(hit){
   if(x01.throws.length===3) setTimeout(advanceX01,350);
 }
 
-document.getElementById("btn-mic").addEventListener("click",()=>{
-  if(!recognition) initMic();
-  if(!recognition) return;
-  if(micEnabled){ stopMic(); }
-  else { startMic(); }
-});
+// Buttons wired in renderTurnTableLP section above
 
 // Restart mic after player advance if micEnabled
 function maybeRestartMic(){
@@ -1516,9 +1482,12 @@ const CHECKOUTS={
   54:"S14 D20",53:"S13 D20",52:"S12 D20",51:"S11 D20",50:"D25",
   49:"S9 D20",48:"S8 D20",47:"S7 D20",46:"S6 D20",45:"S5 D20",
   44:"S4 D20",43:"S3 D20",42:"S2 D20",41:"S1 D20",40:"D20",
-  38:"D19",36:"D18",34:"D17",32:"D16",30:"D15",28:"D14",26:"D13",
-  24:"D12",22:"D11",20:"D10",18:"D9",16:"D8",14:"D7",12:"D6",
-  10:"D5",8:"D4",6:"D3",4:"D2",2:"D1"
+  39:"S7 D16",38:"D19",37:"S5 D16",36:"D18",35:"S3 D16",34:"D17",
+  33:"S1 D16",32:"D16",31:"S7 D12",30:"D15",29:"S3 D13",28:"D14",
+  27:"S3 D12",26:"D13",25:"S1 D12",24:"D12",23:"S7 D8",22:"D11",
+  21:"S5 D8",20:"D10",19:"S3 D8",18:"D9",17:"S1 D8",16:"D8",
+  15:"S7 D4",14:"D7",13:"S5 D4",12:"D6",11:"S3 D4",10:"D5",
+  9:"S1 D4",8:"D4",7:"S3 D2",6:"D3",5:"S1 D2",4:"D2",3:"S1 D1",2:"D1"
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -1938,6 +1907,9 @@ const boardSVG=document.getElementById("board-svg");
 buildBoard(boardSVG);
 
 function startX01(starter=0){
+  // Re-warm audio context for new leg (Android loses it between legs)
+  if(audioCtx&&audioCtx.state==="suspended") audioCtx.resume().catch(()=>{});
+  if(window.speechSynthesis?.paused) window.speechSynthesis.resume();
   x01={
     scores: cfg.players.map(()=>cfg.startScore),
     current: starter,
@@ -1959,12 +1931,11 @@ function startX01(starter=0){
     doubleStats: cfg.players.map(()=>({})),
     startTime: Date.now()
   };
-  renderX01Tabs();
+  const boardSVG=document.getElementById("board-svg");
+  buildBoard(boardSVG);
   clearHits(boardSVG);
   renderX01();
   showScreen("x01");
-  disableBoard(boardSVG,false);
-  // If bot goes first
   if(cfg.isBot?.[x01.current]) setTimeout(runBotTurn,800);
 }
 
@@ -2011,68 +1982,144 @@ function renderX01Tabs(){
 function renderX01(){
   const spent=x01.throws.reduce((s,t)=>s+t.score,0);
   const remaining=Math.max(0, x01.scores[x01.current]-spent);
+  const co=remaining<=170&&remaining>1&&!x01.bust?CHECKOUTS[remaining]||"":null;
+  const showNext=x01.throws.length>0&&!x01.winner;
+  const isBust=x01.bust;
 
-  // title
-  const legInfo = cfg.totalSets>1
-    ? `Set ${cfg.currentSet}/${cfg.totalSets} · Leg ${cfg.currentLeg}/${cfg.totalLegs}`
-    : cfg.totalLegs>1
-      ? `Leg ${cfg.currentLeg}/${cfg.totalLegs}`
-      : '';
-  const legSep = legInfo ? ' · ' : '';
-  document.getElementById("x01-title").textContent=`${cfg.mode}${legSep}${legInfo} · Runde ${x01.round}`;
+  // ── Score strip (portrait) ────────────────────────────────────
+  const strip=document.getElementById("score-strip");
+  if(strip){
+    strip.innerHTML=cfg.players.map((name,i)=>{
+      const isActive=i===x01.current&&!x01.winner;
+      const chips=x01.throws.map(t=>`<span style="font-size:11px;color:${t.miss?"#e53935":"#aaa"}">${t.label}</span>`).join(" ");
+      const f9=x01.first9[i];
+      const sub=f9?`F9: ${f9}`:`Ø ${x01.turnScores[i].length?Math.round(x01.turnScores[i].reduce((a,b)=>a+b,0)/x01.turnScores[i].length*10)/10:0}`;
+      return `<div class="score-cell${isActive?" active":""}">
+        <div class="sc-name">${name}</div>
+        <div class="sc-score">${x01.scores[i]}</div>
+        <div class="sc-throws">${isActive&&x01.throws.length?chips:""}</div>
+        <div class="sc-sub">${sub}</div>
+      </div>`;
+    }).join("");
+  }
 
-  // Sync portrait + landscape slots
+  // ── Landscape panel players ───────────────────────────────────
+  const lpPlayers=document.getElementById("lp-players");
+  if(lpPlayers){
+    lpPlayers.innerHTML=cfg.players.map((name,i)=>{
+      const isActive=i===x01.current&&!x01.winner;
+      const chips=isActive?x01.throws.map(t=>{
+        const cls=t.miss?"color:#e53935":t.label.startsWith("T")?"color:#6bba8a":t.label.startsWith("D")?"color:#6aaada":"color:#aaa";
+        return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:2px 5px;background:#2a2a2a;border-radius:4px;${cls}">${t.label}</span>`;
+      }).join(" "):"";
+      const f9=x01.first9[i];
+      const avgVal=x01.turnScores[i].length?Math.round(x01.turnScores[i].reduce((a,b)=>a+b,0)/x01.turnScores[i].length*10)/10:0;
+      const legDots=cfg.totalLegs>1?`${"▪".repeat(cfg.legWins[i])}${"▫".repeat(Math.max(0,cfg.legsToWin-cfg.legWins[i]))} `:"";
+      const setDots=cfg.totalSets>1?`Set ${cfg.setWins[i]} `:"";
+      return `<div class="lp-player${isActive?" active":""}">
+        <div class="lp-name">${setDots}${legDots}${name}</div>
+        <div class="lp-score">${x01.scores[i]}</div>
+        <div class="lp-throws">${isActive&&chips?chips:`Ø ${avgVal}${f9?` · F9 ${f9}`:""}`}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // ── Remaining + checkout ──────────────────────────────────────
+  const setEl=(id,val)=>{ const e=document.getElementById(id); if(e) e.textContent=val||""; };
+  setEl("lp-remaining", remaining);
+  setEl("lp-checkout", co||"");
+  setEl("bottom-remaining", remaining);
+  setEl("bottom-checkout", co||"");
+
+  // ── Throw slots ───────────────────────────────────────────────
   for(let i=0;i<3;i++){
     const t=x01.throws[i];
-    const cls="throw-slot"+(t?" hit":"")+(x01.bust&&i===x01.throws.length-1?" bust":"")+(t?.miss?" bust":"");
     const lbl=t?t.label:"—";
-    ["slot-"+i,"slot-ls-"+i].forEach(id=>{
-      const el=document.getElementById(id); if(el){el.textContent=lbl;el.className=cls;}
+    const cls=t?(isBust&&i===x01.throws.length-1?"bust":t.miss?"bust":"hit"):"";
+    ["lp-slot-"+i,"bs-"+i].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){ el.textContent=lbl; el.className=(id.startsWith("lp")?"lp-slot":"bottom-slot")+(cls?" "+cls:""); }
     });
   }
-  // Bust labels
-  ["bust-label","bust-label-ls"].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.style.display=x01.bust?"":"none";
-  });
-  // Remaining
-  const remVal=Math.max(0,x01.scores[x01.current]-x01.throws.reduce((s,t)=>s+t.score,0));
-  ["remaining-num","remaining-num-ls"].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.textContent=remVal;
-  });
-  // Checkout box
-  const co=remVal<=170&&remVal>1?CHECKOUTS[remVal]:null;
-  ["","ls"].forEach(sfx=>{
-    const box=document.getElementById("checkout-box"+(sfx?"-"+sfx:""));
-    const sug=document.getElementById("checkout-suggestion"+(sfx?"-"+sfx:""));
-    if(box) box.style.display=co&&!x01.bust?"":"none";
-    if(sug&&co) sug.textContent=co;
-  });
-  // Next button
-  const showNext=x01.throws.length>0&&!x01.winner;
-  const nextCls="btn-next"+(x01.bust?" bust":" ok");
-  const nextTxt=x01.bust?"BUST! WEITER":"WEITER ▶";
-  ["btn-next","btn-next-ls"].forEach(id=>{
+
+  // ── Next button ───────────────────────────────────────────────
+  const nextTxt=isBust?"BUST! WEITER":x01.throws.length<3?"ZÄHLEN":"WEITER";
+  const nextCls=isBust?"bust":"ok";
+  ["lp-next","bottom-next"].forEach(id=>{
     const el=document.getElementById(id);
-    if(el){el.style.display=showNext?"":"none";el.className=nextCls+" "+(id==="btn-next-ls"?"landscape-only":"");el.textContent=id==="btn-next-ls"?( x01.bust?"BUST!":"NÄCHSTER SPIELER"):nextTxt;}
+    if(el){ el.style.display=showNext?"":"none"; el.textContent=nextTxt; el.className=(id==="lp-next"?"lp-btn":"bottom-btn")+" "+nextCls; }
   });
-  // Throw sum
-  const sumVal=x01.throws.length>0?"+"+x01.throws.reduce((s,t)=>s+t.score,0):"";
-  ["throw-sum","throw-sum-ls"].forEach(id=>{
-    const el=document.getElementById(id); if(el){el.style.display=x01.throws.length>0?"":"none";el.textContent="Summe: "+sumVal;}
-  });
-  // Checkout highlight on board
-  const spent2=x01.throws.reduce((s,t)=>s+t.score,0);
-  const rem2=x01.scores[x01.current]-spent2;
-  if(!x01.bust&&!x01.winner&&rem2>=2&&rem2<=170){
-    highlightCheckout(boardSVG, rem2);
-    if(rem2<=170&&x01.throws.length===0) soundCheckout();
-  } else {
-    clearCheckout(boardSVG);
+
+  // ── Checkout highlight + title ────────────────────────────────
+  const titleEl=document.getElementById("x01-title");
+  if(titleEl){
+    const legInfo=cfg.totalSets>1?`Set ${cfg.currentSet}/${cfg.totalSets} · Leg ${cfg.currentLeg}/${cfg.totalLegs}`:
+      cfg.totalLegs>1?`Leg ${cfg.currentLeg}/${cfg.totalLegs}`:"";
+    titleEl.textContent=`${cfg.mode}${legInfo?" · "+legInfo:""} · Runde ${x01.round}`;
   }
+
+  const boardSVG=document.getElementById("board-svg");
+  if(remaining<=170&&remaining>1&&!x01.bust) highlightCheckout(boardSVG,remaining);
+  else clearCheckout(boardSVG);
   disableBoard(boardSVG,!!x01.winner||x01.bust);
-  renderX01Tabs();
-  renderTurnTable();
+
+  // ── History table (landscape) ─────────────────────────────────
+  renderTurnTableLP();
 }
+
+function renderTurnTableLP(){
+  const box=document.getElementById("lp-history");
+  if(!box) return;
+  const maxRounds=Math.max(...x01.turnScores.map(a=>a.length),1);
+  let html=`<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#222">
+      <th style="padding:5px 8px;color:#666;font-size:10px;letter-spacing:1px;text-align:left">WURF</th>`;
+  cfg.players.forEach(p=>{ html+=`<th style="padding:5px 6px;color:#999;font-size:10px;letter-spacing:1px" colspan="2">${p}</th>`; });
+  html+=`</tr></thead><tbody>`;
+  let starts=cfg.players.map(()=>cfg.startScore);
+  for(let r=0;r<maxRounds;r++){
+    const isCur=r===maxRounds-1&&x01.throws.length>0;
+    html+=`<tr style="background:${isCur?"#1a1a00":"transparent"};border-bottom:1px solid #222">
+      <td style="padding:4px 8px;color:#555;font-size:11px">${r+1}</td>`;
+    cfg.players.forEach((_,i)=>{
+      const sc=x01.turnScores[i][r];
+      const rest=sc!==undefined?starts[i]-sc:null;
+      if(sc!==undefined){
+        const col=sc>=100?"#6bba8a":sc>=60?"#aaa":sc<10?"#e53935":"#888";
+        html+=`<td style="padding:4px 6px;font-family:'Bebas Neue',sans-serif;font-size:16px;color:${col};text-align:center">${sc}</td>
+          <td style="padding:4px 6px;color:#666;font-size:13px;text-align:center">${rest||0}</td>`;
+        starts[i]=rest||0;
+      } else {
+        html+=`<td style="padding:4px 6px;color:#333;text-align:center">—</td><td style="color:#333;text-align:center">—</td>`;
+      }
+    });
+    html+=`</tr>`;
+  }
+  html+=`</tbody></table>`;
+  box.innerHTML=html;
+  setTimeout(()=>{ box.scrollTop=box.scrollHeight; },30);
+}
+
+// Wire new buttons
+document.getElementById("x01-back").addEventListener("click",showSetup);
+document.getElementById("x01-undo").addEventListener("click",()=>{
+  if(x01.history.length===0) return;
+  const last=x01.history.pop();
+  x01.scores=[...last.scores]; x01.current=last.current; x01.round=last.round;
+  x01.throws=[...last.throws]; x01.bust=last.bust;
+  last.historicLens.forEach((len,i)=>{ x01.historicThrows[i]=x01.historicThrows[i].slice(0,len); });
+  x01.lastTurnThrows=last.lastTurnThrows.map(a=>[...a]);
+  x01.turnScores=last.turnScores.map(a=>[...a]);
+  x01.winner=null;
+  document.getElementById("winner-overlay").classList.remove("visible");
+  const boardSVG=document.getElementById("board-svg");
+  redrawAllHits(boardSVG,x01.historicThrows[x01.current],x01.throws);
+  renderX01();
+});
+document.getElementById("lp-next").addEventListener("click",advanceX01);
+document.getElementById("bottom-next").addEventListener("click",advanceX01);
+document.getElementById("lp-mic").addEventListener("click",()=>{ if(!micEnabled) startMic(); else stopMic(); });
+document.getElementById("bottom-mic").addEventListener("click",()=>{ if(!micEnabled) startMic(); else stopMic(); });
 
 function scoreEmoji(s){
   if(s>=100) return '<span class="turn-emoji">😃</span>';
@@ -2123,8 +2170,8 @@ function renderTurnTable(){
   html+=`</tbody></table>`;
   box.innerHTML=html;
   // Auto-scroll to bottom so latest turn is always visible
-  const wrap=box.parentElement;
-  if(wrap) wrap.scrollTop=wrap.scrollHeight;
+  const wrap=box.closest(".turn-table-wrap");
+  if(wrap) setTimeout(()=>{ wrap.scrollTop=wrap.scrollHeight; }, 30);
 }
 
 // ── Double field tracking ─────────────────────────────────────────
@@ -2246,90 +2293,56 @@ function handleX01Click(e){
 }
 
 function advanceX01(){
-  const spent=x01.throws.reduce((s,t)=>s+t.score,0);
   const pi=x01.current;
-  // Save state before advancing (so undo can come back to end of this turn)
-  x01.history.push({
-    scores:[...x01.scores],
-    current:pi,
-    round:x01.round,
-    throws:[...x01.throws],
-    bust:false,
+  const boardSVG=document.getElementById("board-svg");
+
+  if(x01.bust){
+    x01.history.push({scores:[...x01.scores],current:pi,round:x01.round,
+      throws:[...x01.throws],bust:true,
+      historicLens:x01.historicThrows.map(a=>a.length),
+      lastTurnThrows:x01.lastTurnThrows.map(a=>[...a]),
+      turnScores:x01.turnScores.map(a=>[...a])});
+    x01.lastTurnThrows[pi]=[...x01.throws];
+    x01.historicThrows[pi].push(...x01.throws.filter(t=>t.svgX!=null));
+    x01.throws=[]; x01.bust=false;
+    const next=(pi+1)%cfg.players.length;
+    x01.current=next;
+    if(next===0) x01.round++;
+    clearCheckout(boardSVG);
+    redrawAllHits(boardSVG,x01.historicThrows[next],[]);
+    renderX01(); maybeRestartMic();
+    if(cfg.isBot?.[next]) setTimeout(runBotTurn,800);
+    return;
+  }
+
+  const spent=x01.throws.reduce((s,t)=>s+t.score,0);
+  x01.history.push({scores:[...x01.scores],current:pi,round:x01.round,
+    throws:[...x01.throws],bust:false,
     historicLens:x01.historicThrows.map(a=>a.length),
     lastTurnThrows:x01.lastTurnThrows.map(a=>[...a]),
-    turnScores:x01.turnScores.map(a=>[...a])
-  });
+    turnScores:x01.turnScores.map(a=>[...a])});
   x01.turnScores[pi].push(spent);
-  // Track first-9: sum of first 3 turns (9 darts)
   if(x01.turnScores[pi].length===3&&x01.first9[pi]===null)
     x01.first9[pi]=Math.round(x01.turnScores[pi].reduce((a,b)=>a+b,0)/3*10)/10;
   x01.scores[pi]-=spent;
   x01.lastTurnThrows[pi]=[...x01.throws];
   x01.historicThrows[pi].push(...x01.throws.filter(t=>t.svgX!=null));
-  x01.throws=[];
-  x01.bust=false;
+  x01.throws=[]; x01.bust=false;
   clearCheckout(boardSVG);
   const next=(pi+1)%cfg.players.length;
   x01.current=next;
   if(next===0) x01.round++;
-  redrawAllHits(boardSVG, x01.historicThrows[next], []);
-  renderX01();
-  maybeRestartMic();
+  redrawAllHits(boardSVG,x01.historicThrows[next],[]);
+  renderX01(); maybeRestartMic();
   if(cfg.isBot?.[next]) setTimeout(runBotTurn,800);
 }
 
-document.getElementById("btn-next").addEventListener("click",()=>{
-  if(x01.bust){
-    const pi=x01.current;
-    x01.history.push({
-      scores:[...x01.scores],
-      current:pi,
-      round:x01.round,
-      throws:[...x01.throws],
-      bust:true,
-      historicLens:x01.historicThrows.map(a=>a.length),
-      lastTurnThrows:x01.lastTurnThrows.map(a=>[...a]),
-      turnScores:x01.turnScores.map(a=>[...a])
-    });
-    x01.lastTurnThrows[pi]=[...x01.throws];
-    x01.historicThrows[pi].push(...x01.throws.filter(t=>t.svgX!=null));
-    x01.throws=[];
-    x01.bust=false;
-    const next=(pi+1)%cfg.players.length;
-    x01.current=next;
-    if(next===0) x01.round++;
-    redrawAllHits(boardSVG, x01.historicThrows[next], []);
-    renderX01();
-    if(cfg.isBot?.[next]) setTimeout(runBotTurn,800);
-  } else {
-    advanceX01();
-  }
-});
+// btn-next handled by lp-next and bottom-next above
+// Bust handling moved into advanceX01
 
-document.getElementById("x01-undo").addEventListener("click",()=>{
-  if(x01.history.length===0) return;
-  const last=x01.history.pop();
-  x01.scores=last.scores;
-  x01.current=last.current;
-  x01.round=last.round;
-  x01.throws=last.throws;
-  x01.bust=last.bust;
-  x01.winner=null;
-  x01.historicThrows=x01.historicThrows.map((a,i)=>a.slice(0,last.historicLens[i]||0));
-  x01.lastTurnThrows=last.lastTurnThrows;
-  x01.turnScores=last.turnScores;
-  document.getElementById("winner-overlay").classList.remove("visible");
-  redrawAllHits(boardSVG, x01.historicThrows[x01.current], x01.throws);
-  renderX01();
-});
 
-document.getElementById("x01-back").addEventListener("click",showSetup);
 
-// Landscape buttons wire to same handlers
-document.getElementById("btn-next-ls")?.addEventListener("click",()=>
-  document.getElementById("btn-next").click());
-document.getElementById("btn-mic-ls")?.addEventListener("click",()=>
-  document.getElementById("btn-mic").click());
+// Landscape buttons handled above in renderTurnTableLP section
 
 // ══════════════════════════════════════════════════════════════════
 // CRICKET GAME
@@ -2914,6 +2927,38 @@ function handleLegWin(winnerIdx){
   document.getElementById("leg-score-display").innerHTML=scoreHtml;
   document.getElementById("leg-to-win").textContent=
     `Noch ${cfg.legsToWin-cfg.legWins[winnerIdx]} Leg(s) zum Set`;
+
+  // Leg stats per player
+  const legStats=document.getElementById("leg-stats-summary");
+  if(legStats){
+    legStats.innerHTML=cfg.players.map((p,i)=>{
+      if(cfg.isBot?.[i]) return "";
+      const turns=x01.turnScores[i]||[];
+      if(!turns.length) return "";
+      const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
+      const best=Math.max(...turns);
+      const coAtt=x01.checkoutAttempts[i]||0;
+      const coHit=x01.checkoutHits[i]||0;
+      const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
+      const f9=x01.first9[i];
+      const isWinner=i===winnerIdx;
+      return `<div style="background:${isWinner?"rgba(232,196,74,0.15)":"rgba(255,255,255,0.05)"};
+        border:1px solid ${isWinner?"#e8c44a":"rgba(255,255,255,0.1)"};
+        border-radius:10px;padding:10px 14px;text-align:left">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${isWinner?"#e8c44a":"#ccc"};letter-spacing:1px;margin-bottom:6px">
+          ${isWinner?"🏆 ":""}${p}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr${f9?` 1fr`:""};gap:4px 12px;font-size:12px;color:#aaa">
+          <span>Ø Aufnahme</span><span>Best</span><span>CO%</span>${f9?"<span>First 9</span>":""}
+          <span style="color:#fff;font-weight:600;font-size:15px">${avg}</span>
+          <span style="color:#fff;font-weight:600;font-size:15px">${best}</span>
+          <span style="color:#fff;font-weight:600;font-size:15px">${coPct}%</span>
+          ${f9?`<span style="color:#fff;font-weight:600;font-size:15px">${f9}</span>`:""}
+        </div>
+      </div>`;
+    }).join("");
+  }
+
   document.getElementById("leg-overlay").classList.add("visible");
 }
 
@@ -2989,7 +3034,7 @@ function saveGameToFirebase(winnerIdx){
       const allT  = x01.allThrows[i];
       const avg   = turns.length ? Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10 : 0;
       const best  = turns.length ? Math.max(...turns) : 0;
-      const scatter = allT.map(t=>({x:Math.round(t.svgX),y:Math.round(t.svgY),l:t.label}));
+      const scatter = allT.filter(t=>t.svgX!=null&&t.svgY!=null).map(t=>({x:Math.round(t.svgX),y:Math.round(t.svgY),l:t.label}));
       return {name, id:cfg.playerIds?.[i]||null, avg3:avg, best3:best,
         checkoutAtt:x01.checkoutAttempts[i], checkoutHit:x01.checkoutHits[i],
         first9:x01.first9?.[i]||null,
@@ -3961,12 +4006,12 @@ function drawMiniBoard(svgEl, dots){
   });
   svgEl.appendChild(mkEl("circle",{cx,cy,r:32,fill:"#27ae60"}));
   svgEl.appendChild(mkEl("circle",{cx,cy,r:13,fill:"#c0392b"}));
-  // Scale dots: recorded in 470x470 (CX=235), display board CX=265 → offset +30
-  const offset=cx-235;
+  // Dots are recorded in 530x530 SVG space (CX=265) — no offset needed
   dots.slice(-600).forEach(s=>{
+    if(s.x==null||s.y==null||isNaN(s.x)||isNaN(s.y)) return;
     const isMiss=s.l==="Miss";
     svgEl.appendChild(mkEl("circle",{
-      cx:s.x+offset, cy:s.y+offset, r:"5",
+      cx:s.x, cy:s.y, r:"5",
       fill: isMiss?"rgba(220,50,50,0.4)":"rgba(255,220,0,0.4)",
       stroke: isMiss?"rgba(200,30,30,0.8)":"rgba(255,200,0,0.8)",
       "stroke-width":"0.8"
@@ -4044,7 +4089,7 @@ async function loadAndRenderStats(){
         <div class="stat-card"><div class="s-label">FIRST 9 Ø</div><div class="s-value">${f9avg||"—"}</div><div class="s-sub">erste 9 Darts</div></div>
         <div class="stat-card"><div class="s-label">HIGHSCORE</div><div class="s-value">${best||"—"}</div></div>
         <div class="stat-card"><div class="s-label">CHECKOUT-QUOTE</div><div class="s-value">${coPct}%</div><div class="s-sub">${coHits}/${coAtts}</div></div>
-        <div class="stat-card"><div class="s-label">⌀ RUNDEN</div><div class="s-value">${x01Games.length?Math.round(x01Games.reduce((s,g)=>s+(g.rounds||0),0)/x01Games.length):0}</div></div>
+        <div class="stat-card"><div class="s-label">⌀ DARTS</div><div class="s-value">${x01Games.length?Math.round(x01Games.reduce((s,g)=>s+(g.rounds||0),0)/x01Games.length*3):0}</div><div class="s-sub">pro Leg</div></div>
       </div>`;
     }
 
@@ -4055,7 +4100,7 @@ async function loadAndRenderStats(){
         <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${crGames.length}</div></div>
         <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${crWins}</div><div class="s-sub">${crGames.length?Math.round(crWins/crGames.length*100):0}% Quote</div></div>
         <div class="stat-card"><div class="s-label">⌀ MARKS/AUFNAHME</div><div class="s-value">${crAvg||"—"}</div></div>
-        <div class="stat-card"><div class="s-label">⌀ RUNDEN</div><div class="s-value">${crGames.length?Math.round(crGames.reduce((s,g)=>s+(g.rounds||0),0)/crGames.length):0}</div></div>
+        <div class="stat-card"><div class="s-label">⌀ DARTS</div><div class="s-value">${crGames.length?Math.round(crGames.reduce((s,g)=>s+(g.rounds||0),0)/crGames.length*3):0}</div><div class="s-sub">pro Leg</div></div>
       </div>`;
     }
 
@@ -4103,7 +4148,7 @@ async function loadAndRenderStats(){
           <button class="chart-kpi-btn" data-kpi="f9">First 9 Ø</button>
           <button class="chart-kpi-btn" data-kpi="best">Highscore</button>
           <button class="chart-kpi-btn" data-kpi="co">Checkout %</button>
-          <button class="chart-kpi-btn" data-kpi="rounds">Runden</button>
+          <button class="chart-kpi-btn" data-kpi="rounds">Darts</button>
           <button class="chart-kpi-btn" data-kpi="crmarks">Cricket ⌀M</button>
         </div>
         <div class="chart-wrap">
@@ -4178,7 +4223,7 @@ async function loadAndRenderStats(){
     // ── Last games ────────────────────────────────────────────────
     html+=`<div class="stats-section-title">LETZTE SPIELE</div>
       <div class="history-list">
-      <div class="history-header"><span>GEWINNER</span><span>MODUS</span><span>RUNDEN</span><span>DATUM</span></div>`;
+      <div class="history-header"><span>GEWINNER</span><span>MODUS</span><span>DARTS</span><span>DATUM</span></div>`;
     games.slice(0,15).forEach(g=>{
       const d=new Date(g.ts);
       const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}`;
@@ -4186,7 +4231,7 @@ async function loadAndRenderStats(){
       html+=`<div class="history-row">
         <span class="winner-tag" style="color:${isWin&&pid?"#2e7d32":"#1a1a1a"}">${g.winner||"—"}</span>
         <span class="mode-tag">${g.mode||"—"}</span>
-        <span>${g.rounds||0}</span>
+        <span>${(g.rounds||0)*3}</span>
         <span style="color:#aaa;font-size:11px">${ds}</span>
       </div>`;
     });
@@ -4262,7 +4307,7 @@ async function loadAndRenderStats(){
           if(!p||!p.checkoutAtt) return null;
           return Math.round(p.checkoutHit/p.checkoutAtt*100);
         }},
-        rounds:{label:"Runden", color:"#8e24aa", extract:(g)=>g.rounds||null},
+        rounds:{label:"Darts", color:"#8e24aa", extract:(g)=>g.rounds?g.rounds*3:null},
         crmarks:{label:"Cricket ⌀M", color:"#00897b", extract:(g,pid)=>{
           const p=(g.players||[]).find(x=>pid?x.id===pid:true);
           return p?.cricketAvgMarks||null;
