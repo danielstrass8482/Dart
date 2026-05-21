@@ -197,13 +197,22 @@ function updateAuthUI(user){
   .btn-nav { background: none; border: 1px solid #555; color: #ccc; padding: 5px 10px; border-radius: 6px; font-size: 13px; }
 
   /* ── PORTRAIT: Scoreboard rows above/below board ── */
-  .game-body { display: flex; flex: 1; min-height: 0; overflow: hidden; background: #111; }
+  .game-body { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; background: #111; align-items: stretch; }
 
-  /* Portrait default */
-  .game-body { flex-direction: column; align-items: stretch; }
-  .board-wrap { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 4px; }
-  .board-wrap svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; touch-action: none; user-select: none; display: block; }
-  #board-svg, #board-svg-cricket, #board-svg-party { width: 100%; height: 100%; touch-action: none; user-select: none; }
+  /* Board wrap — always square SVG centered */
+  .board-wrap { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .board-wrap svg { touch-action: none; user-select: none; display: block; aspect-ratio: 1 / 1; width: auto; height: auto; max-width: 100%; max-height: 100%; }
+  #board-svg, #board-svg-cricket, #board-svg-party { touch-action: none; user-select: none; }
+
+  /* ── Landscape: side-by-side ── */
+  @media (orientation: landscape) {
+    .game-body { flex-direction: row; }
+    .board-wrap { flex: 1; width: auto; height: 100%; }
+    .board-wrap svg { max-width: min(100%, calc(100vh - 44px)); max-height: calc(100vh - 44px); }
+    .score-strip { display: none; }
+    .bottom-bar { display: none; }
+    .landscape-panel { display: flex !important; }
+  }
 
   /* ── Scoreboard strip (portrait top) ── */
   .score-strip { display: flex; background: #1a1a1a; flex-shrink: 0; border-bottom: 1px solid #333; }
@@ -233,15 +242,6 @@ function updateAuthUI(user){
   .bottom-btn.bust { background: #e53935; color: #fff; }
   .bottom-btn.mic { background: #333; color: #fff; font-size: 18px; padding: 7px 10px; }
   .bottom-btn.mic.listening { background: #c62828; animation: pulse-mic 1s infinite; }
-
-  /* ── Landscape: side-by-side ── */
-  @media (orientation: landscape) {
-    .game-body { flex-direction: row; }
-    .board-wrap { flex: 0 0 auto; width: min(92vh, 72vw); height: 100%; padding: 4px; }
-    .score-strip { display: none; }
-    .bottom-bar { display: none; }
-    .landscape-panel { display: flex !important; }
-  }
 
   /* ── Landscape panel (right side) ── */
   .landscape-panel { display: none; flex-direction: column; flex: 1; min-width: 140px; max-width: 240px;
