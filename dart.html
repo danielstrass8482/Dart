@@ -68,12 +68,17 @@ function initDartDB(){
     },
     async loadCoachAnalyses(playerId){
       try{
-        const q=playerId
-          ? query(collection(db,"dart_coach_analyses"), where("playerId","==",playerId), orderBy("ts","desc"), limit(20))
-          : query(collection(db,"dart_coach_analyses"), orderBy("ts","desc"), limit(20));
-        const snap=await getDocs(q);
-        return snap.docs.map(d=>({id:d.id,...d.data()}));
-      }catch(e){ return []; }
+        let snap;
+        if(playerId){
+          snap=await getDocs(query(collection(db,"dart_coach_analyses"),
+            where("playerId","==",playerId), limit(20)));
+        } else {
+          snap=await getDocs(query(collection(db,"dart_coach_analyses"),
+            orderBy("ts","desc"), limit(20)));
+        }
+        const results=snap.docs.map(d=>({id:d.id,...d.data()}));
+        return results.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      }catch(e){ console.warn("loadCoachAnalyses:",e); return []; }
     },
     // Voice samples
     async uploadVoiceSample(key, blob){
@@ -192,9 +197,9 @@ function updateAuthUI(user){
 
   /* ── Game header ── */
   .game-header { display: flex; align-items: center; justify-content: space-between;
-    padding: 6px 12px; background: #1a1a1a; border-bottom: 1px solid #333; flex-shrink: 0; }
-  .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #e8c44a; letter-spacing: 2px; }
-  .btn-nav { background: none; border: 1px solid #555; color: #ccc; padding: 5px 10px; border-radius: 6px; font-size: 13px; }
+    padding: 5px 12px; background: #1a1a1a; border-bottom: 1px solid #333; flex-shrink: 0; }
+  .game-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #e8c44a; letter-spacing: 2px; }
+  .btn-nav { background: none; border: 1px solid #555; color: #ccc; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
 
   /* ── PORTRAIT: Scoreboard rows above/below board ── */
   .game-body { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; background: #111; align-items: stretch; }
@@ -208,10 +213,12 @@ function updateAuthUI(user){
   @media (orientation: landscape) {
     .game-body { flex-direction: row; }
     .board-wrap { flex: 1; height: 100%; min-width: 0; }
-    .board-wrap svg { width: auto; height: 100%; max-height: calc(100vh - 44px); max-width: calc(100vw - 240px); }
-    .score-strip { display: none; }
-    .bottom-bar { display: none; }
+    .board-wrap svg { width: auto; height: 100%; max-height: 100vh; max-width: calc(100vw - 200px); }
+    .score-strip { display: none !important; }
+    .bottom-bar { display: none !important; }
     .landscape-panel { display: flex !important; }
+    .game-header { padding: 4px 10px; }
+    .game-title { font-size: 15px; }
   }
 
   /* ── Scoreboard strip (portrait top) ── */
