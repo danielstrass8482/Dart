@@ -648,7 +648,7 @@ function updateAuthUI(user){
 </div>
 
 <!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
-<div id="x01" class="screen" style="background:#111;display:none;flex-direction:column">
+<div id="x01" class="screen" style="flex-direction:column;background:#111">
   <div class="game-header">
     <button class="btn-nav" id="x01-back">← Zurück</button>
     <div class="game-title" id="x01-title">501 · Runde 1</div>
@@ -1931,8 +1931,6 @@ function startX01(starter=0){
     doubleStats: cfg.players.map(()=>({})),
     startTime: Date.now()
   };
-  const boardSVG=document.getElementById("board-svg");
-  buildBoard(boardSVG);
   clearHits(boardSVG);
   renderX01();
   showScreen("x01");
@@ -2058,7 +2056,7 @@ function renderX01(){
     titleEl.textContent=`${cfg.mode}${legInfo?" · "+legInfo:""} · Runde ${x01.round}`;
   }
 
-  const boardSVG=document.getElementById("board-svg");
+
   if(remaining<=170&&remaining>1&&!x01.bust) highlightCheckout(boardSVG,remaining);
   else clearCheckout(boardSVG);
   disableBoard(boardSVG,!!x01.winner||x01.bust);
@@ -2112,7 +2110,7 @@ document.getElementById("x01-undo").addEventListener("click",()=>{
   x01.turnScores=last.turnScores.map(a=>[...a]);
   x01.winner=null;
   document.getElementById("winner-overlay").classList.remove("visible");
-  const boardSVG=document.getElementById("board-svg");
+
   redrawAllHits(boardSVG,x01.historicThrows[x01.current],x01.throws);
   renderX01();
 });
@@ -2294,7 +2292,7 @@ function handleX01Click(e){
 
 function advanceX01(){
   const pi=x01.current;
-  const boardSVG=document.getElementById("board-svg");
+
 
   if(x01.bust){
     x01.history.push({scores:[...x01.scores],current:pi,round:x01.round,
