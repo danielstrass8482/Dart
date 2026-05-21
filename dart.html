@@ -206,46 +206,45 @@ function updateAuthUI(user){
   #board-svg, #board-svg-cricket, #board-svg-party { width: 100%; height: 100%; touch-action: none; user-select: none; }
 
   /* ── Scoreboard strip (portrait top) ── */
-  .score-strip { display: flex; background: #1a1a1a; flex-shrink: 0; }
-  .score-cell { flex: 1; padding: 6px 10px; border-right: 1px solid #333; }
+  .score-strip { display: flex; background: #1a1a1a; flex-shrink: 0; border-bottom: 1px solid #333; }
+  .score-cell { flex: 1; padding: 6px 10px; border-right: 1px solid #2a2a2a; min-width: 0; }
   .score-cell:last-child { border-right: none; }
   .score-cell.active { background: #111; border-bottom: 3px solid #e8c44a; }
-  .score-cell .sc-name { font-size: 10px; color: #888; letter-spacing: 1px; margin-bottom: 1px; }
+  .score-cell .sc-name { font-size: 10px; color: #666; letter-spacing: 1px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .score-cell.active .sc-name { color: #e8c44a; }
-  .score-cell .sc-score { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: #fff; line-height: 1; }
-  .score-cell .sc-throws { font-size: 11px; color: #666; margin-top: 2px; min-height: 14px; }
-  .score-cell .sc-sub { font-size: 10px; color: #666; }
+  .score-cell .sc-score { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #fff; line-height: 1; }
+  .score-cell .sc-throws { font-size: 11px; color: #666; margin-top: 2px; min-height: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 3px; }
 
   /* ── Bottom controls bar (portrait) ── */
-  .bottom-bar { display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+  .bottom-bar { display: flex; align-items: center; gap: 6px; padding: 5px 8px;
     background: #1a1a1a; flex-shrink: 0; border-top: 1px solid #333; }
-  .bottom-remaining { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: #fff;
-    min-width: 80px; text-align: center; line-height: 1; }
-  .bottom-checkout { font-size: 11px; color: #e8c44a; text-align: center; }
+  .bottom-remaining { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: #fff;
+    min-width: 60px; text-align: center; line-height: 1; }
+  .bottom-checkout { font-size: 10px; color: #e8c44a; text-align: center; margin-top: 1px; }
   .bottom-throws { display: flex; gap: 4px; flex: 1; }
-  .bottom-slot { flex: 1; height: 38px; border-radius: 6px; display: flex; align-items: center;
+  .bottom-slot { flex: 1; height: 34px; border-radius: 6px; display: flex; align-items: center;
     justify-content: center; background: #2a2a2a; border: 1px solid #333;
-    font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #666; }
+    font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #666; }
   .bottom-slot.hit { background: #2a3a2a; border-color: #4a7a4a; color: #fff; }
   .bottom-slot.bust { background: #3a1a1a; border-color: #7a3a3a; color: #e53935; }
-  .bottom-btn { padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer;
-    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; flex-shrink: 0; }
+  .bottom-btn { padding: 7px 10px; border-radius: 8px; border: none; cursor: pointer;
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; flex-shrink: 0; }
   .bottom-btn.ok { background: #e8c44a; color: #000; }
   .bottom-btn.bust { background: #e53935; color: #fff; }
-  .bottom-btn.mic { background: #333; color: #fff; font-size: 18px; }
+  .bottom-btn.mic { background: #333; color: #fff; font-size: 18px; padding: 7px 10px; }
   .bottom-btn.mic.listening { background: #c62828; animation: pulse-mic 1s infinite; }
 
   /* ── Landscape: side-by-side ── */
   @media (orientation: landscape) {
     .game-body { flex-direction: row; }
-    .board-wrap { flex: 0 0 auto; width: min(88vh, 62vw); height: 100%; padding: 6px; }
+    .board-wrap { flex: 0 0 auto; width: min(92vh, 72vw); height: 100%; padding: 4px; }
     .score-strip { display: none; }
     .bottom-bar { display: none; }
     .landscape-panel { display: flex !important; }
   }
 
   /* ── Landscape panel (right side) ── */
-  .landscape-panel { display: none; flex-direction: column; flex: 1; min-width: 160px; max-width: 320px;
+  .landscape-panel { display: none; flex-direction: column; flex: 1; min-width: 140px; max-width: 240px;
     background: #1a1a1a; overflow-y: auto; gap: 0; }
   .lp-player { padding: 10px 14px; border-bottom: 1px solid #2a2a2a; }
   .lp-player.active { background: #111; border-left: 3px solid #e8c44a; }
@@ -1984,19 +1983,25 @@ function renderX01(){
   const showNext=x01.throws.length>0&&!x01.winner;
   const isBust=x01.bust;
 
-  // ── Score strip (portrait) ────────────────────────────────────
+  // ── Score strip (portrait top) ───────────────────────────────
   const strip=document.getElementById("score-strip");
   if(strip){
     strip.innerHTML=cfg.players.map((name,i)=>{
       const isActive=i===x01.current&&!x01.winner;
-      const chips=x01.throws.map(t=>`<span style="font-size:11px;color:${t.miss?"#e53935":"#aaa"}">${t.label}</span>`).join(" ");
+      const throwChips=isActive&&x01.throws.length
+        ? x01.throws.map(t=>{
+            const col=t.miss?"#e53935":t.label.startsWith("T")?"#6bba8a":t.label.startsWith("D")?"#6aaada":"#ccc";
+            return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:1px 5px;background:#2a2a2a;border-radius:4px;color:${col}">${t.label}</span>`;
+          }).join(" ")
+        : "";
+      const coHint=isActive&&co?`<span style="color:#e8c44a;font-size:11px;margin-left:6px">→ ${co}</span>`:"";
       const f9=x01.first9[i];
-      const sub=f9?`F9: ${f9}`:`Ø ${x01.turnScores[i].length?Math.round(x01.turnScores[i].reduce((a,b)=>a+b,0)/x01.turnScores[i].length*10)/10:0}`;
+      const avgVal=x01.turnScores[i].length?Math.round(x01.turnScores[i].reduce((a,b)=>a+b,0)/x01.turnScores[i].length*10)/10:0;
+      const legInfo=cfg.totalSets>1?`S${cfg.setWins[i]} `:cfg.totalLegs>1?`${"▪".repeat(cfg.legWins[i])} `:"";
       return `<div class="score-cell${isActive?" active":""}">
-        <div class="sc-name">${name}</div>
+        <div class="sc-name">${legInfo}${name}</div>
         <div class="sc-score">${x01.scores[i]}</div>
-        <div class="sc-throws">${isActive&&x01.throws.length?chips:""}</div>
-        <div class="sc-sub">${sub}</div>
+        <div class="sc-throws">${throwChips}${coHint||(!throwChips?`<span style="color:#555;font-size:11px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`:"")}</div>
       </div>`;
     }).join("");
   }
