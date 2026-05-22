@@ -1,0 +1,17 @@
+{
+  "name": "dart-pro",
+  "version": "1.0.0",
+  "description": "Dart Pro – Scoring App mit KI-Coach",
+  "scripts": {
+    "sync": "cp dart.html www/index.html && npx cap sync android",
+    "open": "npx cap open android",
+    "build": "cp dart.html www/index.html && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}
