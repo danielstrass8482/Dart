@@ -1,0 +1,10 @@
+## Kopiere diese Datei nach local.properties und trage deine Werte ein.
+## local.properties wird NICHT in Git eingecheckt.
+
+sdk.dir=/Users/DEIN_USER/Library/Android/sdk
+
+# Keystore fuer Play Store Release-Build
+KEYSTORE_FILE=../../fuelofit-release.keystore
+KEYSTORE_PASSWORD=DEIN_KEYSTORE_PASSWORT
+KEY_ALIAS=DEIN_KEY_ALIAS
+KEY_PASSWORD=DEIN_KEY_PASSWORT
