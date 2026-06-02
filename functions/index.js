@@ -8,7 +8,7 @@ initializeApp();
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
 
-const VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"; // George
+const VOICE_ID = "itKfO3PIfQAXJTALxBD6"; // Daniel (cloned voice)
 
 const SYSTEM_PROMPT =
   "You are a professional darts announcer at the PDC World Championship at Alexandra Palace. " +
@@ -19,16 +19,12 @@ const SYSTEM_PROMPT =
   "Never robotic, always human and passionate.";
 
 // Voice settings by category
-const VOICE_SETTINGS_EXTRA    = { stability: 0.15, similarity_boost: 0.90, style: 0.90, use_speaker_boost: true };
-const VOICE_SETTINGS_DRAMATIC = { stability: 0.25, similarity_boost: 0.90, style: 0.80, use_speaker_boost: true };
-const VOICE_SETTINGS_NEUTRAL  = { stability: 0.40, similarity_boost: 0.85, style: 0.55, use_speaker_boost: true };
-const VOICE_SETTINGS_NEGATIVE = { stability: 0.50, similarity_boost: 0.80, style: 0.40, use_speaker_boost: true };
+const VOICE_SETTINGS_DRAMATIC = { stability: 0.20, similarity_boost: 0.95, style: 0.85, use_speaker_boost: true };
+const VOICE_SETTINGS_NEUTRAL  = { stability: 0.45, similarity_boost: 0.90, style: 0.50, use_speaker_boost: true };
 
 // Keys using eleven_multilingual_v2 (higher quality for dramatic moments)
 const MULTILINGUAL_KEYS = new Set(["score_180", "score_171", "score_167", "score_160", "score_140", "score_121", "game_on"]);
-const EXTRA_KEYS    = new Set(["score_180", "game_on"]);
-const DRAMATIC_KEYS = new Set(["score_171", "score_167", "score_160", "score_140", "score_121"]);
-const NEGATIVE_KEYS = new Set(["bust", "no_score", "score_0"]);
+const DRAMATIC_KEYS = new Set(["score_180", "score_171", "score_167", "score_160", "score_140", "game_on"]);
 
 // Special announcement texts for certain keys (strip el_ prefix before lookup)
 const SPECIAL_TEXTS = {
@@ -52,9 +48,7 @@ function modelForKey(baseKey) {
 }
 
 function voiceSettingsForKey(baseKey) {
-  if (EXTRA_KEYS.has(baseKey))    return VOICE_SETTINGS_EXTRA;
   if (DRAMATIC_KEYS.has(baseKey)) return VOICE_SETTINGS_DRAMATIC;
-  if (NEGATIVE_KEYS.has(baseKey)) return VOICE_SETTINGS_NEGATIVE;
   return VOICE_SETTINGS_NEUTRAL;
 }
 
