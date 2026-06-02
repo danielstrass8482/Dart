@@ -1157,7 +1157,7 @@ function numToWords(n){
   if(n===0) return "Zero";
   if(n===180) return "One Hundred and Eighty";
   if(n===100) return "One Hundred";
-  if(n===50)  return "Bull's Eye";
+  if(n===50)  return "Fifty";
   if(n===25)  return "Twenty Five";
   if(n<20)    return ONES[n];
   if(n<100)   return TENS[Math.floor(n/10)]+(n%10?" "+ONES[n%10]:"");
@@ -3185,30 +3185,33 @@ async function playCustomAudio(key){
 
 // ── Google Cloud TTS ──────────────────────────────────────────────
 const elTTSCache={}; // in-memory URL cache for this session
+let currentAudio=null; // only one audio plays at a time
+
+async function fetchTTSUrl(cacheKey, text){
+  if(elTTSCache[cacheKey]) return elTTSCache[cacheKey];
+  let authToken="anonymous";
+  try{
+    const user=window.fbAuth?.currentUser;
+    if(user) authToken=await user.getIdToken();
+  }catch(e){}
+  const resp=await fetch(TTS_FUNCTION_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+authToken},
+    body:JSON.stringify({key:cacheKey, text})
+  });
+  if(!resp.ok) return null;
+  const {url}=await resp.json();
+  if(url) elTTSCache[cacheKey]=url;
+  return url||null;
+}
 
 async function speakElevenLabs(text, cacheKey){
   try{
-    if(elTTSCache[cacheKey]){
-      const audio=new Audio(elTTSCache[cacheKey]);
-      await audio.play();
-      return true;
-    }
-    let authToken="anonymous";
-    try{
-      const user=window.fbAuth?.currentUser;
-      if(user) authToken=await user.getIdToken();
-    }catch(e){}
-    const resp=await fetch(TTS_FUNCTION_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+authToken},
-      body:JSON.stringify({key:cacheKey, text})
-    });
-    if(!resp.ok) return false;
-    const {url}=await resp.json();
+    const url=await fetchTTSUrl(cacheKey, text);
     if(!url) return false;
-    elTTSCache[cacheKey]=url;
-    const audio=new Audio(url);
-    await audio.play();
+    if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; }
+    currentAudio=new Audio(url);
+    await currentAudio.play();
     return true;
   }catch(e){
     console.warn("Google TTS:",e.message);
@@ -3216,18 +3219,22 @@ async function speakElevenLabs(text, cacheKey){
   }
 }
 
-// Pre-warm Google TTS cache for most common dart scores (runs in background)
+// Pre-warm: only fetch+cache, never play
+async function prewarmTTS(text, cacheKey){
+  if(elTTSCache[cacheKey]) return;
+  await fetchTTSUrl(cacheKey, text).catch(()=>{});
+}
+
 function prewarmElevenLabs(){
   const common=[26,41,45,60,81,100,121,140,180,0];
   for(const score of common){
     const key=`el_score_${score}`;
-    if(!elTTSCache[key]){
-      const text=score===180?"One Hundred and Eighty!":score===100?"One Hundred!":
-                 score===50?"Bull's Eye!":numToWords(score)+"!";
-      speakElevenLabs(text,key).catch(()=>{});
-    }
+    const text=score===180?"One Hundred and Eighty!":score===100?"One Hundred!":
+               score===50?"Bull's Eye!":numToWords(score)+"!";
+    prewarmTTS(text, key);
   }
-  if(!elTTSCache["el_bust"]) speakElevenLabs("Bust!","el_bust").catch(()=>{});
+  prewarmTTS("Bust!", "el_bust");
+  prewarmTTS("Game On!", "el_game_on");
 }
 
 // speakScore — Google TTS first, browser TTS as last fallback
