@@ -35,7 +35,7 @@ const gProvider = new GoogleAuthProvider();
 window.currentUser = null;
 window.fbAuth = auth;
 
-// Seed voice list on first run
+// Local voices seed — Firestore is authoritative; this is the offline fallback
 if(!localStorage.getItem("dart_voices")){
   localStorage.setItem("dart_voices", JSON.stringify([
     { id: "JBFqnCBsd6RMkjVDRZzb", name: "George", builtin: true },
@@ -138,6 +138,14 @@ function initDartDB(){
     },
     async deleteRoom(code){
       try{ await fsDeleteDoc(doc(db,"dart_rooms",code)); }catch(e){}
+    },
+    // Global voice list (shared across all devices)
+    async loadGlobalVoices(){
+      const snap=await getDoc(doc(db,"dart_config","voices"));
+      return snap.exists() ? (snap.data().voices||null) : null;
+    },
+    async saveGlobalVoices(voices){
+      await setDoc(doc(db,"dart_config","voices"),{voices});
     }
   };
   window.dispatchEvent(new Event("dbReady"));
@@ -4438,7 +4446,8 @@ async function initAnalyseTab(){
   if(coachBtn) coachBtn.disabled = coachLeft<=0;
   // Load history
   loadCoachHistoryAnalyseTab(analyseSelectedPlayer);
-  renderVoiceSelector();
+  renderVoiceSelector();         // show cached/local immediately
+  syncVoicesFromFirestore();     // then refresh from Firestore in background
 }
 
 // Wire coach button for analyse tab (once at page load)
@@ -4542,14 +4551,31 @@ const BUILTIN_VOICES = [
   { id: "itKfO3PIfQAXJTALxBD6", name: "Daniel", builtin: true },
 ];
 
+let voicesCache = null; // populated from Firestore; localStorage used as offline fallback
+
 function loadVoices(){
+  if(voicesCache) return voicesCache;
   try{
     return JSON.parse(localStorage.getItem("dart_voices")||"null") || [...BUILTIN_VOICES];
   }catch(e){ return [...BUILTIN_VOICES]; }
 }
 
 function saveVoices(voices){
+  voicesCache = voices;
   localStorage.setItem("dart_voices", JSON.stringify(voices));
+  if(window.dartDB) window.dartDB.saveGlobalVoices(voices).catch(e=>console.warn("saveGlobalVoices:",e));
+}
+
+async function syncVoicesFromFirestore(){
+  if(!window.dartDB) return;
+  try{
+    const voices = await window.dartDB.loadGlobalVoices();
+    if(voices && voices.length){
+      voicesCache = voices;
+      localStorage.setItem("dart_voices", JSON.stringify(voices));
+      renderVoiceSelector();
+    }
+  }catch(e){ console.warn("syncVoicesFromFirestore:",e); }
 }
 
 function showVoiceConfirm(msg){
