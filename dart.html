@@ -146,6 +146,17 @@ function initDartDB(){
     },
     async saveGlobalVoices(voices){
       await setDoc(doc(db,"dart_config","voices"),{voices});
+    },
+    async saveUserVoice(voiceId){
+      const uid=auth.currentUser?.uid;
+      if(!uid) return;
+      await setDoc(doc(db,"dart_config",`userprefs_${uid}`),{activeVoiceId:voiceId},{merge:true});
+    },
+    async loadUserVoice(){
+      const uid=auth.currentUser?.uid;
+      if(!uid) return null;
+      const snap=await getDoc(doc(db,"dart_config",`userprefs_${uid}`));
+      return snap.exists() ? (snap.data().activeVoiceId||null) : null;
     }
   };
   window.dispatchEvent(new Event("dbReady"));
@@ -4663,7 +4674,16 @@ async function syncVoicesFromFirestore(){
 }
 
 // Sync as soon as DB is ready (covers the case where tab is open at load time)
-window.addEventListener("dbReady", ()=>syncVoicesFromFirestore());
+window.addEventListener("dbReady", async ()=>{
+  syncVoicesFromFirestore();
+  try{
+    const voiceId=await window.dartDB.loadUserVoice();
+    if(voiceId){
+      localStorage.setItem("dart_active_voice_id", voiceId);
+      renderVoiceSelector();
+    }
+  }catch(e){ console.warn("loadUserVoice:",e); }
+});
 
 function showVoiceConfirm(msg){
   const el=document.getElementById("voice-selector-confirm");
@@ -4677,6 +4697,7 @@ function showVoiceConfirm(msg){
 function activateVoice(voiceId, voiceName){
   localStorage.setItem("dart_active_voice_id", voiceId);
   Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]);
+  if(window.dartDB) window.dartDB.saveUserVoice(voiceId).catch(e=>console.warn("saveUserVoice:",e));
   renderVoiceSelector();
   showVoiceConfirm("✓ Stimme aktiviert — "+voiceName+" ist jetzt aktiv");
 }
