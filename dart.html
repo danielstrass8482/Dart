@@ -548,9 +548,24 @@ function updateAuthUI(user){
   .coach-box .coach-header { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
     color:#e8c44a; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
   .coach-limit { font-size:11px; color:#aaa; text-align:center; margin-top:6px; }
+  @keyframes rotate-hint {
+    0%,100% { transform: rotate(0deg); }
+    50%      { transform: rotate(90deg); }
+  }
 </style>
 </head>
 <body>
+
+<!-- Rotate-to-landscape overlay (shown on iOS portrait during gameplay) -->
+<div id="rotate-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);
+  z-index:9999;flex-direction:column;align-items:center;justify-content:center;
+  color:#fff;text-align:center;font-family:'Bebas Neue',sans-serif">
+  <div style="font-size:72px;margin-bottom:12px;display:inline-block;
+    animation:rotate-hint 1.5s ease-in-out infinite">📱</div>
+  <div style="font-size:32px;letter-spacing:3px">GERÄT DREHEN</div>
+  <div style="font-size:15px;font-family:'DM Sans',sans-serif;margin-top:8px;
+    opacity:.65;letter-spacing:0">Querformat für das Spiel erforderlich</div>
+</div>
 
 <!-- ═══════════════════════ AUTH SCREEN ═══════════════════════ -->
 <!--
@@ -1493,19 +1508,20 @@ function doSpeak(text, lang){
   else{ speechSynthesis.addEventListener("voiceschanged",trySpeak,{once:true}); }
 }
 
-// Re-init speech on orientation change
+// Re-init speech on orientation change + update rotate overlay
 window.addEventListener("orientationchange",()=>{
   setTimeout(()=>{
+    updateRotateOverlay();
     if(window.speechSynthesis){
       window.speechSynthesis.cancel();
-      // Warm up again
       const utt=new SpeechSynthesisUtterance("");
       utt.volume=0;
       window.speechSynthesis.speak(utt);
       window.speechSynthesis.cancel();
     }
-  }, 500);
+  }, 300);
 });
+window.matchMedia("(orientation:portrait)").addEventListener("change", updateRotateOverlay);
 
 // ── Voice Recognition ─────────────────────────────────────────────
 const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -2016,9 +2032,28 @@ window.addEventListener("dbReady", loadPlayers);
 // ══════════════════════════════════════════════════════════════════
 // SCREEN SWITCH
 // ══════════════════════════════════════════════════════════════════
+const GAME_SCREENS = new Set(["x01","cricket","party","online-wait"]);
+
+function lockLandscape(){
+  try{ screen.orientation.lock("landscape").catch(()=>{}); }catch(e){}
+}
+function unlockOrientation(){
+  try{ screen.orientation.unlock(); }catch(e){}
+}
+function updateRotateOverlay(){
+  const active = document.querySelector(".screen.active");
+  const isGame = active && GAME_SCREENS.has(active.id);
+  const isPortrait = window.matchMedia("(orientation:portrait)").matches;
+  const ov = document.getElementById("rotate-overlay");
+  if(ov) ov.style.display = (isGame && isPortrait) ? "flex" : "none";
+}
+
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
+  if(GAME_SCREENS.has(id)) lockLandscape();
+  else unlockOrientation();
+  updateRotateOverlay();
 }
 
 function showSetup(){
