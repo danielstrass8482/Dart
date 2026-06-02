@@ -1424,25 +1424,30 @@ function handleVoiceHit(hit){
     else if(turnScore>=100) soundApplause();
     else soundHit();
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
-    const _pi=x01.current; setTimeout(()=>announceRequires(_pi),1400);
+    setTimeout(announceRequires, 1600);
   } else { soundHit(); }
 
   renderX01();
   if(x01.throws.length===3) setTimeout(advanceX01,350);
 }
 
-function announceRequires(currentPlayerIdx){
-  if(!x01||x01.winner) return;
-  let lowestScore=Infinity, lowestName="";
-  cfg.players.forEach((name,i)=>{
-    if(i===currentPlayerIdx) return;
-    if(cfg.isBot?.[i]) return;
-    const sc=x01.scores[i];
-    if(sc<=170&&sc>1&&sc<lowestScore){ lowestScore=sc; lowestName=name; }
-  });
-  if(!lowestName) return;
-  const k="requires_"+lowestName.toLowerCase().replace(/[^a-z0-9]/g,"_")+"_"+lowestScore;
-  speakKeyWithCustom(k, lowestName+" requires "+numToWords(lowestScore));
+function announceRequires(){
+  if(!x01||!cfg||!cfg.players) return;
+  const currentIdx = x01.current;
+  let targetScore = Infinity;
+  let targetName = "";
+  for(let i=0; i<cfg.players.length; i++){
+    if(i === currentIdx) continue;
+    if(cfg.isBot?.[i]) continue;
+    const score = x01.scores[i];
+    if(score >= 2 && score <= 170 && score < targetScore){
+      targetScore = score;
+      targetName = cfg.players[i];
+    }
+  }
+  if(!targetName) return;
+  const text = targetName + " requires " + numToWords(targetScore) + ".";
+  speakKeyWithCustom("req_" + targetName + "_" + targetScore, text);
 }
 
 // Buttons wired in renderTurnTableLP section above
@@ -1954,7 +1959,7 @@ function startX01(starter=0){
   clearHits(boardSVG);
   renderX01();
   showScreen("x01");
-  setTimeout(()=>speakKeyWithCustom("game_on","Game On!"),500);
+  setTimeout(()=>speakKeyWithCustom("game_on","Game on!"),500);
   prewarmElevenLabs();
   if(cfg.isBot?.[x01.current]) setTimeout(runBotTurn,800);
 }
@@ -2266,7 +2271,7 @@ function handleX01Click(e){
       const turnScore=x01.throws.reduce((s,t)=>s+t.score,0);
       if(turnScore<=9) soundLow();
       turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
-      const _pi=x01.current; setTimeout(()=>announceRequires(_pi),1400);
+      setTimeout(announceRequires, 1600);
       setTimeout(advanceX01, 800);
     }
     return;
@@ -2316,7 +2321,7 @@ function handleX01Click(e){
     else soundHit();
     // Speak then advance — don't await, just fire and let advance happen normally
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
-    const _pi=x01.current; setTimeout(()=>announceRequires(_pi),1400);
+    setTimeout(announceRequires, 1600);
   } else {
     soundHit();
   }
