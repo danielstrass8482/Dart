@@ -11,18 +11,9 @@ const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
 const VOICE_ID = "itKfO3PIfQAXJTALxBD6"; // Daniel (cloned voice)
 
 const SYSTEM_PROMPT =
-  "You are a professional darts announcer at the PDC World Championship at Alexandra Palace. " +
-  "You sound exactly like a seasoned British caller — deep, authoritative, and full of controlled excitement. " +
-  "For high scores like 180, your voice fills with genuine enthusiasm and drama. " +
-  "For bust, you sound deeply disappointed. For Game On, you are energetic and commanding. " +
-  "You speak with a crisp British accent, confident rhythm, and natural pauses between words for dramatic effect. " +
-  "Never robotic, always human and passionate. " +
-  "Always speak slowly and deliberately with dramatic pauses. " +
-  "For big scores like 180, build up tension before the final word — " +
-  "pause noticeably before 'Eighty' and then deliver it with full force and excitement. " +
-  "For Game On, sound commanding and energetic. " +
-  "For Bust, sound genuinely disappointed and deflated. " +
-  "Always vary your energy — big scores deserve big reactions.";
+  "You are a calm, deep-voiced British darts announcer. " +
+  "Speak slowly and clearly with natural pauses. " +
+  "Be enthusiastic for high scores, disappointed for bust.";
 
 // Voice settings by category
 const VOICE_SETTINGS_DRAMATIC = { stability: 0.20, similarity_boost: 0.95, style: 0.85, use_speaker_boost: true };
@@ -32,23 +23,22 @@ const VOICE_SETTINGS_NEUTRAL  = { stability: 0.45, similarity_boost: 0.90, style
 const MULTILINGUAL_KEYS = new Set(["score_180", "score_171", "score_167", "score_160", "score_140", "score_121", "game_on"]);
 const DRAMATIC_KEYS = new Set(["score_180", "score_171", "score_167", "score_160", "score_140", "game_on"]);
 
-// Special announcement texts for certain keys (strip el_ prefix before lookup)
-// "..." triggers natural ElevenLabs pauses; CAPS trigger stronger emphasis
+// Commas/periods create natural pauses for ElevenLabs; no CAPS (causes rushing)
 const SPECIAL_TEXTS = {
-  score_180: "One hundred and... EIGHTY!",
-  score_171: "One hundred and... SEVENTY ONE!",
-  score_167: "One hundred and... SIXTY SEVEN!",
-  score_160: "One hundred and... SIXTY!",
-  score_140: "One hundred and... FORTY!",
-  score_121: "One hundred and... TWENTY ONE!",
-  score_100: "ONE HUNDRED!",
+  score_180: "One hundred, and eighty!",
+  score_171: "One hundred, and seventy one.",
+  score_167: "One hundred, and sixty seven.",
+  score_160: "One hundred, and sixty.",
+  score_140: "One hundred, and forty!",
+  score_121: "One hundred, and twenty one!",
+  score_100: "One hundred!",
   score_50:  "Bull's Eye!",
   score_26:  "Bed and Breakfast!",
-  score_45:  "Forty Five!",
-  score_0:   "...No score.",
-  no_score:  "...No score.",
-  game_on:   "Game... ON!",
-  bust:      "...Bust.",
+  score_45:  "Forty five.",
+  score_0:   "No score.",
+  no_score:  "No score.",
+  game_on:   "Game on!",
+  bust:      "Bust.",
 };
 
 function modelForKey(baseKey) {
