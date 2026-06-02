@@ -4576,11 +4576,15 @@ function saveVoices(voices){
 async function syncVoicesFromFirestore(){
   if(!window.dartDB) return;
   try{
-    const voices = await window.dartDB.loadGlobalVoices();
-    if(voices && voices.length){
-      voicesCache = voices;
-      localStorage.setItem("dart_voices", JSON.stringify(voices));
+    const remote = await window.dartDB.loadGlobalVoices();
+    if(remote && remote.length){
+      voicesCache = remote;
+      localStorage.setItem("dart_voices", JSON.stringify(remote));
       renderVoiceSelector();
+    } else {
+      // Firestore empty — seed it from local if custom voices exist
+      const local = loadVoices();
+      if(local.some(v=>!v.builtin)) saveVoices(local);
     }
   }catch(e){ console.warn("syncVoicesFromFirestore:",e); }
 }
