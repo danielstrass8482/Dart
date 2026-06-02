@@ -152,13 +152,20 @@ function initDartDB(){
 }
 
 // ── Auth helpers ─────────────────────────────────────────────────
+let _googlePopupOpen = false;
 window.signInWithGoogle = async function(){
+  if(_googlePopupOpen) return;
+  _googlePopupOpen = true;
   try{
     const result = await signInWithPopup(auth, gProvider);
     return result.user;
   }catch(e){
+    // User closed the popup or a duplicate request — not a real error
+    if(e.code==="auth/popup-closed-by-user"||e.code==="auth/cancelled-popup-request") return;
     console.warn("Google sign-in failed:", e.message);
     throw e;
+  }finally{
+    _googlePopupOpen = false;
   }
 };
 
