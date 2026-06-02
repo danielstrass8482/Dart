@@ -8,16 +8,16 @@ initializeApp();
 
 const ttsClient = new textToSpeech.TextToSpeechClient();
 
-// SSML overrides for special announcements (keyed without el_ prefix)
+// SSML overrides (keyed without el_ prefix)
 const SSML_MAP = {
-  score_180: '<speak><prosody rate="0.75" pitch="+3st" volume="x-loud"><emphasis level="strong">One Hundred</emphasis> and <emphasis level="strong">Eighty!</emphasis></prosody></speak>',
-  score_140: '<speak><prosody rate="0.8" pitch="+2st" volume="loud"><emphasis level="strong">One Hundred</emphasis> and <emphasis level="strong">Forty!</emphasis></prosody></speak>',
+  score_180: '<speak><prosody rate="0.65" pitch="+4st" volume="x-loud"><break time="100ms"/><emphasis level="strong">One</emphasis> <break time="50ms"/> <emphasis level="strong">Hundred</emphasis> <break time="100ms"/> and <break time="50ms"/> <emphasis level="strong">Eighty!</emphasis></prosody></speak>',
+  score_140: '<speak><prosody rate="0.75" pitch="+3st" volume="x-loud"><emphasis level="strong">One Hundred</emphasis> and <emphasis level="strong">Forty!</emphasis></prosody></speak>',
   score_100: '<speak><prosody rate="0.8" pitch="+2st" volume="loud"><emphasis level="strong">One Hundred!</emphasis></prosody></speak>',
   score_50:  '<speak><prosody rate="0.85" pitch="+2st" volume="loud"><emphasis level="strong">Bull\'s Eye!</emphasis></prosody></speak>',
   score_0:   '<speak><prosody rate="0.9" pitch="-1st">No Score!</prosody></speak>',
   no_score:  '<speak><prosody rate="0.9" pitch="-1st">No Score!</prosody></speak>',
-  game_on:   '<speak><prosody rate="0.85" pitch="+2st" volume="loud"><emphasis level="strong">Game</emphasis> <emphasis level="strong">On!</emphasis></prosody></speak>',
-  bust:      '<speak><prosody rate="0.9" pitch="-2st" volume="loud"><emphasis level="strong">Bust!</emphasis></prosody></speak>',
+  game_on:   '<speak><prosody rate="0.8" pitch="+3st" volume="x-loud"><emphasis level="strong">Game</emphasis> <break time="80ms"/> <emphasis level="strong">On!</emphasis></prosody></speak>',
+  bust:      '<speak><prosody rate="0.85" pitch="-3st" volume="loud"><emphasis level="strong">Bust!</emphasis></prosody></speak>',
 };
 
 exports.dartTTS = onRequest(
@@ -57,10 +57,16 @@ exports.dartTTS = onRequest(
     const ssmlKey = key.startsWith("el_") ? key.slice(3) : key;
     const ssml = SSML_MAP[ssmlKey];
 
+    if (ssml) {
+      console.log("Using SSML for key:", key);
+    }
+
+    // For SSML: let prosody tags control rate/pitch; only set volumeGainDb
+    // For plain text: apply standard voice persona settings
     const synthesisInput = ssml ? { ssml } : { text };
     const audioConfig = ssml
-      ? { audioEncoding: "MP3", volumeGainDb: 2.0 }
-      : { audioEncoding: "MP3", speakingRate: 0.90, pitch: -2.0, volumeGainDb: 2.0 };
+      ? { audioEncoding: "MP3", volumeGainDb: 3.0 }
+      : { audioEncoding: "MP3", speakingRate: 0.88, pitch: -3.0, volumeGainDb: 3.0 };
 
     const [response] = await ttsClient.synthesizeSpeech({
       input: synthesisInput,
