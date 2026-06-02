@@ -900,6 +900,12 @@ function updateAuthUI(user){
     <div class="stats-section-title" style="margin-top:16px">🎙️ STIMME WÄHLEN</div>
     <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px">
       <!-- Voice cards rendered by renderVoiceSelector() -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div id="voice-sync-status" style="font-size:12px;color:#aaa"></div>
+        <button id="btn-voice-sync"
+          style="padding:5px 12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f0;
+          font-size:12px;cursor:pointer">🔄 Sync</button>
+      </div>
       <div id="voice-selector-list"></div>
       <div id="voice-selector-confirm"
         style="display:none;color:#2a7a2a;font-size:13px;padding:6px 0;text-align:center"></div>
@@ -4573,21 +4579,36 @@ function saveVoices(voices){
   if(window.dartDB) window.dartDB.saveGlobalVoices(voices).catch(e=>console.warn("saveGlobalVoices:",e));
 }
 
+function setVoiceSyncStatus(msg){ const el=document.getElementById("voice-sync-status"); if(el) el.textContent=msg; }
+
 async function syncVoicesFromFirestore(){
-  if(!window.dartDB) return;
+  if(!window.dartDB){ setVoiceSyncStatus("⚠ Datenbank nicht bereit"); return; }
+  setVoiceSyncStatus("⏳ Sync…");
   try{
     const remote = await window.dartDB.loadGlobalVoices();
     if(remote && remote.length){
       voicesCache = remote;
       localStorage.setItem("dart_voices", JSON.stringify(remote));
       renderVoiceSelector();
+      setVoiceSyncStatus("✓ Synced · "+remote.length+" Stimmen");
     } else {
-      // Firestore empty — seed it from local if custom voices exist
+      // Firestore empty — seed from local if custom voices exist
       const local = loadVoices();
-      if(local.some(v=>!v.builtin)) saveVoices(local);
+      if(local.some(v=>!v.builtin)){
+        saveVoices(local);
+        setVoiceSyncStatus("✓ "+local.length+" Stimmen hochgeladen");
+      } else {
+        setVoiceSyncStatus("✓ Nur Basis-Stimmen");
+      }
     }
-  }catch(e){ console.warn("syncVoicesFromFirestore:",e); }
+  }catch(e){
+    console.warn("syncVoicesFromFirestore:",e);
+    setVoiceSyncStatus("✗ Fehler: "+e.message);
+  }
 }
+
+// Sync as soon as DB is ready (covers the case where tab is open at load time)
+window.addEventListener("dbReady", ()=>syncVoicesFromFirestore());
 
 function showVoiceConfirm(msg){
   const el=document.getElementById("voice-selector-confirm");
@@ -4688,6 +4709,8 @@ document.getElementById("btn-voice-new-add").addEventListener("click",()=>{
   renderVoiceSelector();
   showVoiceConfirm("✓ \""+name+"\" wurde hinzugefügt");
 });
+
+document.getElementById("btn-voice-sync").addEventListener("click",()=>syncVoicesFromFirestore());
 
 // ── Auth screen listeners ─────────────────────────────────────────
 function authError(id, msg){ const el=document.getElementById(id); if(el) el.textContent=msg||""; }
