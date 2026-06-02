@@ -1405,12 +1405,12 @@ function handleVoiceHit(hit){
 
   if(tent<0||tent===1){
     x01.bust=true;
-    soundBust(); speak("Bust!");
-    renderX01(); return;
+    soundBust(); speakKeyWithCustom("bust","Bust!");
+    renderX01(); setTimeout(advanceX01, 1500); return;
   }
   if(tent===0){
     if(!hit.label.startsWith("D")&&hit.label!=="Bull"){
-      x01.bust=true; soundBust(); speak("Bust!"); renderX01(); return;
+      x01.bust=true; soundBust(); speakKeyWithCustom("bust","Bust!"); renderX01(); setTimeout(advanceX01, 1500); return;
     }
     x01.scores[x01.current]=0; x01.winner=x01.current;
     x01.checkoutHits[x01.current]++;
@@ -1423,7 +1423,7 @@ function handleVoiceHit(hit){
     if(turnScore<=9) soundLow();
     else if(turnScore>=100) soundApplause();
     else soundHit();
-    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScore(turnScore);
+    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
     const _pi=x01.current; setTimeout(()=>announceRequires(_pi),1400);
   } else { soundHit(); }
 
@@ -1436,7 +1436,10 @@ function announceRequires(currentPlayerIdx){
   cfg.players.forEach((name,i)=>{
     if(i===currentPlayerIdx) return;
     const sc=x01.scores[i];
-    if(sc<=170&&sc>1) speak(name+" requires "+sc);
+    if(sc<=170&&sc>1){
+      const k="requires_"+name.toLowerCase().replace(/[^a-z0-9]/g,"_")+"_"+sc;
+      speakKeyWithCustom(k, name+" requires "+sc);
+    }
   });
 }
 
@@ -1892,7 +1895,7 @@ function runBotTurn(){
           } else {
             // bust
             x01.bust=true;
-            soundBust();
+            soundBust(); speakKeyWithCustom("bust","Bust!");
             renderX01();
             setTimeout(()=>{
               x01.history.push({scores:[...x01.scores],current:x01.current,round:x01.round,
@@ -1909,9 +1912,8 @@ function runBotTurn(){
               if(next===0) x01.round++;
               redrawAllHits(boardSVG,x01.historicThrows[next],[]);
               renderX01();
-              // Trigger next bot turn if needed
               if(cfg.isBot?.[next]) setTimeout(runBotTurn,800);
-            },700);
+            },1500);
           }
         },350);
       }
@@ -2069,11 +2071,10 @@ function renderX01(){
   }
 
   // ── Next button ───────────────────────────────────────────────
-  const nextTxt=isBust?"BUST! WEITER":x01.throws.length<3?"ZÄHLEN":"WEITER";
-  const nextCls=isBust?"bust":"ok";
+  const nextTxt=x01.throws.length<3?"ZÄHLEN":"WEITER";
   ["lp-next","bottom-next"].forEach(id=>{
     const el=document.getElementById(id);
-    if(el){ el.style.display=showNext?"":"none"; el.textContent=nextTxt; el.className=(id==="lp-next"?"lp-btn":"bottom-btn")+" "+nextCls; }
+    if(el){ el.style.display=(showNext&&!isBust)?"":"none"; el.textContent=nextTxt; el.className=(id==="lp-next"?"lp-btn":"bottom-btn")+" ok"; }
   });
 
   // ── Checkout highlight + title ────────────────────────────────
@@ -2284,6 +2285,7 @@ function handleX01Click(e){
     x01.bust=true;
     soundBust(); speakKeyWithCustom("bust","Bust!");
     renderX01();
+    setTimeout(advanceX01, 1500);
     return;
   }
   if(tent===0){
@@ -2291,6 +2293,7 @@ function handleX01Click(e){
       x01.bust=true;
       soundBust(); speakKeyWithCustom("bust","Bust!");
       renderX01();
+      setTimeout(advanceX01, 1500);
       return;
     }
     x01.scores[x01.current]=0;
@@ -2870,7 +2873,7 @@ function advanceParty(){
   // Announce turn score for Shanghai/Highscore
   if(["Shanghai","Highscore"].includes(pg.mode)){
     const ts=pg.throws.reduce((s,t)=>s+t.score,0);
-    speakScore(ts);
+    speakScoreWithCustom(ts);
   }
 
   pg.throws=[];
