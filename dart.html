@@ -11,7 +11,10 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/fireba
 import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateDoc,
          onSnapshot, deleteDoc as fsDeleteDoc, query, orderBy, limit, where }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuthStateChanged,
+         createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         sendPasswordResetEmail, updateProfile,
+         EmailAuthProvider, linkWithCredential }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
@@ -43,16 +46,23 @@ function initDartDB(){
     // Players
     async loadPlayers(){
       const snap = await getDocs(query(collection(db,"dart_players"), orderBy("name")));
-      return snap.docs.map(d=>({id:d.id,...d.data()}));
+      const uid = auth.currentUser?.uid;
+      return snap.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .filter(p=>!p.userId || p.userId===uid);
     },
     async deletePlayer(playerId){
       return fsDeleteDoc(doc(db,"dart_players",playerId));
     },
     async savePlayer(name){
-      return addDoc(collection(db,"dart_players"),{
+      const uid = auth.currentUser?.uid;
+      const isAnon = auth.currentUser?.isAnonymous;
+      const data = {
         name, createdAt:Date.now(),
         stats:{games:0,wins:0,avgPerTurn:0,checkoutPct:0,highscore:0}
-      });
+      };
+      if(uid && !isAnon) data.userId = uid;
+      return addDoc(collection(db,"dart_players"), data);
     },
     async updatePlayerStats(playerId, stats){
       return updateDoc(doc(db,"dart_players",playerId), {stats});
@@ -125,15 +135,14 @@ function initDartDB(){
   window.dispatchEvent(new Event("dbReady"));
 }
 
-// Google sign-in
+// ── Auth helpers ─────────────────────────────────────────────────
 window.signInWithGoogle = async function(){
   try{
     const result = await signInWithPopup(auth, gProvider);
     return result.user;
   }catch(e){
-    // Fallback to anonymous if popup blocked
-    await signInAnonymously(auth);
-    return auth.currentUser;
+    console.warn("Google sign-in failed:", e.message);
+    throw e;
   }
 };
 
@@ -141,26 +150,85 @@ window.signOutUser = async function(){
   await auth.signOut();
 };
 
+window.signInAsGuest = async function(){
+  await signInAnonymously(auth);
+};
+
+window.emailSignIn = async function(email, password){
+  return signInWithEmailAndPassword(auth, email, password);
+};
+
+window.emailRegister = async function(email, password, name){
+  const user = auth.currentUser;
+  // If anonymous, link instead of creating new account
+  if(user && user.isAnonymous){
+    const cred = EmailAuthProvider.credential(email, password);
+    const result = await linkWithCredential(user, cred);
+    await updateProfile(result.user, {displayName: name});
+    return result.user;
+  }
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  await updateProfile(result.user, {displayName: name});
+  return result.user;
+};
+
+window.resetPassword = async function(email){
+  await sendPasswordResetEmail(auth, email);
+};
+
+// TEIL 4: Upgrade anonymous → email account
+window.upgradeAnonymousAccount = async function(email, password, name){
+  const cred = EmailAuthProvider.credential(email, password);
+  const result = await linkWithCredential(auth.currentUser, cred);
+  await updateProfile(result.user, {displayName: name});
+  return result.user;
+};
+
 onAuthStateChanged(auth, user=>{
   window.currentUser = user;
   if(user){
     initDartDB();
     updateAuthUI(user);
+    if(document.getElementById("setup")){
+      // Show setup if auth-screen is visible, otherwise stay on current screen
+      const authScreen = document.getElementById("auth-screen");
+      if(authScreen && authScreen.classList.contains("active")){
+        showScreen("setup");
+        loadPlayers?.();
+      }
+    }
   } else {
-    // Auto anonymous sign-in for first load
-    signInAnonymously(auth).catch(e=>console.warn("Auth failed:",e));
+    // Show auth screen
+    const authScreen = document.getElementById("auth-screen");
+    if(authScreen) showScreen("auth-screen");
   }
 });
 
 function updateAuthUI(user){
+  // Update auth-bar in Online tab
   const bar=document.getElementById("auth-bar");
-  if(!bar) return;
-  if(user && !user.isAnonymous){
-    bar.innerHTML=`<span style="font-size:12px;color:#aaa">${user.displayName||user.email}</span>
-      <button onclick="signOutUser()" style="background:none;border:1px solid #444;color:#888;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">Abmelden</button>`;
-  } else {
-    bar.innerHTML=`<button onclick="signInWithGoogle()" style="background:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px"> Mit Google anmelden</button>`;
+  if(bar){
+    if(user && !user.isAnonymous){
+      bar.innerHTML=`<span style="font-size:12px;color:#aaa">${user.displayName||user.email}</span>
+        <button onclick="signOutUser()" style="background:none;border:1px solid #444;color:#888;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">Abmelden</button>`;
+    } else {
+      bar.innerHTML=`<button onclick="signInWithGoogle()" style="background:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px"> Mit Google anmelden</button>`;
+    }
+  }
+  // Update profile button in home-tabs
+  const profBtn = document.getElementById("btn-profile");
+  if(profBtn){
+    if(user && !user.isAnonymous){
+      const initials = (user.displayName||user.email||"?").charAt(0).toUpperCase();
+      profBtn.textContent = initials;
+      profBtn.style.background = "#e8c44a";
+      profBtn.style.color = "#000";
+    } else {
+      profBtn.textContent = "👤";
+      profBtn.style.background = "#2a2a2a";
+      profBtn.style.color = "#666";
+    }
   }
 }
 </script>
@@ -169,6 +237,28 @@ function updateAuthUI(user){
   html, body { height: 100%; background: #f5f5f0; color: #111; font-family: 'DM Sans', sans-serif; overflow: hidden; }
   .screen { display: none; height: 100vh; }
   .screen.active { display: flex; flex-direction: column; }
+
+  /* ── Auth screen ── */
+  .auth-input { width:100%;padding:13px 14px;border:1px solid #333;border-radius:10px;background:#1a1a1a;
+    color:#fff;font-size:15px;font-family:'DM Sans',sans-serif;margin-bottom:10px;outline:none; }
+  .auth-input:focus { border-color:#e8c44a; }
+  .auth-input::placeholder { color:#555; }
+  .auth-btn-primary { width:100%;padding:14px;border:none;border-radius:10px;background:#e8c44a;
+    color:#000;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;margin-bottom:10px; }
+  .auth-btn-primary:active { opacity:.85; }
+  .auth-btn-google { width:100%;padding:12px;border:1px solid #333;border-radius:10px;background:#222;
+    color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-bottom:10px;
+    display:flex;align-items:center;justify-content:center;gap:10px; }
+  .auth-tab-btn { flex:1;padding:10px;border:none;background:none;color:#555;
+    font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;
+    border-bottom:2px solid transparent; }
+  .auth-tab-btn.active { color:#e8c44a;border-bottom:2px solid #e8c44a; }
+  .auth-error { color:#e53935;font-size:12px;min-height:16px;margin-bottom:8px;text-align:center; }
+  .auth-link { background:none;border:none;color:#888;font-size:13px;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif; }
+  /* ── Profile overlay ── */
+  .profile-overlay { display:none;position:absolute;top:52px;right:0;z-index:200;
+    background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:16px;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.6); }
+  .profile-overlay.visible { display:block; }
 
   /* ── Home tabs ── */
   .home-tabs { display: flex; background: #1a1a1a; flex-shrink: 0; width: 100%; }
@@ -432,15 +522,93 @@ function updateAuthUI(user){
 </head>
 <body>
 
+<!-- ═══════════════════════ AUTH SCREEN ═══════════════════════ -->
+<!--
+  TEIL 7: Firestore Rules für dart_players (in Firebase Console eintragen):
+  match /dart_players/{doc} {
+    allow read: if request.auth != null;
+    allow write: if request.auth != null &&
+      (resource == null ||
+       resource.data.userId == request.auth.uid ||
+       resource.data.userId == null);
+  }
+-->
+<div id="auth-screen" class="screen active" style="background:#111;align-items:center;justify-content:center;overflow-y:auto">
+  <div style="width:100%;max-width:360px;padding:24px 20px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:#e8c44a;letter-spacing:4px;line-height:1">DART PRO</div>
+      <div style="font-size:11px;color:#444;letter-spacing:3px;margin-top:2px">SCORE TRACKER</div>
+    </div>
+
+    <div style="display:flex;border-bottom:1px solid #2a2a2a;margin-bottom:20px">
+      <button class="auth-tab-btn active" data-auth-tab="login">ANMELDEN</button>
+      <button class="auth-tab-btn" data-auth-tab="register">REGISTRIEREN</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="auth-login">
+      <input class="auth-input" id="login-email" type="email" placeholder="Email" autocomplete="email">
+      <input class="auth-input" id="login-password" type="password" placeholder="Passwort" autocomplete="current-password">
+      <div class="auth-error" id="login-error"></div>
+      <button class="auth-btn-primary" id="btn-email-login">ANMELDEN</button>
+      <button class="auth-btn-google" id="btn-google-login">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px">
+        MIT GOOGLE ANMELDEN
+      </button>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <button class="auth-link" id="btn-forgot-password">Passwort vergessen?</button>
+        <button class="auth-link" id="btn-guest">Als Gast spielen</button>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="auth-register" style="display:none">
+      <input class="auth-input" id="reg-name" type="text" placeholder="Dein Name" autocomplete="name">
+      <input class="auth-input" id="reg-email" type="email" placeholder="Email" autocomplete="email">
+      <input class="auth-input" id="reg-password" type="password" placeholder="Passwort (min. 6 Zeichen)" autocomplete="new-password">
+      <input class="auth-input" id="reg-password2" type="password" placeholder="Passwort wiederholen" autocomplete="new-password">
+      <div class="auth-error" id="reg-error"></div>
+      <button class="auth-btn-primary" id="btn-email-register">REGISTRIEREN</button>
+      <button class="auth-btn-google" id="btn-google-register">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px">
+        MIT GOOGLE REGISTRIEREN
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════════════ HOME SCREEN ═══════════════════════ -->
-<div id="setup" class="screen active">
+<div id="setup" class="screen">
   <!-- Tab bar -->
-  <div class="home-tabs">
+  <div class="home-tabs" style="position:relative">
     <button class="home-tab active" data-tab="play">🎯 Spiel</button>
     <button class="home-tab" data-tab="stats">📊 Statistiken</button>
     <button class="home-tab" data-tab="analyse">🧠 Analyse</button>
     <button class="home-tab" data-tab="online">🌐 Online</button>
     <button class="home-tab" data-tab="studio" style="display:none">🎙️ Studio</button>
+    <button id="btn-profile" style="flex:0;width:40px;height:40px;border:none;border-radius:50%;
+      background:#2a2a2a;color:#666;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;
+      margin:auto 6px;flex-shrink:0">👤</button>
+    <div class="profile-overlay" id="profile-overlay">
+      <div id="profile-name" style="font-weight:600;color:#fff;font-size:14px;margin-bottom:2px"></div>
+      <div id="profile-email" style="font-size:12px;color:#666;margin-bottom:16px"></div>
+      <button onclick="signOutUser()" style="width:100%;padding:10px;border:1px solid #333;
+        border-radius:8px;background:none;color:#aaa;font-size:14px;cursor:pointer;margin-bottom:8px">
+        Abmelden
+      </button>
+      <button id="btn-profile-reset-pw" style="width:100%;padding:10px;border:1px solid #333;
+        border-radius:8px;background:none;color:#aaa;font-size:14px;cursor:pointer;margin-bottom:8px">
+        Passwort ändern
+      </button>
+      <div id="profile-upgrade-section" style="display:none">
+        <div style="font-size:12px;color:#555;margin-bottom:8px;text-align:center">Als Gast — Daten gehen verloren beim Abmelden</div>
+        <input class="auth-input" id="upgrade-name" type="text" placeholder="Dein Name" style="margin-bottom:8px">
+        <input class="auth-input" id="upgrade-email" type="email" placeholder="Email">
+        <input class="auth-input" id="upgrade-password" type="password" placeholder="Passwort (min. 6 Zeichen)">
+        <div class="auth-error" id="upgrade-error"></div>
+        <button id="btn-upgrade-account" class="auth-btn-primary" style="font-size:15px">ACCOUNT ERSTELLEN</button>
+      </div>
+    </div>
   </div>
 
   <!-- TAB: PLAY -->
@@ -4278,6 +4446,129 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
     outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:#e53935">Fehler: ${err.message}</div>`;
     btn.disabled=false;
     btn.textContent="🎥 WURF ANALYSIEREN";
+  }
+});
+
+// ── Auth screen listeners ─────────────────────────────────────────
+function authError(id, msg){ const el=document.getElementById(id); if(el) el.textContent=msg||""; }
+
+document.querySelectorAll(".auth-tab-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".auth-tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab=btn.dataset.authTab;
+    document.getElementById("auth-login").style.display=tab==="login"?"":"none";
+    document.getElementById("auth-register").style.display=tab==="register"?"":"none";
+    authError("login-error",""); authError("reg-error","");
+  });
+});
+
+document.getElementById("btn-email-login").addEventListener("click",async()=>{
+  const email=document.getElementById("login-email").value.trim();
+  const pw=document.getElementById("login-password").value;
+  authError("login-error","");
+  if(!email||!pw){ authError("login-error","Bitte Email und Passwort eingeben."); return; }
+  try{
+    await window.emailSignIn(email, pw);
+  }catch(e){
+    authError("login-error", e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"
+      ? "Ungültige Email oder Passwort."
+      : e.code==="auth/user-not-found" ? "Kein Account mit dieser Email."
+      : e.message);
+  }
+});
+
+document.getElementById("btn-google-login").addEventListener("click",async()=>{
+  authError("login-error","");
+  try{ await window.signInWithGoogle(); }
+  catch(e){ authError("login-error",e.message); }
+});
+
+document.getElementById("btn-forgot-password").addEventListener("click",async()=>{
+  const email=document.getElementById("login-email").value.trim();
+  if(!email){ authError("login-error","Bitte Email eingeben."); return; }
+  try{
+    await window.resetPassword(email);
+    authError("login-error",""); document.getElementById("login-error").style.color="#2e7d32";
+    document.getElementById("login-error").textContent="Reset-Email gesendet!";
+  }catch(e){ authError("login-error",e.message); }
+});
+
+document.getElementById("btn-guest").addEventListener("click",async()=>{
+  try{ await window.signInAsGuest(); }
+  catch(e){ authError("login-error",e.message); }
+});
+
+document.getElementById("btn-email-register").addEventListener("click",async()=>{
+  const name=document.getElementById("reg-name").value.trim();
+  const email=document.getElementById("reg-email").value.trim();
+  const pw=document.getElementById("reg-password").value;
+  const pw2=document.getElementById("reg-password2").value;
+  authError("reg-error","");
+  if(!name){ authError("reg-error","Bitte Name eingeben."); return; }
+  if(!email){ authError("reg-error","Bitte Email eingeben."); return; }
+  if(pw.length<6){ authError("reg-error","Passwort min. 6 Zeichen."); return; }
+  if(pw!==pw2){ authError("reg-error","Passwörter stimmen nicht überein."); return; }
+  try{
+    await window.emailRegister(email, pw, name);
+  }catch(e){
+    authError("reg-error", e.code==="auth/email-already-in-use"
+      ? "Diese Email ist bereits registriert."
+      : e.message);
+  }
+});
+
+document.getElementById("btn-google-register").addEventListener("click",async()=>{
+  authError("reg-error","");
+  try{ await window.signInWithGoogle(); }
+  catch(e){ authError("reg-error",e.message); }
+});
+
+// ── Profile overlay ────────────────────────────────────────────────
+document.getElementById("btn-profile").addEventListener("click",()=>{
+  const overlay=document.getElementById("profile-overlay");
+  const user=window.currentUser;
+  if(!overlay) return;
+  overlay.classList.toggle("visible");
+  if(overlay.classList.contains("visible") && user){
+    document.getElementById("profile-name").textContent=user.displayName||"Gast";
+    document.getElementById("profile-email").textContent=user.isAnonymous?"Anonymer Gast":user.email||"";
+    document.getElementById("profile-upgrade-section").style.display=user.isAnonymous?"":"none";
+  }
+});
+
+document.addEventListener("click",e=>{
+  const overlay=document.getElementById("profile-overlay");
+  if(overlay?.classList.contains("visible") &&
+     !overlay.contains(e.target) &&
+     e.target.id!=="btn-profile"){
+    overlay.classList.remove("visible");
+  }
+});
+
+document.getElementById("btn-profile-reset-pw").addEventListener("click",async()=>{
+  const user=window.currentUser;
+  if(!user||!user.email) return;
+  try{
+    await window.resetPassword(user.email);
+    alert("Reset-Email gesendet an "+user.email);
+  }catch(e){ alert(e.message); }
+});
+
+document.getElementById("btn-upgrade-account").addEventListener("click",async()=>{
+  const name=document.getElementById("upgrade-name").value.trim();
+  const email=document.getElementById("upgrade-email").value.trim();
+  const pw=document.getElementById("upgrade-password").value;
+  authError("upgrade-error","");
+  if(!name||!email||pw.length<6){ authError("upgrade-error","Alle Felder ausfüllen (PW min. 6 Zeichen)."); return; }
+  try{
+    await window.upgradeAnonymousAccount(email, pw, name);
+    document.getElementById("profile-overlay").classList.remove("visible");
+    alert("Account erstellt! Deine Spieldaten wurden übernommen.");
+  }catch(e){
+    authError("upgrade-error", e.code==="auth/email-already-in-use"
+      ? "Diese Email ist bereits vergeben."
+      : e.message);
   }
 });
 
