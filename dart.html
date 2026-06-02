@@ -243,6 +243,7 @@ function updateAuthUI(user){
     font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #666; }
   .bottom-slot.hit { background: #2a3a2a; border-color: #4a7a4a; color: #fff; }
   .bottom-slot.bust { background: #3a1a1a; border-color: #7a3a3a; color: #e53935; }
+  .bottom-slot.bouncer { background: #2a1600; border-color: #c77700; color: #ff9800; }
   .bottom-btn { padding: 7px 10px; border-radius: 8px; border: none; cursor: pointer;
     font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; flex-shrink: 0; }
   .bottom-btn.ok { background: #e8c44a; color: #000; }
@@ -269,6 +270,7 @@ function updateAuthUI(user){
     font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #555; }
   .lp-slot.hit { background: #1a2a1a; border-color: #3a6a3a; color: #fff; }
   .lp-slot.bust { background: #2a1a1a; border-color: #6a3a3a; color: #e53935; }
+  .lp-slot.bouncer { background: #1a1000; border-color: #a66600; color: #ff9800; }
   .lp-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer;
     font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
   .lp-btn.ok { background: #e8c44a; color: #000; }
@@ -718,6 +720,7 @@ function updateAuthUI(user){
         </div>
         <button class="lp-btn ok" id="lp-next" style="display:none">NÄCHSTER SPIELER</button>
         <button class="lp-mic" id="lp-mic">🎤</button>
+        <button class="lp-mic" id="lp-bouncer" style="background:#2a1600;color:#ff9800">↩ Bouncer</button>
         <div id="voice-feedback" style="color:#555;font-size:11px;text-align:center;min-height:14px;padding:2px 0"></div>
       </div>
       <div class="lp-history" id="lp-history"></div>
@@ -737,6 +740,7 @@ function updateAuthUI(user){
     </div>
     <button class="bottom-btn ok" id="bottom-next" style="display:none;white-space:nowrap">WEITER</button>
     <button class="bottom-btn mic" id="bottom-mic">🎤</button>
+    <button class="bottom-btn mic" id="bottom-bouncer" style="background:#2a1600;color:#ff9800;flex-shrink:0">↩</button>
   </div>
 </div>
 
@@ -1986,6 +1990,7 @@ function startX01(starter=0){
     checkoutHits: cfg.players.map(()=>0),
     // Double field tracking: {D16: {att:3, hit:1}, D20: {att:5, hit:2}, ...}
     doubleStats: cfg.players.map(()=>({})),
+    bouncers: cfg.players.map(()=>0),
     startTime: Date.now()
   };
   clearHits(boardSVG);
@@ -2102,7 +2107,7 @@ function renderX01(){
   for(let i=0;i<3;i++){
     const t=x01.throws[i];
     const lbl=t?t.label:"—";
-    const cls=t?(isBust&&i===x01.throws.length-1?"bust":t.miss?"bust":"hit"):"";
+    const cls=t?(isBust&&i===x01.throws.length-1?"bust":t.bouncer?"bouncer":t.miss?"bust":"hit"):"";
     ["lp-slot-"+i,"bs-"+i].forEach(id=>{
       const el=document.getElementById(id);
       if(el){ el.textContent=lbl; el.className=(id.startsWith("lp")?"lp-slot":"bottom-slot")+(cls?" "+cls:""); }
@@ -2186,6 +2191,26 @@ document.getElementById("lp-next").addEventListener("click",advanceX01);
 document.getElementById("bottom-next").addEventListener("click",advanceX01);
 document.getElementById("lp-mic").addEventListener("click",()=>{ if(!micEnabled) startMic(); else stopMic(); });
 document.getElementById("bottom-mic").addEventListener("click",()=>{ if(!micEnabled) startMic(); else stopMic(); });
+
+function handleBouncer(){
+  if(!x01||x01.winner||x01.bust||x01.throws.length>=3) return;
+  const pi=x01.current;
+  const spent=x01.throws.reduce((s,t)=>s+t.score,0);
+  const remaining=x01.scores[pi]-spent;
+  if(remaining<=40&&remaining%2===0&&remaining>1)
+    trackDoubleAttempt(pi, remaining, {label:"↩",bouncer:true});
+  x01.bouncers[pi]++;
+  x01.history.push({scores:[...x01.scores],throws:[...x01.throws],bust:x01.bust});
+  x01.throws.push({score:0,label:"↩",bouncer:true,miss:false});
+  speakKeyWithCustom("bouncer","Bouncer!");
+  renderX01();
+  if(x01.throws.length===3){
+    setTimeout(announceRequires,1600);
+    setTimeout(advanceX01,800);
+  }
+}
+document.getElementById("lp-bouncer").addEventListener("click",handleBouncer);
+document.getElementById("bottom-bouncer").addEventListener("click",handleBouncer);
 
 function scoreEmoji(s){
   if(s>=100) return '<span class="turn-emoji">😃</span>';
@@ -3498,7 +3523,8 @@ function coachCallsLeft(){
 function buildCoachPrompt(stats, sessionStats, allGames, playerId){
   const lines=[
     "Du bist ein erfahrener Dart-Coach. Analysiere die folgenden Spielerstatistiken und gib konkretes, actionables Feedback auf Deutsch.",
-    "Sei direkt, freundlich und spezifisch. Max. 5-6 Sätze. Fokus auf die wichtigsten Schwächen und konkrete Verbesserungsempfehlungen.",
+    "Sei direkt, freundlich und spezifisch. Max. 5-6 Sätze. Fokus auf die wichtigsten Schwächen.",
+    "Gib KONKRETE Trainingsempfehlungen mit spezifischen Feldern und Wiederholungszahlen. Verweise auf echte Schwächen aus den Daten. Keine generischen Ratschläge.",
     ""
   ];
 
@@ -3535,6 +3561,45 @@ function buildCoachPrompt(stats, sessionStats, allGames, playerId){
       lines.push(`Checkout-Quote: ${coLast}% (${coLast>=coPrev?"+":""}${coLast-coPrev}% vs. vorher)`);
       if(avgLast>avgPrev&&coLast>coPrev) lines.push("→ Klare Verbesserung in beiden Bereichen");
       else if(avgLast<avgPrev||coLast<coPrev) lines.push("→ Leichter Rückgang — mögliche Ermüdung oder Technikfehler");
+    }
+  }
+
+  // A) Per-dart sequence (1st/2nd/3rd dart avg from current session)
+  if(sessionStats && typeof x01!=="undefined" && x01?.allThrows){
+    const pi=cfg?.players?.indexOf(sessionStats.players?.[0]?.name)??-1;
+    if(pi>=0 && x01.allThrows[pi]?.length>=6){
+      const throws=x01.allThrows[pi].filter(t=>!t.bouncer);
+      const d1=throws.filter((_,j)=>j%3===0).map(t=>t.score);
+      const d2=throws.filter((_,j)=>j%3===1).map(t=>t.score);
+      const d3=throws.filter((_,j)=>j%3===2).map(t=>t.score);
+      const avgD=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10:0;
+      lines.push("","=== WURFSEQUENZ (Ø pro Dart) ===");
+      lines.push(`Erster Dart Ø: ${avgD(d1)}, Zweiter: ${avgD(d2)}, Dritter: ${avgD(d3)}`);
+      const worst=["Erster","Zweiter","Dritter"][[avgD(d1),avgD(d2),avgD(d3)].indexOf(Math.min(avgD(d1),avgD(d2),avgD(d3)))];
+      lines.push(`→ Schwächster Dart: ${worst}`);
+    }
+  }
+
+  // B) Double field stats from all saved games
+  if(allGames && playerId){
+    const pGames=allGames.filter(g=>(g.playerIds||[]).includes(playerId));
+    const doubleAgg={};
+    pGames.forEach(g=>{
+      const p=(g.players||[]).find(x=>x.id===playerId);
+      if(p?.doubleStats) Object.entries(p.doubleStats).forEach(([field,v])=>{
+        if(!doubleAgg[field]) doubleAgg[field]={att:0,hit:0};
+        doubleAgg[field].att+=v.att||0; doubleAgg[field].hit+=v.hit||0;
+      });
+    });
+    const topDoubles=Object.entries(doubleAgg)
+      .filter(([_,v])=>v.att>=3)
+      .map(([f,v])=>({field:f,att:v.att,hit:v.hit,pct:Math.round(v.hit/v.att*100)}))
+      .sort((a,b)=>b.att-a.att).slice(0,3);
+    if(topDoubles.length>0){
+      lines.push("","=== HÄUFIGSTE DOPPELFELDER (alle Spiele) ===");
+      topDoubles.forEach(e=>lines.push(`${e.field}: ${e.pct}% (${e.hit}/${e.att} Versuche)`));
+      const worst=[...topDoubles].sort((a,b)=>a.pct-b.pct)[0];
+      lines.push(`→ Schwächstes Doppel (häufig gespielt): ${worst.field} (${worst.pct}%)`);
     }
   }
 
@@ -3719,7 +3784,7 @@ async function loadCoachHistoryStats(pid){
             <span>${ds}</span>
             <span>${a.mode||""} ${a.avgPerTurn?`· Ø ${a.avgPerTurn}`:""}</span>
           </div>
-          <div style="font-size:13px;color:#333;line-height:1.7">${(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").trim()}</div>
+          <div style="font-size:13px;color:#333;line-height:1.7">${(a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim()}</div>
         </div>`;
       }).join("")}
     </div>`;
@@ -3737,7 +3802,7 @@ async function loadCoachHistory(pid){
     const ds=`${d.getDate()}.${d.getMonth()+1}. ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
     return `<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px">
       <div style="font-size:10px;color:#aaa;margin-bottom:4px">${ds} · ${a.mode||""} · Ø ${a.avgPerTurn||0}</div>
-      <div style="color:#333;line-height:1.6">${(a.text||"").replace("🧠 COACH-ANALYSE","").trim()}</div>
+      <div style="color:#333;line-height:1.6">${(a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim()}</div>
     </div>`;
   }).join("");
 }
@@ -4045,6 +4110,16 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
     </div>`;
     btn.textContent="🎥 ERNEUT ANALYSIEREN";
     btn.disabled=newLeft<=0;
+
+    if(window.dartDB){
+      const pi=coachSelectedPlayerIdx;
+      const pid=cfg.playerIds?.[pi]||null;
+      const pName=cfg.players?.[pi]||"Unbekannt";
+      await window.dartDB.saveCoachAnalysis({
+        playerId:pid, playerName:pName,
+        type:"video", text, frameCount:frames.length
+      });
+    }
   }catch(err){
     outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:#e53935">Fehler: ${err.message}</div>`;
     btn.disabled=false;
@@ -4072,7 +4147,7 @@ async function loadCoachHistoryAnalyseTab(pid){
           <div style="font-size:10px;color:#aaa;margin-bottom:6px;display:flex;justify-content:space-between">
             <span>${ds}</span><span>${a.mode||""} ${a.avgPerTurn?`· Ø ${a.avgPerTurn}`:""}</span>
           </div>
-          <div style="font-size:13px;color:#333;line-height:1.7">${(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").trim()}</div>
+          <div style="font-size:13px;color:#333;line-height:1.7">${(a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim()}</div>
         </div>`;
       }).join("")}
     </div>`;
@@ -4191,6 +4266,14 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
     </div>`;
     btn.textContent="🎥 ERNEUT ANALYSIEREN";
     btn.disabled = newLeft<=0;
+    if(window.dartDB && analyseSelectedPlayer){
+      const p = allPlayers.find(x=>x.id===analyseSelectedPlayer);
+      await window.dartDB.saveCoachAnalysis({
+        playerId:analyseSelectedPlayer, playerName:playerName||p?.name||"Unbekannt",
+        type:"video", text, frameCount:frames.length
+      });
+      loadCoachHistoryAnalyseTab(analyseSelectedPlayer);
+    }
   }catch(err){
     outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:#e53935">Fehler: ${err.message}</div>`;
     btn.disabled=false;
