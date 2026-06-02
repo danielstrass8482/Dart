@@ -1423,11 +1423,21 @@ function handleVoiceHit(hit){
     if(turnScore<=9) soundLow();
     else if(turnScore>=100) soundApplause();
     else soundHit();
-    speakScore(turnScore);
+    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScore(turnScore);
+    const _pi=x01.current; setTimeout(()=>announceRequires(_pi),1400);
   } else { soundHit(); }
 
   renderX01();
   if(x01.throws.length===3) setTimeout(advanceX01,350);
+}
+
+function announceRequires(currentPlayerIdx){
+  if(!x01||x01.winner) return;
+  cfg.players.forEach((name,i)=>{
+    if(i===currentPlayerIdx) return;
+    const sc=x01.scores[i];
+    if(sc<=170&&sc>1) speak(name+" requires "+sc);
+  });
 }
 
 // Buttons wired in renderTurnTableLP section above
@@ -1940,6 +1950,7 @@ function startX01(starter=0){
   clearHits(boardSVG);
   renderX01();
   showScreen("x01");
+  setTimeout(()=>speakKeyWithCustom("game_on","Game On!"),500);
   prewarmElevenLabs();
   if(cfg.isBot?.[x01.current]) setTimeout(runBotTurn,800);
 }
@@ -2002,7 +2013,7 @@ function renderX01(){
             return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:1px 5px;background:#2a2a2a;border-radius:4px;color:${col}">${t.label}</span>`;
           }).join(" ")
         : "";
-      const coHint=isActive&&co?`<span style="color:#e8c44a;font-size:11px;margin-left:6px">→ ${co}</span>`:"";
+      const coHint=isActive&&co?`<span style="color:#e8c44a;font-size:11px;margin-left:6px">→ ${co} · ${co.split(" ").length}-Dart Finish</span>`:"";
       const f9=x01.first9[i];
       const avgVal=x01.turnScores[i].length?Math.round(x01.turnScores[i].reduce((a,b)=>a+b,0)/x01.turnScores[i].length*10)/10:0;
       const legInfo=cfg.totalSets>1?`S${cfg.setWins[i]} `:cfg.totalLegs>1?`${"▪".repeat(cfg.legWins[i])} `:"";
@@ -2038,7 +2049,11 @@ function renderX01(){
   // ── Remaining + checkout ──────────────────────────────────────
   const setEl=(id,val)=>{ const e=document.getElementById(id); if(e) e.textContent=val||""; };
   setEl("lp-remaining", remaining);
-  setEl("lp-checkout", co||"");
+  const lpCoEl=document.getElementById("lp-checkout");
+  if(lpCoEl){
+    if(co){ const dc=co.split(" ").length; lpCoEl.innerHTML=`${co}<br><span style="font-size:10px">${dc}-Dart Finish</span>`; }
+    else lpCoEl.textContent="";
+  }
   setEl("bottom-remaining", remaining);
   setEl("bottom-checkout", co||"");
 
@@ -2247,7 +2262,8 @@ function handleX01Click(e){
     if(x01.throws.length===3){
       const turnScore=x01.throws.reduce((s,t)=>s+t.score,0);
       if(turnScore<=9) soundLow();
-      speakScoreWithCustom(turnScore);
+      turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
+      const _pi=x01.current; setTimeout(()=>announceRequires(_pi),1400);
       setTimeout(advanceX01, 800);
     }
     return;
@@ -2294,7 +2310,8 @@ function handleX01Click(e){
     else if(turnScore>=100) soundApplause();
     else soundHit();
     // Speak then advance — don't await, just fire and let advance happen normally
-    speakScoreWithCustom(turnScore);
+    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
+    const _pi=x01.current; setTimeout(()=>announceRequires(_pi),1400);
   } else {
     soundHit();
   }
