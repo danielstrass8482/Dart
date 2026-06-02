@@ -3183,7 +3183,7 @@ async function playCustomAudio(key){
   }
 }
 
-// ── Google Cloud TTS ──────────────────────────────────────────────
+// ── ElevenLabs TTS ────────────────────────────────────────────────
 const elTTSCache={}; // in-memory URL cache for this session
 let currentAudio=null; // only one audio plays at a time
 
@@ -3226,18 +3226,24 @@ async function prewarmTTS(text, cacheKey){
 }
 
 function prewarmElevenLabs(){
-  const common=[26,41,45,60,81,100,121,140,180,0];
-  for(const score of common){
+  const scoreKeys=[
+    [180,"One Hundred and Eighty!"],[171,"One Hundred and Seventy One!"],
+    [167,"One Hundred and Sixty Seven!"],[160,"One Hundred and Sixty!"],
+    [140,"One Hundred and Forty!"],[121,null],[100,"One Hundred!"],
+    [81,null],[60,null],[45,"Forty Five!"],[41,null],[26,"Bed and Breakfast!"],
+    [0,"No Score!"]
+  ];
+  for(const [score,override] of scoreKeys){
     const key=`el_score_${score}`;
-    const text=score===180?"One Hundred and Eighty!":score===100?"One Hundred!":
-               score===50?"Bull's Eye!":numToWords(score)+"!";
+    const text=override??(score===50?"Bull's Eye!":numToWords(score)+"!");
     prewarmTTS(text, key);
   }
   prewarmTTS("Bust!", "el_bust");
+  prewarmTTS("No Score!", "el_no_score");
   prewarmTTS("Game On!", "el_game_on");
 }
 
-// speakScore — Google TTS first, browser TTS as last fallback
+// speakScore — ElevenLabs first, browser TTS as last fallback
 async function speakScoreWithCustom(score){
   const key=`score_${score}`;
   const text=score===180?"One Hundred and Eighty!":score===100?"One Hundred!":
@@ -3246,7 +3252,7 @@ async function speakScoreWithCustom(score){
   if(!played) speakScore(score);
 }
 
-// speak for bust/special — Google TTS first, browser TTS as last fallback
+// speak for bust/special — ElevenLabs first, browser TTS as last fallback
 async function speakKeyWithCustom(key, fallbackText){
   const played=await speakElevenLabs(fallbackText,`el_${key}`);
   if(!played) speak(fallbackText);
