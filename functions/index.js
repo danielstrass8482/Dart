@@ -16,7 +16,13 @@ const SYSTEM_PROMPT =
   "For high scores like 180, your voice fills with genuine enthusiasm and drama. " +
   "For bust, you sound deeply disappointed. For Game On, you are energetic and commanding. " +
   "You speak with a crisp British accent, confident rhythm, and natural pauses between words for dramatic effect. " +
-  "Never robotic, always human and passionate.";
+  "Never robotic, always human and passionate. " +
+  "Always speak slowly and deliberately with dramatic pauses. " +
+  "For big scores like 180, build up tension before the final word — " +
+  "pause noticeably before 'Eighty' and then deliver it with full force and excitement. " +
+  "For Game On, sound commanding and energetic. " +
+  "For Bust, sound genuinely disappointed and deflated. " +
+  "Always vary your energy — big scores deserve big reactions.";
 
 // Voice settings by category
 const VOICE_SETTINGS_DRAMATIC = { stability: 0.20, similarity_boost: 0.95, style: 0.85, use_speaker_boost: true };
@@ -27,20 +33,22 @@ const MULTILINGUAL_KEYS = new Set(["score_180", "score_171", "score_167", "score
 const DRAMATIC_KEYS = new Set(["score_180", "score_171", "score_167", "score_160", "score_140", "game_on"]);
 
 // Special announcement texts for certain keys (strip el_ prefix before lookup)
+// "..." triggers natural ElevenLabs pauses; CAPS trigger stronger emphasis
 const SPECIAL_TEXTS = {
-  score_180: "One hundred and EIGHTY!",
-  score_171: "One Hundred and Seventy One!",
-  score_167: "One Hundred and Sixty Seven!",
-  score_160: "One Hundred and Sixty!",
-  score_140: "One hundred and FORTY!",
-  score_100: "One Hundred!",
+  score_180: "One hundred and... EIGHTY!",
+  score_171: "One hundred and... SEVENTY ONE!",
+  score_167: "One hundred and... SIXTY SEVEN!",
+  score_160: "One hundred and... SIXTY!",
+  score_140: "One hundred and... FORTY!",
+  score_121: "One hundred and... TWENTY ONE!",
+  score_100: "ONE HUNDRED!",
   score_50:  "Bull's Eye!",
   score_26:  "Bed and Breakfast!",
   score_45:  "Forty Five!",
-  score_0:   "No Score!",
-  no_score:  "No Score!",
-  game_on:   "Game ON!",
-  bust:      "Bust!",
+  score_0:   "...No score.",
+  no_score:  "...No score.",
+  game_on:   "Game... ON!",
+  bust:      "...Bust.",
 };
 
 function modelForKey(baseKey) {
