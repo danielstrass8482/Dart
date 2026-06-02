@@ -216,14 +216,21 @@ function updateAuthUI(user){
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px"> Mit Google anmelden</button>`;
     }
   }
-  // Update profile button in home-tabs
-  const profBtn = document.getElementById("btn-profile");
+  // Update profile button (absolute top-right in setup)
+  const profBtn = document.getElementById("profile-btn");
   if(profBtn){
     if(user && !user.isAnonymous){
-      const initials = (user.displayName||user.email||"?").charAt(0).toUpperCase();
-      profBtn.textContent = initials;
-      profBtn.style.background = "#e8c44a";
-      profBtn.style.color = "#000";
+      const name = user.displayName || user.email || "?";
+      if(user.photoURL){
+        profBtn.innerHTML=`<img src="${user.photoURL}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+        profBtn.style.background="transparent";
+      } else {
+        const initials = name.charAt(0).toUpperCase();
+        const col = typeof playerColor==="function" ? playerColor(name) : "#e8c44a";
+        profBtn.textContent = initials;
+        profBtn.style.background = col;
+        profBtn.style.color = "#fff";
+      }
     } else {
       profBtn.textContent = "👤";
       profBtn.style.background = "#2a2a2a";
@@ -255,10 +262,10 @@ function updateAuthUI(user){
   .auth-tab-btn.active { color:#e8c44a;border-bottom:2px solid #e8c44a; }
   .auth-error { color:#e53935;font-size:12px;min-height:16px;margin-bottom:8px;text-align:center; }
   .auth-link { background:none;border:none;color:#888;font-size:13px;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif; }
-  /* ── Profile overlay ── */
-  .profile-overlay { display:none;position:absolute;top:52px;right:0;z-index:200;
-    background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:16px;min-width:220px;box-shadow:0 8px 32px rgba(0,0,0,.6); }
-  .profile-overlay.visible { display:block; }
+  /* ── Profile modal ── */
+  .profile-modal-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center; }
+  .profile-modal-backdrop.visible { display:flex; }
+  .profile-modal { background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:24px;width:90%;max-width:320px;position:relative; }
 
   /* ── Home tabs ── */
   .home-tabs { display: flex; background: #1a1a1a; flex-shrink: 0; width: 100%; }
@@ -578,36 +585,51 @@ function updateAuthUI(user){
 </div>
 
 <!-- ═══════════════════════ HOME SCREEN ═══════════════════════ -->
-<div id="setup" class="screen">
+<div id="setup" class="screen" style="position:relative">
   <!-- Tab bar -->
-  <div class="home-tabs" style="position:relative">
+  <div class="home-tabs">
     <button class="home-tab active" data-tab="play">🎯 Spiel</button>
     <button class="home-tab" data-tab="stats">📊 Statistiken</button>
     <button class="home-tab" data-tab="analyse">🧠 Analyse</button>
     <button class="home-tab" data-tab="online">🌐 Online</button>
     <button class="home-tab" data-tab="studio" style="display:none">🎙️ Studio</button>
-    <button id="btn-profile" style="flex:0;width:40px;height:40px;border:none;border-radius:50%;
-      background:#2a2a2a;color:#666;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer;
-      margin:auto 6px;flex-shrink:0">👤</button>
-    <div class="profile-overlay" id="profile-overlay">
-      <div id="profile-name" style="font-weight:600;color:#fff;font-size:14px;margin-bottom:2px"></div>
-      <div id="profile-email" style="font-size:12px;color:#666;margin-bottom:16px"></div>
-      <button onclick="signOutUser()" style="width:100%;padding:10px;border:1px solid #333;
-        border-radius:8px;background:none;color:#aaa;font-size:14px;cursor:pointer;margin-bottom:8px">
-        Abmelden
-      </button>
-      <button id="btn-profile-reset-pw" style="width:100%;padding:10px;border:1px solid #333;
-        border-radius:8px;background:none;color:#aaa;font-size:14px;cursor:pointer;margin-bottom:8px">
-        Passwort ändern
-      </button>
-      <div id="profile-upgrade-section" style="display:none">
-        <div style="font-size:12px;color:#555;margin-bottom:8px;text-align:center">Als Gast — Daten gehen verloren beim Abmelden</div>
-        <input class="auth-input" id="upgrade-name" type="text" placeholder="Dein Name" style="margin-bottom:8px">
+  </div>
+
+  <!-- Profile button (absolute, top-right) -->
+  <div id="profile-btn" style="position:absolute;top:8px;right:12px;z-index:10;cursor:pointer;
+    width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;font-size:15px;background:#2a2a2a;color:#666;
+    overflow:hidden;flex-shrink:0"></div>
+
+  <!-- Profile modal -->
+  <div class="profile-modal-backdrop" id="profile-modal-backdrop">
+    <div class="profile-modal">
+      <button id="btn-profile-close" style="position:absolute;top:12px;right:14px;background:none;
+        border:none;color:#666;font-size:20px;cursor:pointer;line-height:1">✕</button>
+      <div id="profile-name" style="font-weight:600;color:#fff;font-size:16px;margin-bottom:2px;padding-right:28px"></div>
+      <div id="profile-email" style="font-size:12px;color:#666;margin-bottom:4px"></div>
+      <div id="profile-type" style="font-size:11px;color:#444;letter-spacing:1px;margin-bottom:20px"></div>
+
+      <div id="profile-upgrade-section" style="display:none;margin-bottom:16px;padding:16px;
+        background:#111;border-radius:10px;border:1px solid #333">
+        <div style="font-size:13px;color:#e8c44a;font-weight:600;margin-bottom:4px">⚠ Gast-Modus</div>
+        <div style="font-size:12px;color:#666;margin-bottom:12px">Spieldaten gehen verloren wenn du dich abmeldest.</div>
+        <input class="auth-input" id="upgrade-name" type="text" placeholder="Dein Name">
         <input class="auth-input" id="upgrade-email" type="email" placeholder="Email">
         <input class="auth-input" id="upgrade-password" type="password" placeholder="Passwort (min. 6 Zeichen)">
         <div class="auth-error" id="upgrade-error"></div>
         <button id="btn-upgrade-account" class="auth-btn-primary" style="font-size:15px">ACCOUNT ERSTELLEN</button>
       </div>
+
+      <button id="btn-profile-reset-pw" style="display:none;width:100%;padding:10px;border:1px solid #333;
+        border-radius:8px;background:none;color:#aaa;font-size:14px;cursor:pointer;margin-bottom:8px">
+        🔑 Passwort ändern
+      </button>
+      <button onclick="signOutUser();document.getElementById('profile-modal-backdrop').classList.remove('visible')"
+        style="width:100%;padding:10px;border:1px solid #333;border-radius:8px;background:none;
+        color:#e53935;font-size:14px;cursor:pointer">
+        Abmelden
+      </button>
     </div>
   </div>
 
@@ -4524,30 +4546,34 @@ document.getElementById("btn-google-register").addEventListener("click",async()=
   catch(e){ authError("reg-error",e.message); }
 });
 
-// ── Profile overlay ────────────────────────────────────────────────
-document.getElementById("btn-profile").addEventListener("click",()=>{
-  const overlay=document.getElementById("profile-overlay");
-  const user=window.currentUser;
-  if(!overlay) return;
-  overlay.classList.toggle("visible");
-  if(overlay.classList.contains("visible") && user){
-    document.getElementById("profile-name").textContent=user.displayName||"Gast";
-    document.getElementById("profile-email").textContent=user.isAnonymous?"Anonymer Gast":user.email||"";
-    document.getElementById("profile-upgrade-section").style.display=user.isAnonymous?"":"none";
-  }
+// ── Profile modal ─────────────────────────────────────────────────
+function openProfileModal(){
+  const user = window.currentUser;
+  if(!user) return;
+  document.getElementById("profile-name").textContent = user.displayName || "Gast";
+  document.getElementById("profile-email").textContent = user.isAnonymous ? "" : (user.email||"");
+  const typeMap = {google:"GOOGLE ACCOUNT", password:"EMAIL ACCOUNT", anonymous:"GAST-MODUS"};
+  const provId = user.providerData?.[0]?.providerId || (user.isAnonymous?"anonymous":"");
+  document.getElementById("profile-type").textContent = typeMap[provId] || provId.toUpperCase();
+  document.getElementById("profile-upgrade-section").style.display = user.isAnonymous ? "" : "none";
+  const resetBtn = document.getElementById("btn-profile-reset-pw");
+  if(resetBtn) resetBtn.style.display = (!user.isAnonymous && provId==="password") ? "" : "none";
+  document.getElementById("profile-modal-backdrop").classList.add("visible");
+}
+
+document.getElementById("profile-btn").addEventListener("click", openProfileModal);
+
+document.getElementById("btn-profile-close").addEventListener("click",()=>{
+  document.getElementById("profile-modal-backdrop").classList.remove("visible");
 });
 
-document.addEventListener("click",e=>{
-  const overlay=document.getElementById("profile-overlay");
-  if(overlay?.classList.contains("visible") &&
-     !overlay.contains(e.target) &&
-     e.target.id!=="btn-profile"){
-    overlay.classList.remove("visible");
-  }
+document.getElementById("profile-modal-backdrop").addEventListener("click",e=>{
+  if(e.target === document.getElementById("profile-modal-backdrop"))
+    document.getElementById("profile-modal-backdrop").classList.remove("visible");
 });
 
 document.getElementById("btn-profile-reset-pw").addEventListener("click",async()=>{
-  const user=window.currentUser;
+  const user = window.currentUser;
   if(!user||!user.email) return;
   try{
     await window.resetPassword(user.email);
@@ -4556,14 +4582,14 @@ document.getElementById("btn-profile-reset-pw").addEventListener("click",async()
 });
 
 document.getElementById("btn-upgrade-account").addEventListener("click",async()=>{
-  const name=document.getElementById("upgrade-name").value.trim();
-  const email=document.getElementById("upgrade-email").value.trim();
-  const pw=document.getElementById("upgrade-password").value;
+  const name = document.getElementById("upgrade-name").value.trim();
+  const email = document.getElementById("upgrade-email").value.trim();
+  const pw = document.getElementById("upgrade-password").value;
   authError("upgrade-error","");
   if(!name||!email||pw.length<6){ authError("upgrade-error","Alle Felder ausfüllen (PW min. 6 Zeichen)."); return; }
   try{
     await window.upgradeAnonymousAccount(email, pw, name);
-    document.getElementById("profile-overlay").classList.remove("visible");
+    document.getElementById("profile-modal-backdrop").classList.remove("visible");
     alert("Account erstellt! Deine Spieldaten wurden übernommen.");
   }catch(e){
     authError("upgrade-error", e.code==="auth/email-already-in-use"
