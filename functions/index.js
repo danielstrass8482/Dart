@@ -1,27 +1,57 @@
 const { onRequest } = require("firebase-functions/v2/https");
+const { defineSecret } = require("firebase-functions/params");
 const { initializeApp } = require("firebase-admin/app");
 const { getStorage } = require("firebase-admin/storage");
-const textToSpeech = require("@google-cloud/text-to-speech");
 const { randomUUID } = require("crypto");
 
 initializeApp();
 
-const ttsClient = new textToSpeech.TextToSpeechClient();
+const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
 
-// SSML overrides (keyed without el_ prefix)
-const SSML_MAP = {
-  score_180: '<speak><prosody rate="0.65" pitch="+4st" volume="x-loud"><break time="100ms"/><emphasis level="strong">One</emphasis> <break time="50ms"/> <emphasis level="strong">Hundred</emphasis> <break time="100ms"/> and <break time="50ms"/> <emphasis level="strong">Eighty!</emphasis></prosody></speak>',
-  score_140: '<speak><prosody rate="0.75" pitch="+3st" volume="x-loud"><emphasis level="strong">One Hundred</emphasis> and <emphasis level="strong">Forty!</emphasis></prosody></speak>',
-  score_100: '<speak><prosody rate="0.8" pitch="+2st" volume="loud"><emphasis level="strong">One Hundred!</emphasis></prosody></speak>',
-  score_50:  '<speak><prosody rate="0.85" pitch="+2st" volume="loud"><emphasis level="strong">Bull\'s Eye!</emphasis></prosody></speak>',
-  score_0:   '<speak><prosody rate="0.9" pitch="-1st">No Score!</prosody></speak>',
-  no_score:  '<speak><prosody rate="0.9" pitch="-1st">No Score!</prosody></speak>',
-  game_on:   '<speak><prosody rate="0.8" pitch="+3st" volume="x-loud"><emphasis level="strong">Game</emphasis> <break time="80ms"/> <emphasis level="strong">On!</emphasis></prosody></speak>',
-  bust:      '<speak><prosody rate="0.85" pitch="-3st" volume="loud"><emphasis level="strong">Bust!</emphasis></prosody></speak>',
+const VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"; // George
+
+const SYSTEM_PROMPT =
+  "You are a professional darts announcer at the PDC World Championship at Alexandra Palace. " +
+  "You sound exactly like a seasoned British caller — deep, authoritative, and full of controlled excitement. " +
+  "For high scores like 180, your voice fills with genuine enthusiasm and drama. " +
+  "For bust, you sound deeply disappointed. For Game On, you are energetic and commanding. " +
+  "You speak with a crisp British accent, confident rhythm, and natural pauses between words for dramatic effect. " +
+  "Never robotic, always human and passionate.";
+
+// Voice settings by category
+const VOICE_SETTINGS_DRAMATIC = { stability: 0.25, similarity_boost: 0.90, style: 0.80, use_speaker_boost: true };
+const VOICE_SETTINGS_NEUTRAL  = { stability: 0.40, similarity_boost: 0.85, style: 0.55, use_speaker_boost: true };
+const VOICE_SETTINGS_NEGATIVE = { stability: 0.50, similarity_boost: 0.80, style: 0.40, use_speaker_boost: true };
+
+const DRAMATIC_KEYS = new Set(["score_180", "score_171", "score_167", "game_on"]);
+const NEGATIVE_KEYS = new Set(["bust", "no_score", "score_0"]);
+
+// Special announcement texts for certain keys (strip el_ prefix before lookup)
+const SPECIAL_TEXTS = {
+  score_180: "One Hundred and Eighty!",
+  score_171: "One Hundred and Seventy One!",
+  score_167: "One Hundred and Sixty Seven!",
+  score_160: "One Hundred and Sixty!",
+  score_140: "One Hundred and Forty!",
+  score_100: "One Hundred!",
+  score_50:  "Bull's Eye!",
+  score_26:  "Bed and Breakfast!",
+  score_45:  "Forty Five!",
+  score_0:   "No Score!",
+  no_score:  "No Score!",
+  game_on:   "Game On!",
+  bust:      "Bust!",
 };
+
+function voiceSettingsForKey(baseKey) {
+  if (DRAMATIC_KEYS.has(baseKey)) return VOICE_SETTINGS_DRAMATIC;
+  if (NEGATIVE_KEYS.has(baseKey)) return VOICE_SETTINGS_NEGATIVE;
+  return VOICE_SETTINGS_NEUTRAL;
+}
 
 exports.dartTTS = onRequest(
   {
+    secrets: [ELEVENLABS_API_KEY],
     region: "europe-west1",
     cors: true,
     timeoutSeconds: 30,
@@ -32,8 +62,8 @@ exports.dartTTS = onRequest(
       return;
     }
 
-    const { key, text } = req.body;
-    if (!key || !text) {
+    const { key, text: fallbackText } = req.body;
+    if (!key || !fallbackText) {
       res.status(400).json({ error: "key and text required" });
       return;
     }
@@ -53,28 +83,39 @@ exports.dartTTS = onRequest(
       }
     }
 
-    // Strip el_ prefix to look up SSML (frontend always sends el_<key>)
-    const ssmlKey = key.startsWith("el_") ? key.slice(3) : key;
-    const ssml = SSML_MAP[ssmlKey];
+    // Strip el_ prefix to look up special text / voice category
+    const baseKey = key.startsWith("el_") ? key.slice(3) : key;
+    const text = SPECIAL_TEXTS[baseKey] ?? fallbackText;
+    const voiceSettings = voiceSettingsForKey(baseKey);
 
-    if (ssml) {
-      console.log("Using SSML for key:", key);
-    }
-
-    // For SSML: let prosody tags control rate/pitch; only set volumeGainDb
-    // For plain text: apply standard voice persona settings
-    const synthesisInput = ssml ? { ssml } : { text };
-    const audioConfig = ssml
-      ? { audioEncoding: "MP3", volumeGainDb: 3.0 }
-      : { audioEncoding: "MP3", speakingRate: 0.88, pitch: -3.0, volumeGainDb: 3.0 };
-
-    const [response] = await ttsClient.synthesizeSpeech({
-      input: synthesisInput,
-      voice: { languageCode: "en-GB", name: "en-GB-Neural2-B" },
-      audioConfig,
+    const elResp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
+      method: "POST",
+      headers: {
+        "xi-api-key": ELEVENLABS_API_KEY.value(),
+        "Content-Type": "application/json",
+        Accept: "audio/mpeg",
+      },
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_turbo_v2_5",
+        voice_settings: voiceSettings,
+        system_prompt: SYSTEM_PROMPT,
+        pronunciation_dictionary_locators: [],
+        seed: null,
+        previous_text: null,
+        next_text: null,
+        apply_text_normalization: "auto",
+      }),
     });
 
-    const audioBuffer = Buffer.from(response.audioContent, "binary");
+    if (!elResp.ok) {
+      const errBody = await elResp.text();
+      console.error("ElevenLabs error:", elResp.status, errBody);
+      res.status(502).json({ error: "TTS generation failed" });
+      return;
+    }
+
+    const audioBuffer = Buffer.from(await elResp.arrayBuffer());
     const token = randomUUID();
 
     await file.save(audioBuffer, {
