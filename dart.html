@@ -35,9 +35,12 @@ const gProvider = new GoogleAuthProvider();
 window.currentUser = null;
 window.fbAuth = auth;
 
-// Seed unlocked voices on first run (George + Daniel always free)
-if(!localStorage.getItem("dart_voice_unlocked")){
-  localStorage.setItem("dart_voice_unlocked", JSON.stringify(["JBFqnCBsd6RMkjVDRZzb","itKfO3PIfQAXJTALxBD6"]));
+// Seed voice list on first run
+if(!localStorage.getItem("dart_voices")){
+  localStorage.setItem("dart_voices", JSON.stringify([
+    { id: "JBFqnCBsd6RMkjVDRZzb", name: "George", builtin: true },
+    { id: "itKfO3PIfQAXJTALxBD6", name: "Daniel", builtin: true },
+  ]));
 }
 
 function initDartDB(){
@@ -879,43 +882,40 @@ function updateAuthUI(user){
       <div id="coach-output-video-analyse-tab"></div>
     </div>
 
-    <div class="stats-section-title" style="margin-top:16px">🎙️ STIMME & VOICE-SETTINGS</div>
+    <div class="stats-section-title" style="margin-top:16px">🎙️ STIMME WÄHLEN</div>
     <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px">
-      <div style="font-size:12px;color:#999;margin-bottom:10px">
-        Wähle die Stimme für Ansagen. Jede Stimme wird separat gecacht.
+      <!-- Voice cards rendered by renderVoiceSelector() -->
+      <div id="voice-selector-list"></div>
+      <div id="voice-selector-confirm"
+        style="display:none;color:#2a7a2a;font-size:13px;padding:6px 0;text-align:center"></div>
+
+      <!-- Add new voice form -->
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;
+          color:#555;margin-bottom:8px">+ NEUE STIMME HINZUFÜGEN</div>
+        <input id="voice-new-name" placeholder="Name (z.B. Meine Stimme)"
+          style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:14px;
+          margin-bottom:6px;box-sizing:border-box">
+        <input id="voice-new-id" placeholder="ElevenLabs Voice ID"
+          style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;
+          font-family:monospace;font-size:13px;margin-bottom:8px;box-sizing:border-box">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button id="btn-voice-new-test-180"
+            style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;
+            font-size:12px;cursor:pointer">Test: 180</button>
+          <button id="btn-voice-new-test-gameon"
+            style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;
+            font-size:12px;cursor:pointer">Test: Game On</button>
+          <button id="btn-voice-new-test-bust"
+            style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;
+            font-size:12px;cursor:pointer">Test: Bust</button>
+          <button id="btn-voice-new-add"
+            style="padding:8px 14px;border:none;border-radius:7px;background:#222;
+            color:#fff;font-size:12px;cursor:pointer;margin-left:auto">+ Hinzufügen</button>
+        </div>
+        <div id="voice-new-error"
+          style="color:#c00;font-size:12px;margin-top:6px;min-height:16px"></div>
       </div>
-
-      <!-- Preset voice buttons -->
-      <div id="voice-preset-buttons" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
-
-      <!-- Custom ID input (hidden by default) -->
-      <input id="voice-id-input" placeholder="ElevenLabs Voice ID eingeben..."
-        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;
-        font-family:monospace;font-size:14px;margin-bottom:8px;display:none;box-sizing:border-box">
-
-      <!-- Active voice display -->
-      <div id="voice-id-current" style="font-size:12px;color:#888;font-family:monospace;margin-bottom:10px"></div>
-
-      <!-- Test buttons -->
-      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-        <button id="btn-test-voice-180"
-          style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f5f5f0;
-          font-size:13px;cursor:pointer">Test: 180</button>
-        <button id="btn-test-voice-gameon"
-          style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f5f5f0;
-          font-size:13px;cursor:pointer">Test: Game On</button>
-        <button id="btn-test-voice-bust"
-          style="padding:8px 12px;border:1px solid #ddd;border-radius:8px;background:#f5f5f0;
-          font-size:13px;cursor:pointer">Test: Bust</button>
-      </div>
-
-      <!-- Save button + confirm -->
-      <button id="btn-save-voice-id"
-        style="width:100%;padding:10px;border:none;border-radius:8px;background:#222;
-        color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;
-        cursor:pointer;margin-bottom:6px">✓ STIMME SPEICHERN</button>
-      <div id="voice-save-confirm"
-        style="display:none;color:#2a7a2a;font-size:13px;text-align:center;padding:4px 0"></div>
     </div>
   </div>
   </div>
@@ -3486,11 +3486,11 @@ const elTTSCache={}; // in-memory URL cache for this session
 let currentAudio=null; // only one audio plays at a time
 
 function getVoiceId(){
-  return localStorage.getItem("dart_voice_id")||"JBFqnCBsd6RMkjVDRZzb";
+  return localStorage.getItem("dart_active_voice_id")||"JBFqnCBsd6RMkjVDRZzb";
 }
 
-async function fetchTTSUrl(storageKey, text){
-  const voiceId=getVoiceId();
+async function fetchTTSUrl(storageKey, text, voiceIdOverride){
+  const voiceId=voiceIdOverride||getVoiceId();
   const cacheKey=voiceId+"_"+storageKey;
   if(elTTSCache[cacheKey]) return elTTSCache[cacheKey];
   let authToken="anonymous";
@@ -3519,6 +3519,21 @@ async function speakElevenLabs(text, cacheKey){
     return true;
   }catch(e){
     console.warn("Google TTS:",e.message);
+    return false;
+  }
+}
+
+// Test a specific voice without changing the active voice
+async function testVoice(voiceId, storageKey, text){
+  try{
+    const url=await fetchTTSUrl(storageKey, text, voiceId);
+    if(!url) return false;
+    if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; }
+    currentAudio=new Audio(url);
+    await currentAudio.play();
+    return true;
+  }catch(e){
+    console.warn("testVoice:",e.message);
     return false;
   }
 }
@@ -4423,7 +4438,7 @@ async function initAnalyseTab(){
   if(coachBtn) coachBtn.disabled = coachLeft<=0;
   // Load history
   loadCoachHistoryAnalyseTab(analyseSelectedPlayer);
-  initVoiceSettings();
+  renderVoiceSelector();
 }
 
 // Wire coach button for analyse tab (once at page load)
@@ -4522,81 +4537,119 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
 });
 
 // ── Voice Settings ────────────────────────────────────────────────
-const VOICE_PRESETS = [
-  { id: "JBFqnCBsd6RMkjVDRZzb", label: "🎙️ George", premium: false },
-  { id: "itKfO3PIfQAXJTALxBD6", label: "🎙️ Daniel", premium: false },
+const BUILTIN_VOICES = [
+  { id: "JBFqnCBsd6RMkjVDRZzb", name: "George", builtin: true },
+  { id: "itKfO3PIfQAXJTALxBD6", name: "Daniel", builtin: true },
 ];
 
-function getUnlockedVoices(){
+function loadVoices(){
   try{
-    return JSON.parse(localStorage.getItem("dart_voice_unlocked")||"null")
-      || ["JBFqnCBsd6RMkjVDRZzb","itKfO3PIfQAXJTALxBD6"];
-  }catch(e){ return ["JBFqnCBsd6RMkjVDRZzb","itKfO3PIfQAXJTALxBD6"]; }
+    return JSON.parse(localStorage.getItem("dart_voices")||"null") || [...BUILTIN_VOICES];
+  }catch(e){ return [...BUILTIN_VOICES]; }
 }
 
-// TODO: Premium unlock via In-App-Purchase oder Subscription
-// isPremiumVoice(voiceId) → false für alle außer Whitelist
-function isPremiumVoice(voiceId){
-  return !getUnlockedVoices().includes(voiceId);
+function saveVoices(voices){
+  localStorage.setItem("dart_voices", JSON.stringify(voices));
 }
 
-function initVoiceSettings(){
-  const container = document.getElementById("voice-preset-buttons");
-  if(!container) return;
-  const active = getVoiceId();
-  const unlocked = getUnlockedVoices();
+function showVoiceConfirm(msg){
+  const el=document.getElementById("voice-selector-confirm");
+  if(!el) return;
+  el.textContent=msg;
+  el.style.display="";
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.style.display="none", 3000);
+}
 
-  const presets = [...VOICE_PRESETS, { id: "__custom__", label: "+ Eigene ID", premium: false }];
-  container.innerHTML = presets.map(v => {
-    const isActive = (v.id!=="__custom__") && active===v.id ? " outline:2px solid #222;" : "";
-    const locked = (v.id!=="__custom__") && !unlocked.includes(v.id);
-    const label = locked ? v.label+" 🔒 <span style='font-size:10px;color:#aaa'>Premium</span>" : v.label;
-    const opacity = locked ? "opacity:0.5;" : "";
-    return `<button data-voice-preset="${v.id}"
-      style="padding:8px 14px;border:1px solid #ddd;border-radius:20px;background:#f5f5f0;
-      font-size:13px;cursor:pointer;${isActive}${opacity}">${label}</button>`;
+function activateVoice(voiceId, voiceName){
+  localStorage.setItem("dart_active_voice_id", voiceId);
+  Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]);
+  renderVoiceSelector();
+  showVoiceConfirm("✓ Stimme aktiviert — "+voiceName+" ist jetzt aktiv");
+}
+
+function renderVoiceSelector(){
+  const list=document.getElementById("voice-selector-list");
+  if(!list) return;
+  const voices=loadVoices();
+  const activeId=getVoiceId();
+  const tvBtn="padding:7px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer;";
+
+  list.innerHTML=voices.map((v,i)=>{
+    const isActive=v.id===activeId;
+    const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
+    return `<div style="border-radius:8px;padding:12px;margin-bottom:8px;
+        border:${isActive?"2px solid #222":"1px solid #eee"};
+        background:${isActive?"#f9f9f7":"#fff"}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-weight:600;font-size:15px">🎙️ ${v.name}</span>
+        ${isActive?`<span style="background:#222;color:#fff;padding:2px 8px;border-radius:12px;
+          font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}
+      </div>
+      <div style="font-size:11px;color:#aaa;font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">Test: 180</button>
+        <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Test: Game On</button>
+        <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Test: Bust</button>
+        ${isActive
+          ?`<button style="padding:7px 11px;border:none;border-radius:7px;background:#2a7a2a;color:#fff;font-size:12px;cursor:default;" disabled>✓ Aktiv</button>`
+          :`<button style="padding:7px 11px;border:none;border-radius:7px;background:#222;color:#fff;font-size:12px;cursor:pointer;"
+              data-activate-id="${v.id}" data-activate-name="${v.name}">✓ Aktivieren</button>`
+        }
+        ${!v.builtin?`<button style="padding:7px 11px;border:1px solid #fdd;border-radius:7px;
+            background:#fff5f5;font-size:12px;cursor:pointer;" data-delete-idx="${i}">🗑</button>`:""}
+      </div>
+    </div>`;
   }).join("");
 
-  document.getElementById("voice-id-current").textContent = "Aktiv: "+active;
-  document.getElementById("voice-id-input").value = active;
-
-  container.querySelectorAll("[data-voice-preset]").forEach(btn=>{
+  list.querySelectorAll("[data-tv-id]").forEach(btn=>{
+    btn.addEventListener("click",()=>testVoice(btn.dataset.tvId, btn.dataset.tvKey, btn.dataset.tvText));
+  });
+  list.querySelectorAll("[data-activate-id]").forEach(btn=>{
+    btn.addEventListener("click",()=>activateVoice(btn.dataset.activateId, btn.dataset.activateName));
+  });
+  list.querySelectorAll("[data-delete-idx]").forEach(btn=>{
     btn.addEventListener("click",()=>{
-      const vid = btn.dataset.voicePreset;
-      if(vid==="__custom__"){
-        const inp = document.getElementById("voice-id-input");
-        inp.style.display = inp.style.display==="none" ? "" : "none";
-        return;
+      const vs=loadVoices();
+      const removed=vs.splice(parseInt(btn.dataset.deleteIdx),1)[0];
+      if(removed.id===getVoiceId()){
+        const fallback=vs.find(v=>v.builtin)||vs[0];
+        if(fallback){ localStorage.setItem("dart_active_voice_id",fallback.id); Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]); }
       }
-      if(isPremiumVoice(vid)) return; // locked — no action yet
-      document.getElementById("voice-id-input").value = vid;
-      document.getElementById("voice-id-input").style.display="none";
+      saveVoices(vs);
+      renderVoiceSelector();
     });
   });
 }
 
-document.getElementById("btn-save-voice-id").addEventListener("click",()=>{
-  const val = document.getElementById("voice-id-input").value.trim();
-  if(!val) return;
-  localStorage.setItem("dart_voice_id", val);
-  // Reset in-memory cache so next request uses new voice
-  Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]);
-  document.getElementById("voice-id-current").textContent = "Aktiv: "+val;
-  const confirm = document.getElementById("voice-save-confirm");
-  confirm.textContent = "✓ Stimme gespeichert! Cache geleert.";
-  confirm.style.display = "";
-  setTimeout(()=>confirm.style.display="none", 3000);
-  initVoiceSettings();
+// "Add new voice" form wiring (once at page load)
+document.getElementById("btn-voice-new-test-180").addEventListener("click",()=>{
+  const id=document.getElementById("voice-new-id").value.trim();
+  if(id) testVoice(id,"el_score_180","One Hundred, and Eighty!");
 });
-
-document.getElementById("btn-test-voice-180").addEventListener("click",()=>{
-  speakElevenLabs("One Hundred, and Eighty!", "el_score_180");
+document.getElementById("btn-voice-new-test-gameon").addEventListener("click",()=>{
+  const id=document.getElementById("voice-new-id").value.trim();
+  if(id) testVoice(id,"el_game_on","Game on!");
 });
-document.getElementById("btn-test-voice-gameon").addEventListener("click",()=>{
-  speakElevenLabs("Game on!", "el_game_on");
+document.getElementById("btn-voice-new-test-bust").addEventListener("click",()=>{
+  const id=document.getElementById("voice-new-id").value.trim();
+  if(id) testVoice(id,"el_bust","Bust.");
 });
-document.getElementById("btn-test-voice-bust").addEventListener("click",()=>{
-  speakElevenLabs("Bust.", "el_bust");
+document.getElementById("btn-voice-new-add").addEventListener("click",()=>{
+  const name=document.getElementById("voice-new-name").value.trim();
+  const id=document.getElementById("voice-new-id").value.trim();
+  const errEl=document.getElementById("voice-new-error");
+  if(!name||!id){ errEl.textContent="Name und Voice ID sind Pflichtfelder."; return; }
+  const vs=loadVoices();
+  if(vs.filter(v=>!v.builtin).length>=10){ errEl.textContent="Maximum 10 eigene Stimmen erreicht."; return; }
+  if(vs.some(v=>v.id===id)){ errEl.textContent="Diese Voice ID ist bereits in der Liste."; return; }
+  errEl.textContent="";
+  vs.push({id,name,builtin:false});
+  saveVoices(vs);
+  document.getElementById("voice-new-name").value="";
+  document.getElementById("voice-new-id").value="";
+  renderVoiceSelector();
+  showVoiceConfirm("✓ \""+name+"\" wurde hinzugefügt");
 });
 
 // ── Auth screen listeners ─────────────────────────────────────────
