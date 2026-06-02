@@ -4321,6 +4321,28 @@ async function loadAndRenderStats(){
       <div class="coach-limit" id="coach-limit-stats">${coachLeft} von ${COACH_DAILY_LIMIT} Analysen heute verfügbar</div>
       <div id="coach-history-stats" style="margin-top:12px"></div>`;
 
+    // ── Video Coach ───────────────────────────────────────────────
+    html+=`<div class="stats-section-title">🎥 WURF-ANALYSE (VIDEO)</div>
+      <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px">
+        <div style="font-size:12px;color:#999;margin-bottom:10px">
+          Lade ein kurzes Video (3-5 Sek.) deines Wurfs hoch — von der Seite, Hüfthöhe.
+        </div>
+        <input type="file" id="video-upload-stats" accept="video/*" style="display:none">
+        <button id="btn-video-select-stats" style="width:100%;padding:10px;border:2px dashed #ddd;
+          border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666;margin-bottom:8px">
+          📁 Video auswählen
+        </button>
+        <div id="video-preview-wrap-stats" style="display:none;margin-bottom:8px">
+          <video id="video-preview-stats" style="width:100%;border-radius:8px;max-height:160px"
+            muted playsinline></video>
+          <div id="video-frames-info-stats" style="font-size:11px;color:#aaa;margin-top:4px;text-align:center"></div>
+        </div>
+        <button id="btn-video-analyze-stats" class="coach-btn" style="display:none;font-size:16px;padding:10px">
+          🎥 WURF ANALYSIEREN
+        </button>
+        <div id="coach-output-video-stats"></div>
+      </div>`;
+
     // ── Last games ────────────────────────────────────────────────
     html+=`<div class="stats-section-title">LETZTE SPIELE</div>
       <div class="history-list">
@@ -4339,6 +4361,69 @@ async function loadAndRenderStats(){
     html+=`</div>`;
 
     box.innerHTML=html;
+
+    // Wire video coach (stats tab)
+    document.getElementById("btn-video-select-stats").addEventListener("click",()=>{
+      document.getElementById("video-upload-stats").click();
+    });
+    document.getElementById("video-upload-stats").addEventListener("change",e=>{
+      const file=e.target.files[0];
+      if(!file) return;
+      const url=URL.createObjectURL(file);
+      const preview=document.getElementById("video-preview-stats");
+      preview.src=url;
+      preview.load();
+      document.getElementById("video-preview-wrap-stats").style.display="";
+      document.getElementById("btn-video-select-stats").textContent="📁 "+file.name.substring(0,30);
+      preview.addEventListener("loadedmetadata",()=>{
+        const dur=Math.round(preview.duration);
+        document.getElementById("video-frames-info-stats").textContent=
+          `${dur}s · ${Math.round(preview.videoWidth)}×${Math.round(preview.videoHeight)}px · 5 Frames werden analysiert`;
+        document.getElementById("btn-video-analyze-stats").style.display="";
+        document.getElementById("coach-output-video-stats").innerHTML="";
+      },{once:true});
+    });
+    document.getElementById("btn-video-analyze-stats").addEventListener("click",async()=>{
+      const left=videoCoachCallsLeft();
+      const outputEl=document.getElementById("coach-output-video-stats");
+      const btn=document.getElementById("btn-video-analyze-stats");
+      if(left<=0){
+        outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">Du hast heute dein Video-Analyse-Limit (${VIDEO_COACH_LIMIT}x) erreicht.</div>`;
+        return;
+      }
+      const videoEl=document.getElementById("video-preview-stats");
+      if(!videoEl.src){ alert("Bitte zuerst ein Video auswählen"); return; }
+      btn.disabled=true;
+      btn.textContent="⏳ Extrahiere Frames…";
+      outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:#aaa">Analysiere deine Wurftechnik…</span></div>`;
+      try{
+        const frames=await extractVideoFrames(videoEl, 5);
+        btn.textContent="⏳ Claude analysiert…";
+        const playerName=statsSelectedPlayer
+          ? (allPlayers.find(x=>x.id===statsSelectedPlayer)?.name||null)
+          : null;
+        const content=[
+          {type:"text", text:buildVideoCoachPrompt(frames.length, playerName)},
+          ...frames.map(b64=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}})),
+          {type:"text", text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}
+        ];
+        const data=await callClaudeViaProxy([{role:"user",content}]);
+        const text=data.content?.[0]?.text||"Keine Antwort erhalten.";
+        recordVideoCoachUsage();
+        const newLeft=videoCoachCallsLeft();
+        outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">
+          <div class="coach-header">🎥 WURF-ANALYSE</div>
+          ${text.replace(/\n/g,"<br>")}
+          <div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div>
+        </div>`;
+        btn.textContent="🎥 ERNEUT ANALYSIEREN";
+        btn.disabled=newLeft<=0;
+      }catch(err){
+        outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:#e53935">Fehler: ${err.message}</div>`;
+        btn.disabled=false;
+        btn.textContent="🎥 WURF ANALYSIEREN";
+      }
+    });
 
     // Wire coach button
     const coachStatsBtn=document.getElementById("btn-coach-stats");
