@@ -3180,7 +3180,7 @@ async function playCustomAudio(key){
   }
 }
 
-// ── ElevenLabs TTS ────────────────────────────────────────────────
+// ── Google Cloud TTS ──────────────────────────────────────────────
 const elTTSCache={}; // in-memory URL cache for this session
 
 async function speakElevenLabs(text, cacheKey){
@@ -3208,12 +3208,12 @@ async function speakElevenLabs(text, cacheKey){
     await audio.play();
     return true;
   }catch(e){
-    console.warn("ElevenLabs TTS:",e.message);
+    console.warn("Google TTS:",e.message);
     return false;
   }
 }
 
-// Pre-warm ElevenLabs cache for most common dart scores (runs in background)
+// Pre-warm Google TTS cache for most common dart scores (runs in background)
 function prewarmElevenLabs(){
   const common=[26,41,45,60,81,100,121,140,180,0];
   for(const score of common){
@@ -3227,7 +3227,7 @@ function prewarmElevenLabs(){
   if(!elTTSCache["el_bust"]) speakElevenLabs("Bust!","el_bust").catch(()=>{});
 }
 
-// speakScore — ElevenLabs first, browser TTS as last fallback
+// speakScore — Google TTS first, browser TTS as last fallback
 async function speakScoreWithCustom(score){
   const key=`score_${score}`;
   const text=score===180?"One Hundred and Eighty!":score===100?"One Hundred!":
@@ -3236,7 +3236,7 @@ async function speakScoreWithCustom(score){
   if(!played) speakScore(score);
 }
 
-// speak for bust/special — ElevenLabs first, browser TTS as last fallback
+// speak for bust/special — Google TTS first, browser TTS as last fallback
 async function speakKeyWithCustom(key, fallbackText){
   const played=await speakElevenLabs(fallbackText,`el_${key}`);
   if(!played) speak(fallbackText);

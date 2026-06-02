@@ -40,6 +40,12 @@ storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
   - URL: `https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartCoach`
   - Secret: `ANTHROPIC_API_KEY` (Firebase Secret Manager)
   - File: `functions/dartCoach.js`
+- **`dartTTS`** — Google Cloud TTS Proxy (British voice, caching in Firebase Storage)
+  - URL: `https://darttts-64z7naltva-ew.a.run.app`
+  - Auth: Application Default Credentials (kein separater API Key)
+  - Voice: `en-GB-Neural2-B` (männlich, britisch)
+  - Cache: `dart_voice_el/<key>.mp3` in Firebase Storage
+  - File: `functions/index.js`
 
 ---
 
@@ -87,8 +93,9 @@ service cloud.firestore {
 
 ### Audio-System
 - **Custom Voice:** `playCustomAudio(key)` → lädt aus Firebase Storage, cached URLs
+- **Google TTS:** `speakElevenLabs(text, key)` → ruft `dartTTS` Cloud Function auf, cached in Storage + Memory
 - **Fallback TTS:** `doSpeak(text, lang)` → Web Speech API
-- **Wrapper:** `speakScoreWithCustom(score)` → versucht Custom, fallback TTS
+- **Wrapper:** `speakScoreWithCustom(score)` → Google TTS first, dann Web Speech fallback
 - **Unlock:** beim ersten `pointerdown` wird AudioContext entsperrt (iOS/Android)
 
 ### Sprachsteuerung
@@ -133,11 +140,7 @@ service cloud.firestore {
 ## Offene Features / TODOs
 
 ### Hohe Priorität
-- [ ] **ElevenLabs TTS** — Ersetze Web Speech API durch professionelle KI-Stimme (British Darts Caller Style)
-  - Neue Cloud Function `dartTTS` als Proxy
-  - Caching der generierten Audio-Files in Firebase Storage
-  - Betrifft: `speakScoreWithCustom()`, `doSpeak()`, `announceRequires()`
-  - "X requires Y" funktioniert dann ohne Pre-Recordings
+- [x] **Google Cloud TTS** — `dartTTS` Cloud Function mit `en-GB-Neural2-B`, ADC, Caching in Storage `dart_voice_el/`
 - [ ] **User-Accounts** — Email/Passwort Registration zusätzlich zu Google Login
   - Firebase Auth `createUserWithEmailAndPassword`
   - Spielerprofile an Auth-UID binden

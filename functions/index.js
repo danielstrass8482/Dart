@@ -1,19 +1,15 @@
 const { onRequest } = require("firebase-functions/v2/https");
-const { defineSecret } = require("firebase-functions/params");
 const { initializeApp } = require("firebase-admin/app");
 const { getStorage } = require("firebase-admin/storage");
+const textToSpeech = require("@google-cloud/text-to-speech");
 const { randomUUID } = require("crypto");
 
 initializeApp();
 
-const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
-
-// British male voice – suits dart announcing
-const DEFAULT_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"; // George
+const ttsClient = new textToSpeech.TextToSpeechClient();
 
 exports.dartTTS = onRequest(
   {
-    secrets: [ELEVENLABS_API_KEY],
     region: "europe-west1",
     cors: true,
     timeoutSeconds: 30,
@@ -24,7 +20,7 @@ exports.dartTTS = onRequest(
       return;
     }
 
-    const { key, text, voice_id = DEFAULT_VOICE_ID } = req.body;
+    const { key, text } = req.body;
     if (!key || !text) {
       res.status(400).json({ error: "key and text required" });
       return;
@@ -40,37 +36,19 @@ exports.dartTTS = onRequest(
       const [meta] = await file.getMetadata();
       const token = meta.metadata?.firebaseStorageDownloadTokens;
       if (token) {
-        const url = buildDownloadURL(bucket.name, filePath, token);
-        res.json({ url });
+        res.json({ url: buildDownloadURL(bucket.name, filePath, token) });
         return;
       }
     }
 
-    // Generate via ElevenLabs
-    const elResp = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voice_id}`,
-      {
-        method: "POST",
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY.value(),
-          "Content-Type": "application/json",
-          Accept: "audio/mpeg",
-        },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_turbo_v2",
-          voice_settings: { stability: 0.45, similarity_boost: 0.75, speed: 1.05 },
-        }),
-      }
-    );
+    // Generate via Google Cloud TTS (ADC — no API key needed)
+    const [response] = await ttsClient.synthesizeSpeech({
+      input: { text },
+      voice: { languageCode: "en-GB", name: "en-GB-Neural2-B" },
+      audioConfig: { audioEncoding: "MP3", speakingRate: 1.05 },
+    });
 
-    if (!elResp.ok) {
-      console.error("ElevenLabs error:", elResp.status, await elResp.text());
-      res.status(502).json({ error: "TTS generation failed" });
-      return;
-    }
-
-    const audioBuffer = Buffer.from(await elResp.arrayBuffer());
+    const audioBuffer = Buffer.from(response.audioContent, "binary");
     const token = randomUUID();
 
     await file.save(audioBuffer, {
