@@ -1776,11 +1776,11 @@ function disableBoard(svgEl,on){
 
 function svgCoords(svgEl,e){
   const rect=svgEl.getBoundingClientRect();
-  const scaleX=530/rect.width, scaleY=530/rect.height;
-  // PointerEvent has clientX/Y directly; fallback for changedTouches
+  const vb=svgEl.viewBox.baseVal;
+  const scaleX=vb.width/rect.width, scaleY=vb.height/rect.height;
   const clientX=e.clientX!==undefined?e.clientX:(e.changedTouches?.[0]||e.touches?.[0])?.clientX||0;
   const clientY=e.clientY!==undefined?e.clientY:(e.changedTouches?.[0]||e.touches?.[0])?.clientY||0;
-  return {x:(clientX-rect.left)*scaleX, y:(clientY-rect.top)*scaleY};
+  return {x:(clientX-rect.left)*scaleX+vb.x, y:(clientY-rect.top)*scaleY+vb.y};
 }
 
 // ══════════════════════════════════════════════════════════════════
