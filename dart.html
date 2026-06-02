@@ -1433,14 +1433,16 @@ function handleVoiceHit(hit){
 
 function announceRequires(currentPlayerIdx){
   if(!x01||x01.winner) return;
+  let lowestScore=Infinity, lowestName="";
   cfg.players.forEach((name,i)=>{
     if(i===currentPlayerIdx) return;
+    if(cfg.isBot?.[i]) return;
     const sc=x01.scores[i];
-    if(sc<=170&&sc>1){
-      const k="requires_"+name.toLowerCase().replace(/[^a-z0-9]/g,"_")+"_"+sc;
-      speakKeyWithCustom(k, name+" requires "+sc);
-    }
+    if(sc<=170&&sc>1&&sc<lowestScore){ lowestScore=sc; lowestName=name; }
   });
+  if(!lowestName) return;
+  const k="requires_"+lowestName.toLowerCase().replace(/[^a-z0-9]/g,"_")+"_"+lowestScore;
+  speakKeyWithCustom(k, lowestName+" requires "+numToWords(lowestScore));
 }
 
 // Buttons wired in renderTurnTableLP section above
