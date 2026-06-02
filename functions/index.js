@@ -8,7 +8,7 @@ initializeApp();
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
 
-const VOICE_ID = "itKfO3PIfQAXJTALxBD6"; // Daniel (cloned voice)
+const DEFAULT_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"; // George (default)
 
 const SYSTEM_PROMPT =
   "You are a calm, deep-voiced British darts announcer. " +
@@ -63,14 +63,15 @@ exports.dartTTS = onRequest(
       return;
     }
 
-    const { key, text: fallbackText } = req.body;
+    const { key, text: fallbackText, voiceId: reqVoiceId } = req.body;
     if (!key || !fallbackText) {
       res.status(400).json({ error: "key and text required" });
       return;
     }
 
+    const voiceId = reqVoiceId || process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID;
     const bucket = getStorage().bucket("fitness-tracker-c6f97.firebasestorage.app");
-    const filePath = `dart_voice_el/${key}.mp3`;
+    const filePath = `dart_voice_el/${voiceId}/${key}.mp3`;
     const file = bucket.file(filePath);
 
     // Return cached URL if the file already exists
@@ -89,7 +90,7 @@ exports.dartTTS = onRequest(
     const text = SPECIAL_TEXTS[baseKey] ?? fallbackText;
     const voiceSettings = voiceSettingsForKey(baseKey);
 
-    const elResp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
+    const elResp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",
       headers: {
         "xi-api-key": ELEVENLABS_API_KEY.value(),
