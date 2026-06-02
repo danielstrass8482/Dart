@@ -147,6 +147,25 @@ function initDartDB(){
     async saveGlobalVoices(voices){
       await setDoc(doc(db,"dart_config","voices"),{voices});
     },
+    // Dart Scanner sessions
+    async createScanSession(code, data){
+      await setDoc(doc(db,"dart_scan_sessions",code),{...data,code});
+    },
+    async getScanSession(code){
+      const snap=await getDoc(doc(db,"dart_scan_sessions",code));
+      return snap.exists()?snap.data():null;
+    },
+    async updateScanSession(code,data){
+      return updateDoc(doc(db,"dart_scan_sessions",code),data);
+    },
+    watchScanSession(code,cb){
+      return onSnapshot(doc(db,"dart_scan_sessions",code),snap=>{
+        cb(snap.exists()?snap.data():null);
+      });
+    },
+    async deleteScanSession(code){
+      try{await fsDeleteDoc(doc(db,"dart_scan_sessions",code));}catch(e){}
+    },
     async saveUserVoice(voiceId){
       const uid=auth.currentUser?.uid;
       if(!uid) return;
@@ -559,6 +578,15 @@ function updateAuthUI(user){
   .coach-box .coach-header { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
     color:#e8c44a; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
   .coach-limit { font-size:11px; color:#aaa; text-align:center; margin-top:6px; }
+  /* ── Dart Scanner ── */
+  .scan-host-bar { display:none; background:#1a0a00; border-bottom:1px solid #c77700;
+    padding:6px 14px; flex-shrink:0; flex-direction:row; align-items:center;
+    justify-content:space-between; gap:12px; }
+  .scan-host-bar.active { display:flex; }
+  .scan-code-badge { font-family:'Bebas Neue',sans-serif; font-size:28px;
+    letter-spacing:8px; color:#e8c44a; }
+  .scan-dart-card { background:#2a2a2a; border-radius:8px; padding:8px 12px;
+    text-align:center; min-width:60px; }
   @keyframes rotate-hint {
     0%,100% { transform: rotate(0deg); }
     50%      { transform: rotate(90deg); }
@@ -756,6 +784,14 @@ function updateAuthUI(user){
     </div>
 
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
+    <button class="btn-start" id="btn-start-scanner"
+      style="background:#1a1a1a;color:#e8c44a;border:1px solid #444;margin-top:6px;font-size:15px">
+      📱 MIT HANDY-SCANNER STARTEN
+    </button>
+    <button class="btn-start" id="btn-scan-join"
+      style="background:#f5f5f0;color:#555;border:1px solid #ddd;margin-top:4px;font-size:14px">
+      Als Scanner verbinden
+    </button>
   </div><!-- end setup-card -->
   </div><!-- end inner scroll -->
   </div><!-- end tab-play -->
@@ -968,8 +1004,79 @@ function updateAuthUI(user){
   </div>
 </div>
 
+<!-- ═══════════════════════ SCANNER REMOTE SCREEN ═══════════════════════ -->
+<div id="scan-remote" class="screen" style="flex-direction:column;background:#111">
+  <div class="game-header">
+    <button class="btn-nav" id="scan-back">← Zurück</button>
+    <div class="game-title">📱 DART SCANNER</div>
+    <div style="width:60px"></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;background:#1a1a1a;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px">
+
+    <!-- Connect section -->
+    <div id="scan-connect-section" style="width:100%;max-width:400px">
+      <div style="color:#aaa;font-size:13px;margin-bottom:12px;text-align:center">
+        Verbindungscode vom Tablet eingeben
+      </div>
+      <input id="scan-code-input" maxlength="4" placeholder="ABCD"
+        style="width:100%;padding:16px;font-size:36px;font-family:'Bebas Neue',sans-serif;
+        letter-spacing:10px;text-align:center;border:2px solid #333;border-radius:10px;
+        background:#222;color:#fff;box-sizing:border-box;text-transform:uppercase">
+      <button id="btn-scan-connect"
+        style="width:100%;margin-top:10px;padding:14px;background:#e8c44a;border:none;
+        border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:20px;cursor:pointer">
+        VERBINDEN
+      </button>
+      <div id="scan-connect-error"
+        style="color:#e53935;font-size:12px;text-align:center;margin-top:8px;min-height:16px"></div>
+    </div>
+
+    <!-- Camera section -->
+    <div id="scan-camera-section" style="display:none;width:100%;max-width:400px">
+      <div id="scan-game-info"
+        style="background:#222;border-radius:8px;padding:10px 14px;margin-bottom:12px;text-align:center"></div>
+      <input type="file" id="scan-photo-input" accept="image/*" capture="environment" style="display:none">
+      <button id="btn-scan-photo"
+        style="width:100%;padding:28px;background:#222;border:2px dashed #444;border-radius:14px;
+        font-size:56px;cursor:pointer;margin-bottom:10px">📸</button>
+      <div id="scan-preview-wrap" style="display:none">
+        <img id="scan-preview-img" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:280px;object-fit:cover">
+        <div id="scan-detected" style="background:#222;border-radius:8px;padding:12px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <button id="btn-scan-retry"
+            style="flex:1;padding:12px;background:#333;color:#fff;border:none;
+            border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer">
+            ↩ NEU
+          </button>
+          <button id="btn-scan-confirm"
+            style="flex:2;padding:12px;background:#e8c44a;color:#000;border:none;
+            border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:18px;cursor:pointer">
+            ✓ BESTÄTIGEN
+          </button>
+        </div>
+      </div>
+      <div id="scan-status"
+        style="color:#aaa;font-size:13px;text-align:center;margin-top:8px;min-height:20px"></div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
 <div id="x01" class="screen" style="flex-direction:column;background:#111">
+  <!-- Scanner host banner (shown when tablet is in scanner mode) -->
+  <div class="scan-host-bar" id="scan-host-bar">
+    <div>
+      <div style="font-size:10px;color:#c77700;letter-spacing:1px">SCANNER AKTIV</div>
+      <div class="scan-code-badge" id="scan-host-code">----</div>
+    </div>
+    <div id="scan-host-status" style="color:#aaa;font-size:12px;flex:1;text-align:center">
+      Warte auf Handy…
+    </div>
+    <button onclick="stopScanSession()"
+      style="background:none;border:1px solid #555;color:#888;padding:5px 10px;
+      border-radius:6px;font-size:12px;cursor:pointer">✕ Ende</button>
+  </div>
   <div class="game-header">
     <button class="btn-nav" id="x01-back">← Zurück</button>
     <div class="game-title" id="x01-title">501 · Runde 1</div>
@@ -2614,16 +2721,10 @@ function getDoubleStatsForCoach(playerIdx){
 
 boardSVG.addEventListener("pointerup",handleX01Click);
 
-function handleX01Click(e){
-  e.preventDefault();
-  // Only handle left mouse button or touch/pen
-  if(e.pointerType==="mouse"&&e.button!==0) return;
+// Shared throw processor — called by board tap AND scanner
+function processX01Hit(hit, svgX=null, svgY=null){
   if(x01.winner||x01.bust||x01.throws.length>=3) return;
-  const {x,y}=svgCoords(boardSVG,e);
-  const hit=hitFromXY(x,y);
-  if(!hit) return;
 
-  // Save full state before this throw for single-throw undo
   x01.history.push({
     scores:[...x01.scores],
     current:x01.current,
@@ -2635,11 +2736,10 @@ function handleX01Click(e){
     turnScores:x01.turnScores.map(a=>[...a])
   });
 
-  const throwObj={...hit,svgX:x,svgY:y};
+  const throwObj={...hit,svgX,svgY};
   x01.throws.push(throwObj);
   x01.allThrows[x01.current].push(throwObj);
   redrawAllHits(boardSVG, x01.historicThrows[x01.current], x01.throws);
-  // Push to online room if multiplayer
   if(cfg.online) pushThrowToRoom(hit);
 
   if(hit.miss){
@@ -2706,6 +2806,17 @@ function handleX01Click(e){
 
   renderX01();
   if(x01.throws.length===3) setTimeout(advanceX01, 800);
+}
+
+function handleX01Click(e){
+  e.preventDefault();
+  if(scanSession) return; // board disabled in scanner host mode
+  if(e.pointerType==="mouse"&&e.button!==0) return;
+  if(x01.winner||x01.bust||x01.throws.length>=3) return;
+  const {x,y}=svgCoords(boardSVG,e);
+  const hit=hitFromXY(x,y);
+  if(!hit) return;
+  processX01Hit(hit, x, y);
 }
 
 function advanceX01(){
@@ -4787,6 +4898,227 @@ document.getElementById("btn-voice-new-add").addEventListener("click",()=>{
 });
 
 document.getElementById("btn-voice-sync").addEventListener("click",()=>syncVoicesFromFirestore());
+
+// ── Dart Scanner (Second Device) ─────────────────────────────────
+// TODO: Premium Feature — unlock via subscription; currently open for testing
+
+let scanSession = null;      // session code when tablet is host
+let scanUnsubscribe = null;  // Firestore listener cleanup
+
+function genScanCode(){
+  return Math.random().toString(36).substring(2,6).toUpperCase();
+}
+
+async function compressScanPhoto(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const maxPx=1024;
+      let w=img.width,h=img.height;
+      if(w>maxPx||h>maxPx){ if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;} }
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      resolve(c.toDataURL("image/jpeg",0.85).split(",")[1]);
+    };
+    img.onerror=reject; img.src=url;
+  });
+}
+
+async function analyzeDartsPhoto(base64){
+  const prompt=`Analyze this dartboard photo. Find all darts currently stuck in the board.
+Return ONLY a JSON array (no other text):
+[{"label":"T20","score":60},{"label":"20","score":20},{"label":"D5","score":10}]
+Label rules: T=triple, D=double, no prefix=single, Bull=bullseye(50pts), 25=outer bull(25pts).
+Score = actual point value. Max 3 darts. If no darts visible return [].`;
+  const content=[
+    {type:"text",text:prompt},
+    {type:"image",source:{type:"base64",media_type:"image/jpeg",data:base64}}
+  ];
+  const data=await callClaudeViaProxy([{role:"user",content}]);
+  const text=data.content?.[0]?.text||"[]";
+  const m=text.match(/\[[\s\S]*?\]/);
+  if(!m) return [];
+  try{return JSON.parse(m[0]);}catch(e){return [];}
+}
+
+// ── Host (Tablet) ──
+
+async function startScanSession(){
+  if(!window.dartDB){alert("Datenbank nicht bereit");return;}
+  const code=genScanCode();
+  try{
+    await window.dartDB.createScanSession(code,{
+      gameMode:cfg.mode||"x01",
+      currentPlayer:cfg.players?.[x01?.current??0]||"Spieler 1",
+      remaining:x01?.scores?.[x01?.current??0]??cfg.start??501,
+      round:x01?.round??1,
+      status:"active",
+      pendingDarts:null,
+      createdAt:Date.now()
+    });
+    scanSession=code;
+    document.getElementById("scan-host-code").textContent=code;
+    document.getElementById("scan-host-bar").classList.add("active");
+    document.getElementById("scan-host-status").textContent="Warte auf Handy…";
+    scanUnsubscribe=window.dartDB.watchScanSession(code,onScanDartsReceived);
+  }catch(e){alert("Fehler: "+e.message);}
+}
+
+function stopScanSession(){
+  if(!scanSession) return;
+  if(scanUnsubscribe){scanUnsubscribe();scanUnsubscribe=null;}
+  window.dartDB?.deleteScanSession(scanSession).catch(()=>{});
+  scanSession=null;
+  document.getElementById("scan-host-bar").classList.remove("active");
+}
+
+async function onScanDartsReceived(data){
+  if(!data||data.status!=="confirmed"||!data.pendingDarts?.length) return;
+  document.getElementById("scan-host-status").textContent="📥 Verarbeite Würfe…";
+  for(const dart of data.pendingDarts){
+    if(x01.throws.length>=3||x01.winner||x01.bust) break;
+    processX01Hit({score:dart.score,label:dart.label,miss:dart.label==="Miss"||dart.score===0});
+    await new Promise(r=>setTimeout(r,450));
+  }
+  // Reset session for next round
+  const pi=x01.current??0;
+  await window.dartDB?.updateScanSession(scanSession,{
+    status:"active",pendingDarts:null,
+    currentPlayer:cfg.players?.[pi]||"Spieler",
+    remaining:x01.scores?.[pi]??0,
+    round:x01.round??1
+  }).catch(()=>{});
+  document.getElementById("scan-host-status").textContent="✓ Bereit";
+}
+
+// ── Remote (Phone) ──
+
+let scanRemoteCode=null;
+let scanRemoteUnsub=null;
+
+document.getElementById("scan-back").addEventListener("click",()=>{
+  if(scanRemoteUnsub){scanRemoteUnsub();scanRemoteUnsub=null;}
+  scanRemoteCode=null;
+  showScreen("setup");
+});
+
+document.getElementById("btn-scan-join").addEventListener("click",()=>{
+  // Reset scanner screen then navigate
+  document.getElementById("scan-connect-section").style.display="";
+  document.getElementById("scan-camera-section").style.display="none";
+  document.getElementById("scan-code-input").value="";
+  document.getElementById("scan-connect-error").textContent="";
+  document.getElementById("scan-preview-wrap").style.display="none";
+  document.getElementById("scan-status").textContent="";
+  showScreen("scan-remote");
+});
+
+document.getElementById("btn-scan-connect").addEventListener("click",async()=>{
+  const code=document.getElementById("scan-code-input").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  const errEl=document.getElementById("scan-connect-error");
+  if(code.length!==4){errEl.textContent="Bitte genau 4 Zeichen eingeben.";return;}
+  if(!window.dartDB){errEl.textContent="Datenbank nicht bereit.";return;}
+  errEl.textContent="";
+  try{
+    const session=await window.dartDB.getScanSession(code);
+    if(!session){errEl.textContent="Code nicht gefunden.";return;}
+    scanRemoteCode=code;
+    document.getElementById("scan-connect-section").style.display="none";
+    document.getElementById("scan-camera-section").style.display="";
+    updateScanRemoteInfo(session);
+    scanRemoteUnsub=window.dartDB.watchScanSession(code,d=>{if(d)updateScanRemoteInfo(d);});
+  }catch(e){errEl.textContent="Fehler: "+e.message;}
+});
+
+function updateScanRemoteInfo(s){
+  const el=document.getElementById("scan-game-info");
+  if(!el) return;
+  el.innerHTML=`<span style="color:#e8c44a;font-family:'Bebas Neue',sans-serif;font-size:18px">${s.currentPlayer||"Spieler"}</span>
+    <span style="color:#888;font-size:13px"> · </span>
+    <span style="color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px">${s.remaining??""}</span>
+    <span style="color:#555;font-size:12px"> · Runde ${s.round??""}</span>`;
+}
+
+document.getElementById("btn-scan-photo").addEventListener("click",()=>{
+  if(!scanRemoteCode){document.getElementById("scan-status").textContent="Nicht verbunden.";return;}
+  document.getElementById("scan-photo-input").click();
+});
+
+document.getElementById("scan-photo-input").addEventListener("change",async e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const statusEl=document.getElementById("scan-status");
+  const photoBtn=document.getElementById("btn-scan-photo");
+  statusEl.textContent="⏳ Analysiere Bild…";
+  photoBtn.textContent="⏳";
+  document.getElementById("scan-preview-wrap").style.display="none";
+  try{
+    const b64=await compressScanPhoto(file);
+    document.getElementById("scan-preview-img").src="data:image/jpeg;base64,"+b64;
+    document.getElementById("scan-preview-wrap").style.display="";
+    statusEl.textContent="⏳ KI erkennt Pfeile…";
+    const darts=await analyzeDartsPhoto(b64);
+    photoBtn.textContent="📸";
+    const det=document.getElementById("scan-detected");
+    if(!darts.length){
+      det.innerHTML=`<div style="color:#e53935;text-align:center;padding:8px">Keine Pfeile erkannt — erneut versuchen</div>`;
+      statusEl.textContent="";
+      document.getElementById("btn-scan-confirm").dataset.darts="";
+      return;
+    }
+    const total=darts.reduce((s,d)=>s+d.score,0);
+    det.innerHTML=`<div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px">
+      ${darts.map(d=>`<div class="scan-dart-card">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#e8c44a">${d.label}</div>
+        <div style="font-size:11px;color:#aaa">${d.score}</div>
+      </div>`).join("")}
+    </div>
+    <div style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:24px;color:#fff">∑ ${total}</div>`;
+    document.getElementById("btn-scan-confirm").dataset.darts=JSON.stringify(darts);
+    statusEl.textContent="";
+  }catch(err){
+    statusEl.textContent="Fehler: "+err.message;
+    photoBtn.textContent="📸";
+  }
+  e.target.value="";
+});
+
+document.getElementById("btn-scan-retry").addEventListener("click",()=>{
+  document.getElementById("scan-preview-wrap").style.display="none";
+  document.getElementById("scan-status").textContent="";
+  document.getElementById("btn-scan-photo").textContent="📸";
+  document.getElementById("btn-scan-confirm").dataset.darts="";
+});
+
+document.getElementById("btn-scan-confirm").addEventListener("click",async()=>{
+  const dartsJson=document.getElementById("btn-scan-confirm").dataset.darts;
+  if(!dartsJson||!scanRemoteCode) return;
+  const darts=JSON.parse(dartsJson);
+  const btn=document.getElementById("btn-scan-confirm");
+  btn.disabled=true; btn.textContent="⏳ Sende…";
+  try{
+    await window.dartDB.updateScanSession(scanRemoteCode,{
+      status:"confirmed",pendingDarts:darts,submittedAt:Date.now()
+    });
+    document.getElementById("scan-preview-wrap").style.display="none";
+    document.getElementById("scan-status").textContent="✓ Gesendet — warte auf nächste Aufnahme";
+    document.getElementById("btn-scan-confirm").dataset.darts="";
+  }catch(e){
+    document.getElementById("scan-status").textContent="Fehler: "+e.message;
+  }finally{
+    btn.disabled=false; btn.textContent="✓ BESTÄTIGEN";
+  }
+});
+
+// Scanner mode start (from setup) — starts the game then creates scan session
+document.getElementById("btn-start-scanner").addEventListener("click",async()=>{
+  // Reuse the same validation + start flow as btn-start
+  document.getElementById("btn-start").click();
+  // After game screen appears, open scan session
+  setTimeout(async()=>{ if(scanSession===null) await startScanSession(); }, 400);
+});
 
 // ── Auth screen listeners ─────────────────────────────────────────
 function authError(id, msg){ const el=document.getElementById(id); if(el) el.textContent=msg||""; }
