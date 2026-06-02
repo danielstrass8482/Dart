@@ -333,7 +333,7 @@ function updateAuthUI(user){
   @media (orientation: landscape) {
     .game-body { flex-direction: row; }
     .board-wrap { flex: 1; height: 100%; min-width: 0; }
-    .board-wrap svg { width: auto; height: 100%; max-height: 100vh; max-width: calc(100vw - 200px); }
+    .board-wrap svg { width: auto; height: 100%; max-height: 100%; max-width: calc(100vw - 200px); }
     .score-strip { display: none !important; }
     .bottom-bar { display: none !important; }
     .landscape-panel { display: flex !important; }
@@ -2040,6 +2040,26 @@ function lockLandscape(){
 function unlockOrientation(){
   try{ screen.orientation.unlock(); }catch(e){}
 }
+function requestFullscreen(){
+  const el=document.documentElement;
+  try{ (el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen)?.call(el); }catch(e){}
+}
+function exitFullscreen(){
+  try{ (document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen)?.call(document); }catch(e){}
+}
+
+// Play Game On only once landscape is confirmed (avoids playing mid-rotation)
+function gameOnWhenLandscape(){
+  if(!window.matchMedia("(orientation:portrait)").matches){
+    setTimeout(()=>speakKeyWithCustom("game_on","Game on!"), 300);
+    return;
+  }
+  let done=false;
+  const fire=()=>{ if(done) return; done=true; setTimeout(()=>speakKeyWithCustom("game_on","Game on!"),300); };
+  const handler=()=>{ if(!window.matchMedia("(orientation:portrait)").matches){ window.removeEventListener("orientationchange",handler); fire(); } };
+  window.addEventListener("orientationchange",handler);
+  setTimeout(()=>{ window.removeEventListener("orientationchange",handler); fire(); }, 6000); // fallback
+}
 function updateRotateOverlay(){
   const active = document.querySelector(".screen.active");
   const isGame = active && GAME_SCREENS.has(active.id);
@@ -2051,8 +2071,8 @@ function updateRotateOverlay(){
 function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-  if(GAME_SCREENS.has(id)) lockLandscape();
-  else unlockOrientation();
+  if(GAME_SCREENS.has(id)){ lockLandscape(); requestFullscreen(); }
+  else{ unlockOrientation(); exitFullscreen(); }
   updateRotateOverlay();
 }
 
@@ -2286,7 +2306,7 @@ function startX01(starter=0){
   clearHits(boardSVG);
   renderX01();
   showScreen("x01");
-  setTimeout(()=>speakKeyWithCustom("game_on","Game on!"),500);
+  gameOnWhenLandscape();
   prewarmElevenLabs();
   if(cfg.isBot?.[x01.current]) setTimeout(runBotTurn,800);
 }
