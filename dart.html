@@ -971,7 +971,7 @@ function updateAuthUI(user){
   <div class="game-body">
     <!-- Board — takes all available space -->
     <div class="board-wrap">
-      <svg id="board-svg" viewBox="0 0 530 530"></svg>
+      <svg id="board-svg" viewBox="36 36 458 458"></svg>
     </div>
 
     <!-- Landscape right panel -->
@@ -1028,7 +1028,7 @@ function updateAuthUI(user){
 
   <div class="game-body">
     <div class="board-wrap">
-      <svg id="board-svg-cricket" viewBox="0 0 530 530"></svg>
+      <svg id="board-svg-cricket" viewBox="36 36 458 458"></svg>
     </div>
     <div class="side-panel">
       <div class="panel-box">
@@ -1063,7 +1063,7 @@ function updateAuthUI(user){
 
   <div class="game-body">
     <div class="board-wrap">
-      <svg id="board-svg-party" viewBox="0 0 530 530"></svg>
+      <svg id="board-svg-party" viewBox="36 36 458 458"></svg>
     </div>
     <div class="side-panel">
       <div class="panel-box">
@@ -1170,7 +1170,7 @@ const R = {
   dblOut:  200,
   numR:    216,
   board:   228,
-  miss:    258   // clickable miss zone outer edge
+  miss:    229   // half the original miss zone (was 258); viewBox crops to match
 };
 const CX=265, CY=265;
 const CRICKET_TARGETS = [20,19,18,17,16,15,25];
@@ -5137,7 +5137,7 @@ async function loadAndRenderStats(){
     if(allScatter.length){
       html+=`<div class="stats-section-title">TREFFERBILD (${Math.min(allScatter.length,600)} Würfe)</div>
         <div class="scatter-wrap">
-          <svg id="scatter-svg" viewBox="0 0 530 530" style="display:block;width:100%;max-width:500px;max-height:500px;border-radius:8px;background:#0a0a0f;margin:0 auto"></svg>
+          <svg id="scatter-svg" viewBox="36 36 458 458" style="display:block;width:100%;max-width:500px;max-height:500px;border-radius:8px;background:#0a0a0f;margin:0 auto"></svg>
         </div>`;
     }
 
