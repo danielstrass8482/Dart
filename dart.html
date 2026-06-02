@@ -147,32 +147,6 @@ function initDartDB(){
     async saveGlobalVoices(voices){
       await setDoc(doc(db,"dart_config","voices"),{voices});
     },
-    // Dart Scanner sessions
-    async createScanSession(code, data){
-      await setDoc(doc(db,"dart_scan_sessions",code),{...data,code});
-    },
-    async getScanSession(code){
-      const snap=await getDoc(doc(db,"dart_scan_sessions",code));
-      return snap.exists()?snap.data():null;
-    },
-    async updateScanSession(code,data){
-      return updateDoc(doc(db,"dart_scan_sessions",code),data);
-    },
-    watchScanSession(code,cb){
-      return onSnapshot(doc(db,"dart_scan_sessions",code),snap=>{
-        cb(snap.exists()?snap.data():null);
-      });
-    },
-    async deleteScanSession(code){
-      try{await fsDeleteDoc(doc(db,"dart_scan_sessions",code));}catch(e){}
-    },
-    async saveScanFeedback(wrong,correct,note){
-      return addDoc(collection(db,"dart_scan_feedback"),{wrong,correct,note:note||"",ts:Date.now()});
-    },
-    async loadScanFeedback(){
-      const snap=await getDocs(query(collection(db,"dart_scan_feedback"),orderBy("ts","desc"),limit(4)));
-      return snap.docs.map(d=>d.data());
-    },
     async saveUserVoice(voiceId){
       const uid=auth.currentUser?.uid;
       if(!uid) return;
@@ -585,20 +559,6 @@ function updateAuthUI(user){
   .coach-box .coach-header { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
     color:#e8c44a; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
   .coach-limit { font-size:11px; color:#aaa; text-align:center; margin-top:6px; }
-  /* ── Dart Scanner ── */
-  .scan-host-bar { display:none; background:#1a0a00; border-bottom:1px solid #c77700;
-    padding:6px 14px; flex-shrink:0; flex-direction:row; align-items:center;
-    justify-content:space-between; gap:12px; }
-  .scan-host-bar.active { display:flex; }
-  .scan-code-badge { font-family:'Bebas Neue',sans-serif; font-size:28px;
-    letter-spacing:8px; color:#e8c44a; }
-  .scan-dart-card { background:#2a2a2a; border-radius:8px; padding:8px 12px;
-    text-align:center; min-width:60px; }
-  .scan-fix-input { flex:1; padding:10px 6px; background:#222; color:#fff; border:1px solid #555;
-    border-radius:8px; font-family:'Bebas Neue',sans-serif; font-size:18px; text-align:center;
-    text-transform:uppercase; }
-  .scan-fix-input::placeholder { color:#555; font-size:14px; }
-  .scan-fix-input:focus { outline:none; border-color:#e8c44a; }
   @keyframes rotate-hint {
     0%,100% { transform: rotate(0deg); }
     50%      { transform: rotate(90deg); }
@@ -795,15 +755,22 @@ function updateAuthUI(user){
       <button class="btn-toggle" data-value="pro">🤖 Profi</button>
     </div>
 
+    <div id="bot-personality-section" style="display:none">
+      <label class="field-label" style="margin-top:8px">PERSÖNLICHKEIT</label>
+      <div class="btn-group" id="bot-personality-group" style="flex-wrap:wrap">
+        <button class="btn-toggle active" data-value="methodisch">🎯 Methodisch</button>
+        <button class="btn-toggle" data-value="uebermuetig">💪 Übermütig</button>
+        <button class="btn-toggle" data-value="nervoese">😰 Nervös</button>
+        <button class="btn-toggle" data-value="gluecksspieler">🎰 Glücksspieler</button>
+        <button class="btn-toggle" data-value="kaltbluetig">🧊 Kaltblütig</button>
+        <button class="btn-toggle" data-value="aufholer">📉 Aufholer</button>
+      </div>
+      <div id="bot-personality-desc" style="color:#888;font-size:11px;text-align:center;margin-top:4px;min-height:14px">
+        Spielt immer optimal und konstant
+      </div>
+    </div>
+
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
-    <button class="btn-start" id="btn-start-scanner"
-      style="background:#1a1a1a;color:#e8c44a;border:1px solid #444;margin-top:6px;font-size:15px">
-      📱 MIT HANDY-SCANNER STARTEN
-    </button>
-    <button class="btn-start" id="btn-scan-join"
-      style="background:#f5f5f0;color:#555;border:1px solid #ddd;margin-top:4px;font-size:14px">
-      Als Scanner verbinden
-    </button>
   </div><!-- end setup-card -->
   </div><!-- end inner scroll -->
   </div><!-- end tab-play -->
@@ -1016,104 +983,8 @@ function updateAuthUI(user){
   </div>
 </div>
 
-<!-- ═══════════════════════ SCANNER REMOTE SCREEN ═══════════════════════ -->
-<div id="scan-remote" class="screen" style="flex-direction:column;background:#111">
-  <div class="game-header">
-    <button class="btn-nav" id="scan-back">← Zurück</button>
-    <div class="game-title">📱 DART SCANNER</div>
-    <div style="width:60px"></div>
-  </div>
-  <div style="flex:1;overflow-y:auto;background:#1a1a1a;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px">
-
-    <!-- Connect section -->
-    <div id="scan-connect-section" style="width:100%;max-width:400px">
-      <div style="color:#aaa;font-size:13px;margin-bottom:12px;text-align:center">
-        Verbindungscode vom Tablet eingeben
-      </div>
-      <input id="scan-code-input" maxlength="4" placeholder="ABCD"
-        style="width:100%;padding:16px;font-size:36px;font-family:'Bebas Neue',sans-serif;
-        letter-spacing:10px;text-align:center;border:2px solid #333;border-radius:10px;
-        background:#222;color:#fff;box-sizing:border-box;text-transform:uppercase">
-      <button id="btn-scan-connect"
-        style="width:100%;margin-top:10px;padding:14px;background:#e8c44a;border:none;
-        border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:20px;cursor:pointer">
-        VERBINDEN
-      </button>
-      <div id="scan-connect-error"
-        style="color:#e53935;font-size:12px;text-align:center;margin-top:8px;min-height:16px"></div>
-    </div>
-
-    <!-- Camera section -->
-    <div id="scan-camera-section" style="display:none;width:100%;max-width:400px">
-      <div id="scan-game-info"
-        style="background:#222;border-radius:8px;padding:10px 14px;margin-bottom:12px;text-align:center"></div>
-      <input type="file" id="scan-photo-input" accept="image/*" capture="environment" style="display:none">
-      <button id="btn-scan-photo"
-        style="width:100%;padding:28px;background:#222;border:2px dashed #444;border-radius:14px;
-        font-size:56px;cursor:pointer;margin-bottom:10px">📸</button>
-      <div id="scan-preview-wrap" style="display:none">
-        <img id="scan-preview-img" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:280px;object-fit:cover">
-        <div id="scan-detected" style="background:#222;border-radius:8px;padding:12px;margin-bottom:8px"></div>
-        <!-- Correction area (hidden until user taps "KI WAR FALSCH") -->
-        <div id="scan-correct-area" style="display:none;background:#1a1a1a;border:1px solid #444;
-          border-radius:8px;padding:10px;margin-bottom:8px">
-          <div style="color:#aaa;font-size:11px;text-align:center;margin-bottom:8px;letter-spacing:0.5px">
-            RICHTIGE FELDER EINGEBEN (leer = kein Pfeil)
-          </div>
-          <div style="display:flex;gap:6px;margin-bottom:6px">
-            <input id="scan-fix-1" class="scan-fix-input" placeholder="Pfeil 1" maxlength="5">
-            <input id="scan-fix-2" class="scan-fix-input" placeholder="Pfeil 2" maxlength="5">
-            <input id="scan-fix-3" class="scan-fix-input" placeholder="Pfeil 3" maxlength="5">
-          </div>
-          <div style="color:#555;font-size:10px;text-align:center;margin-bottom:8px">
-            T20 = Triple 20 · D16 = Double 16 · 20 = Single 20 · Bull · 25 · M = Miss
-          </div>
-          <button id="btn-scan-fix-send"
-            style="width:100%;padding:11px;background:#c0392b;color:#fff;border:none;
-            border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer">
-            KORREKTUR SENDEN + FEEDBACK SPEICHERN
-          </button>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:6px">
-          <button id="btn-scan-retry"
-            style="flex:1;padding:12px;background:#333;color:#fff;border:none;
-            border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer">
-            ↩ NEU
-          </button>
-          <button id="btn-scan-confirm"
-            style="flex:2;padding:12px;background:#e8c44a;color:#000;border:none;
-            border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:18px;cursor:pointer">
-            ✓ BESTÄTIGEN
-          </button>
-        </div>
-        <button id="btn-scan-wrong"
-          style="width:100%;padding:9px;background:none;color:#888;border:1px solid #444;
-          border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">
-          ✏️ KI WAR FALSCH
-        </button>
-      </div>
-      <div id="scan-status"
-        style="color:#aaa;font-size:13px;text-align:center;margin-top:8px;min-height:20px"></div>
-    </div>
-
-  </div>
-</div>
-
 <!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
 <div id="x01" class="screen" style="flex-direction:column;background:#111">
-  <!-- Scanner host banner (shown when tablet is in scanner mode) -->
-  <div class="scan-host-bar" id="scan-host-bar">
-    <div>
-      <div style="font-size:10px;color:#c77700;letter-spacing:1px">SCANNER AKTIV</div>
-      <div class="scan-code-badge" id="scan-host-code">----</div>
-    </div>
-    <div id="scan-host-status" style="color:#aaa;font-size:12px;flex:1;text-align:center">
-      Warte auf Handy…
-    </div>
-    <button onclick="stopScanSession()"
-      style="background:none;border:1px solid #555;color:#888;padding:5px 10px;
-      border-radius:6px;font-size:12px;cursor:pointer">✕ Ende</button>
-  </div>
   <div class="game-header">
     <button class="btn-nav" id="x01-back">← Zurück</button>
     <div class="game-title" id="x01-title">501 · Runde 1</div>
@@ -2134,10 +2005,29 @@ document.getElementById("rounds-group")?.addEventListener("click",e=>{
 });
 
 let selectedBot="none";
+let selectedPersonality="methodisch";
+
+const BOT_PERSONALITY_DESCS = {
+  methodisch:"Spielt immer optimal und konstant",
+  uebermuetig:"Zielt immer auf T20, ignoriert bessere Optionen",
+  nervoese:"Verliert Konzentration wenn es drauf ankommt",
+  gluecksspieler:"Zielt immer auf Maximum, riskiert Bust",
+  kaltbluetig:"Wird besser unter Druck",
+  aufholer:"Kämpft sich von hinten vor"
+};
+
 document.getElementById("bot-group").addEventListener("click",e=>{
   if(!e.target.dataset.value) return;
   selectedBot=e.target.dataset.value;
   document.querySelectorAll("#bot-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedBot));
+  document.getElementById("bot-personality-section").style.display=selectedBot==="none"?"none":"";
+});
+
+document.getElementById("bot-personality-group").addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedPersonality=e.target.dataset.value;
+  document.querySelectorAll("#bot-personality-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedPersonality));
+  document.getElementById("bot-personality-desc").textContent=BOT_PERSONALITY_DESCS[selectedPersonality]||"";
 });
 
 document.getElementById("btn-start").addEventListener("click",()=>{
@@ -2150,8 +2040,9 @@ document.getElementById("btn-start").addEventListener("click",()=>{
   isBot.length=players.length; isBot.fill(false);
 
   if(selectedBot!=="none"){
-    const botName=selectedBot==="easy"?"Bot (Anfänger)":selectedBot==="medium"?"Bot (Mittel)":"Bot (Profi)";
-    players.push(botName);
+    const levelName=selectedBot==="easy"?"Anfänger":selectedBot==="medium"?"Mittel":"Profi";
+    const pName=(BOT_PERSONALITIES[selectedPersonality]?.name||"🎯 Methodisch").split(" ").slice(0,2).join(" ");
+    players.push(`${pName} Bot (${levelName})`);
     playerIds.push(null);
     isBot.push(true);
   }
@@ -2164,6 +2055,7 @@ document.getElementById("btn-start").addEventListener("click",()=>{
     playerObjects:[...selectedPlayers],
     isBot,
     botLevel:selectedBot,
+    botPersonality:selectedBot!=="none"?selectedPersonality:"methodisch",
     // Sets
     totalSets:selectedSets,
     setsToWin:Math.ceil(selectedSets/2),
@@ -2248,6 +2140,77 @@ document.getElementById("btn-new-game").addEventListener("click",showSetup);
 // Accuracy per level: probability of hitting intended segment
 const BOT_ACCURACY={ easy:0.22, medium:0.52, pro:0.82 };
 
+const BOT_PERSONALITIES = {
+  methodisch: {
+    name: "🎯 Methodisch",
+    description: "Spielt immer optimal und konstant",
+    baseAccuracy: { easy: 0.22, medium: 0.52, pro: 0.82 },
+    targetModifier: (remaining, opponentRemaining, target) => target,
+    accuracyModifier: (base, remaining, opponentRemaining) => base
+  },
+  uebermuetig: {
+    name: "💪 Übermütig",
+    description: "Zielt immer auf T20, ignoriert bessere Optionen",
+    baseAccuracy: { easy: 0.28, medium: 0.58, pro: 0.75 },
+    targetModifier: (remaining, opponentRemaining, target) => {
+      if(remaining > 32) return { num: 20, ring: "triple" };
+      return target;
+    },
+    accuracyModifier: (base, remaining, opponentRemaining) => {
+      return Math.random() < 0.3 ? base * 1.4 : base * 0.7;
+    }
+  },
+  nervoese: {
+    name: "😰 Nervös",
+    description: "Verliert Konzentration wenn es drauf ankommt",
+    baseAccuracy: { easy: 0.25, medium: 0.55, pro: 0.85 },
+    accuracyModifier: (base, remaining, opponentRemaining) => {
+      if(opponentRemaining <= 170) return base * 0.5;
+      if(remaining <= 170) return base * 0.65;
+      return base;
+    }
+  },
+  gluecksspieler: {
+    name: "🎰 Glücksspieler",
+    description: "Zielt immer auf Maximum, riskiert Bust",
+    baseAccuracy: { easy: 0.20, medium: 0.45, pro: 0.70 },
+    targetModifier: (remaining, opponentRemaining, target) => {
+      if(remaining <= 60 && remaining % 2 === 0)
+        return { num: remaining/2, ring: "double" };
+      return { num: 20, ring: "triple" };
+    },
+    accuracyModifier: (base) => {
+      const roll = Math.random();
+      if(roll < 0.2) return base * 2.0;
+      if(roll < 0.5) return base * 0.4;
+      return base;
+    }
+  },
+  kaltbluetig: {
+    name: "🧊 Kaltblütig",
+    description: "Wird besser unter Druck",
+    baseAccuracy: { easy: 0.18, medium: 0.45, pro: 0.75 },
+    accuracyModifier: (base, remaining, opponentRemaining) => {
+      if(opponentRemaining <= 170) return base * 1.5;
+      if(remaining <= 170) return base * 1.3;
+      return base;
+    }
+  },
+  aufholer: {
+    name: "📉 Aufholer",
+    description: "Kämpft sich von hinten vor",
+    baseAccuracy: { easy: 0.20, medium: 0.48, pro: 0.78 },
+    accuracyModifier: (base, remaining, opponentRemaining) => {
+      const diff = remaining - opponentRemaining;
+      if(diff > 100) return base * 1.4;
+      if(diff > 50) return base * 1.2;
+      if(diff < -100) return base * 0.6;
+      if(diff < -50) return base * 0.8;
+      return base;
+    }
+  }
+};
+
 // Optimal target selection for x01
 function botChooseTarget(remaining, level){
   // Checkout phase (≤170): use checkout table, aim for the first dart
@@ -2282,30 +2245,33 @@ function parseTargetString(s){
 }
 
 // Simulate a single bot throw given a target and accuracy
-function botThrow(remaining, level){
-  const acc=BOT_ACCURACY[level]||0.5;
-  const target=botChooseTarget(remaining, level);
-  const rand=Math.random();
+function botThrow(remaining, level, personality){
+  const p = BOT_PERSONALITIES[personality] || BOT_PERSONALITIES.methodisch;
+  const opponentIdx = cfg.players.findIndex((_,i) => i !== x01.current && !cfg.isBot?.[i]);
+  const opponentRemaining = opponentIdx >= 0 ? x01.scores[opponentIdx] : 999;
 
-  if(rand<acc){
-    // Hit intended target
+  const baseAcc = (p.baseAccuracy?.[level]) ?? (BOT_ACCURACY[level] ?? 0.5);
+  let target = botChooseTarget(remaining, level);
+  if(p.targetModifier) target = p.targetModifier(remaining, opponentRemaining, target);
+  const acc = p.accuracyModifier
+    ? Math.min(0.95, Math.max(0.05, p.accuracyModifier(baseAcc, remaining, opponentRemaining)))
+    : baseAcc;
+
+  if(Math.random() < acc){
     return makeBotHit(target);
   }
 
   // Miss — land somewhere nearby or random
   const missRand=Math.random();
   if(missRand<0.5){
-    // Adjacent sector
     const idx=SECTORS.indexOf(target.num);
     const adj=SECTORS[(idx+(Math.random()<0.5?1:-1)+20)%20];
     return makeBotHit({num:adj,ring:target.ring==="triple"?"single":target.ring});
   } else if(missRand<0.75){
-    // Same sector, wrong ring
     const rings=["single","single","double","triple"];
     const ring=rings[Math.floor(Math.random()*rings.length)];
     return makeBotHit({num:target.num,ring});
   } else {
-    // Random segment, single
     return makeBotHit({num:SECTORS[Math.floor(Math.random()*20)],ring:"single"});
   }
 }
@@ -2326,28 +2292,27 @@ function wouldBust(remaining, throwScore){
 }
 
 // Generate a full bot turn (3 throws), respecting bust rules
-function botTakeTurn(remaining, level){
+function botTakeTurn(remaining, level, personality){
+  const p = BOT_PERSONALITIES[personality] || BOT_PERSONALITIES.methodisch;
+  const baseAcc = (p.baseAccuracy?.[level]) ?? (BOT_ACCURACY[level] ?? 0.5);
   const throws=[];
   let rem=remaining;
   for(let i=0;i<3;i++){
-    const t=botThrow(rem,level);
-    // Bust check
+    const t=botThrow(rem,level,personality);
     const after=rem-t.score;
     if(after<0||after===1){
-      // Try double-only safe throw if in checkout range
       if(rem<=40&&rem%2===0){
         const safeHit=makeBotHit({num:rem/2,ring:"double"});
-        if(Math.random()<BOT_ACCURACY[level]){
-          throws.push(safeHit); break; // checkout!
+        if(Math.random()<baseAcc){
+          throws.push(safeHit); break;
         }
       }
-      // Miss intentionally to avoid bust
       throws.push({score:0,label:"Miss",svgX:null,svgY:null,miss:true});
       break;
     }
     throws.push(t);
     rem=after;
-    if(rem===0) break; // won!
+    if(rem===0) break;
   }
   return throws;
 }
@@ -2356,11 +2321,12 @@ function botTakeTurn(remaining, level){
 function runBotTurn(){
   const botIdx=x01.current;
   const level=cfg.botLevel||"medium";
+  const personality=cfg.botPersonality||"methodisch";
   let rem=x01.scores[botIdx];
 
   disableBoard(boardSVG,true);
 
-  const turns=botTakeTurn(rem,level);
+  const turns=botTakeTurn(rem,level,personality);
   let delay=600;
 
   turns.forEach((t,i)=>{
@@ -2847,7 +2813,6 @@ function processX01Hit(hit, svgX=null, svgY=null){
 
 function handleX01Click(e){
   e.preventDefault();
-  if(scanSession) return; // board disabled in scanner host mode
   if(e.pointerType==="mouse"&&e.button!==0) return;
   if(x01.winner||x01.bust||x01.throws.length>=3) return;
   const {x,y}=svgCoords(boardSVG,e);
@@ -4936,307 +4901,6 @@ document.getElementById("btn-voice-new-add").addEventListener("click",()=>{
 
 document.getElementById("btn-voice-sync").addEventListener("click",()=>syncVoicesFromFirestore());
 
-// ── Dart Scanner (Second Device) ─────────────────────────────────
-// TODO: Premium Feature — unlock via subscription; currently open for testing
-
-let scanSession = null;      // session code when tablet is host
-let scanUnsubscribe = null;  // Firestore listener cleanup
-
-function genScanCode(){
-  return Math.random().toString(36).substring(2,6).toUpperCase();
-}
-
-async function compressScanPhoto(file){
-  return new Promise((resolve,reject)=>{
-    const img=new Image();
-    const url=URL.createObjectURL(file);
-    img.onload=()=>{
-      URL.revokeObjectURL(url);
-      const maxPx=1800;
-      let w=img.width,h=img.height;
-      if(w>maxPx||h>maxPx){ if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;} }
-      const c=document.createElement("canvas"); c.width=w; c.height=h;
-      c.getContext("2d").drawImage(img,0,0,w,h);
-      resolve(c.toDataURL("image/jpeg",0.88).split(",")[1]);
-    };
-    img.onerror=reject; img.src=url;
-  });
-}
-
-function parseDartLabel(raw){
-  const s=(raw||"").trim().toUpperCase();
-  if(!s||s==="M"||s==="MISS"||s==="0") return {label:"Miss",score:0};
-  if(s==="BULL"||s==="50") return {label:"Bull",score:50};
-  if(s==="25") return {label:"25",score:25};
-  const t=s.match(/^T(\d+)$/);
-  if(t){const n=parseInt(t[1]);if(n>=1&&n<=20)return{label:`T${n}`,score:n*3};}
-  const d=s.match(/^D(\d+)$/);
-  if(d){const n=parseInt(d[1]);if(n>=1&&n<=20)return{label:`D${n}`,score:n*2};}
-  const n=parseInt(s);
-  if(!isNaN(n)&&n>=1&&n<=20) return {label:`${n}`,score:n};
-  return null;
-}
-
-async function analyzeDartsPhoto(base64){
-  let feedbackLines="";
-  try{
-    const fb=await window.dartDB?.loadScanFeedback();
-    if(fb?.length){
-      feedbackLines="\n\nPrevious corrections from this user (learn from these):\n"+
-        fb.map(f=>`- AI returned ${JSON.stringify(f.wrong)} but correct was ${JSON.stringify(f.correct)}`+
-          (f.note?` (note: "${f.note}")`:"")).join("\n")+"\n";
-    }
-  }catch(e){}
-
-  const prompt=`You are analyzing a dartboard photo to count and score every dart.
-
-STEP 1 — COUNT SHAFTS: Scan the entire board carefully. Darts are metallic cylinders (barrel + shaft) sticking out of the board. Flights (feather-like fins) at the back help spot darts. Even if 2–3 darts are very close together or clustered in the same segment, count each physical dart separately.
-
-STEP 2 — IDENTIFY EACH DART: For each dart, find where its TIP enters the scoring surface.
-- Scoring rings from center outward: Bullseye (Bull, 50pts) → Outer Bull (25, 25pts) → Single → Triple → Single → Double (outermost ring)
-- Segments clockwise from top: 20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5
-- Labels: T=triple, D=double, no prefix=single
-
-STEP 3 — OUTPUT: Return ONLY a valid JSON array, no explanation, no markdown. Max 3 entries.
-Format: [{"label":"T20","score":60},{"label":"D16","score":32},{"label":"1","score":1}]
-No darts visible: []
-
-CRITICAL: Never merge two separate darts into one entry. If you see 3 dart shafts, return 3 entries.${feedbackLines}`;
-
-  const content=[
-    {type:"text",text:prompt},
-    {type:"image",source:{type:"base64",media_type:"image/jpeg",data:base64}}
-  ];
-  const data=await callClaudeViaProxy([{role:"user",content}]);
-  const text=data.content?.[0]?.text||"[]";
-  const m=text.match(/\[[\s\S]*?\]/);
-  if(!m) return [];
-  try{return JSON.parse(m[0]);}catch(e){return [];}
-}
-
-// ── Host (Tablet) ──
-
-async function startScanSession(){
-  if(!window.dartDB){alert("Datenbank nicht bereit");return;}
-  const code=genScanCode();
-  try{
-    await window.dartDB.createScanSession(code,{
-      gameMode:cfg.mode||"x01",
-      currentPlayer:cfg.players?.[x01?.current??0]||"Spieler 1",
-      remaining:x01?.scores?.[x01?.current??0]??cfg.start??501,
-      round:x01?.round??1,
-      status:"active",
-      pendingDarts:null,
-      createdAt:Date.now()
-    });
-    scanSession=code;
-    document.getElementById("scan-host-code").textContent=code;
-    document.getElementById("scan-host-bar").classList.add("active");
-    document.getElementById("scan-host-status").textContent="Warte auf Handy…";
-    scanUnsubscribe=window.dartDB.watchScanSession(code,onScanDartsReceived);
-  }catch(e){alert("Fehler: "+e.message);}
-}
-
-function stopScanSession(){
-  if(!scanSession) return;
-  if(scanUnsubscribe){scanUnsubscribe();scanUnsubscribe=null;}
-  window.dartDB?.deleteScanSession(scanSession).catch(()=>{});
-  scanSession=null;
-  document.getElementById("scan-host-bar").classList.remove("active");
-}
-
-async function onScanDartsReceived(data){
-  if(!data||data.status!=="confirmed"||!data.pendingDarts?.length) return;
-  document.getElementById("scan-host-status").textContent="📥 Verarbeite Würfe…";
-  for(const dart of data.pendingDarts){
-    if(x01.throws.length>=3||x01.winner||x01.bust) break;
-    processX01Hit({score:dart.score,label:dart.label,miss:dart.label==="Miss"||dart.score===0});
-    await new Promise(r=>setTimeout(r,450));
-  }
-  // Reset session for next round
-  const pi=x01.current??0;
-  await window.dartDB?.updateScanSession(scanSession,{
-    status:"active",pendingDarts:null,
-    currentPlayer:cfg.players?.[pi]||"Spieler",
-    remaining:x01.scores?.[pi]??0,
-    round:x01.round??1
-  }).catch(()=>{});
-  document.getElementById("scan-host-status").textContent="✓ Bereit";
-}
-
-// ── Remote (Phone) ──
-
-let scanRemoteCode=null;
-let scanRemoteUnsub=null;
-
-document.getElementById("scan-back").addEventListener("click",()=>{
-  if(scanRemoteUnsub){scanRemoteUnsub();scanRemoteUnsub=null;}
-  scanRemoteCode=null;
-  showScreen("setup");
-});
-
-document.getElementById("btn-scan-join").addEventListener("click",()=>{
-  // Reset scanner screen then navigate
-  document.getElementById("scan-connect-section").style.display="";
-  document.getElementById("scan-camera-section").style.display="none";
-  document.getElementById("scan-code-input").value="";
-  document.getElementById("scan-connect-error").textContent="";
-  document.getElementById("scan-preview-wrap").style.display="none";
-  document.getElementById("scan-status").textContent="";
-  showScreen("scan-remote");
-});
-
-document.getElementById("btn-scan-connect").addEventListener("click",async()=>{
-  const code=document.getElementById("scan-code-input").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
-  const errEl=document.getElementById("scan-connect-error");
-  if(code.length!==4){errEl.textContent="Bitte genau 4 Zeichen eingeben.";return;}
-  if(!window.dartDB){errEl.textContent="Datenbank nicht bereit.";return;}
-  errEl.textContent="";
-  try{
-    const session=await window.dartDB.getScanSession(code);
-    if(!session){errEl.textContent="Code nicht gefunden.";return;}
-    scanRemoteCode=code;
-    document.getElementById("scan-connect-section").style.display="none";
-    document.getElementById("scan-camera-section").style.display="";
-    updateScanRemoteInfo(session);
-    scanRemoteUnsub=window.dartDB.watchScanSession(code,d=>{if(d)updateScanRemoteInfo(d);});
-  }catch(e){errEl.textContent="Fehler: "+e.message;}
-});
-
-function updateScanRemoteInfo(s){
-  const el=document.getElementById("scan-game-info");
-  if(!el) return;
-  el.innerHTML=`<span style="color:#e8c44a;font-family:'Bebas Neue',sans-serif;font-size:18px">${s.currentPlayer||"Spieler"}</span>
-    <span style="color:#888;font-size:13px"> · </span>
-    <span style="color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px">${s.remaining??""}</span>
-    <span style="color:#555;font-size:12px"> · Runde ${s.round??""}</span>`;
-}
-
-document.getElementById("btn-scan-photo").addEventListener("click",()=>{
-  if(!scanRemoteCode){document.getElementById("scan-status").textContent="Nicht verbunden.";return;}
-  document.getElementById("scan-photo-input").click();
-});
-
-document.getElementById("scan-photo-input").addEventListener("change",async e=>{
-  const file=e.target.files[0];
-  if(!file) return;
-  const statusEl=document.getElementById("scan-status");
-  const photoBtn=document.getElementById("btn-scan-photo");
-  statusEl.textContent="⏳ Analysiere Bild…";
-  photoBtn.textContent="⏳";
-  document.getElementById("scan-preview-wrap").style.display="none";
-  try{
-    const b64=await compressScanPhoto(file);
-    document.getElementById("scan-preview-img").src="data:image/jpeg;base64,"+b64;
-    document.getElementById("scan-preview-wrap").style.display="";
-    statusEl.textContent="⏳ KI erkennt Pfeile…";
-    const darts=await analyzeDartsPhoto(b64);
-    photoBtn.textContent="📸";
-    const det=document.getElementById("scan-detected");
-    document.getElementById("scan-correct-area").style.display="none";
-    document.getElementById("btn-scan-wrong").style.display="";
-    if(!darts.length){
-      det.innerHTML=`<div style="color:#e53935;text-align:center;padding:8px">Keine Pfeile erkannt — erneut versuchen</div>`;
-      statusEl.textContent="";
-      document.getElementById("btn-scan-confirm").dataset.darts="";
-      return;
-    }
-    const total=darts.reduce((s,d)=>s+d.score,0);
-    det.innerHTML=`<div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px">
-      ${darts.map(d=>`<div class="scan-dart-card">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#e8c44a">${d.label}</div>
-        <div style="font-size:11px;color:#aaa">${d.score}</div>
-      </div>`).join("")}
-    </div>
-    <div style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:24px;color:#fff">∑ ${total}</div>`;
-    document.getElementById("btn-scan-confirm").dataset.darts=JSON.stringify(darts);
-    statusEl.textContent="";
-  }catch(err){
-    statusEl.textContent="Fehler: "+err.message;
-    photoBtn.textContent="📸";
-  }
-  e.target.value="";
-});
-
-document.getElementById("btn-scan-retry").addEventListener("click",()=>{
-  document.getElementById("scan-preview-wrap").style.display="none";
-  document.getElementById("scan-status").textContent="";
-  document.getElementById("btn-scan-photo").textContent="📸";
-  document.getElementById("btn-scan-confirm").dataset.darts="";
-  document.getElementById("scan-correct-area").style.display="none";
-});
-
-document.getElementById("btn-scan-wrong").addEventListener("click",()=>{
-  const dartsJson=document.getElementById("btn-scan-confirm").dataset.darts;
-  const darts=dartsJson?JSON.parse(dartsJson):[];
-  // Pre-fill inputs with detected values
-  ["scan-fix-1","scan-fix-2","scan-fix-3"].forEach((id,i)=>{
-    document.getElementById(id).value=darts[i]?.label||"";
-  });
-  document.getElementById("scan-correct-area").style.display="";
-  document.getElementById("btn-scan-wrong").style.display="none";
-});
-
-document.getElementById("btn-scan-fix-send").addEventListener("click",async()=>{
-  const wrongJson=document.getElementById("btn-scan-confirm").dataset.darts;
-  const wrong=wrongJson?JSON.parse(wrongJson):[];
-  const correct=["scan-fix-1","scan-fix-2","scan-fix-3"]
-    .map(id=>document.getElementById(id).value)
-    .filter(v=>v.trim())
-    .map(v=>parseDartLabel(v))
-    .filter(Boolean);
-  if(!correct.length){
-    document.getElementById("scan-status").textContent="Mindestens ein Feld eingeben.";
-    return;
-  }
-  const btn=document.getElementById("btn-scan-fix-send");
-  btn.disabled=true; btn.textContent="⏳ Speichert…";
-  try{
-    await window.dartDB?.saveScanFeedback(wrong,correct,"");
-    // Send corrected darts to tablet
-    if(scanRemoteCode){
-      await window.dartDB.updateScanSession(scanRemoteCode,{
-        status:"confirmed",pendingDarts:correct,submittedAt:Date.now()
-      });
-    }
-    document.getElementById("scan-preview-wrap").style.display="none";
-    document.getElementById("scan-status").textContent="✓ Korrektur gespeichert + gesendet";
-    document.getElementById("btn-scan-confirm").dataset.darts="";
-    document.getElementById("scan-correct-area").style.display="none";
-  }catch(e){
-    document.getElementById("scan-status").textContent="Fehler: "+e.message;
-  }finally{
-    btn.disabled=false; btn.textContent="KORREKTUR SENDEN + FEEDBACK SPEICHERN";
-  }
-});
-
-document.getElementById("btn-scan-confirm").addEventListener("click",async()=>{
-  const dartsJson=document.getElementById("btn-scan-confirm").dataset.darts;
-  if(!dartsJson||!scanRemoteCode) return;
-  const darts=JSON.parse(dartsJson);
-  const btn=document.getElementById("btn-scan-confirm");
-  btn.disabled=true; btn.textContent="⏳ Sende…";
-  try{
-    await window.dartDB.updateScanSession(scanRemoteCode,{
-      status:"confirmed",pendingDarts:darts,submittedAt:Date.now()
-    });
-    document.getElementById("scan-preview-wrap").style.display="none";
-    document.getElementById("scan-status").textContent="✓ Gesendet — warte auf nächste Aufnahme";
-    document.getElementById("btn-scan-confirm").dataset.darts="";
-  }catch(e){
-    document.getElementById("scan-status").textContent="Fehler: "+e.message;
-  }finally{
-    btn.disabled=false; btn.textContent="✓ BESTÄTIGEN";
-  }
-});
-
-// Scanner mode start (from setup) — starts the game then creates scan session
-document.getElementById("btn-start-scanner").addEventListener("click",async()=>{
-  // Reuse the same validation + start flow as btn-start
-  document.getElementById("btn-start").click();
-  // After game screen appears, open scan session
-  setTimeout(async()=>{ if(scanSession===null) await startScanSession(); }, 400);
-});
 
 // ── Auth screen listeners ─────────────────────────────────────────
 function authError(id, msg){ const el=document.getElementById(id); if(el) el.textContent=msg||""; }
