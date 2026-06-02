@@ -166,6 +166,13 @@ function initDartDB(){
     async deleteScanSession(code){
       try{await fsDeleteDoc(doc(db,"dart_scan_sessions",code));}catch(e){}
     },
+    async saveScanFeedback(wrong,correct,note){
+      return addDoc(collection(db,"dart_scan_feedback"),{wrong,correct,note:note||"",ts:Date.now()});
+    },
+    async loadScanFeedback(){
+      const snap=await getDocs(query(collection(db,"dart_scan_feedback"),orderBy("ts","desc"),limit(4)));
+      return snap.docs.map(d=>d.data());
+    },
     async saveUserVoice(voiceId){
       const uid=auth.currentUser?.uid;
       if(!uid) return;
@@ -587,6 +594,11 @@ function updateAuthUI(user){
     letter-spacing:8px; color:#e8c44a; }
   .scan-dart-card { background:#2a2a2a; border-radius:8px; padding:8px 12px;
     text-align:center; min-width:60px; }
+  .scan-fix-input { flex:1; padding:10px 6px; background:#222; color:#fff; border:1px solid #555;
+    border-radius:8px; font-family:'Bebas Neue',sans-serif; font-size:18px; text-align:center;
+    text-transform:uppercase; }
+  .scan-fix-input::placeholder { color:#555; font-size:14px; }
+  .scan-fix-input:focus { outline:none; border-color:#e8c44a; }
   @keyframes rotate-hint {
     0%,100% { transform: rotate(0deg); }
     50%      { transform: rotate(90deg); }
@@ -1041,8 +1053,28 @@ function updateAuthUI(user){
         font-size:56px;cursor:pointer;margin-bottom:10px">📸</button>
       <div id="scan-preview-wrap" style="display:none">
         <img id="scan-preview-img" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:280px;object-fit:cover">
-        <div id="scan-detected" style="background:#222;border-radius:8px;padding:12px;margin-bottom:10px"></div>
-        <div style="display:flex;gap:8px">
+        <div id="scan-detected" style="background:#222;border-radius:8px;padding:12px;margin-bottom:8px"></div>
+        <!-- Correction area (hidden until user taps "KI WAR FALSCH") -->
+        <div id="scan-correct-area" style="display:none;background:#1a1a1a;border:1px solid #444;
+          border-radius:8px;padding:10px;margin-bottom:8px">
+          <div style="color:#aaa;font-size:11px;text-align:center;margin-bottom:8px;letter-spacing:0.5px">
+            RICHTIGE FELDER EINGEBEN (leer = kein Pfeil)
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <input id="scan-fix-1" class="scan-fix-input" placeholder="Pfeil 1" maxlength="5">
+            <input id="scan-fix-2" class="scan-fix-input" placeholder="Pfeil 2" maxlength="5">
+            <input id="scan-fix-3" class="scan-fix-input" placeholder="Pfeil 3" maxlength="5">
+          </div>
+          <div style="color:#555;font-size:10px;text-align:center;margin-bottom:8px">
+            T20 = Triple 20 · D16 = Double 16 · 20 = Single 20 · Bull · 25 · M = Miss
+          </div>
+          <button id="btn-scan-fix-send"
+            style="width:100%;padding:11px;background:#c0392b;color:#fff;border:none;
+            border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer">
+            KORREKTUR SENDEN + FEEDBACK SPEICHERN
+          </button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:6px">
           <button id="btn-scan-retry"
             style="flex:1;padding:12px;background:#333;color:#fff;border:none;
             border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer">
@@ -1054,6 +1086,11 @@ function updateAuthUI(user){
             ✓ BESTÄTIGEN
           </button>
         </div>
+        <button id="btn-scan-wrong"
+          style="width:100%;padding:9px;background:none;color:#888;border:1px solid #444;
+          border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">
+          ✏️ KI WAR FALSCH
+        </button>
       </div>
       <div id="scan-status"
         style="color:#aaa;font-size:13px;text-align:center;margin-top:8px;min-height:20px"></div>
@@ -4915,23 +4952,57 @@ async function compressScanPhoto(file){
     const url=URL.createObjectURL(file);
     img.onload=()=>{
       URL.revokeObjectURL(url);
-      const maxPx=1024;
+      const maxPx=1800;
       let w=img.width,h=img.height;
       if(w>maxPx||h>maxPx){ if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}else{w=Math.round(w*maxPx/h);h=maxPx;} }
       const c=document.createElement("canvas"); c.width=w; c.height=h;
       c.getContext("2d").drawImage(img,0,0,w,h);
-      resolve(c.toDataURL("image/jpeg",0.85).split(",")[1]);
+      resolve(c.toDataURL("image/jpeg",0.88).split(",")[1]);
     };
     img.onerror=reject; img.src=url;
   });
 }
 
+function parseDartLabel(raw){
+  const s=(raw||"").trim().toUpperCase();
+  if(!s||s==="M"||s==="MISS"||s==="0") return {label:"Miss",score:0};
+  if(s==="BULL"||s==="50") return {label:"Bull",score:50};
+  if(s==="25") return {label:"25",score:25};
+  const t=s.match(/^T(\d+)$/);
+  if(t){const n=parseInt(t[1]);if(n>=1&&n<=20)return{label:`T${n}`,score:n*3};}
+  const d=s.match(/^D(\d+)$/);
+  if(d){const n=parseInt(d[1]);if(n>=1&&n<=20)return{label:`D${n}`,score:n*2};}
+  const n=parseInt(s);
+  if(!isNaN(n)&&n>=1&&n<=20) return {label:`${n}`,score:n};
+  return null;
+}
+
 async function analyzeDartsPhoto(base64){
-  const prompt=`Analyze this dartboard photo. Find all darts currently stuck in the board.
-Return ONLY a JSON array (no other text):
-[{"label":"T20","score":60},{"label":"20","score":20},{"label":"D5","score":10}]
-Label rules: T=triple, D=double, no prefix=single, Bull=bullseye(50pts), 25=outer bull(25pts).
-Score = actual point value. Max 3 darts. If no darts visible return [].`;
+  let feedbackLines="";
+  try{
+    const fb=await window.dartDB?.loadScanFeedback();
+    if(fb?.length){
+      feedbackLines="\n\nPrevious corrections from this user (learn from these):\n"+
+        fb.map(f=>`- AI returned ${JSON.stringify(f.wrong)} but correct was ${JSON.stringify(f.correct)}`+
+          (f.note?` (note: "${f.note}")`:"")).join("\n")+"\n";
+    }
+  }catch(e){}
+
+  const prompt=`You are analyzing a dartboard photo to count and score every dart.
+
+STEP 1 — COUNT SHAFTS: Scan the entire board carefully. Darts are metallic cylinders (barrel + shaft) sticking out of the board. Flights (feather-like fins) at the back help spot darts. Even if 2–3 darts are very close together or clustered in the same segment, count each physical dart separately.
+
+STEP 2 — IDENTIFY EACH DART: For each dart, find where its TIP enters the scoring surface.
+- Scoring rings from center outward: Bullseye (Bull, 50pts) → Outer Bull (25, 25pts) → Single → Triple → Single → Double (outermost ring)
+- Segments clockwise from top: 20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5
+- Labels: T=triple, D=double, no prefix=single
+
+STEP 3 — OUTPUT: Return ONLY a valid JSON array, no explanation, no markdown. Max 3 entries.
+Format: [{"label":"T20","score":60},{"label":"D16","score":32},{"label":"1","score":1}]
+No darts visible: []
+
+CRITICAL: Never merge two separate darts into one entry. If you see 3 dart shafts, return 3 entries.${feedbackLines}`;
+
   const content=[
     {type:"text",text:prompt},
     {type:"image",source:{type:"base64",media_type:"image/jpeg",data:base64}}
@@ -5062,6 +5133,8 @@ document.getElementById("scan-photo-input").addEventListener("change",async e=>{
     const darts=await analyzeDartsPhoto(b64);
     photoBtn.textContent="📸";
     const det=document.getElementById("scan-detected");
+    document.getElementById("scan-correct-area").style.display="none";
+    document.getElementById("btn-scan-wrong").style.display="";
     if(!darts.length){
       det.innerHTML=`<div style="color:#e53935;text-align:center;padding:8px">Keine Pfeile erkannt — erneut versuchen</div>`;
       statusEl.textContent="";
@@ -5090,6 +5163,51 @@ document.getElementById("btn-scan-retry").addEventListener("click",()=>{
   document.getElementById("scan-status").textContent="";
   document.getElementById("btn-scan-photo").textContent="📸";
   document.getElementById("btn-scan-confirm").dataset.darts="";
+  document.getElementById("scan-correct-area").style.display="none";
+});
+
+document.getElementById("btn-scan-wrong").addEventListener("click",()=>{
+  const dartsJson=document.getElementById("btn-scan-confirm").dataset.darts;
+  const darts=dartsJson?JSON.parse(dartsJson):[];
+  // Pre-fill inputs with detected values
+  ["scan-fix-1","scan-fix-2","scan-fix-3"].forEach((id,i)=>{
+    document.getElementById(id).value=darts[i]?.label||"";
+  });
+  document.getElementById("scan-correct-area").style.display="";
+  document.getElementById("btn-scan-wrong").style.display="none";
+});
+
+document.getElementById("btn-scan-fix-send").addEventListener("click",async()=>{
+  const wrongJson=document.getElementById("btn-scan-confirm").dataset.darts;
+  const wrong=wrongJson?JSON.parse(wrongJson):[];
+  const correct=["scan-fix-1","scan-fix-2","scan-fix-3"]
+    .map(id=>document.getElementById(id).value)
+    .filter(v=>v.trim())
+    .map(v=>parseDartLabel(v))
+    .filter(Boolean);
+  if(!correct.length){
+    document.getElementById("scan-status").textContent="Mindestens ein Feld eingeben.";
+    return;
+  }
+  const btn=document.getElementById("btn-scan-fix-send");
+  btn.disabled=true; btn.textContent="⏳ Speichert…";
+  try{
+    await window.dartDB?.saveScanFeedback(wrong,correct,"");
+    // Send corrected darts to tablet
+    if(scanRemoteCode){
+      await window.dartDB.updateScanSession(scanRemoteCode,{
+        status:"confirmed",pendingDarts:correct,submittedAt:Date.now()
+      });
+    }
+    document.getElementById("scan-preview-wrap").style.display="none";
+    document.getElementById("scan-status").textContent="✓ Korrektur gespeichert + gesendet";
+    document.getElementById("btn-scan-confirm").dataset.darts="";
+    document.getElementById("scan-correct-area").style.display="none";
+  }catch(e){
+    document.getElementById("scan-status").textContent="Fehler: "+e.message;
+  }finally{
+    btn.disabled=false; btn.textContent="KORREKTUR SENDEN + FEEDBACK SPEICHERN";
+  }
 });
 
 document.getElementById("btn-scan-confirm").addEventListener("click",async()=>{
