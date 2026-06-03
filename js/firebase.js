@@ -16,12 +16,24 @@ import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuth
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
 
-const fbCfg = {
+// TODO: Firebase Config hier eintragen — in index.html <head> einfügen:
+// <script>
+//   window.FIREBASE_CONFIG = {
+//     apiKey: "...",
+//     authDomain: "darttrainer-app.firebaseapp.com",
+//     projectId: "darttrainer-app",
+//     storageBucket: "darttrainer-app.firebasestorage.app",
+//     messagingSenderId: "...",
+//     appId: "..."
+//   };
+// </script>
+const FALLBACK_CONFIG = {
   apiKey: "AIzaSyBvTU5OhJnvJW-hYJYYVTro2rNcNr60aCk",
   authDomain: "fitness-tracker-c6f97.firebaseapp.com",
   projectId: "fitness-tracker-c6f97",
   storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
 };
+const fbCfg = window.FIREBASE_CONFIG || FALLBACK_CONFIG;
 const app     = initializeApp(fbCfg);
 const db      = getFirestore(app);
 const auth    = getAuth(app);

@@ -1,2 +1,9 @@
 node_modules/
 www/
+
+# Service Account Keys — NIEMALS ins Repo
+scripts/source-service-account.json
+scripts/target-service-account.json
+*.service-account.json
+.env
+.env.local
