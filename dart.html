@@ -181,6 +181,31 @@ function initDartDB(){
     async getVideoSessionURL(code){
       try{ return await getDownloadURL(ref(storage,`dart_video_sessions/${code}.webm`)); }
       catch(e){ return null; }
+    },
+    // ── Tournaments ──────────────────────────────────────────────
+    async saveTournament(data){
+      if(data.id){
+        await setDoc(doc(db,"dart_tournaments",data.id), data);
+        return data.id;
+      }
+      const ref2=await addDoc(collection(db,"dart_tournaments"), {...data, createdAt:Date.now()});
+      return ref2.id;
+    },
+    async updateTournament(id, data){
+      return updateDoc(doc(db,"dart_tournaments",id), data);
+    },
+    async loadTournaments(){
+      const snap=await getDocs(query(collection(db,"dart_tournaments"),orderBy("createdAt","desc"),limit(50)));
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
+    },
+    async getTournament(id){
+      const snap=await getDoc(doc(db,"dart_tournaments",id));
+      return snap.exists()?{id:snap.id,...snap.data()}:null;
+    },
+    watchTournament(id, cb){
+      return onSnapshot(doc(db,"dart_tournaments",id), snap=>{
+        if(snap.exists()) cb({id:snap.id,...snap.data()});
+      });
     }
   };
   window.dispatchEvent(new Event("dbReady"));
@@ -327,12 +352,54 @@ function updateAuthUI(user){
 
   /* ── Home tabs ── */
   .home-tabs { display: flex; background: #1a1a1a; flex-shrink: 0; width: 100%; }
-  .home-tab { flex: 1; padding: 12px 0; border: none; background: none; color: #666;
-    font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; cursor: pointer;
+  .home-tab { flex: 1; padding: 10px 0; border: none; background: none; color: #666;
+    font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; cursor: pointer;
     transition: all .2s; white-space: nowrap; }
   .home-tab.active { color: #e8c44a; border-bottom: 3px solid #e8c44a; }
   .home-tab-content { display: none; }
   .home-tab-content.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
+  /* ── Spielen cards ── */
+  .spielen-cards-wrap { padding:20px 16px;flex:1;overflow-y:auto; }
+  .spielen-card { display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #ddd;
+    border-radius:14px;padding:18px 20px;margin-bottom:14px;cursor:pointer;
+    transition:box-shadow .15s; }
+  .spielen-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.10); }
+  .spielen-card-icon { font-size:28px;flex-shrink:0; }
+  .spielen-card-title { font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#1a1a1a; }
+  .spielen-card-sub { font-size:12px;color:#999;margin-top:2px; }
+  .spielen-card-arrow { margin-left:auto;color:#ccc;font-size:20px; }
+  .spielen-section { display:none;flex:1;flex-direction:column;min-height:0; }
+  .spielen-section.active { display:flex; }
+  .spielen-back { background:#1a1a1a;color:#e8c44a;border:none;padding:10px 16px;
+    font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;
+    text-align:left;flex-shrink:0; }
+  /* ── Sub-tabs (Statistiken) ── */
+  .sub-tabs-bar { display:flex;border-bottom:2px solid #eee;flex-shrink:0;background:#f5f5f0; }
+  .sub-tab { flex:1;padding:10px;border:none;background:none;font-family:'Bebas Neue',sans-serif;
+    font-size:16px;letter-spacing:1px;cursor:pointer;color:#999;border-bottom:2px solid transparent;
+    margin-bottom:-2px; }
+  .sub-tab.active { color:#1a1a1a;border-bottom-color:#e8c44a; }
+  .sub-tab-content { display:none;flex:1;flex-direction:column;min-height:0;overflow-y:auto; }
+  .sub-tab-content.active { display:flex; }
+  /* ── Profil-Tab ── */
+  .profil-section { background:#fff;border:1px solid #ddd;border-radius:12px;padding:18px;margin-bottom:14px; }
+  .profil-section-title { font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;
+    color:#1a1a1a;margin-bottom:12px; }
+  /* ── Turnier-Tab ── */
+  .tournament-card { background:#fff;border:1px solid #ddd;border-radius:12px;padding:16px;
+    margin-bottom:10px;cursor:pointer;transition:box-shadow .15s; }
+  .tournament-card:hover { box-shadow:0 2px 10px rgba(0,0,0,.08); }
+  .tournament-status-badge { display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;
+    font-weight:700;letter-spacing:1px; }
+  .tournament-status-badge.running { background:#fff3cd;color:#856404; }
+  .tournament-status-badge.finished { background:#d4edda;color:#155724; }
+  .tournament-status-badge.setup { background:#e2e3e5;color:#495057; }
+  /* ── Tournament bracket ── */
+  .bracket-match { display:flex;align-items:center;gap:6px;padding:6px 10px;
+    border:1px solid #ddd;border-radius:8px;margin-bottom:4px;font-size:13px; }
+  .bracket-match .winner { font-weight:700;color:#2e7d32; }
+  .bracket-round-title { font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;
+    color:#999;margin:10px 0 4px; }
   .setup-card { background: #fff; border: 1px solid #ddd; border-radius: 16px; padding: 36px 32px; width: 420px; max-width: 95vw; }
   .logo { text-align: center; margin-bottom: 28px; }
   .logo-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; color: #e8c44a; line-height: 1; }
@@ -747,11 +814,10 @@ function updateAuthUI(user){
 <div id="setup" class="screen" style="position:relative">
   <!-- Tab bar -->
   <div class="home-tabs">
-    <button class="home-tab active" data-tab="play">🎯 Spiel</button>
-    <button class="home-tab" data-tab="stats">📊 Statistiken</button>
-    <button class="home-tab" data-tab="analyse">🧠 Analyse</button>
-    <button class="home-tab" data-tab="online">🌐 Online</button>
-    <button class="home-tab" data-tab="studio" style="display:none">🎙️ Studio</button>
+    <button class="home-tab active" data-tab="spielen">🎯 SPIELEN</button>
+    <button class="home-tab" data-tab="statistiken">📊 STATS</button>
+    <button class="home-tab" data-tab="turniere">🏆 TURNIERE</button>
+    <button class="home-tab" data-tab="profil">⚙️ PROFIL</button>
   </div>
 
   <!-- Profile button (absolute, top-right) -->
@@ -792,15 +858,43 @@ function updateAuthUI(user){
     </div>
   </div>
 
-  <!-- TAB: PLAY -->
-  <div class="home-tab-content active" id="tab-play">
-  <div style="display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto;flex:1">
-  <div class="setup-card">
-    <div class="logo">
-      <div class="logo-title">DART PRO</div>
-      <div class="logo-sub">SCORE TRACKER</div>
+  <!-- TAB: SPIELEN -->
+  <div class="home-tab-content active" id="tab-spielen">
+
+    <!-- Cards-Übersicht (default) -->
+    <div id="spielen-cards" class="spielen-cards-wrap">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#1a1a1a;margin-bottom:16px;padding-top:4px">DART PRO</div>
+      <div class="spielen-card" onclick="showSpielenSection('lokal')">
+        <div class="spielen-card-icon">👤</div>
+        <div>
+          <div class="spielen-card-title">LOKAL SPIELEN</div>
+          <div class="spielen-card-sub">Gegen Freunde oder Bot</div>
+        </div>
+        <div class="spielen-card-arrow">→</div>
+      </div>
+      <div class="spielen-card" onclick="showSpielenSection('online')">
+        <div class="spielen-card-icon">🌐</div>
+        <div>
+          <div class="spielen-card-title">ONLINE SPIELEN</div>
+          <div class="spielen-card-sub">Gegen Freunde weltweit</div>
+        </div>
+        <div class="spielen-card-arrow">→</div>
+      </div>
+      <div class="spielen-card" onclick="openTournamentSetup()">
+        <div class="spielen-card-icon">🏆</div>
+        <div>
+          <div class="spielen-card-title">TURNIER</div>
+          <div class="spielen-card-sub">Lokal oder Online</div>
+        </div>
+        <div class="spielen-card-arrow">→</div>
+      </div>
     </div>
 
+    <!-- LOKAL: Setup-Formular -->
+    <div id="spielen-lokal" class="spielen-section">
+      <button class="spielen-back" onclick="showSpielenCards()">← ZURÜCK</button>
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:16px">
+      <div class="setup-card">
     <label class="field-label">SPIELMODUS</label>
     <div class="btn-group" id="mode-group">
       <button class="btn-toggle active" data-value="501">501</button>
@@ -883,11 +977,12 @@ function updateAuthUI(user){
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
   </div><!-- end setup-card -->
   </div><!-- end inner scroll -->
-  </div><!-- end tab-play -->
+  </div><!-- end spielen-lokal -->
 
-  <!-- TAB: ONLINE -->
-  <div class="home-tab-content" id="tab-online">
-  <div style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;align-items:center">
+    <!-- ONLINE: Raum erstellen/beitreten -->
+    <div id="spielen-online" class="spielen-section">
+      <button class="spielen-back" onclick="showSpielenCards()">← ZURÜCK</button>
+      <div style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;align-items:center">
 
     <!-- Auth bar -->
     <div id="auth-bar" style="width:100%;max-width:480px;margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:10px"></div>
@@ -940,22 +1035,169 @@ function updateAuthUI(user){
 
       <div id="online-status" style="text-align:center;color:#aaa;font-size:13px;min-height:20px"></div>
     </div>
+    </div>
+    </div><!-- end spielen-online -->
+
+  </div><!-- end tab-spielen -->
+
+  <!-- TAB: STATISTIKEN (sub-tabs: Statistiken + Analyse) -->
+  <div class="home-tab-content" id="tab-statistiken">
+    <div class="sub-tabs-bar">
+      <button class="sub-tab active" data-sub="stats">STATISTIKEN</button>
+      <button class="sub-tab" data-sub="analyse">ANALYSE</button>
+    </div>
+    <!-- Sub: STATISTIKEN -->
+    <div class="sub-tab-content active" id="sub-tab-stats">
+    <div style="flex:1;padding:16px 24px;overflow-y:auto;background:#f5f5f0">
+      <div class="stats-player-bar" id="stats-player-bar"></div>
+      <div class="stats-time-bar">
+        <button class="time-btn active" data-range="today">Heute</button>
+        <button class="time-btn" data-range="7d">7 Tage</button>
+        <button class="time-btn" data-range="30d">Monat</button>
+        <button class="time-btn" data-range="90d">3 Monate</button>
+        <button class="time-btn" data-range="180d">6 Monate</button>
+        <button class="time-btn" data-range="all">Alles</button>
+        <button class="time-btn" data-range="custom">📅</button>
+      </div>
+      <div class="custom-date-row" id="custom-date-row" style="display:none">
+        <input type="date" id="date-from" class="date-input" />
+        <span style="color:#999;font-size:13px">bis</span>
+        <input type="date" id="date-to" class="date-input" />
+        <button class="btn-add-player" id="btn-apply-dates" style="padding:6px 12px;font-size:13px">OK</button>
+      </div>
+      <div id="stats-content"><div class="stats-loading">Lade Statistiken…</div></div>
+    </div>
+    </div>
+    <!-- Sub: ANALYSE -->
+    <div class="sub-tab-content" id="sub-tab-analyse">
+    <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
+      <div id="analyse-player-bar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+      <div class="stats-section-title">🧠 COACH-ANALYSE</div>
+      <button class="coach-btn" id="btn-coach-analyse-tab" disabled>🧠 COACH-ANALYSE STARTEN</button>
+      <div id="coach-output-analyse-tab"></div>
+      <div class="coach-limit" id="coach-limit-analyse-tab"></div>
+      <div id="coach-history-analyse-tab" style="margin-top:12px"></div>
+      <div class="stats-section-title" style="margin-top:16px">🎥 WURF-ANALYSE</div>
+      <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px">
+        <div style="font-size:12px;color:#999;margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
+        <input type="file" id="video-upload-analyse-tab" accept="video/*" style="display:none">
+        <button id="btn-video-phone-analyse" style="width:100%;padding:11px;border:2px solid #e8c44a;border-radius:8px;background:#1a1800;cursor:pointer;font-size:13px;color:#e8c44a;font-weight:700;margin-bottom:8px">📱 MIT HANDY AUFNEHMEN</button>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid #e53935;border-radius:8px;background:#1a0a0a;cursor:pointer;font-size:13px;color:#e53935">📹 TABLET-KAMERA</button>
+          <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666">📁 HOCHLADEN</button>
+        </div>
+        <button id="btn-video-stop-analyse" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:#e53935;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">⏹ STOP</button>
+        <div id="video-preview-wrap-analyse-tab" style="display:none;margin-bottom:8px">
+          <video id="video-preview-analyse-tab" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
+          <div id="video-frames-info-analyse-tab" style="font-size:11px;color:#aaa;margin-top:4px;text-align:center"></div>
+        </div>
+        <button id="btn-video-analyze-analyse-tab" class="coach-btn" style="display:none;font-size:16px;padding:10px">🎥 WURF ANALYSIEREN</button>
+        <div id="coach-output-video-analyse-tab"></div>
+      </div>
+    </div>
+    </div>
+  </div><!-- end tab-statistiken -->
+
+  <!-- TAB: TURNIERE -->
+  <div class="home-tab-content" id="tab-turniere">
+  <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px">🏆 TURNIERE</div>
+      <button onclick="openTournamentSetup()" style="padding:9px 16px;background:#e8c44a;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">+ ERSTELLEN</button>
+    </div>
+    <div id="tournament-list"><div style="color:#aaa;font-size:13px;text-align:center;padding:20px">Noch keine Turniere</div></div>
   </div>
   </div>
 
-  <!-- ═══ ONLINE WAITING SCREEN ═══ -->
-  <div id="online-wait" class="screen">
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:20px;text-align:center">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#e8c44a;letter-spacing:3px;margin-bottom:8px">RAUM-CODE</div>
-      <div id="online-room-display" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:#1a1a1a;letter-spacing:8px;margin-bottom:8px"></div>
-      <div style="font-size:13px;color:#999;margin-bottom:24px">Teile diesen Code mit deinem Gegner</div>
-      <div id="online-players-list" style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;width:100%;max-width:320px;margin-bottom:20px"></div>
-      <div id="online-wait-status" style="font-size:13px;color:#aaa;margin-bottom:16px">Warte auf Mitspieler…</div>
-      <button id="btn-start-online" class="btn-start" style="display:none;width:320px">SPIEL STARTEN</button>
-      <button id="btn-cancel-room" style="background:none;border:1px solid #ddd;color:#999;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:10px">Abbrechen</button>
+  <!-- TAB: PROFIL -->
+  <div class="home-tab-content" id="tab-profil">
+  <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
+
+    <!-- Account -->
+    <div class="profil-section">
+      <div class="profil-section-title">👤 ACCOUNT</div>
+      <div id="profil-account-info" style="margin-bottom:12px"></div>
+      <div id="profil-upgrade-inline" style="display:none">
+        <div style="font-size:12px;color:#666;margin-bottom:10px">Spieldaten gehen verloren wenn du dich abmeldest. Jetzt Account erstellen:</div>
+        <input class="auth-input" id="profil-upgrade-name" type="text" placeholder="Dein Name">
+        <input class="auth-input" id="profil-upgrade-email" type="email" placeholder="Email">
+        <input class="auth-input" id="profil-upgrade-password" type="password" placeholder="Passwort (min. 6 Zeichen)">
+        <div class="auth-error" id="profil-upgrade-error"></div>
+        <button id="btn-profil-upgrade" class="auth-btn-primary" style="font-size:15px">ACCOUNT ERSTELLEN</button>
+        <button id="btn-profil-google" class="auth-btn-google" style="margin-top:6px">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px">
+          MIT GOOGLE UPGRADEN
+        </button>
+      </div>
+      <button id="btn-profil-signout" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;background:none;color:#e53935;font-size:14px;cursor:pointer">Abmelden</button>
     </div>
+
+    <!-- Stimme & Sound -->
+    <div class="profil-section">
+      <div class="profil-section-title">🎙️ STIMME & SOUND</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div id="voice-sync-status" style="font-size:12px;color:#aaa"></div>
+        <button id="btn-voice-sync" style="padding:5px 12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f0;font-size:12px;cursor:pointer">🔄 Sync</button>
+      </div>
+      <div id="voice-selector-list"></div>
+      <div id="voice-selector-confirm" style="display:none;color:#2a7a2a;font-size:13px;padding:6px 0;text-align:center"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#555;margin-bottom:8px">+ NEUE STIMME HINZUFÜGEN</div>
+        <input id="voice-new-name" placeholder="Name (z.B. Meine Stimme)" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:6px;box-sizing:border-box">
+        <input id="voice-new-id" placeholder="ElevenLabs Voice ID" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:monospace;font-size:13px;margin-bottom:8px;box-sizing:border-box">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button id="btn-voice-new-test-180" style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer">Test: 180</button>
+          <button id="btn-voice-new-test-gameon" style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer">Test: Game On</button>
+          <button id="btn-voice-new-test-bust" style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer">Test: Bust</button>
+          <button id="btn-voice-new-add" style="padding:8px 14px;border:none;border-radius:7px;background:#222;color:#fff;font-size:12px;cursor:pointer;margin-left:auto">+ Hinzufügen</button>
+        </div>
+        <div id="voice-new-error" style="color:#c00;font-size:12px;margin-top:6px;min-height:16px"></div>
+      </div>
+    </div>
+
+    <!-- App-Einstellungen -->
+    <div class="profil-section">
+      <div class="profil-section-title">⚙️ APP-EINSTELLUNGEN</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0">
+        <span style="font-size:14px;color:#333">🔊 Sprachausgabe</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-tts" checked style="opacity:0;width:0;height:0">
+          <span id="setting-tts-slider" onclick="toggleSetting('tts')" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0">
+        <span style="font-size:14px;color:#333">🎤 Sprachsteuerung</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-mic" style="opacity:0;width:0;height:0">
+          <span id="setting-mic-slider" onclick="toggleSetting('mic')" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+        <span style="font-size:14px;color:#333">💫 Animationen</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-anim" checked style="opacity:0;width:0;height:0">
+          <span id="setting-anim-slider" onclick="toggleSetting('anim')" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Rechtliches -->
+    <div class="profil-section">
+      <div class="profil-section-title">📋 RECHTLICHES</div>
+      <div style="font-size:13px;color:#666;line-height:1.7">
+        <div style="margin-bottom:6px"><strong>Dart Pro</strong> — Persönliches Dart-Score-Tracking</div>
+        <div style="margin-bottom:6px">Version: 2.0 · Firebase Hosting via GitHub Pages</div>
+        <div style="margin-bottom:6px">Datenschutz: Daten werden in Firebase (Google) gespeichert. Keine Weitergabe an Dritte.</div>
+        <div>Entwickelt von Daniel Straß · 2025</div>
+      </div>
+    </div>
+
   </div>
-  <div class="home-tab-content" id="tab-studio">
+  </div>
+
+  <!-- Studio tab (hidden, kept for legacy Studio functionality) -->
+  <div class="home-tab-content" id="tab-studio" style="display:none!important">
+  <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
   <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
 
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#1a1a1a;margin-bottom:4px">🎙️ STIMM-STUDIO</div>
@@ -989,117 +1231,80 @@ function updateAuthUI(user){
 
   </div>
   </div>
-  <!-- TAB: STATS -->
-  <div class="home-tab-content" id="tab-stats">
-  <div style="flex:1;padding:16px 24px;overflow-y:auto;background:#f5f5f0">
+</div>
 
-    <!-- Player selector -->
-    <div class="stats-player-bar" id="stats-player-bar"></div>
-
-    <!-- Time range -->
-    <div class="stats-time-bar">
-      <button class="time-btn active" data-range="today">Heute</button>
-      <button class="time-btn" data-range="7d">7 Tage</button>
-      <button class="time-btn" data-range="30d">Monat</button>
-      <button class="time-btn" data-range="90d">3 Monate</button>
-      <button class="time-btn" data-range="180d">6 Monate</button>
-      <button class="time-btn" data-range="all">Alles</button>
-      <button class="time-btn" data-range="custom">📅</button>
-    </div>
-
-    <!-- Custom date picker (hidden by default) -->
-    <div class="custom-date-row" id="custom-date-row" style="display:none">
-      <input type="date" id="date-from" class="date-input" />
-      <span style="color:#999;font-size:13px">bis</span>
-      <input type="date" id="date-to" class="date-input" />
-      <button class="btn-add-player" id="btn-apply-dates" style="padding:6px 12px;font-size:13px">OK</button>
-    </div>
-
-    <div id="stats-content"><div class="stats-loading">Lade Statistiken…</div></div>
+<!-- ═══════════════════════ ONLINE WAITING SCREEN ═══════════════════════ -->
+<div id="online-wait" class="screen" style="background:#f5f5f0">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#e8c44a;letter-spacing:3px;margin-bottom:8px">RAUM-CODE</div>
+    <div id="online-room-display" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:#1a1a1a;letter-spacing:8px;margin-bottom:8px"></div>
+    <div style="font-size:13px;color:#999;margin-bottom:24px">Teile diesen Code mit deinem Gegner</div>
+    <div id="online-players-list" style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;width:100%;max-width:320px;margin-bottom:20px"></div>
+    <div id="online-wait-status" style="font-size:13px;color:#aaa;margin-bottom:16px">Warte auf Mitspieler…</div>
+    <button id="btn-start-online" class="btn-start" style="display:none;width:320px">SPIEL STARTEN</button>
+    <button id="btn-cancel-room" style="background:none;border:1px solid #ddd;color:#999;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:10px">Abbrechen</button>
   </div>
+</div>
+
+<!-- ═══════════════════════ TOURNAMENT SETUP SCREEN ═══════════════════════ -->
+<div id="tournament-setup" class="screen" style="background:#f5f5f0;flex-direction:column">
+  <div style="background:#1a1a1a;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));" style="background:none;border:none;color:#e8c44a;font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← ZURÜCK</button>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">TURNIER ERSTELLEN</div>
   </div>
-  <!-- TAB: ANALYSE -->
-  <div class="home-tab-content" id="tab-analyse">
-  <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
-    <div id="analyse-player-bar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
-    <div class="stats-section-title">🧠 COACH-ANALYSE</div>
-    <button class="coach-btn" id="btn-coach-analyse-tab" disabled>🧠 COACH-ANALYSE STARTEN</button>
-    <div id="coach-output-analyse-tab"></div>
-    <div class="coach-limit" id="coach-limit-analyse-tab"></div>
-    <div id="coach-history-analyse-tab" style="margin-top:12px"></div>
-    <div class="stats-section-title" style="margin-top:16px">🎥 WURF-ANALYSE</div>
-    <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px">
-      <div style="font-size:12px;color:#999;margin-bottom:10px">
-        Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.
-      </div>
-      <input type="file" id="video-upload-analyse-tab" accept="video/*" style="display:none">
-      <button id="btn-video-phone-analyse" style="width:100%;padding:11px;border:2px solid #e8c44a;border-radius:8px;background:#1a1800;cursor:pointer;font-size:13px;color:#e8c44a;font-weight:700;margin-bottom:8px">
-        📱 MIT HANDY AUFNEHMEN
-      </button>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid #e53935;border-radius:8px;background:#1a0a0a;cursor:pointer;font-size:13px;color:#e53935">
-          📹 TABLET-KAMERA
-        </button>
-        <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666">
-          📁 HOCHLADEN
-        </button>
-      </div>
-      <button id="btn-video-stop-analyse" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:#e53935;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">
-        ⏹ STOP
-      </button>
-      <div id="video-preview-wrap-analyse-tab" style="display:none;margin-bottom:8px">
-        <video id="video-preview-analyse-tab" style="width:100%;border-radius:8px;max-height:160px"
-          muted playsinline></video>
-        <div id="video-frames-info-analyse-tab" style="font-size:11px;color:#aaa;margin-top:4px;text-align:center"></div>
-      </div>
-      <button id="btn-video-analyze-analyse-tab" class="coach-btn" style="display:none;font-size:16px;padding:10px">
-        🎥 WURF ANALYSIEREN
-      </button>
-      <div id="coach-output-video-analyse-tab"></div>
-    </div>
+  <div style="flex:1;overflow-y:auto;padding:16px">
+    <div style="max-width:480px;margin:0 auto">
 
-    <div class="stats-section-title" style="margin-top:16px">🎙️ STIMME WÄHLEN</div>
-    <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px">
-      <!-- Voice cards rendered by renderVoiceSelector() -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div id="voice-sync-status" style="font-size:12px;color:#aaa"></div>
-        <button id="btn-voice-sync"
-          style="padding:5px 12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f0;
-          font-size:12px;cursor:pointer">🔄 Sync</button>
+      <div style="margin-bottom:16px">
+        <label class="field-label">TURNIER NAME</label>
+        <input id="tn-name" class="add-player-input" style="width:100%;font-size:15px" placeholder="z.B. Darts-Abend">
       </div>
-      <div id="voice-selector-list"></div>
-      <div id="voice-selector-confirm"
-        style="display:none;color:#2a7a2a;font-size:13px;padding:6px 0;text-align:center"></div>
 
-      <!-- Add new voice form -->
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;
-          color:#555;margin-bottom:8px">+ NEUE STIMME HINZUFÜGEN</div>
-        <input id="voice-new-name" placeholder="Name (z.B. Meine Stimme)"
-          style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:14px;
-          margin-bottom:6px;box-sizing:border-box">
-        <input id="voice-new-id" placeholder="ElevenLabs Voice ID"
-          style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;
-          font-family:monospace;font-size:13px;margin-bottom:8px;box-sizing:border-box">
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button id="btn-voice-new-test-180"
-            style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;
-            font-size:12px;cursor:pointer">Test: 180</button>
-          <button id="btn-voice-new-test-gameon"
-            style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;
-            font-size:12px;cursor:pointer">Test: Game On</button>
-          <button id="btn-voice-new-test-bust"
-            style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;
-            font-size:12px;cursor:pointer">Test: Bust</button>
-          <button id="btn-voice-new-add"
-            style="padding:8px 14px;border:none;border-radius:7px;background:#222;
-            color:#fff;font-size:12px;cursor:pointer;margin-left:auto">+ Hinzufügen</button>
-        </div>
-        <div id="voice-new-error"
-          style="color:#c00;font-size:12px;margin-top:6px;min-height:16px"></div>
+      <label class="field-label">FORMAT</label>
+      <div class="btn-group" id="tn-format-group" style="margin-bottom:16px">
+        <button class="btn-toggle active" data-value="round_robin">Jeder gegen Jeden</button>
+        <button class="btn-toggle" data-value="knockout">K.O.-System</button>
       </div>
+
+      <label class="field-label">SPIELMODUS</label>
+      <div class="btn-group" id="tn-mode-group" style="margin-bottom:8px">
+        <button class="btn-toggle active" data-value="501">501</button>
+        <button class="btn-toggle" data-value="301">301</button>
+        <button class="btn-toggle" data-value="Cricket">Cricket</button>
+      </div>
+      <label class="field-label">LEGS</label>
+      <div class="btn-group" id="tn-legs-group" style="margin-bottom:16px">
+        <button class="btn-toggle active" data-value="1">1</button>
+        <button class="btn-toggle" data-value="3">3</button>
+        <button class="btn-toggle" data-value="5">5</button>
+      </div>
+
+      <label class="field-label">TYP</label>
+      <div class="btn-group" id="tn-type-group" style="margin-bottom:16px">
+        <button class="btn-toggle active" data-value="local">👤 Lokal</button>
+        <button class="btn-toggle" data-value="online">🌐 Online</button>
+      </div>
+
+      <label class="field-label">SPIELER</label>
+      <div id="tn-player-list" style="margin-bottom:12px"></div>
+      <div id="tn-online-hint" style="display:none;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:13px;color:#666;margin-bottom:12px">
+        Online-Turnier: Nach dem Start erhalten andere Spieler einen Code zum Beitreten.
+      </div>
+
+      <button class="btn-start" id="btn-create-tournament">🏆 TURNIER STARTEN</button>
     </div>
   </div>
+</div>
+
+<!-- ═══════════════════════ TOURNAMENT VIEW SCREEN ═══════════════════════ -->
+<div id="tournament-view" class="screen" style="background:#f5f5f0;flex-direction:column">
+  <div style="background:#1a1a1a;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));loadTournaments();" style="background:none;border:none;color:#e8c44a;font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← TURNIERE</button>
+    <div id="tv-title" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">TURNIER</div>
+    <div id="tv-status-badge" style="margin-left:auto"></div>
+  </div>
+  <div id="tv-content" style="flex:1;overflow-y:auto;padding:16px">
+    <div style="color:#aaa;text-align:center;padding:20px">Lade Turnier…</div>
   </div>
 </div>
 
@@ -3748,6 +3953,9 @@ function saveGameToFirebase(winnerIdx){
   window.dartDB.saveGame(gameDoc)
     .then(()=>updateAllPlayerStats())
     .catch(e=>console.warn("Firebase save failed:",e));
+  if(cfg.tournamentId&&cfg.matchId){
+    updateTournamentMatch(cfg.tournamentId, cfg.matchId, winnerIdx);
+  }
 }
 
 async function updateAllPlayerStats(){
@@ -4685,8 +4893,9 @@ document.getElementById("btn-cancel-room").addEventListener("click",()=>{
   if(isRoomHost&&currentRoomCode) window.dartDB.deleteRoom(currentRoomCode);
   currentRoomCode=null;
   showSetup();
-  document.querySelectorAll(".home-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab==="online"));
-  document.querySelectorAll(".home-tab-content").forEach(c=>c.classList.toggle("active",c.id==="tab-online"));
+  document.querySelectorAll(".home-tab").forEach(b=>b.classList.toggle("active",b.dataset.tab==="spielen"));
+  document.querySelectorAll(".home-tab-content").forEach(c=>c.classList.toggle("active",c.id==="tab-spielen"));
+  showSpielenSection("online");
 });
 
 let onlineUnsubscribe=null;
@@ -5019,6 +5228,342 @@ async function sendVrVideo(){
   if(window.dartDB) doInit();
   else window.addEventListener("dbReady", doInit, {once:true});
 })();
+
+// ══════════════════════════════════════════════════════════════════
+// TOURNAMENT SYSTEM
+// ══════════════════════════════════════════════════════════════════
+let tnFormat="round_robin", tnMode="501", tnLegs=1, tnType="local";
+let activeTournamentId=null, tournamentUnsubscribe=null;
+
+function openTournamentSetup(){
+  // Pre-fill name with date
+  const d=new Date();
+  document.getElementById("tn-name").value=`Darts-Abend ${d.getDate()}.${d.getMonth()+1}.`;
+  // Render player list (allPlayers)
+  renderTnPlayerList();
+  showScreen("tournament-setup");
+}
+
+function renderTnPlayerList(){
+  const el=document.getElementById("tn-player-list");
+  if(!el) return;
+  el.innerHTML=allPlayers.map(p=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0">
+      <input type="checkbox" id="tnp-${p.id}" value="${p.id}" style="width:18px;height:18px;cursor:pointer">
+      <label for="tnp-${p.id}" style="font-size:14px;cursor:pointer">${p.name}</label>
+    </div>`).join("");
+}
+
+document.getElementById("tn-format-group")?.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  tnFormat=e.target.dataset.value;
+  document.querySelectorAll("#tn-format-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===tnFormat));
+});
+document.getElementById("tn-mode-group")?.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  tnMode=e.target.dataset.value;
+  document.querySelectorAll("#tn-mode-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===tnMode));
+});
+document.getElementById("tn-legs-group")?.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  tnLegs=+e.target.dataset.value;
+  document.querySelectorAll("#tn-legs-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==tnLegs));
+});
+document.getElementById("tn-type-group")?.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  tnType=e.target.dataset.value;
+  document.querySelectorAll("#tn-type-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===tnType));
+  document.getElementById("tn-online-hint").style.display=tnType==="online"?"":"none";
+});
+
+document.getElementById("btn-create-tournament")?.addEventListener("click",async()=>{
+  const name=document.getElementById("tn-name").value.trim()||"Turnier";
+  const checked=[...document.querySelectorAll("#tn-player-list input:checked")];
+  if(checked.length<2){alert("Mindestens 2 Spieler auswählen!");return;}
+  const players=checked.map(c=>{
+    const p=allPlayers.find(x=>x.id===c.value);
+    return p?.name||"?";
+  });
+  const playerIds=checked.map(c=>c.value);
+
+  const matches=tnFormat==="round_robin"
+    ? generateRoundRobin(players)
+    : generateKnockout(players);
+
+  const standings=players.map((_,i)=>({playerIdx:i, wins:0, losses:0, legsFor:0, legsAgainst:0}));
+
+  const data={
+    name, status:"running", format:tnFormat, mode:tnMode, legs:tnLegs, type:tnType,
+    players, playerIds, matches, standings, bracket:tnFormat==="knockout"?{rounds:generateKnockoutRounds(players)}:null,
+    createdBy:window.currentUser?.uid||null, winner:null
+  };
+  const id=await window.dartDB.saveTournament(data);
+  data.id=id;
+  openTournamentView(id);
+});
+
+function generateRoundRobin(players){
+  const matches=[];
+  for(let i=0;i<players.length;i++){
+    for(let j=i+1;j<players.length;j++){
+      matches.push({id:`m${i}_${j}`,player1:i,player2:j,status:"pending",winner:null,score:""});
+    }
+  }
+  return matches;
+}
+
+function generateKnockout(players){
+  // Returns flat match list for first round (bracket structure in generateKnockoutRounds)
+  const rounds=generateKnockoutRounds(players);
+  return rounds[0]?.matches||[];
+}
+
+function generateKnockoutRounds(players){
+  const n=players.length;
+  // Find next power of 2
+  let size=1; while(size<n) size*=2;
+  const byes=size-n;
+  const seeds=[...players.map((_,i)=>i)];
+  // Shuffle
+  for(let i=seeds.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[seeds[i],seeds[j]]=[seeds[j],seeds[i]];}
+  // Add byes as null
+  while(seeds.length<size) seeds.push(null);
+  const r1matches=[];
+  for(let i=0;i<size;i+=2){
+    r1matches.push({id:`r0m${i/2}`,player1:seeds[i],player2:seeds[i+1],status:seeds[i+1]===null?"bye":"pending",winner:seeds[i+1]===null?seeds[i]:null,score:""});
+  }
+  const rounds=[{name:"Runde 1",matches:r1matches}];
+  let remaining=size/2;
+  let rIdx=1;
+  const roundNames=["Halbfinale","Finale","Viertelfinale","Achtelfinale"];
+  while(remaining>1){
+    const rName=remaining===2?"Finale":remaining===4?"Halbfinale":`Top ${remaining}`;
+    const rMatches=[];
+    for(let i=0;i<remaining/2;i++){
+      rMatches.push({id:`r${rIdx}m${i}`,player1:null,player2:null,status:"pending",winner:null,score:""});
+    }
+    rounds.push({name:rName,matches:rMatches});
+    remaining/=2; rIdx++;
+  }
+  return rounds;
+}
+
+async function openTournamentView(id){
+  activeTournamentId=id;
+  showScreen("tournament-view");
+  if(tournamentUnsubscribe){tournamentUnsubscribe();tournamentUnsubscribe=null;}
+  if(window.dartDB){
+    tournamentUnsubscribe=window.dartDB.watchTournament(id,t=>renderTournamentView(t));
+  } else {
+    window.addEventListener("dbReady",async()=>{
+      const t=await window.dartDB.getTournament(id);
+      if(t) renderTournamentView(t);
+      tournamentUnsubscribe=window.dartDB.watchTournament(id,t2=>renderTournamentView(t2));
+    },{once:true});
+  }
+}
+
+function renderTournamentView(t){
+  document.getElementById("tv-title").textContent=t.name;
+  const badge=document.getElementById("tv-status-badge");
+  badge.innerHTML=`<span class="tournament-status-badge ${t.status}">${t.status==="running"?"LÄUFT":t.status==="finished"?"ABGESCHLOSSEN":"SETUP"}</span>`;
+
+  const el=document.getElementById("tv-content");
+  if(t.format==="round_robin"){
+    el.innerHTML=renderRoundRobinView(t);
+  } else {
+    el.innerHTML=renderKnockoutView(t);
+  }
+  // Wire match start buttons
+  el.querySelectorAll(".btn-start-match").forEach(btn=>{
+    btn.addEventListener("click",()=>startTournamentMatch(t, btn.dataset.matchId));
+  });
+}
+
+function renderRoundRobinView(t){
+  const sorted=[...t.standings].sort((a,b)=>b.wins-a.wins||(b.legsFor-b.legsAgainst)-(a.legsFor-a.legsAgainst));
+  let html=`<div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:8px">TABELLE</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <tr style="border-bottom:2px solid #eee"><th style="text-align:left;padding:4px 2px">Spieler</th><th style="padding:4px 6px">S</th><th style="padding:4px 6px">N</th><th style="padding:4px 6px">Legs+</th><th style="padding:4px 6px">Legs-</th></tr>
+      ${sorted.map((s,i)=>`<tr style="border-bottom:1px solid #f5f5f5${i===0?" font-weight:700":""}"><td style="padding:5px 2px">${i===0?"🥇 ":i===1?"🥈 ":i===2?"🥉 ":""}${t.players[s.playerIdx]}</td><td style="text-align:center;padding:5px 6px;color:#2e7d32">${s.wins}</td><td style="text-align:center;padding:5px 6px;color:#c62828">${s.losses}</td><td style="text-align:center;padding:5px 6px">${s.legsFor}</td><td style="text-align:center;padding:5px 6px">${s.legsAgainst}</td></tr>`).join("")}
+    </table>
+  </div>`;
+
+  html+=`<div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:8px">SPIELE</div>`;
+  t.matches.forEach(m=>{
+    const p1=t.players[m.player1], p2=t.players[m.player2];
+    if(m.status==="finished"){
+      const winner=t.players[m.winner];
+      html+=`<div class="bracket-match"><span class="${m.winner===m.player1?"winner":""}">${p1}</span><span style="color:#aaa;font-size:11px;padding:0 4px">${m.score}</span><span class="${m.winner===m.player2?"winner":""}">${p2}</span><span style="margin-left:auto;font-size:11px;color:#2e7d32">✓</span></div>`;
+    } else {
+      html+=`<div class="bracket-match">${p1} <span style="color:#aaa;font-size:11px;padding:0 6px">vs</span> ${p2} <button class="btn-start-match" data-match-id="${m.id}" style="margin-left:auto;padding:4px 12px;border:none;border-radius:6px;background:#e8c44a;font-size:12px;font-weight:700;cursor:pointer">SPIELEN</button></div>`;
+    }
+  });
+  html+="</div>";
+  if(t.winner){
+    html+=`<div style="background:#fff8e1;border:2px solid #e8c44a;border-radius:12px;padding:20px;text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px">🏆 SIEGER</div><div style="font-size:24px;font-weight:700;margin-top:4px">${t.winner}</div></div>`;
+  }
+  return html;
+}
+
+function renderKnockoutView(t){
+  if(!t.bracket?.rounds) return "<div style='color:#aaa;padding:20px;text-align:center'>Keine Bracket-Daten</div>";
+  let html="";
+  t.bracket.rounds.forEach(round=>{
+    html+=`<div class="bracket-round-title">${round.name.toUpperCase()}</div>`;
+    round.matches.forEach(m=>{
+      if(m.status==="bye"||m.player2===null){
+        const p1=m.player1!==null?t.players[m.player1]:"—";
+        html+=`<div class="bracket-match"><span>${p1}</span><span style="margin-left:auto;font-size:11px;color:#aaa">Freilos</span></div>`;
+      } else if(m.player1===null||m.player2===null){
+        html+=`<div class="bracket-match" style="opacity:.5">Warte auf vorherige Runde…</div>`;
+      } else if(m.status==="finished"){
+        const p1=t.players[m.player1], p2=t.players[m.player2];
+        html+=`<div class="bracket-match"><span class="${m.winner===m.player1?"winner":""}">${p1}</span><span style="color:#aaa;font-size:11px;padding:0 4px">${m.score}</span><span class="${m.winner===m.player2?"winner":""}">${p2}</span><span style="margin-left:auto;font-size:11px;color:#2e7d32">✓</span></div>`;
+      } else {
+        const p1=t.players[m.player1], p2=t.players[m.player2];
+        html+=`<div class="bracket-match">${p1} <span style="color:#aaa;font-size:11px;padding:0 6px">vs</span> ${p2} <button class="btn-start-match" data-match-id="${m.id}" style="margin-left:auto;padding:4px 12px;border:none;border-radius:6px;background:#e8c44a;font-size:12px;font-weight:700;cursor:pointer">SPIELEN</button></div>`;
+      }
+    });
+  });
+  if(t.winner){
+    html+=`<div style="background:#fff8e1;border:2px solid #e8c44a;border-radius:12px;padding:20px;text-align:center;margin-top:16px"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px">🏆 SIEGER</div><div style="font-size:24px;font-weight:700;margin-top:4px">${t.winner}</div></div>`;
+  }
+  return html;
+}
+
+function startTournamentMatch(tournament, matchId){
+  const m=tournament.matches?.find(x=>x.id===matchId)
+    || tournament.bracket?.rounds?.flatMap(r=>r.matches)?.find(x=>x.id===matchId);
+  if(!m) return;
+  const p1=tournament.players[m.player1];
+  const p2=tournament.players[m.player2];
+  const pid1=tournament.playerIds?.[m.player1]||null;
+  const pid2=tournament.playerIds?.[m.player2]||null;
+  const isBot=[];
+  cfg={
+    mode:tournament.mode,
+    startScore:tournament.mode==="301"?301:501,
+    players:[p1,p2],
+    playerIds:[pid1,pid2],
+    playerObjects:allPlayers.filter(x=>x.id===pid1||x.id===pid2),
+    isBot:[false,false],
+    botLevel:"none",
+    botPersonality:"methodisch",
+    totalSets:1,setsToWin:1,setWins:[0,0],currentSet:1,
+    totalLegs:tournament.legs||1,
+    legsToWin:Math.ceil((tournament.legs||1)/2),
+    legWins:[0,0],currentLeg:1,
+    rounds:0,
+    healthData:null,
+    tournamentId:tournament.id,
+    matchId:matchId
+  };
+  const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
+  if(cfg.mode==="Cricket") startCricket();
+  else if(partyModes.includes(cfg.mode)) startParty();
+  else startX01();
+}
+
+async function updateTournamentMatch(tournamentId, matchId, winnerPlayerIdx){
+  if(!window.dartDB) return;
+  const t=await window.dartDB.getTournament(tournamentId);
+  if(!t) return;
+
+  const legWins=cfg.legWins||[0,0];
+  const score=`${legWins[0]}-${legWins[1]}`;
+
+  // Update match
+  let allMatches=t.matches||[];
+  let inBracket=false;
+  let matchObj=allMatches.find(m=>m.id===matchId);
+  if(!matchObj&&t.bracket?.rounds){
+    for(const r of t.bracket.rounds){
+      const m=r.matches.find(x=>x.id===matchId);
+      if(m){matchObj=m;inBracket=true;break;}
+    }
+  }
+  if(!matchObj) return;
+  matchObj.status="finished";
+  matchObj.winner=winnerPlayerIdx;
+  matchObj.score=score;
+
+  // Update standings (round robin)
+  const standings=t.standings||[];
+  if(!inBracket){
+    const loserIdx=winnerPlayerIdx===matchObj.player1?matchObj.player2:matchObj.player1;
+    const ws=standings.find(s=>s.playerIdx===winnerPlayerIdx);
+    const ls=standings.find(s=>s.playerIdx===loserIdx);
+    if(ws){ws.wins++;ws.legsFor+=legWins[winnerPlayerIdx===matchObj.player1?0:1];ws.legsAgainst+=legWins[winnerPlayerIdx===matchObj.player1?1:0];}
+    if(ls){ls.losses++;ls.legsFor+=legWins[winnerPlayerIdx===matchObj.player1?1:0];ls.legsAgainst+=legWins[winnerPlayerIdx===matchObj.player1?0:1];}
+  }
+
+  // Advance knockout bracket
+  if(inBracket&&t.bracket?.rounds){
+    advanceKnockoutBracket(t.bracket.rounds, matchId, winnerPlayerIdx);
+  }
+
+  // Check if tournament finished
+  const allDone=(t.matches||[]).every(m=>m.status==="finished")&&
+    (!t.bracket||t.bracket.rounds.every(r=>r.matches.every(m=>m.status==="finished"||m.status==="bye")));
+  let winner=null;
+  if(allDone){
+    if(t.format==="round_robin"){
+      const sorted=[...standings].sort((a,b)=>b.wins-a.wins);
+      winner=t.players[sorted[0]?.playerIdx]||null;
+    } else {
+      const lastRound=t.bracket?.rounds?.[t.bracket.rounds.length-1];
+      const finalMatch=lastRound?.matches?.[0];
+      if(finalMatch?.winner!=null) winner=t.players[finalMatch.winner];
+    }
+  }
+
+  await window.dartDB.updateTournament(tournamentId,{
+    matches:t.matches||[], standings, bracket:t.bracket||null,
+    status:allDone?"finished":"running",
+    winner
+  });
+  openTournamentView(tournamentId);
+}
+
+function advanceKnockoutBracket(rounds, matchId, winnerIdx){
+  for(let ri=0;ri<rounds.length-1;ri++){
+    const round=rounds[ri];
+    const mi=round.matches.findIndex(m=>m.id===matchId);
+    if(mi===-1) continue;
+    const nextRound=rounds[ri+1];
+    const nextMatchIdx=Math.floor(mi/2);
+    const slot=mi%2===0?"player1":"player2";
+    if(nextRound?.matches[nextMatchIdx]){
+      nextRound.matches[nextMatchIdx][slot]=winnerIdx;
+      // Check if both players are set
+      const nm=nextRound.matches[nextMatchIdx];
+      if(nm.player1!==null&&nm.player2!==null) nm.status="pending";
+    }
+    break;
+  }
+}
+
+async function loadTournaments(){
+  const el=document.getElementById("tournament-list");
+  if(!el||!window.dartDB) return;
+  el.innerHTML=`<div style="color:#aaa;font-size:13px;text-align:center;padding:16px">Lade…</div>`;
+  const list=await window.dartDB.loadTournaments();
+  if(!list.length){
+    el.innerHTML=`<div style="color:#aaa;font-size:13px;text-align:center;padding:20px">Noch keine Turniere — erstelle dein erstes!</div>`;
+    return;
+  }
+  el.innerHTML=list.map(t=>`
+    <div class="tournament-card" onclick="openTournamentView('${t.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px">${t.name}</div>
+        <span class="tournament-status-badge ${t.status}">${t.status==="running"?"LÄUFT":t.status==="finished"?"FERTIG":"SETUP"}</span>
+      </div>
+      <div style="font-size:12px;color:#999">${t.format==="round_robin"?"Jeder gegen Jeden":"K.O."} · ${t.mode} · ${t.players?.length||0} Spieler${t.winner?" · 🏆 "+t.winner:""}</div>
+    </div>`).join("");
+}
 
 // Extract N frames from video as base64 JPEG
 async function extractVideoFrames(videoEl, numFrames=5){
@@ -5615,12 +6160,117 @@ document.querySelectorAll(".home-tab").forEach(btn=>{
     btn.classList.add("active");
     const tabEl=document.getElementById("tab-"+btn.dataset.tab);
     if(tabEl) tabEl.classList.add("active");
-    if(btn.dataset.tab==="stats") loadAndRenderStats();
-    if(btn.dataset.tab==="analyse") initAnalyseTab();
-    if(btn.dataset.tab==="studio") initStudio();
-    if(btn.dataset.tab==="online") updateAuthUI(window.currentUser);
+    if(btn.dataset.tab==="statistiken") loadAndRenderStats();
+    if(btn.dataset.tab==="turniere") loadTournaments();
+    if(btn.dataset.tab==="profil") initProfilTab();
+    if(btn.dataset.tab==="spielen") updateAuthUI(window.currentUser);
   });
 });
+
+// ── Spielen sub-sections ──────────────────────────────────────────
+function showSpielenCards(){
+  document.getElementById("spielen-cards").style.display="";
+  document.getElementById("spielen-lokal").classList.remove("active");
+  document.getElementById("spielen-online").classList.remove("active");
+}
+function showSpielenSection(section){
+  document.getElementById("spielen-cards").style.display="none";
+  document.getElementById("spielen-lokal").classList.toggle("active", section==="lokal");
+  document.getElementById("spielen-online").classList.toggle("active", section==="online");
+  if(section==="online") updateAuthUI(window.currentUser);
+}
+
+// ── Statistiken sub-tabs ──────────────────────────────────────────
+document.querySelectorAll(".sub-tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const bar=btn.closest(".sub-tabs-bar");
+    bar.querySelectorAll(".sub-tab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const tabContent=btn.closest(".home-tab-content");
+    tabContent.querySelectorAll(".sub-tab-content").forEach(c=>c.classList.remove("active"));
+    const target=tabContent.querySelector("#sub-tab-"+btn.dataset.sub);
+    if(target) target.classList.add("active");
+    if(btn.dataset.sub==="stats") loadAndRenderStats();
+    if(btn.dataset.sub==="analyse") initAnalyseTab();
+  });
+});
+
+// ── Profil-Tab ────────────────────────────────────────────────────
+function initProfilTab(){
+  const user=window.currentUser;
+  const infoEl=document.getElementById("profil-account-info");
+  const upgradeEl=document.getElementById("profil-upgrade-inline");
+  if(!infoEl) return;
+  if(!user){
+    infoEl.innerHTML=`<div style="font-size:14px;color:#aaa">Nicht angemeldet</div>`;
+    if(upgradeEl) upgradeEl.style.display="";
+    return;
+  }
+  const displayName=user.displayName||"Gast";
+  const email=user.email||"—";
+  const isAnon=user.isAnonymous;
+  infoEl.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#e8c44a;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1a1a1a;flex-shrink:0">${displayName[0].toUpperCase()}</div>
+      <div>
+        <div style="font-weight:600;font-size:15px;color:#1a1a1a">${displayName}</div>
+        <div style="font-size:12px;color:#999">${email}</div>
+        <div style="font-size:11px;color:#aaa;letter-spacing:1px">${isAnon?"GAST-ACCOUNT":"REGISTRIERT"}</div>
+      </div>
+    </div>`;
+  if(upgradeEl) upgradeEl.style.display=isAnon?"":"none";
+  renderVoiceSelector();
+  syncVoicesFromFirestore();
+}
+
+document.getElementById("btn-profil-signout")?.addEventListener("click",()=>{
+  signOutUser();
+});
+
+document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=>{
+  const name=document.getElementById("profil-upgrade-name").value.trim();
+  const email=document.getElementById("profil-upgrade-email").value.trim();
+  const pw=document.getElementById("profil-upgrade-password").value;
+  const errEl=document.getElementById("profil-upgrade-error");
+  errEl.textContent="";
+  if(!name||!email||pw.length<6){errEl.textContent="Alle Felder ausfüllen (PW min. 6 Zeichen).";return;}
+  try{
+    await window.upgradeAnonymousAccount(email,pw,name);
+    alert("Account erstellt! Deine Spieldaten wurden übernommen.");
+    initProfilTab();
+  }catch(e){
+    errEl.textContent=e.code==="auth/email-already-in-use"?"Diese Email ist bereits vergeben.":e.message;
+  }
+});
+
+document.getElementById("btn-profil-google")?.addEventListener("click",async()=>{
+  try{
+    await window.signInWithGoogle();
+    initProfilTab();
+  }catch(e){}
+});
+
+// ── App-Settings toggles ──────────────────────────────────────────
+function toggleSetting(key){
+  const cb=document.getElementById("setting-"+key);
+  const slider=document.getElementById("setting-"+key+"-slider");
+  if(!cb) return;
+  cb.checked=!cb.checked;
+  slider.style.background=cb.checked?"#e8c44a":"#ccc";
+  if(key==="tts") localStorage.setItem("dart_setting_tts", cb.checked?"1":"0");
+  if(key==="mic") localStorage.setItem("dart_setting_mic", cb.checked?"1":"0");
+  if(key==="anim") localStorage.setItem("dart_setting_anim", cb.checked?"1":"0");
+}
+(function initSettings(){
+  ["tts","mic","anim"].forEach(k=>{
+    const v=localStorage.getItem("dart_setting_"+k);
+    const cb=document.getElementById("setting-"+k);
+    const sl=document.getElementById("setting-"+k+"-slider");
+    if(!cb||!sl) return;
+    if(v!==null) cb.checked=v==="1";
+    sl.style.background=cb.checked?"#e8c44a":"#ccc";
+  });
+})();
 
 // ── Time range buttons ────────────────────────────────────────────
 document.querySelectorAll(".time-btn").forEach(btn=>{
