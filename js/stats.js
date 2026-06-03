@@ -204,7 +204,7 @@ export async function loadAndRenderStats(){
     const mostTriedDouble=doubleEntries[0];
 
     if(doubleEntries.length>0){
-      html+=`<div class="stats-section-title">🎯 DOPPELFELD-STATISTIK</div>`;
+      html+=`<div class="stats-section-title" style="display:flex;align-items:center">🎯 DOPPELFELD-STATISTIK <button class="help-btn" onclick="window.showHelp('Doppelfeld-Statistik','Die App erkennt automatisch wann du auf ein Doppelfeld zielst und trackt deine Trefferquote. So siehst du welche Doppelfelder deine Stärken und Schwächen sind.')">?</button></div>`;
       html+=`<div class="stats-grid" style="margin-bottom:10px">
         ${bestDouble?`<div class="stat-card"><div class="s-label">BESTES DOPPEL</div><div class="s-value">${bestDouble.field}</div><div class="s-sub">${bestDouble.pct}% (${bestDouble.hit}/${bestDouble.att})</div></div>`:""}
         ${worstDouble&&worstDouble.field!==bestDouble?.field?`<div class="stat-card"><div class="s-label">SCHWÄCHSTES DOPPEL</div><div class="s-value">${worstDouble.field}</div><div class="s-sub">${worstDouble.pct}% (${worstDouble.hit}/${worstDouble.att})</div></div>`:""}

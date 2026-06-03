@@ -1,4 +1,4 @@
-# Dart Pro — Claude Code Übergabe-Dokumentation
+# DartTrainer — Claude Code Übergabe-Dokumentation
 
 ## Projektübersicht
 Single-File HTML-App (`dart.html`) — Dart-Scoring-App mit KI-Coach, Statistiken, Sprachsteuerung und Voice-Samples.
