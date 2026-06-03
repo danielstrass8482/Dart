@@ -214,6 +214,20 @@ Für App-Store: **Capacitor** verwenden um die Web-App in eine native iOS/Androi
 
 ---
 
+## Premium System
+- `js/premium.js` — Feature-Flags, `canUseFeature()`, `showPremiumOverlay()`, `registerBetaUser()`
+- `BETA_MODE = true` — alle Features entsperrt; zum Aktivieren der Paywall: `BETA_MODE = false`
+- Grandfathered Beta-User werden in `dart_users` Collection gespeichert
+- Firestore: `dart_users/{uid}` (Beta-Info) + `dart_users/{uid}/subscription/current` (Abo-Status)
+- Firestore-Rule nötig: `match /dart_users/{userId}/{document=**} { allow read, write: if request.auth != null && request.auth.uid == userId; }`
+
+## Monetarisierung (geplant)
+- **Free:** 3 Coach-Analysen/Monat, 1 Video-Analyse, Methodischer Bot, Basis-Statistiken
+- **Premium (€2,99/Monat):** Alles unbegrenzt
+- **Elite (€9,99 einmalig):** Eigene Stimme, unbegrenzte Analysen dauerhaft
+
+---
+
 ## Entwickler-Kontext
 - **Entwickelt mit:** Claude Sonnet (claude.ai Chat)
 - **Owner:** Daniel Straß, VP Customer Service DACH @ Dogado

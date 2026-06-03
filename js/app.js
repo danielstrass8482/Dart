@@ -5,6 +5,9 @@
 // ── Firebase (sets window.dartDB etc.) ───────────────────────────
 import './firebase.js';
 
+// ── Premium ──────────────────────────────────────────────────────
+import { registerBetaUser, BETA_MODE } from './premium.js';
+
 // ── State ────────────────────────────────────────────────────────
 import { state } from './state.js';
 
@@ -578,8 +581,41 @@ function initProfilTab(){
       </div>
     </div>`;
   if(upgradeEl) upgradeEl.style.display=isAnon?"":"none";
+  renderPremiumStatus(isAnon, displayName, email);
   renderVoiceSelector();
   syncVoicesFromFirestore();
+}
+
+function renderPremiumStatus(isAnon, displayName, email){
+  const el = document.getElementById("profil-premium-status");
+  if(!el) return;
+  if(isAnon || !displayName || displayName === "Gast"){
+    el.innerHTML = `
+      <div style="background:#1a1800;border:1px solid #e8c44a;border-radius:12px;padding:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#e8c44a;
+          letter-spacing:2px;margin-bottom:6px">🎉 BETA-NUTZER</div>
+        <div style="font-size:13px;color:#ccc;margin-bottom:10px;line-height:1.5">
+          Du hast Zugriff auf alle Features während der Beta.
+          Registriere dich jetzt um deine Beta-Vorteile dauerhaft zu sichern wenn Premium startet.
+        </div>
+        <button onclick="document.getElementById('profil-upgrade-inline').style.display=''"
+          style="width:100%;padding:11px;background:#e8c44a;border:none;border-radius:8px;
+          font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;
+          color:#000;cursor:pointer">
+          ACCOUNT ERSTELLEN →
+        </button>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div style="background:#1a1800;border:1px solid #e8c44a;border-radius:12px;padding:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#e8c44a;
+          letter-spacing:2px;margin-bottom:4px">✅ BETA-NUTZER (Grandfathered)</div>
+        <div style="font-size:13px;color:#aaa;margin-bottom:6px">${email}</div>
+        <div style="font-size:13px;color:#ccc;line-height:1.5">
+          Deine Beta-Vorteile sind gesichert. Du bekommst Premium dauerhaft kostenlos.
+        </div>
+      </div>`;
+  }
 }
 document.getElementById("btn-profil-signout")?.addEventListener("click",()=>window.signOutUser());
 document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=>{
@@ -921,8 +957,9 @@ function renderVoiceSelector(){
   const tvBtn="padding:7px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer;";
   list.innerHTML=voices.map((v,i)=>{
     const isActive=v.id===activeId; const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
+    const premiumBadge=!v.builtin?` <span style="background:#e8c44a;color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
     return `<div style="border-radius:8px;padding:12px;margin-bottom:8px;border:${isActive?"2px solid #222":"1px solid #eee"};background:${isActive?"#f9f9f7":"#fff"}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px">🎙️ ${v.name}</span>${isActive?`<span style="background:#222;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px">🎙️ ${v.name}${premiumBadge}</span>${isActive?`<span style="background:#222;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
       <div style="font-size:11px;color:#aaa;font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">Test: 180</button>
@@ -967,6 +1004,10 @@ wireStudioButtons();
 window.addEventListener("dbReady", loadPlayers);
 window.addEventListener("dbReady", applySettings);
 window.addEventListener("dbReady", ()=>{ loadPlayers().then(()=>renderStatsPlayerBar()); });
+window.addEventListener("dbReady", ()=>{
+  const user = window.currentUser;
+  if(user && !user.isAnonymous) registerBetaUser();
+});
 
 // ── Expose globals for inline HTML onclick handlers ───────────────
 window.showSpielenSection = showSpielenSection;
