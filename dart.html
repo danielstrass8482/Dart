@@ -157,6 +157,30 @@ function initDartDB(){
       if(!uid) return null;
       const snap=await getDoc(doc(db,"dart_config",`userprefs_${uid}`));
       return snap.exists() ? (snap.data().activeVoiceId||null) : null;
+    },
+    // ── Video sessions (Second Screen) ───────────────────────────
+    async createVideoSession(code, data){
+      await setDoc(doc(db,"dart_video_sessions",code), {...data, code, ts:Date.now(), status:"waiting"});
+    },
+    async updateVideoSession(code, data){
+      return updateDoc(doc(db,"dart_video_sessions",code), data);
+    },
+    watchVideoSession(code, cb){
+      return onSnapshot(doc(db,"dart_video_sessions",code), snap=>{
+        if(snap.exists()) cb(snap.data());
+      });
+    },
+    async deleteVideoSession(code){
+      try{ await fsDeleteDoc(doc(db,"dart_video_sessions",code)); }catch(e){}
+    },
+    async uploadVideoBlob(code, blob){
+      const r=ref(storage,`dart_video_sessions/${code}.webm`);
+      await uploadBytes(r, blob, {contentType:"video/webm"});
+      return getDownloadURL(r);
+    },
+    async getVideoSessionURL(code){
+      try{ return await getDownloadURL(ref(storage,`dart_video_sessions/${code}.webm`)); }
+      catch(e){ return null; }
     }
   };
   window.dispatchEvent(new Event("dbReady"));
@@ -563,6 +587,25 @@ function updateAuthUI(user){
     0%,100% { transform: rotate(0deg); }
     50%      { transform: rotate(90deg); }
   }
+  /* ── Video Session (Second Screen) ── */
+  .vidsession-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center; }
+  .vidsession-backdrop.visible { display:flex; }
+  .vidsession-modal { background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:28px 20px;width:92%;max-width:340px;text-align:center;color:#fff; }
+  .vidsession-code { font-family:'Bebas Neue',sans-serif;font-size:56px;letter-spacing:8px;color:#e8c44a;margin:8px 0; }
+  .vidsession-qr { margin:12px auto;width:180px;height:180px;border-radius:8px;background:#fff;display:block; }
+  .vidsession-status { font-size:13px;color:#aaa;margin:10px 0; }
+  .vidsession-status.connected { color:#4caf50; }
+  /* Phone remote screen */
+  #video-remote { align-items:center;justify-content:center;background:#111; }
+  .vr-card { background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:24px 20px;width:92%;max-width:360px;text-align:center;color:#fff; }
+  .vr-title { font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#e8c44a;margin-bottom:16px; }
+  .vr-preview { width:100%;border-radius:8px;max-height:220px;background:#000;display:block;margin:10px 0; }
+  .vr-btn { width:100%;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px; }
+  .vr-btn-record { background:#e53935;color:#fff; }
+  .vr-btn-stop { background:#555;color:#fff; }
+  .vr-btn-send { background:#e8c44a;color:#1a1a1a; }
+  .vr-status { font-size:13px;color:#aaa;margin-top:10px;min-height:20px; }
+
   /* ── Health Check Modal ── */
   .health-modal-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.80);z-index:400;align-items:center;justify-content:center; }
   .health-modal-backdrop.visible { display:flex; }
@@ -580,6 +623,19 @@ function updateAuthUI(user){
 </style>
 </head>
 <body>
+
+<!-- Video Session Host Modal -->
+<div class="vidsession-backdrop" id="vidsession-backdrop">
+  <div class="vidsession-modal">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#e8c44a;margin-bottom:4px">📱 MIT HANDY AUFNEHMEN</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:12px">QR-Code scannen oder Code eingeben</div>
+    <img id="vidsession-qr-img" class="vidsession-qr" src="" alt="QR Code">
+    <div class="vidsession-code" id="vidsession-code-display"></div>
+    <div style="font-size:11px;color:#555;word-break:break-all;margin-bottom:8px" id="vidsession-url-display"></div>
+    <div class="vidsession-status" id="vidsession-status">⏳ Warte auf Handy…</div>
+    <button onclick="cancelVideoSession()" style="margin-top:12px;padding:8px 24px;border-radius:8px;border:1px solid #555;background:#111;color:#aaa;cursor:pointer;font-size:13px">Abbrechen</button>
+  </div>
+</div>
 
 <!-- Health Check Modal -->
 <div class="health-modal-backdrop" id="health-modal-backdrop">
@@ -977,9 +1033,12 @@ function updateAuthUI(user){
         Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.
       </div>
       <input type="file" id="video-upload-analyse-tab" accept="video/*" style="display:none">
+      <button id="btn-video-phone-analyse" style="width:100%;padding:11px;border:2px solid #e8c44a;border-radius:8px;background:#1a1800;cursor:pointer;font-size:13px;color:#e8c44a;font-weight:700;margin-bottom:8px">
+        📱 MIT HANDY AUFNEHMEN
+      </button>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid #e53935;border-radius:8px;background:#1a0a0a;cursor:pointer;font-size:13px;color:#e53935">
-          📹 VIDEO AUFNEHMEN
+          📹 TABLET-KAMERA
         </button>
         <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666">
           📁 HOCHLADEN
@@ -1168,6 +1227,23 @@ function updateAuthUI(user){
     </div>
   </div>
 </div>
+<!-- ═══════════════════════ VIDEO REMOTE SCREEN (Phone) ═══════════════════════ -->
+<div id="video-remote" class="screen" style="flex-direction:column">
+  <div class="vr-card">
+    <div class="vr-title">📹 WURFVIDEO AUFNEHMEN</div>
+    <div id="vr-game-info" style="font-size:12px;color:#aaa;margin-bottom:12px"></div>
+
+    <div id="vr-camera-section">
+      <video id="vr-preview" class="vr-preview" muted playsinline style="display:none"></video>
+      <div id="vr-frames-info" style="font-size:11px;color:#aaa;margin-bottom:6px"></div>
+      <button class="vr-btn vr-btn-record" id="btn-vr-record">⏺ AUFNEHMEN (max. 10s)</button>
+      <button class="vr-btn vr-btn-stop" id="btn-vr-stop" style="display:none">⏹ STOP</button>
+      <button class="vr-btn vr-btn-send" id="btn-vr-send" style="display:none">📤 AN TABLET SENDEN</button>
+      <div class="vr-status" id="vr-status">Bereit — Handy seitlich, Hüfthöhe</div>
+    </div>
+  </div>
+</div>
+
 <div class="winner-overlay" id="winner-overlay">
   <div style="max-width:440px;width:90vw;max-height:90vh;overflow-y:auto;padding:32px 24px;text-align:center">
     <div class="winner-label">GEWINNER</div>
@@ -1199,9 +1275,12 @@ function updateAuthUI(user){
       <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px">🎥 WURF-ANALYSE (VIDEO)</div>
       <div style="font-size:12px;color:#999;margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
       <input type="file" id="video-upload" accept="video/*" style="display:none">
+      <button id="btn-video-phone-winner" style="width:100%;padding:11px;border:2px solid #e8c44a;border-radius:8px;background:#1a1800;cursor:pointer;font-size:13px;color:#e8c44a;font-weight:700;margin-bottom:8px">
+        📱 MIT HANDY AUFNEHMEN
+      </button>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button id="btn-video-record-winner" style="flex:1;padding:10px;border:2px solid #e53935;border-radius:8px;background:#1a0a0a;cursor:pointer;font-size:13px;color:#e53935">
-          📹 VIDEO AUFNEHMEN
+          📹 TABLET-KAMERA
         </button>
         <button id="btn-video-select" style="flex:1;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666">
           📁 HOCHLADEN
@@ -4743,6 +4822,203 @@ document.getElementById("btn-video-record-analyse").addEventListener("click",()=
     document.getElementById("btn-video-analyze-analyse-tab")
   );
 });
+
+// ── Second Screen: Video Session ─────────────────────────────────
+const APP_URL = "https://danielstrass8482.github.io/Dart/dart.html";
+
+function genVideoCode(){
+  return Math.random().toString(36).substring(2,6).toUpperCase();
+}
+
+let _videoSessionUnsubscribe = null;
+let _videoSessionCode = null;
+// Callback to call after video arrives on tablet
+let _videoSessionAnalyzeCb = null;
+
+async function startVideoHostSession(analyzeCb){
+  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  const code = genVideoCode();
+  _videoSessionCode = code;
+  _videoSessionAnalyzeCb = analyzeCb;
+
+  await window.dartDB.createVideoSession(code, {});
+
+  const url = `${APP_URL}?vidsession=${code}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=000000&bgcolor=ffffff&data=${encodeURIComponent(url)}`;
+
+  document.getElementById("vidsession-code-display").textContent = code;
+  document.getElementById("vidsession-qr-img").src = qrUrl;
+  document.getElementById("vidsession-url-display").textContent = url;
+  document.getElementById("vidsession-status").textContent = "⏳ Warte auf Handy…";
+  document.getElementById("vidsession-status").className = "vidsession-status";
+  document.getElementById("vidsession-backdrop").classList.add("visible");
+
+  if(_videoSessionUnsubscribe) _videoSessionUnsubscribe();
+  _videoSessionUnsubscribe = window.dartDB.watchVideoSession(code, async(data)=>{
+    if(data.status === "connected"){
+      document.getElementById("vidsession-status").textContent = "✅ Handy verbunden — nimmt auf…";
+      document.getElementById("vidsession-status").className = "vidsession-status connected";
+    }
+    if(data.status === "ready" && data.videoPath){
+      cancelVideoSession(false);
+      const videoUrl = await window.dartDB.getVideoSessionURL(code);
+      if(videoUrl && analyzeCb) analyzeCb(videoUrl);
+      window.dartDB.deleteVideoSession(code).catch(()=>{});
+    }
+  });
+}
+
+function cancelVideoSession(cleanup=true){
+  document.getElementById("vidsession-backdrop").classList.remove("visible");
+  if(_videoSessionUnsubscribe){ _videoSessionUnsubscribe(); _videoSessionUnsubscribe=null; }
+  if(cleanup && _videoSessionCode) window.dartDB?.deleteVideoSession(_videoSessionCode).catch(()=>{});
+  _videoSessionCode = null;
+}
+
+// ── Button wiring: "📱 MIT HANDY" tablet side ───────────────────
+function startPhoneSessionForWinner(){
+  startVideoHostSession(async(videoUrl)=>{
+    const videoEl = document.getElementById("video-preview");
+    videoEl.src = videoUrl;
+    videoEl.load();
+    const wrap = document.getElementById("video-preview-wrap");
+    wrap.style.display = "";
+    document.getElementById("video-frames-info").textContent = "Video vom Handy erhalten — analysiere…";
+    document.getElementById("btn-video-analyze").style.display = "";
+    // Auto-trigger analysis
+    document.getElementById("btn-video-analyze").click();
+  });
+}
+
+function startPhoneSessionForAnalyse(){
+  startVideoHostSession(async(videoUrl)=>{
+    const videoEl = document.getElementById("video-preview-analyse-tab");
+    videoEl.src = videoUrl;
+    videoEl.load();
+    const wrap = document.getElementById("video-preview-wrap-analyse-tab");
+    wrap.style.display = "";
+    document.getElementById("video-frames-info-analyse-tab").textContent = "Video vom Handy erhalten — analysiere…";
+    document.getElementById("btn-video-analyze-analyse-tab").style.display = "";
+    document.getElementById("btn-video-analyze-analyse-tab").click();
+  });
+}
+
+document.getElementById("btn-video-phone-winner").addEventListener("click", startPhoneSessionForWinner);
+document.getElementById("btn-video-phone-analyse").addEventListener("click", startPhoneSessionForAnalyse);
+
+// ── Phone remote side ────────────────────────────────────────────
+let vrMediaStream = null;
+let vrMediaRecorder = null;
+let vrRecordedChunks = [];
+let vrVideoBlob = null;
+let vrSessionCode = null;
+
+async function initVideoRemote(code){
+  vrSessionCode = code;
+  showScreen("video-remote");
+
+  // Wait for DB ready, then signal connected
+  const signalConnected = async()=>{
+    try{
+      await window.dartDB?.updateVideoSession(code, {status:"connected"});
+    }catch(e){}
+    document.getElementById("vr-game-info").textContent = `Code: ${code} — Tablet wartet`;
+  };
+
+  if(window.dartDB) signalConnected();
+  else window.addEventListener("dbReady", ()=>signalConnected(), {once:true});
+
+  document.getElementById("btn-vr-record").addEventListener("click", startVrRecording);
+  document.getElementById("btn-vr-send").addEventListener("click", sendVrVideo);
+}
+
+async function startVrRecording(){
+  const recordBtn = document.getElementById("btn-vr-record");
+  const stopBtn = document.getElementById("btn-vr-stop");
+  const sendBtn = document.getElementById("btn-vr-send");
+  const preview = document.getElementById("vr-preview");
+  const status = document.getElementById("vr-status");
+
+  try{
+    vrMediaStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:"environment", width:{ideal:1280}, height:{ideal:720}},
+      audio:false
+    });
+    preview.srcObject = vrMediaStream;
+    preview.style.display = "";
+    preview.play();
+    recordBtn.style.display = "none";
+    stopBtn.style.display = "";
+    sendBtn.style.display = "none";
+    vrVideoBlob = null;
+
+    vrRecordedChunks = [];
+    vrMediaRecorder = new MediaRecorder(vrMediaStream, {mimeType:"video/webm"});
+    vrMediaRecorder.ondataavailable = e=>{ if(e.data.size>0) vrRecordedChunks.push(e.data); };
+    vrMediaRecorder.onstop = ()=>{
+      vrVideoBlob = new Blob(vrRecordedChunks, {type:"video/webm"});
+      const url = URL.createObjectURL(vrVideoBlob);
+      preview.srcObject = null;
+      preview.src = url;
+      vrMediaStream.getTracks().forEach(t=>t.stop());
+      stopBtn.style.display = "none";
+      recordBtn.style.display = "";
+      recordBtn.textContent = "📹 NEU AUFNEHMEN";
+      sendBtn.style.display = "";
+      status.textContent = "Vorschau — Senden wenn ok";
+    };
+
+    vrMediaRecorder.start();
+    let countdown = 10;
+    status.textContent = `⏺ Aufnahme läuft… (${countdown}s)`;
+    const timer = setInterval(()=>{
+      countdown--;
+      status.textContent = `⏺ Aufnahme läuft… (${countdown}s)`;
+      stopBtn.textContent = `⏹ STOP (${countdown}s)`;
+      if(countdown<=0){
+        clearInterval(timer);
+        if(vrMediaRecorder?.state==="recording") vrMediaRecorder.stop();
+      }
+    },1000);
+    stopBtn.onclick = ()=>{ clearInterval(timer); if(vrMediaRecorder?.state==="recording") vrMediaRecorder.stop(); };
+
+  }catch(err){
+    status.textContent = "Kamera nicht verfügbar: "+err.message;
+  }
+}
+
+async function sendVrVideo(){
+  if(!vrVideoBlob || !vrSessionCode){ return; }
+  const sendBtn = document.getElementById("btn-vr-send");
+  const status = document.getElementById("vr-status");
+  sendBtn.disabled = true;
+  sendBtn.textContent = "📤 Wird hochgeladen…";
+  status.textContent = "Upload läuft…";
+  try{
+    await window.dartDB.uploadVideoBlob(vrSessionCode, vrVideoBlob);
+    await window.dartDB.updateVideoSession(vrSessionCode, {status:"ready", videoPath:`dart_video_sessions/${vrSessionCode}.webm`});
+    status.textContent = "✅ Fertig! Das Tablet analysiert jetzt.";
+    sendBtn.textContent = "✅ Gesendet";
+    document.getElementById("btn-vr-record").style.display = "none";
+  }catch(e){
+    status.textContent = "Fehler: "+e.message;
+    sendBtn.disabled = false;
+    sendBtn.textContent = "📤 AN TABLET SENDEN";
+  }
+}
+
+// ── URL param detection — must run after DB is ready ─────────────
+(function detectVidSession(){
+  const code = new URLSearchParams(window.location.search).get("vidsession");
+  if(!code) return;
+  // Hide normal app chrome; show remote screen once DB is ready
+  document.querySelectorAll(".screen").forEach(s=>{
+    if(s.id!=="video-remote") s.style.display="none";
+  });
+  const doInit = ()=>initVideoRemote(code.toUpperCase());
+  if(window.dartDB) doInit();
+  else window.addEventListener("dbReady", doInit, {once:true});
+})();
 
 // Extract N frames from video as base64 JPEG
 async function extractVideoFrames(videoEl, numFrames=5){
