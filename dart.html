@@ -563,9 +563,63 @@ function updateAuthUI(user){
     0%,100% { transform: rotate(0deg); }
     50%      { transform: rotate(90deg); }
   }
+  /* ── Health Check Modal ── */
+  .health-modal-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.80);z-index:400;align-items:center;justify-content:center; }
+  .health-modal-backdrop.visible { display:flex; }
+  .health-modal { background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:24px 20px;width:92%;max-width:360px;color:#fff;font-family:'Segoe UI',sans-serif; }
+  .health-modal h3 { font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#e8c44a;margin:0 0 16px;text-align:center; }
+  .health-row { margin-bottom:14px; }
+  .health-row label { display:block;font-size:12px;color:#aaa;letter-spacing:1px;margin-bottom:6px; }
+  .health-chips { display:flex;gap:6px;flex-wrap:wrap; }
+  .health-chip { padding:6px 12px;border-radius:20px;border:1px solid #444;background:#111;color:#ccc;font-size:13px;cursor:pointer;transition:all .15s; }
+  .health-chip.active { background:#e8c44a;border-color:#e8c44a;color:#1a1a1a;font-weight:700; }
+  .health-modal-btns { display:flex;gap:10px;margin-top:18px; }
+  .health-modal-btns button { flex:1;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer; }
+  .health-skip-btn { background:#333;color:#aaa; }
+  .health-save-btn { background:#e8c44a;color:#1a1a1a; }
 </style>
 </head>
 <body>
+
+<!-- Health Check Modal -->
+<div class="health-modal-backdrop" id="health-modal-backdrop">
+  <div class="health-modal">
+    <h3>Wie geht's dir heute? (optional)</h3>
+    <div class="health-row">
+      <label>😴 GESCHLAFEN</label>
+      <div class="health-chips" id="hc-sleep">
+        <span class="health-chip" data-val="4">4h</span>
+        <span class="health-chip" data-val="5">5h</span>
+        <span class="health-chip" data-val="6">6h</span>
+        <span class="health-chip" data-val="7">7h</span>
+        <span class="health-chip" data-val="8">8h</span>
+        <span class="health-chip" data-val="9">9h+</span>
+      </div>
+    </div>
+    <div class="health-row">
+      <label>💪 KÖRPERLICHE BELASTUNG</label>
+      <div class="health-chips" id="hc-exertion">
+        <span class="health-chip" data-val="kaum">Kaum</span>
+        <span class="health-chip" data-val="leicht">Leicht</span>
+        <span class="health-chip" data-val="mittel">Mittel</span>
+        <span class="health-chip" data-val="viel">Viel</span>
+      </div>
+    </div>
+    <div class="health-row">
+      <label>🫀 WIE FÜHLST DU DICH</label>
+      <div class="health-chips" id="hc-feeling">
+        <span class="health-chip" data-val="1">😴 Müde</span>
+        <span class="health-chip" data-val="2">😐 Ok</span>
+        <span class="health-chip" data-val="3">😊 Gut</span>
+        <span class="health-chip" data-val="4">🌟 Top</span>
+      </div>
+    </div>
+    <div class="health-modal-btns">
+      <button class="health-skip-btn" id="health-skip-btn">Überspringen</button>
+      <button class="health-save-btn" id="health-save-btn">Speichern →</button>
+    </div>
+  </div>
+</div>
 
 <!-- Rotate-to-landscape overlay (shown on iOS portrait during gameplay) -->
 <div id="rotate-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);
@@ -2030,9 +2084,11 @@ document.getElementById("bot-personality-group").addEventListener("click",e=>{
   document.getElementById("bot-personality-desc").textContent=BOT_PERSONALITY_DESCS[selectedPersonality]||"";
 });
 
-document.getElementById("btn-start").addEventListener("click",()=>{
+document.getElementById("btn-start").addEventListener("click",async()=>{
   if(selectedPlayers.length<1){ alert("Bitte mindestens 1 Spieler auswählen!"); return; }
   if(selectedMode==="Killer"&&selectedPlayers.length<2&&selectedBot==="none"){ alert("Killer braucht mindestens 2 Spieler!"); return; }
+
+  const healthData = await collectHealthData();
 
   const players=[...selectedPlayers.map(p=>p.name)];
   const playerIds=[...selectedPlayers.map(p=>p.id)];
@@ -2066,7 +2122,8 @@ document.getElementById("btn-start").addEventListener("click",()=>{
     legsToWin:Math.ceil(selectedLegs/2),
     legWins:players.map(()=>0),
     currentLeg:1,
-    rounds:selectedRounds
+    rounds:selectedRounds,
+    healthData: healthData || null
   };
   const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
   if(cfg.mode==="Cricket") startCricket();
@@ -3591,7 +3648,8 @@ function saveGameToFirebase(winnerIdx){
     winnerId: cfg.playerIds?.[winnerIdx]||null,
     playerIds: cfg.playerIds||[],
     players,
-    durationSec: isX01 ? Math.round((Date.now()-x01.startTime)/1000) : 0
+    durationSec: isX01 ? Math.round((Date.now()-x01.startTime)/1000) : 0,
+    ...(cfg.healthData ? {healthData: cfg.healthData} : {})
   };
   window.dartDB.saveGame(gameDoc)
     .then(()=>updateAllPlayerStats())
@@ -3950,6 +4008,77 @@ document.getElementById("studio-delete-btn").addEventListener("click",async()=>{
 // ══════════════════════════════════════════════════════════════════
 const COACH_DAILY_LIMIT = 999;
 const COACH_STORAGE_KEY = "dart_coach_usage";
+const HEALTH_CONNECT_ENABLED = false; // true im Android Capacitor Build
+
+// ── Health Connect (Android) ──────────────────────────────────────
+async function getHealthDataFromConnect(){
+  if(!HEALTH_CONNECT_ENABLED || !window.healthConnect) return null;
+  try{
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 86400000);
+    const sleep = await window.healthConnect.readRecords({type:"SleepSession", startTime:yesterday.toISOString(), endTime:now.toISOString()});
+    const hrv = await window.healthConnect.readRecords({type:"RestingHeartRate", startTime:today.toISOString(), endTime:now.toISOString()});
+    const activity = await window.healthConnect.readRecords({type:"ActiveCalories", startTime:today.toISOString(), endTime:now.toISOString()});
+    return {
+      sleep: sleep.totalHours||null,
+      restingHR: hrv.beatsPerMinute||null,
+      activeCalories: activity.total||null,
+      source:"healthconnect"
+    };
+  }catch(e){ return null; }
+}
+
+// ── Health Modal (Browser) ────────────────────────────────────────
+function initHealthChips(){
+  document.querySelectorAll(".health-chips").forEach(group=>{
+    group.querySelectorAll(".health-chip").forEach(chip=>{
+      chip.addEventListener("click",()=>{
+        group.querySelectorAll(".health-chip").forEach(c=>c.classList.remove("active"));
+        chip.classList.add("active");
+      });
+    });
+  });
+}
+initHealthChips();
+
+function showHealthModal(){
+  return new Promise(resolve=>{
+    // Reset chips
+    document.querySelectorAll(".health-chip").forEach(c=>c.classList.remove("active"));
+    const backdrop = document.getElementById("health-modal-backdrop");
+    backdrop.classList.add("visible");
+    const skip = document.getElementById("health-skip-btn");
+    const save = document.getElementById("health-save-btn");
+    function cleanup(data){
+      backdrop.classList.remove("visible");
+      skip.removeEventListener("click", onSkip);
+      save.removeEventListener("click", onSave);
+      resolve(data);
+    }
+    function onSkip(){ cleanup(null); }
+    function onSave(){
+      const sleepChip = document.querySelector("#hc-sleep .health-chip.active");
+      const exertionChip = document.querySelector("#hc-exertion .health-chip.active");
+      const feelingChip = document.querySelector("#hc-feeling .health-chip.active");
+      const data = {
+        sleep: sleepChip ? Number(sleepChip.dataset.val) : null,
+        exertion: exertionChip ? exertionChip.dataset.val : null,
+        feeling: feelingChip ? Number(feelingChip.dataset.val) : null,
+        source:"manual"
+      };
+      cleanup(data);
+    }
+    skip.addEventListener("click", onSkip);
+    save.addEventListener("click", onSave);
+  });
+}
+
+async function collectHealthData(){
+  const hc = await getHealthDataFromConnect();
+  if(hc) return hc;
+  return showHealthModal();
+}
 
 function getCoachUsage(){
   try{
@@ -3974,11 +4103,30 @@ function coachCallsLeft(){
   return Math.max(0, COACH_DAILY_LIMIT - usage.count);
 }
 
-function buildCoachPrompt(stats, sessionStats, allGames, playerId){
+function buildCoachPrompt(stats, sessionStats, allGames, playerId, healthData){
   const lines=[
-    "Du bist ein erfahrener Dart-Coach. Analysiere die folgenden Spielerstatistiken und gib konkretes, actionables Feedback auf Deutsch.",
-    "Sei direkt, freundlich und spezifisch. Max. 5-6 Sätze. Fokus auf die wichtigsten Schwächen.",
-    "Gib KONKRETE Trainingsempfehlungen mit spezifischen Feldern und Wiederholungszahlen. Verweise auf echte Schwächen aus den Daten. Keine generischen Ratschläge.",
+    "Du bist ein professioneller, datenbasierter Dart-Elite-Trainer und Datenanalyst. Analysiere kritisch aber balanciert.",
+    "Kein blindes Loben, kein Niedermachen. Der Spieler entscheidet selbst über sein Training.",
+    "",
+    "Analysiere strikt nach diesem Schema:",
+    "",
+    "### 1. Status Quo & Muster-Erkennung",
+    "- First-9 vs. Gesamt-Average: Analysiere das Verhältnis. Beachte dass lange Checkout-Phasen den Average drücken.",
+    "- Trend: Letzte 5 vs. vorherige 5 Spiele explizit vergleichen.",
+    "- Präzision & Streuung: Werte X/Y-Koordinaten aus wenn vorhanden. Unterscheide systematischen Drift (links/rechts/oben/unten) von wilder Streuung.",
+    "- Match-Dynamik: High Scores, Checkout-Effizienz, Muster bei bestimmten Doppelfeldern.",
+    "",
+    "### 2. Differenzierte Betrachtung",
+    "- Stärken (Pro): Welche Segmente laufen stabil?",
+    "- Herausforderungen (Contra): Primärer Engpass laut Daten?",
+    "",
+    "### 3. Evidenzbasierte Trainingsempfehlungen",
+    "- Option A (Scoring & Konstanz): Übungen basierend auf Streuungsradius und Rhythmus.",
+    "- Option B (Checkout & Druck): Spielformen wie Bob's 27, Around the Clock Doubles.",
+    "",
+    "Wenn Gesundheitsdaten vorhanden: Beziehe sie explizit in die Analyse ein. Erkläre konkret wie Schlaf und Belastung die heutige Leistung beeinflusst haben könnten.",
+    "",
+    "Nur Analyse, kein Intro, kein Outro.",
     ""
   ];
 
@@ -4015,6 +4163,25 @@ function buildCoachPrompt(stats, sessionStats, allGames, playerId){
       lines.push(`Checkout-Quote: ${coLast}% (${coLast>=coPrev?"+":""}${coLast-coPrev}% vs. vorher)`);
       if(avgLast>avgPrev&&coLast>coPrev) lines.push("→ Klare Verbesserung in beiden Bereichen");
       else if(avgLast<avgPrev||coLast<coPrev) lines.push("→ Leichter Rückgang — mögliche Ermüdung oder Technikfehler");
+    }
+  }
+
+  // Scatter analysis from last 3 games
+  if(allGames&&playerId){
+    const pGames=allGames.filter(g=>(g.playerIds||[]).includes(playerId));
+    const last3=pGames.slice(0,3);
+    const pts=last3.flatMap(g=>(g.players||[]).find(p=>p.id===playerId)?.scatter||[]).filter(p=>p.x!=null&&p.y!=null);
+    if(pts.length>=5){
+      const cx=Math.round(pts.reduce((s,p)=>s+p.x,0)/pts.length);
+      const cy=Math.round(pts.reduce((s,p)=>s+p.y,0)/pts.length);
+      const radius=Math.round(pts.reduce((s,p)=>s+Math.sqrt((p.x-cx)**2+(p.y-cy)**2),0)/pts.length);
+      const driftH=cx<260?"links":cx>270?"rechts":"mittig";
+      const driftV=cy<260?"oben":cy>270?"unten":"mittig";
+      lines.push("","=== TREFFERBILD (letzte 3 Spiele) ===");
+      lines.push(`Cluster-Zentrum X:${cx} Y:${cy} (Scheibenmitte: 265/265)`);
+      lines.push(`Streuungsradius: ${radius} SVG-Einheiten`);
+      lines.push(`Drift: ${driftH} horizontal, ${driftV} vertikal`);
+      lines.push(`Trefferanzahl analysiert: ${pts.length}`);
     }
   }
 
@@ -4080,6 +4247,38 @@ function buildCoachPrompt(stats, sessionStats, allGames, playerId){
       if(p.id===null) return;
       lines.push(`${p.name}: Ø ${p.avg3||0}, Best ${p.best3||0}, Checkout ${p.checkoutHit||0}/${p.checkoutAtt||0}${p.first9?`, First-9: ${p.first9}`:""}${p.winner?" → GEWONNEN":""}`);
     });
+  }
+
+  // Health data — current game
+  if(healthData){
+    lines.push("","=== KÖRPERLICHE VERFASSUNG ===");
+    if(healthData.sleep!=null) lines.push(`Schlaf: ${healthData.sleep}h`);
+    if(healthData.exertion) lines.push(`Belastung: ${healthData.exertion}`);
+    if(healthData.feeling!=null) lines.push(`Befinden: ${healthData.feeling}/4`);
+    lines.push(`Datenquelle: ${healthData.source||"manual"}`);
+  }
+
+  // Health correlation — if enough historical games with healthData
+  if(allGames&&playerId){
+    const pGames=allGames.filter(g=>(g.playerIds||[]).includes(playerId)&&g.healthData?.sleep!=null);
+    if(pGames.length>=10){
+      const getPlayerAvg=g=>(g.players||[]).find(p=>p.id===playerId)?.avg3||0;
+      const lowSleep=pGames.filter(g=>g.healthData.sleep<6);
+      const goodSleep=pGames.filter(g=>g.healthData.sleep>=7);
+      const coOf=games=>{
+        const att=games.flatMap(g=>(g.players||[]).filter(p=>p.id===playerId)).reduce((s,p)=>s+(p.checkoutAtt||0),0);
+        const hit=games.flatMap(g=>(g.players||[]).filter(p=>p.id===playerId)).reduce((s,p)=>s+(p.checkoutHit||0),0);
+        return att>0?Math.round(hit/att*100):null;
+      };
+      if(lowSleep.length>=3&&goodSleep.length>=3){
+        const avgLow=Math.round(lowSleep.map(getPlayerAvg).reduce((a,b)=>a+b,0)/lowSleep.length*10)/10;
+        const avgGood=Math.round(goodSleep.map(getPlayerAvg).reduce((a,b)=>a+b,0)/goodSleep.length*10)/10;
+        const coLow=coOf(lowSleep), coGood=coOf(goodSleep);
+        lines.push("","=== KORRELATION SCHLAF / LEISTUNG ===");
+        lines.push(`Bei <6h Schlaf (${lowSleep.length} Spiele): Ø Average ${avgLow}${coLow!=null?" | Checkout "+coLow+"%":""}`);
+        lines.push(`Bei ≥7h Schlaf (${goodSleep.length} Spiele): Ø Average ${avgGood}${coGood!=null?" | Checkout "+coGood+"%":""}`);
+      }
+    }
   }
 
   lines.push("","Antworte NUR mit dem Coach-Feedback, keine Einleitung, keine Überschriften.");
@@ -4202,7 +4401,7 @@ document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
     }]
   };
 
-  const prompt=buildCoachPrompt(playerStats, sessionStats, allGamesCache, pid);
+  const prompt=buildCoachPrompt(playerStats, sessionStats, allGamesCache, pid, cfg.healthData||null);
   await callCoach(prompt, outputEl, limitEl, btn);
 
   // Save analysis to Firebase after successful response
