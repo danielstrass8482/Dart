@@ -1173,10 +1173,10 @@ function updateAuthUI(user){
         </label>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
-        <span style="font-size:14px;color:#333">💫 Animationen</span>
+        <span style="font-size:14px;color:#333">🎯 Checkout-Highlight</span>
         <label style="position:relative;display:inline-block;width:44px;height:24px">
-          <input type="checkbox" id="setting-anim" checked style="opacity:0;width:0;height:0">
-          <span id="setting-anim-slider" onclick="toggleSetting('anim')" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
+          <input type="checkbox" id="setting-checkout" checked style="opacity:0;width:0;height:0">
+          <span id="setting-checkout-slider" onclick="toggleSetting('checkout')" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
         </label>
       </div>
     </div>
@@ -1693,6 +1693,7 @@ function clearHits(svgEl){
 
 // ── Checkout segment highlight ────────────────────────────────────
 function highlightCheckout(svgEl, remaining){
+  if(localStorage.getItem("dart_checkout_highlight")==="false") return;
   const g=svgEl.querySelector("#"+svgEl.id+"-checkout");
   if(!g){ return; }
   g.innerHTML="";
@@ -1867,6 +1868,7 @@ function speak(text){
 }
 
 function doSpeak(text, lang){
+  if(localStorage.getItem("dart_tts_enabled")==="false") return;
   if(!window.speechSynthesis) return;
   const trySpeak=()=>{
     // Resume if suspended (happens after orientation change)
@@ -1967,6 +1969,7 @@ function initMic(){
 let micEnabled=false; // tracks if user wants mic on
 
 function startMic(){
+  if(localStorage.getItem("dart_mic_enabled")==="false") return;
   if(!recognition) initMic();
   if(!recognition) return;
   micEnabled=true;
@@ -2139,6 +2142,7 @@ function announceRequires(){
 
 // Restart mic after player advance if micEnabled
 function maybeRestartMic(){
+  if(localStorage.getItem("dart_mic_enabled")==="false") return;
   if(micEnabled&&!cfg.isBot?.[x01.current]&&!x01.winner){
     setTimeout(()=>{ if(!micActive) try{ recognition.start(); }catch(e){} },400);
   }
@@ -2430,6 +2434,7 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
 });
 
 window.addEventListener("dbReady", loadPlayers);
+window.addEventListener("dbReady", applySettings);
 
 // ══════════════════════════════════════════════════════════════════
 // SCREEN SWITCH
@@ -4122,6 +4127,7 @@ function prewarmElevenLabs(){
 
 // speakScore — ElevenLabs first, browser TTS as last fallback
 async function speakScoreWithCustom(score){
+  if(localStorage.getItem("dart_tts_enabled")==="false") return;
   const key=`score_${score}`;
   const text=score===180?"One Hundred and Eighty!":score===100?"One Hundred!":
              score===50?"Bull's Eye!":numToWords(score)+"!";
@@ -4131,6 +4137,7 @@ async function speakScoreWithCustom(score){
 
 // speak for bust/special — ElevenLabs first, browser TTS as last fallback
 async function speakKeyWithCustom(key, fallbackText){
+  if(localStorage.getItem("dart_tts_enabled")==="false") return;
   const played=await speakElevenLabs(fallbackText,`el_${key}`);
   if(!played) speak(fallbackText);
 }
@@ -6250,25 +6257,43 @@ document.getElementById("btn-profil-google")?.addEventListener("click",async()=>
 });
 
 // ── App-Settings toggles ──────────────────────────────────────────
+// Maps toggle-key → localStorage key (all default "true")
+const SETTING_KEYS = {
+  tts:      "dart_tts_enabled",
+  mic:      "dart_mic_enabled",
+  checkout: "dart_checkout_highlight"
+};
+
 function toggleSetting(key){
   const cb=document.getElementById("setting-"+key);
   const slider=document.getElementById("setting-"+key+"-slider");
-  if(!cb) return;
+  if(!cb||!SETTING_KEYS[key]) return;
   cb.checked=!cb.checked;
   slider.style.background=cb.checked?"#e8c44a":"#ccc";
-  if(key==="tts") localStorage.setItem("dart_setting_tts", cb.checked?"1":"0");
-  if(key==="mic") localStorage.setItem("dart_setting_mic", cb.checked?"1":"0");
-  if(key==="anim") localStorage.setItem("dart_setting_anim", cb.checked?"1":"0");
+  localStorage.setItem(SETTING_KEYS[key], cb.checked?"true":"false");
+  applySettings();
 }
+
+function applySettings(){
+  // Mic-Button visibility
+  const micOn=localStorage.getItem("dart_mic_enabled")!=="false";
+  document.querySelectorAll("#lp-mic,#bottom-mic").forEach(b=>{
+    if(b) b.style.display=micOn?"":"none";
+  });
+  // If mic disabled while active, stop it
+  if(!micOn && micEnabled) stopMic();
+}
+
 (function initSettings(){
-  ["tts","mic","anim"].forEach(k=>{
-    const v=localStorage.getItem("dart_setting_"+k);
+  Object.entries(SETTING_KEYS).forEach(([k, lsKey])=>{
     const cb=document.getElementById("setting-"+k);
     const sl=document.getElementById("setting-"+k+"-slider");
     if(!cb||!sl) return;
-    if(v!==null) cb.checked=v==="1";
+    // Default: checked (true), unless explicitly set to "false"
+    cb.checked=localStorage.getItem(lsKey)!=="false";
     sl.style.background=cb.checked?"#e8c44a":"#ccc";
   });
+  applySettings();
 })();
 
 // ── Time range buttons ────────────────────────────────────────────
