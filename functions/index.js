@@ -1,3 +1,7 @@
+// Deploy ins neue Projekt:
+// firebase use darttrainer-app
+// firebase deploy --only functions:dartTTS
+// firebase deploy --only functions:dartCoach
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { initializeApp } = require("firebase-admin/app");
@@ -70,7 +74,7 @@ exports.dartTTS = onRequest(
     }
 
     const voiceId = reqVoiceId || process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID;
-    const bucket = getStorage().bucket("fitness-tracker-c6f97.firebasestorage.app");
+    const bucket = getStorage().bucket(); // uses default bucket — projekt-unabhängig
     const filePath = `dart_voice_el/${voiceId}/${key}.mp3`;
     const file = bucket.file(filePath);
 
