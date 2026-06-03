@@ -4,6 +4,8 @@
 
 import { state } from './state.js';
 import { numToWords, soundBust, soundApplause, soundHit, soundLow, speakKeyWithCustom, speakScoreWithCustom, speak } from './audio.js';
+import { flashSegment } from './board.js';
+import { requiresDelay } from './x01.js';
 
 // ── Voice parser vocabulary ───────────────────────────────────────
 const NUM_WORDS={
@@ -219,13 +221,31 @@ export function handleVoiceHit(hit){
     turnScores:state.x01.turnScores.map(a=>[...a])
   });
 
+  // PDC checkout attempt: count once per turn at turn start when score ≤170
+  if(state.x01.throws.length===0&&
+     state.x01.scores[state.x01.current]<=170&&
+     state.x01.scores[state.x01.current]>1&&
+     state.x01.scores[state.x01.current]!==25&&
+     !state.x01.checkoutAttemptThisTurn){
+    state.x01.checkoutAttemptThisTurn=true;
+    state.x01.checkoutAttempts[state.x01.current]++;
+  }
+
   state.x01.throws.push(hit);
   state.x01.allThrows[state.x01.current].push(hit);
   if(window._boardOps) window._boardOps.redrawAllHits(state.boardSVG, state.x01.historicThrows[state.x01.current], state.x01.throws);
+  if(state.boardSVG) flashSegment(state.boardSVG, hit, 700);
 
   if(hit.miss){
     if(window._renderX01) window._renderX01();
-    if(state.x01.throws.length===3) setTimeout(()=>window._advanceX01&&window._advanceX01(),350);
+    if(state.x01.throws.length===3){
+      const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
+      if(turnScore===0){ soundLow(); speakKeyWithCustom("no_score","No Score!"); }
+      else if(turnScore<=9){ soundLow(); speakScoreWithCustom(turnScore); }
+      else { soundHit(); speakScoreWithCustom(turnScore); }
+      setTimeout(announceRequires, requiresDelay(turnScore));
+      setTimeout(()=>window._advanceX01&&window._advanceX01(),350);
+    }
     return;
   }
 
@@ -233,8 +253,6 @@ export function handleVoiceHit(hit){
   const prevSpent=spent-hit.score;
   const prevRemaining=state.x01.scores[state.x01.current]-prevSpent;
   const tent=prevRemaining-hit.score;
-
-  if(prevRemaining<=170&&prevRemaining>1) state.x01.checkoutAttempts[state.x01.current]++;
 
   if(tent<0||tent===1){
     state.x01.bust=true;
@@ -259,11 +277,13 @@ export function handleVoiceHit(hit){
 
   const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
   if(state.x01.throws.length===3){
-    if(turnScore<=9) soundLow();
-    else if(turnScore>=100) soundApplause();
-    else soundHit();
-    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
-    setTimeout(announceRequires, 1600);
+    if(turnScore===0){ soundLow(); }
+    else if(turnScore<=9){ soundLow(); }
+    else if(turnScore>=100){ soundApplause(); }
+    else { soundHit(); }
+    const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
+    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
+    setTimeout(announceRequires, requiresDelay(turnScore));
   } else { soundHit(); }
 
   if(window._renderX01) window._renderX01();

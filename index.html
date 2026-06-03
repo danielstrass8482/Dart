@@ -225,6 +225,8 @@
           <button class="btn-toggle" data-value="Highscore">Highscore</button>
           <button class="btn-toggle" data-value="Killer">Killer</button>
           <button class="btn-toggle" data-value="Elimination">Elimination</button>
+          <button class="btn-toggle" data-value="Bob27">🎯 Bob's 27</button>
+          <button class="btn-toggle" data-value="CheckoutTraining">✓ Checkout</button>
         </div>
       </div>
     </div>
@@ -285,6 +287,14 @@
       <div id="bot-personality-desc" style="color:#888;font-size:11px;text-align:center;margin-top:4px;min-height:14px">
         Spielt immer optimal und konstant
       </div>
+    </div>
+
+    <label class="field-label" style="margin-top:4px">SPIELKONTEXT</label>
+    <div class="btn-group" id="context-group">
+      <button class="btn-toggle active" data-value="auto">🤖 Auto</button>
+      <button class="btn-toggle" data-value="training">🎯 Training</button>
+      <button class="btn-toggle" data-value="casual">🎮 Casual</button>
+      <button class="btn-toggle" data-value="tournament">🏆 Turnier</button>
     </div>
 
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
@@ -377,6 +387,12 @@
         <span style="color:#999;font-size:13px">bis</span>
         <input type="date" id="date-to" class="date-input" />
         <button class="btn-add-player" id="btn-apply-dates" style="padding:6px 12px;font-size:13px">OK</button>
+      </div>
+      <div class="stats-time-bar" id="context-filter-bar" style="margin-top:4px">
+        <button class="time-btn active" data-ctx="all">Alle</button>
+        <button class="time-btn" data-ctx="training">🎯 Training</button>
+        <button class="time-btn" data-ctx="casual">🎮 Casual</button>
+        <button class="time-btn" data-ctx="tournament">🏆 Turnier</button>
       </div>
       <div id="stats-content"><div class="stats-loading">Lade Statistiken…</div></div>
     </div>
@@ -643,6 +659,7 @@
     <div class="game-title" id="x01-title">501 · Runde 1</div>
     <button class="btn-nav" id="x01-undo">↩ Undo</button>
   </div>
+  <div id="target-feedback-toast" style="display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:8px 16px;border-radius:8px;font-size:14px;z-index:500;pointer-events:none;white-space:nowrap"></div>
 
   <!-- Score strip (portrait: top, landscape: hidden) -->
   <div class="score-strip" id="score-strip"></div>

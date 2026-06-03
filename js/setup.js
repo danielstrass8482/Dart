@@ -193,6 +193,9 @@ export async function saveGameToFirebase(winnerIdx){
     playerIds: state.cfg.playerIds||[],
     players,
     durationSec: isX01 ? Math.round((Date.now()-state.x01.startTime)/1000) : 0,
+    context: state.cfg.context||"casual",
+    tournamentId: state.cfg.tournamentId||null,
+    tournamentName: state.cfg.tournamentName||null,
     ...(state.cfg.healthData ? {healthData: state.cfg.healthData} : {})
   };
   window.dartDB.saveGame(gameDoc)

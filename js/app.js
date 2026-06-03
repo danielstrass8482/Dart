@@ -36,7 +36,7 @@ import { initMic, startMic, stopMic, setVoiceFeedback, announceRequires, maybeRe
 import { runBotTurn, BOT_PERSONALITIES } from './bot.js';
 
 // ── X01 ──────────────────────────────────────────────────────────
-import { startX01, renderX01, handleX01Click, processX01Hit, advanceX01, handleLegWin, showWinner, handleBouncer, trackDoubleAttempt, getDoubleStatsForCoach } from './x01.js';
+import { startX01, renderX01, handleX01Click, processX01Hit, advanceX01, handleLegWin, showWinner, handleBouncer, trackDoubleAttempt, getDoubleStatsForCoach, showTargetOverlay, showTargetFeedback, calcTargetDistance } from './x01.js';
 
 // ── Cricket ──────────────────────────────────────────────────────
 import { startCricket, renderCricket, handleCricketClick, advanceCricket, setCricketBoard } from './cricket.js';
@@ -55,7 +55,8 @@ import {
 import {
   loadAndRenderStats, renderStatsPlayerBar, getTimeRange, allGamesCache,
   statsSelectedPlayer, statsRange, statsFrom, statsTo,
-  setStatsSelectedPlayer, setStatsRange, setStatsFrom, setStatsTo, setAllGamesCache
+  setStatsSelectedPlayer, setStatsRange, setStatsFrom, setStatsTo, setAllGamesCache,
+  statsContext, setStatsContext
 } from './stats.js';
 
 // ── Coach ────────────────────────────────────────────────────────
@@ -166,8 +167,23 @@ const boardSVGparty = document.getElementById("board-svg-party");
 buildBoard(boardSVGparty);
 setPartyBoard(boardSVGparty);
 
-// Board click listeners
-boardSVG.addEventListener("pointerup", handleX01Click);
+// Board click listeners — x01 board intercepts for target practice
+boardSVG.addEventListener("pointerup", (e)=>{
+  if(localStorage.getItem("dart_target_practice")==="true"&&
+     !state.x01?.winner&&!state.x01?.bust&&(state.x01?.throws?.length||0)<3&&
+     !state.x01?.currentTarget){
+    showTargetOverlay(true);
+    disableBoard(boardSVG, true);
+    return;
+  }
+  const prevTarget=state.x01?.currentTarget||null;
+  handleX01Click(e);
+  if(prevTarget&&state.x01?.throws?.length){
+    const lastThrow=state.x01.throws[state.x01.throws.length-1];
+    showTargetFeedback(prevTarget, lastThrow);
+    state.x01.currentTarget=null;
+  }
+});
 boardSVGcr.addEventListener("pointerup", handleCricketClick);
 boardSVGparty.addEventListener("pointerup", handlePartyClick);
 
@@ -253,14 +269,18 @@ document.getElementById("btn-next-set").addEventListener("click",()=>{
   state.cfg.currentSet++;
   state.cfg.currentLeg=1;
   state.cfg.legWins=state.cfg.players.map(()=>0);
-  const legStarter=state.x01.winner;
-  startX01(legStarter);
+  // PDC: set starter advances by 1 from the first leg starter of previous set
+  state.cfg.currentLegStarter=((state.cfg.firstLegStarter||0)+1)%state.cfg.players.length;
+  state.cfg.firstLegStarter=state.cfg.currentLegStarter;
+  state.cfg.nextLegStarter=state.cfg.currentLegStarter;
+  startX01(state.cfg.currentLegStarter);
 });
 document.getElementById("btn-next-leg").addEventListener("click",()=>{
   document.getElementById("leg-overlay").classList.remove("visible");
   state.cfg.currentLeg++;
-  const legStarter=state.x01.winner;
-  startX01(legStarter);
+  // PDC: strictly alternate leg starters
+  state.cfg.currentLegStarter=state.cfg.nextLegStarter||0;
+  startX01(state.cfg.currentLegStarter);
 });
 
 // ── Setup form ────────────────────────────────────────────────────
@@ -268,6 +288,7 @@ let selectedMode="501";
 let selectedLegs=1, selectedSets=1;
 let selectedRounds=8;
 let selectedBot="none", selectedPersonality="methodisch";
+let selectedContext="auto";
 
 const modeGroup=document.getElementById("mode-group");
 const legsGroup=document.getElementById("legs-group");
@@ -328,6 +349,12 @@ document.getElementById("bot-personality-group").addEventListener("click",e=>{
   document.getElementById("bot-personality-desc").textContent=BOT_PERSONALITY_DESCS[selectedPersonality]||"";
 });
 
+document.getElementById("context-group")?.addEventListener("click",e=>{
+  if(!e.target.dataset.value) return;
+  selectedContext=e.target.dataset.value;
+  document.querySelectorAll("#context-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedContext));
+});
+
 document.getElementById("btn-add-player").addEventListener("click", async ()=>{
   const input=document.getElementById("new-player-input");
   const name=input.value.trim();
@@ -356,13 +383,20 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
     players.push(`${pName} Bot (${levelName})`); playerIds.push(null); isBot.push(true);
   }
 
+  const humans=players.filter((_,i)=>!isBot[i]);
+  const hasBot=isBot.some(Boolean);
+  const detectedContext=selectedContext!=="auto"?selectedContext:
+    (humans.length===1&&!hasBot?"training":"casual");
+
   state.cfg={
     mode:selectedMode, startScore:selectedMode==="301"?301:501,
     players, playerIds, playerObjects:[...state.selectedPlayers], isBot,
     botLevel:selectedBot, botPersonality:selectedBot!=="none"?selectedPersonality:"methodisch",
     totalSets:selectedSets, setsToWin:Math.ceil(selectedSets/2), setWins:players.map(()=>0), currentSet:1,
     totalLegs:selectedLegs, legsToWin:Math.ceil(selectedLegs/2), legWins:players.map(()=>0), currentLeg:1,
-    rounds:selectedRounds, healthData: healthData || null
+    rounds:selectedRounds, healthData: healthData || null,
+    currentLegStarter:0, nextLegStarter:0, firstLegStarter:0,
+    context: detectedContext, tournamentId: null, tournamentName: null
   };
   const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
   if(state.cfg.mode==="Cricket") startCricket();
@@ -409,6 +443,15 @@ document.querySelectorAll(".time-btn").forEach(btn=>{
     const customRow=document.getElementById("custom-date-row");
     customRow.style.display=btn.dataset.range==="custom"?"flex":"none";
     if(btn.dataset.range!=="custom") loadAndRenderStats();
+  });
+});
+
+document.querySelectorAll("#context-filter-bar .time-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("#context-filter-bar .time-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    setStatsContext(btn.dataset.ctx);
+    loadAndRenderStats();
   });
 });
 
@@ -634,7 +677,7 @@ document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=
 document.getElementById("btn-profil-google")?.addEventListener("click",async()=>{ try{ await window.signInWithGoogle(); initProfilTab(); }catch(e){} });
 
 // ── Settings toggles ──────────────────────────────────────────────
-const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", health:"dart_health_enabled" };
+const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", health:"dart_health_enabled", targetpractice:"dart_target_practice" };
 window.toggleSetting = function(key){
   const cb=document.getElementById("setting-"+key);
   const slider=document.getElementById("setting-"+key+"-slider");

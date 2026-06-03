@@ -10,6 +10,7 @@ export let statsSelectedPlayer = null;
 export let statsRange = 'all';
 export let statsFrom = null, statsTo = null;
 export let allGamesCache = [];
+export let statsContext = 'all';
 
 /**
  * Sets the stats selected player.
@@ -20,6 +21,7 @@ export function setStatsRange(r){ statsRange = r; }
 export function setStatsFrom(f){ statsFrom = f; }
 export function setStatsTo(t){ statsTo = t; }
 export function setAllGamesCache(g){ allGamesCache = g; }
+export function setStatsContext(c){ statsContext = c; }
 
 /**
  * Computes time range {from, to} based on current statsRange.
@@ -85,6 +87,7 @@ export async function loadAndRenderStats(){
     const {from,to}=getTimeRange();
     let games=allGamesCache.filter(g=>g.ts>=from&&g.ts<=to);
     if(statsSelectedPlayer){ games=games.filter(g=>(g.playerIds||[]).includes(statsSelectedPlayer)); }
+    if(statsContext!=="all"){ games=games.filter(g=>g.context===statsContext||(statsContext==="casual"&&!g.context)); }
 
     if(!games.length){
       box.innerHTML='<div class="stats-loading">Keine Spiele im gewählten Zeitraum.</div>'; return;
@@ -194,6 +197,35 @@ export async function loadAndRenderStats(){
         <div class="scatter-wrap">
           <svg id="scatter-svg" viewBox="36 36 458 458" style="display:block;width:100%;max-width:500px;max-height:500px;border-radius:8px;background:#0a0a0f;margin:0 auto"></svg>
         </div>`;
+
+      // FEATURE 6: Scatter comparison (Premium)
+      if(pid){
+        html+=`<div class="stats-section-title" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('scatter-compare-wrap').style.display=document.getElementById('scatter-compare-wrap').style.display==='none'?'':'none';this.querySelector('.sc-arrow').textContent=this.querySelector('.sc-arrow').textContent==='▼'?'▲':'▼'">
+          📊 TREFFERBILD VERGLEICH <span style="font-size:10px;background:#e8c44a;color:#000;padding:2px 6px;border-radius:8px;font-family:'DM Sans',sans-serif">PREMIUM</span>
+          <span class="sc-arrow" style="color:#aaa;font-size:12px">▼</span>
+        </div>
+        <div id="scatter-compare-wrap" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div>
+              <div style="font-size:11px;color:#888;margin-bottom:4px;text-align:center">LETZTER MONAT</div>
+              <svg id="scatter-cmp-a" viewBox="36 36 458 458" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
+              <div id="scatter-cmp-a-info" style="font-size:10px;color:#aaa;text-align:center;margin-top:2px"></div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:#888;margin-bottom:4px;text-align:center">VORLETZTER MONAT</div>
+              <svg id="scatter-cmp-b" viewBox="36 36 458 458" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
+              <div id="scatter-cmp-b-info" style="font-size:10px;color:#aaa;text-align:center;margin-top:2px"></div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      // FEATURE 7: Segment frequency table (Premium)
+      html+=`<div class="stats-section-title" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('segment-analysis-wrap').style.display=document.getElementById('segment-analysis-wrap').style.display==='none'?'':'none';this.querySelector('.sa-arrow').textContent=this.querySelector('.sa-arrow').textContent==='▼'?'▲':'▼'">
+        🎯 SEGMENT-ANALYSE <span style="font-size:10px;background:#e8c44a;color:#000;padding:2px 6px;border-radius:8px;font-family:'DM Sans',sans-serif">PREMIUM</span>
+        <span class="sa-arrow" style="color:#aaa;font-size:12px">▼</span>
+      </div>
+      <div id="segment-analysis-wrap" style="display:none" data-scatter-json='${JSON.stringify(allScatter.slice(0,600))}'></div>`;
     }
 
     const doubleAgg={};
@@ -253,6 +285,87 @@ export async function loadAndRenderStats(){
     if(allScatter.length){
       const svg=document.getElementById("scatter-svg");
       if(svg) drawMiniBoard(svg, allScatter);
+
+      // Render scatter comparison boards
+      if(pid){
+        const now=Date.now(), day=86400000;
+        const mStart=new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
+        const mEnd=now;
+        const pm=new Date(mStart); pm.setMonth(pm.getMonth()-1);
+        const pmStart=pm.getTime();
+        const pmEnd=mStart.getTime()-1;
+        const scatterA=allGamesCache.filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=mStart.getTime()&&g.ts<=mEnd)
+          .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
+          .filter(s=>s.x!=null&&s.y!=null);
+        const scatterB=allGamesCache.filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=pmStart&&g.ts<=pmEnd)
+          .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
+          .filter(s=>s.x!=null&&s.y!=null);
+        const svgA=document.getElementById("scatter-cmp-a");
+        const svgB=document.getElementById("scatter-cmp-b");
+        if(svgA) drawMiniBoard(svgA, scatterA);
+        if(svgB) drawMiniBoard(svgB, scatterB);
+        const infoA=document.getElementById("scatter-cmp-a-info");
+        const infoB=document.getElementById("scatter-cmp-b-info");
+        const avgA=x01Data.filter(p=>{const g=games.find(g=>g.ts>=mStart.getTime());return g;}).map(p=>p.avg3||0).filter(v=>v>0);
+        if(infoA) infoA.textContent=`${scatterA.length} Würfe`;
+        if(infoB) infoB.textContent=`${scatterB.length} Würfe`;
+      }
+
+      // Render segment frequency table
+      const segWrap=document.getElementById("segment-analysis-wrap");
+      if(segWrap){
+        const scatterData=JSON.parse(segWrap.dataset.scatterJson||"[]");
+        const segments={};
+        [...Array(20)].forEach((_,i)=>{ segments[i+1]={single:0,double:0,triple:0}; });
+        segments[25]={single:0,double:0};
+        scatterData.forEach(p=>{
+          if(!p.l||p.l==="Miss") return;
+          const isTriple=p.l.startsWith("T");
+          const isDouble=p.l.startsWith("D");
+          const isBull=p.l==="Bull";
+          const isBull25=p.l==="Bull 25";
+          const num=isBull||isBull25?25:parseInt(p.l.replace(/[TDS]/,""))||0;
+          if(!segments[num]) return;
+          if(isTriple) segments[num].triple=(segments[num].triple||0)+1;
+          else if(isDouble||isBull) segments[num].double++;
+          else segments[num].single++;
+        });
+        const entries=Object.entries(segments).map(([num,v])=>{
+          const total=(v.single||0)+(v.double||0)+(v.triple||0);
+          return {num:parseInt(num),single:v.single||0,double:v.double||0,triple:v.triple||0,total};
+        }).filter(e=>e.total>0).sort((a,b)=>b.total-a.total);
+        if(entries.length>0){
+          const totalThrows=scatterData.filter(p=>p.l&&p.l!=="Miss").length||1;
+          const fav=entries[0];
+          const bestTriple=[...entries].sort((a,b)=>b.triple-a.triple)[0];
+          const rarest=[...entries].sort((a,b)=>a.total-b.total)[0];
+          let segHtml=`<div style="margin-bottom:8px">
+            <span style="font-size:12px;color:#aaa">Lieblings-Feld: <strong>${fav.num}</strong> (${fav.total}×)</span>
+            ${bestTriple?.triple>0?` &nbsp;·&nbsp; <span style="font-size:12px;color:#aaa">Bestes Triple: <strong>T${bestTriple.num}</strong> (${bestTriple.triple}×)</span>`:""}
+            ${rarest?` &nbsp;·&nbsp; <span style="font-size:12px;color:#aaa">Seltenst: <strong>${rarest.num}</strong> (${rarest.total}×)</span>`:""}
+          </div>
+          <div class="history-list">
+            <div class="history-header" style="grid-template-columns:50px 1fr 55px 55px 55px 45px">
+              <span>FELD</span><span></span><span>SINGLE</span><span>DOUBLE</span><span>TRIPLE</span><span>%</span>
+            </div>`;
+          entries.slice(0,20).forEach(e=>{
+            const pct=Math.round(e.total/totalThrows*100);
+            const barW=Math.round(pct/Math.max(1,Math.round(entries[0].total/totalThrows*100))*80);
+            segHtml+=`<div class="history-row" style="grid-template-columns:50px 1fr 55px 55px 55px 45px">
+              <strong>${e.num===25?"Bull":e.num}</strong>
+              <span style="height:6px;background:#f0f0f0;border-radius:3px;align-self:center">
+                <span style="display:block;height:6px;width:${barW}%;background:#1e88e5;border-radius:3px"></span>
+              </span>
+              <span>${e.single||"—"}</span><span>${e.double||"—"}</span><span>${e.triple||"—"}</span>
+              <span style="font-weight:700;color:#555">${pct}%</span>
+            </div>`;
+          });
+          segHtml+=`</div>`;
+          segWrap.innerHTML=segHtml;
+        } else {
+          segWrap.innerHTML=`<div style="color:#aaa;font-size:13px;padding:8px">Keine Treffer-Koordinaten vorhanden (nur bei Touch-Eingabe auf dem Board).</div>`;
+        }
+      }
     }
 
     if(chartGames.length>=2){

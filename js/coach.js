@@ -170,19 +170,31 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
 
   if(allGames&&playerId){
     const pGames=allGames.filter(g=>(g.playerIds||[]).includes(playerId));
-    const last3=pGames.slice(0,3);
-    const pts=last3.flatMap(g=>(g.players||[]).find(p=>p.id===playerId)?.scatter||[]).filter(p=>p.x!=null&&p.y!=null);
-    if(pts.length>=5){
-      const cx=Math.round(pts.reduce((s,p)=>s+p.x,0)/pts.length);
-      const cy=Math.round(pts.reduce((s,p)=>s+p.y,0)/pts.length);
-      const radius=Math.round(pts.reduce((s,p)=>s+Math.sqrt((p.x-cx)**2+(p.y-cy)**2),0)/pts.length);
-      const driftH=cx<260?"links":cx>270?"rechts":"mittig";
-      const driftV=cy<260?"oben":cy>270?"unten":"mittig";
-      lines.push("","=== TREFFERBILD (letzte 3 Spiele) ===");
+    const last5=pGames.slice(0,5);
+    const scatter=last5
+      .flatMap(g=>(g.players||[]).filter(p=>p.id===playerId).flatMap(p=>p.scatter||[]))
+      .filter(p=>p.x!=null&&p.y!=null&&!isNaN(p.x)&&!isNaN(p.y));
+    if(scatter.length>=5){
+      const cx=Math.round(scatter.reduce((s,p)=>s+p.x,0)/scatter.length);
+      const cy=Math.round(scatter.reduce((s,p)=>s+p.y,0)/scatter.length);
+      const driftX=cx-265;
+      const driftY=cy-265;
+      const hDrift=Math.abs(driftX)<15?"mittig":
+        driftX<0?`${Math.abs(driftX)}px links`:`${driftX}px rechts`;
+      const vDrift=Math.abs(driftY)<15?"mittig":
+        driftY<0?`${Math.abs(driftY)}px oben`:`${driftY}px unten`;
+      const radius=Math.round(scatter.reduce((s,p)=>s+Math.sqrt((p.x-cx)**2+(p.y-cy)**2),0)/scatter.length);
+      const precision=radius<20?"sehr präzise":radius<40?"gut":radius<70?"mittlere Streuung":"große Streuung";
+      const missRate=Math.round(scatter.filter(p=>p.l==="Miss").length/scatter.length*100);
+      lines.push("","=== TREFFERBILD-ANALYSE (letzte 5 Spiele) ===");
+      lines.push(`Würfe analysiert: ${scatter.length}`);
       lines.push(`Cluster-Zentrum X:${cx} Y:${cy} (Scheibenmitte: 265/265)`);
-      lines.push(`Streuungsradius: ${radius} SVG-Einheiten`);
-      lines.push(`Drift: ${driftH} horizontal, ${driftV} vertikal`);
-      lines.push(`Trefferanzahl analysiert: ${pts.length}`);
+      lines.push(`Horizontaler Drift: ${hDrift}`);
+      lines.push(`Vertikaler Drift: ${vDrift}`);
+      lines.push(`Streuungsradius: ${radius}px — ${precision}`);
+      lines.push(`Miss-Rate: ${missRate}%`);
+      if(Math.abs(driftX)>=20||Math.abs(driftY)>=20)
+        lines.push(`→ Systematischer Drift erkannt: ${hDrift} / ${vDrift}`);
     }
   }
 

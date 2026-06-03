@@ -180,6 +180,7 @@ export function clearHits(svgEl){
 
 /**
  * Highlights checkout suggestion segments on the board.
+ * First segment pulses strongly (next throw), rest are static and dimmer.
  * @param {SVGElement} svgEl
  * @param {number} remaining
  */
@@ -196,18 +197,25 @@ export function highlightCheckout(svgEl, remaining){
   const throwsArr = (svgEl.id==="board-svg" ? state.x01.throws : state.cr.throws) || [];
   const parts=co.split(" ").slice(0, 3-throwsArr.length);
 
-  parts.forEach(part=>{
+  parts.forEach((part, partIdx)=>{
+    const isNext=partIdx===0;
     const isTriple=part.startsWith("T");
     const isDouble=part.startsWith("D");
     const isBull=part==="Bull"||part==="D25";
     const num=isBull?25:parseInt(part.replace(/[TDS]/,""));
 
+    const fillColor=isNext?"rgba(80,255,120,0.45)":"rgba(80,200,255,0.20)";
+    const strokeColor=isNext?"#00ff88":"#44aaff";
+    const strokeWidth=isNext?"3":"1.5";
+
     if(isBull){
       const r=part==="D25"?R.bull25:R.bull;
       const c=document.createElementNS(ns,"circle");
       c.setAttribute("cx",CX); c.setAttribute("cy",CY); c.setAttribute("r",r);
-      c.setAttribute("fill","rgba(80,255,120,0.35)");
-      c.setAttribute("stroke","#00ff88"); c.setAttribute("stroke-width","2");
+      c.setAttribute("fill",fillColor);
+      c.setAttribute("stroke",strokeColor); c.setAttribute("stroke-width",strokeWidth);
+      if(isNext) c.innerHTML=`<animate attributeName="opacity" values="0.5;1;0.5" dur="0.9s" repeatCount="indefinite"/>`;
+      else c.setAttribute("opacity","0.6");
       g.appendChild(c);
       return;
     }
@@ -221,13 +229,83 @@ export function highlightCheckout(svgEl, remaining){
 
     const path=document.createElementNS(ns,"path");
     path.setAttribute("d",slicePath(rIn,rOut,idx));
-    path.setAttribute("fill","rgba(80,255,120,0.35)");
-    path.setAttribute("stroke","#00ff88");
-    path.setAttribute("stroke-width","2.5");
+    path.setAttribute("fill",fillColor);
+    path.setAttribute("stroke",strokeColor);
+    path.setAttribute("stroke-width",strokeWidth);
     path.setAttribute("stroke-linejoin","round");
     g.appendChild(path);
-    path.innerHTML=`<animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite"/>`;
+
+    if(isNext){
+      path.innerHTML=`
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="0.9s" repeatCount="indefinite"/>
+        <animate attributeName="stroke-width" values="2;5;2" dur="0.9s" repeatCount="indefinite"/>`;
+      if(num>=1&&num<=20){
+        const mid=sectorAngle(idx)+toRad(9);
+        const labelR=isTriple?(R.triIn+R.triOut)/2:
+          isDouble?(R.dblIn+R.dblOut)/2:
+          (R.bull25+R.dblIn)/2;
+        const [lx,ly]=polarXY(labelR,mid);
+        const label=document.createElementNS(ns,"text");
+        label.setAttribute("x",lx); label.setAttribute("y",ly);
+        label.setAttribute("text-anchor","middle");
+        label.setAttribute("dominant-baseline","middle");
+        label.setAttribute("fill","#fff"); label.setAttribute("font-size","11");
+        label.setAttribute("font-family","'Bebas Neue',sans-serif");
+        label.setAttribute("pointer-events","none");
+        label.textContent=part;
+        label.innerHTML+=`<animate attributeName="opacity" values="0.6;1;0.6" dur="0.9s" repeatCount="indefinite"/>`;
+        g.appendChild(label);
+      }
+    } else {
+      path.setAttribute("opacity","0.6");
+    }
   });
+}
+
+/**
+ * Flashes the hit segment briefly on the SVG board (e.g. for voice hits).
+ * @param {SVGElement} svgEl
+ * @param {{label:string, miss?:boolean}} hit
+ * @param {number} durationMs
+ */
+export function flashSegment(svgEl, hit, durationMs=600){
+  const ns="http://www.w3.org/2000/svg";
+  const g=svgEl.querySelector("#"+svgEl.id+"-hits");
+  if(!g) return;
+  let flashEl;
+  if(hit.label==="Bull"){
+    flashEl=document.createElementNS(ns,"circle");
+    flashEl.setAttribute("cx",CX); flashEl.setAttribute("cy",CY);
+    flashEl.setAttribute("r",R.bull);
+    flashEl.setAttribute("fill","rgba(255,255,100,0.7)");
+  } else if(hit.label==="Bull 25"){
+    flashEl=document.createElementNS(ns,"circle");
+    flashEl.setAttribute("cx",CX); flashEl.setAttribute("cy",CY);
+    flashEl.setAttribute("r",R.bull25);
+    flashEl.setAttribute("fill","rgba(255,255,100,0.5)");
+  } else if(hit.miss){
+    flashEl=document.createElementNS(ns,"circle");
+    flashEl.setAttribute("cx",CX); flashEl.setAttribute("cy",CY);
+    flashEl.setAttribute("r",R.miss);
+    flashEl.setAttribute("fill","rgba(220,50,50,0.3)");
+  } else {
+    const isTriple=hit.label.startsWith("T");
+    const isDouble=hit.label.startsWith("D");
+    const num=parseInt(hit.label.replace(/[TDS]/,""))||0;
+    const idx=SECTORS.indexOf(num);
+    if(idx<0) return;
+    let rIn,rOut;
+    if(isTriple){rIn=R.triIn;rOut=R.triOut;}
+    else if(isDouble){rIn=R.dblIn;rOut=R.dblOut;}
+    else{rIn=R.bull25;rOut=R.dblIn;}
+    flashEl=document.createElementNS(ns,"path");
+    flashEl.setAttribute("d",slicePath(rIn,rOut,idx));
+    flashEl.setAttribute("fill","rgba(255,255,100,0.6)");
+  }
+  flashEl.setAttribute("opacity","0");
+  flashEl.innerHTML=`<animate attributeName="opacity" values="0;0.8;0.8;0" dur="${durationMs}ms" repeatCount="1" fill="freeze"/>`;
+  g.appendChild(flashEl);
+  setTimeout(()=>flashEl.remove(), durationMs+50);
 }
 
 /**
