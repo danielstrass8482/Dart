@@ -276,11 +276,11 @@
       <label class="field-label" style="margin-top:8px">PERSÖNLICHKEIT</label>
       <div class="btn-group" id="bot-personality-group" style="flex-wrap:wrap">
         <button class="btn-toggle active" data-value="methodisch">🎯 Methodisch</button>
-        <button class="btn-toggle" data-value="uebermuetig">💪 Übermütig</button>
-        <button class="btn-toggle" data-value="nervoese">😰 Nervös</button>
-        <button class="btn-toggle" data-value="gluecksspieler">🎰 Glücksspieler</button>
-        <button class="btn-toggle" data-value="kaltbluetig">🧊 Kaltblütig</button>
-        <button class="btn-toggle" data-value="aufholer">📉 Aufholer</button>
+        <button class="btn-toggle" data-value="uebermuetig">💪 Übermütig 🔒</button>
+        <button class="btn-toggle" data-value="nervoese">😰 Nervös 🔒</button>
+        <button class="btn-toggle" data-value="gluecksspieler">🎰 Glücksspieler 🔒</button>
+        <button class="btn-toggle" data-value="kaltbluetig">🧊 Kaltblütig 🔒</button>
+        <button class="btn-toggle" data-value="aufholer">📉 Aufholer 🔒</button>
       </div>
       <div id="bot-personality-desc" style="color:#888;font-size:11px;text-align:center;margin-top:4px;min-height:14px">
         Spielt immer optimal und konstant
@@ -357,7 +357,7 @@
   <div class="home-tab-content" id="tab-statistiken">
     <div class="sub-tabs-bar">
       <button class="sub-tab active" data-sub="stats">STATISTIKEN</button>
-      <button class="sub-tab" data-sub="analyse">ANALYSE</button>
+      <button class="sub-tab" data-sub="analyse">ANALYSE <span style="background:#e8c44a;color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span></button>
     </div>
     <!-- Sub: STATISTIKEN -->
     <div class="sub-tab-content active" id="sub-tab-stats">
@@ -385,8 +385,9 @@
     <div class="sub-tab-content" id="sub-tab-analyse">
     <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
       <div id="analyse-player-bar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+      <div class="stats-section-title">📊 ERWEITERTE STATISTIKEN <span style="background:#e8c44a;color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
       <div class="stats-section-title">🧠 COACH-ANALYSE</div>
-      <button class="coach-btn" id="btn-coach-analyse-tab" disabled>🧠 COACH-ANALYSE STARTEN</button>
+      <button class="coach-btn" id="btn-coach-analyse-tab" disabled>🧠 COACH-ANALYSE STARTEN <span style="background:#e8c44a;color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
       <div id="coach-output-analyse-tab"></div>
       <div class="coach-limit" id="coach-limit-analyse-tab"></div>
       <div id="coach-history-analyse-tab" style="margin-top:12px"></div>
@@ -415,7 +416,7 @@
   <div class="home-tab-content" id="tab-turniere">
   <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px">🏆 TURNIERE</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px">🏆 TURNIERE <span style="background:#e8c44a;color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span></div>
       <button onclick="openTournamentSetup()" style="padding:9px 16px;background:#e8c44a;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">+ ERSTELLEN</button>
     </div>
     <div id="tournament-list"><div style="color:#aaa;font-size:13px;text-align:center;padding:20px">Noch keine Turniere</div></div>
@@ -444,6 +445,9 @@
       </div>
       <button id="btn-profil-signout" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;background:none;color:#e53935;font-size:14px;cursor:pointer">Abmelden</button>
     </div>
+
+    <!-- Premium Status -->
+    <div class="profil-section" id="profil-premium-status"></div>
 
     <!-- Stimme & Sound -->
     <div class="profil-section">
@@ -759,7 +763,7 @@
         <div style="font-size:11px;color:#999;letter-spacing:1px;margin-bottom:6px">ANALYSE FÜR</div>
         <div id="coach-player-btns" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
       </div>
-      <button class="coach-btn" id="btn-coach-winner">🧠 STATISTIK-ANALYSE</button>
+      <button class="coach-btn" id="btn-coach-winner">🧠 STATISTIK-ANALYSE <span style="background:#e8c44a;color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
       <div id="coach-output-winner"></div>
       <div class="coach-limit" id="coach-limit-winner"></div>
     </div>

@@ -206,6 +206,32 @@ function initDartDB(){
       return onSnapshot(doc(db,"dart_tournaments",id), snap=>{
         if(snap.exists()) cb({id:snap.id,...snap.data()});
       });
+    },
+    // ── Premium / Beta-User ──────────────────────────────────────
+    // Firestore rule: match /dart_users/{userId}/{document=**} {
+    //   allow read, write: if request.auth != null
+    //     && request.auth.uid == userId;
+    // }
+    async saveBetaUser(data){
+      const ref = doc(db, "dart_users", data.uid);
+      return setDoc(ref, {
+        ...data,
+        updatedAt: Date.now()
+      }, { merge: true });
+    },
+    async getSubscription(uid){
+      try{
+        const snap = await getDoc(
+          doc(db, "dart_users", uid, "subscription", "current")
+        );
+        return snap.exists() ? snap.data() : null;
+      }catch(e){ return null; }
+    },
+    async saveSubscription(uid, data){
+      return setDoc(
+        doc(db, "dart_users", uid, "subscription", "current"),
+        { ...data, updatedAt: Date.now() }
+      );
     }
   };
   window.dispatchEvent(new Event("dbReady"));
