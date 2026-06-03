@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>Dart Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/setup.css" />
+<link rel="stylesheet" href="css/game.css" />
+<link rel="stylesheet" href="css/stats.css" />
+<link rel="stylesheet" href="css/overlays.css" />
+</head>
+<body>
+
+<!-- Video Session Host Modal -->
+<div class="vidsession-backdrop" id="vidsession-backdrop">
+  <div class="vidsession-modal">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#e8c44a;margin-bottom:4px">📱 MIT HANDY AUFNEHMEN</div>
+    <div style="font-size:12px;color:#aaa;margin-bottom:12px">QR-Code scannen oder Code eingeben</div>
+    <img id="vidsession-qr-img" class="vidsession-qr" src="" alt="QR Code">
+    <div class="vidsession-code" id="vidsession-code-display"></div>
+    <div style="font-size:11px;color:#555;word-break:break-all;margin-bottom:8px" id="vidsession-url-display"></div>
+    <div class="vidsession-status" id="vidsession-status">⏳ Warte auf Handy…</div>
+    <button onclick="cancelVideoSession()" style="margin-top:12px;padding:8px 24px;border-radius:8px;border:1px solid #555;background:#111;color:#aaa;cursor:pointer;font-size:13px">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Health Check Modal -->
+<div class="health-modal-backdrop" id="health-modal-backdrop">
+  <div class="health-modal">
+    <h3>Wie geht's dir heute? (optional)</h3>
+    <div class="health-row">
+      <label>😴 GESCHLAFEN</label>
+      <div class="health-chips" id="hc-sleep">
+        <span class="health-chip" data-val="4">4h</span>
+        <span class="health-chip" data-val="5">5h</span>
+        <span class="health-chip" data-val="6">6h</span>
+        <span class="health-chip" data-val="7">7h</span>
+        <span class="health-chip" data-val="8">8h</span>
+        <span class="health-chip" data-val="9">9h+</span>
+      </div>
+    </div>
+    <div class="health-row">
+      <label>💪 KÖRPERLICHE BELASTUNG</label>
+      <div class="health-chips" id="hc-exertion">
+        <span class="health-chip" data-val="kaum">Kaum</span>
+        <span class="health-chip" data-val="leicht">Leicht</span>
+        <span class="health-chip" data-val="mittel">Mittel</span>
+        <span class="health-chip" data-val="viel">Viel</span>
+      </div>
+    </div>
+    <div class="health-row">
+      <label>🫀 WIE FÜHLST DU DICH</label>
+      <div class="health-chips" id="hc-feeling">
+        <span class="health-chip" data-val="1">😴 Müde</span>
+        <span class="health-chip" data-val="2">😐 Ok</span>
+        <span class="health-chip" data-val="3">😊 Gut</span>
+        <span class="health-chip" data-val="4">🌟 Top</span>
+      </div>
+    </div>
+    <div class="health-modal-btns">
+      <button class="health-skip-btn" id="health-skip-btn">Überspringen</button>
+      <button class="health-save-btn" id="health-save-btn">Speichern →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rotate-to-landscape overlay -->
+<div id="rotate-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);
+  z-index:9999;flex-direction:column;align-items:center;justify-content:center;
+  color:#fff;text-align:center;font-family:'Bebas Neue',sans-serif">
+  <div style="font-size:72px;margin-bottom:12px;display:inline-block;
+    animation:rotate-hint 1.5s ease-in-out infinite">📱</div>
+  <div style="font-size:32px;letter-spacing:3px">GERÄT DREHEN</div>
+  <div style="font-size:15px;font-family:'DM Sans',sans-serif;margin-top:8px;
+    opacity:.65;letter-spacing:0">Querformat für das Spiel erforderlich</div>
+</div>
+
+<!-- ═══════════════════════ AUTH SCREEN ═══════════════════════ -->
+<div id="auth-screen" class="screen active" style="background:#111;align-items:center;justify-content:center;overflow-y:auto">
+  <div style="width:100%;max-width:360px;padding:24px 20px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:#e8c44a;letter-spacing:4px;line-height:1">DART PRO</div>
+      <div style="font-size:11px;color:#444;letter-spacing:3px;margin-top:2px">SCORE TRACKER</div>
+    </div>
+
+    <div style="display:flex;border-bottom:1px solid #2a2a2a;margin-bottom:20px">
+      <button class="auth-tab-btn active" data-auth-tab="login">ANMELDEN</button>
+      <button class="auth-tab-btn" data-auth-tab="register">REGISTRIEREN</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="auth-login">
+      <input class="auth-input" id="login-email" type="email" placeholder="Email" autocomplete="email">
+      <input class="auth-input" id="login-password" type="password" placeholder="Passwort" autocomplete="current-password">
+      <div class="auth-error" id="login-error"></div>
+      <button class="auth-btn-primary" id="btn-email-login">ANMELDEN</button>
+      <button class="auth-btn-google" id="btn-google-login">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px">
+        MIT GOOGLE ANMELDEN
+      </button>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <button class="auth-link" id="btn-forgot-password">Passwort vergessen?</button>
+        <button class="auth-link" id="btn-guest">Als Gast spielen</button>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="auth-register" style="display:none">
+      <input class="auth-input" id="reg-name" type="text" placeholder="Dein Name" autocomplete="name">
+      <input class="auth-input" id="reg-email" type="email" placeholder="Email" autocomplete="email">
+      <input class="auth-input" id="reg-password" type="password" placeholder="Passwort (min. 6 Zeichen)" autocomplete="new-password">
+      <input class="auth-input" id="reg-password2" type="password" placeholder="Passwort wiederholen" autocomplete="new-password">
+      <div class="auth-error" id="reg-error"></div>
+      <button class="auth-btn-primary" id="btn-email-register">REGISTRIEREN</button>
+      <button class="auth-btn-google" id="btn-google-register">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px">
+        MIT GOOGLE REGISTRIEREN
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ HOME SCREEN ═══════════════════════ -->
+<div id="setup" class="screen" style="position:relative">
+  <!-- Tab bar -->
+  <div class="home-tabs">
+    <button class="home-tab active" data-tab="spielen">🎯 SPIELEN</button>
+    <button class="home-tab" data-tab="statistiken">📊 STATS</button>
+    <button class="home-tab" data-tab="turniere">🏆 TURNIERE</button>
+    <button class="home-tab" data-tab="profil">⚙️ PROFIL</button>
+  </div>
+
+  <!-- Profile button (absolute, top-right) -->
+  <div id="profile-btn" style="position:absolute;top:8px;right:12px;z-index:10;cursor:pointer;
+    width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;font-size:15px;background:#2a2a2a;color:#666;
+    overflow:hidden;flex-shrink:0"></div>
+
+  <!-- Profile modal -->
+  <div class="profile-modal-backdrop" id="profile-modal-backdrop">
+    <div class="profile-modal">
+      <button id="btn-profile-close" style="position:absolute;top:12px;right:14px;background:none;
+        border:none;color:#666;font-size:20px;cursor:pointer;line-height:1">✕</button>
+      <div id="profile-name" style="font-weight:600;color:#fff;font-size:16px;margin-bottom:2px;padding-right:28px"></div>
+      <div id="profile-email" style="font-size:12px;color:#666;margin-bottom:4px"></div>
+      <div id="profile-type" style="font-size:11px;color:#444;letter-spacing:1px;margin-bottom:20px"></div>
+
+      <div id="profile-upgrade-section" style="display:none;margin-bottom:16px;padding:16px;
+        background:#111;border-radius:10px;border:1px solid #333">
+        <div style="font-size:13px;color:#e8c44a;font-weight:600;margin-bottom:4px">⚠ Gast-Modus</div>
+        <div style="font-size:12px;color:#666;margin-bottom:12px">Spieldaten gehen verloren wenn du dich abmeldest.</div>
+        <input class="auth-input" id="upgrade-name" type="text" placeholder="Dein Name">
+        <input class="auth-input" id="upgrade-email" type="email" placeholder="Email">
+        <input class="auth-input" id="upgrade-password" type="password" placeholder="Passwort (min. 6 Zeichen)">
+        <div class="auth-error" id="upgrade-error"></div>
+        <button id="btn-upgrade-account" class="auth-btn-primary" style="font-size:15px">ACCOUNT ERSTELLEN</button>
+      </div>
+
+      <button id="btn-profile-reset-pw" style="display:none;width:100%;padding:10px;border:1px solid #333;
+        border-radius:8px;background:none;color:#aaa;font-size:14px;cursor:pointer;margin-bottom:8px">
+        🔑 Passwort ändern
+      </button>
+      <button onclick="signOutUser();document.getElementById('profile-modal-backdrop').classList.remove('visible')"
+        style="width:100%;padding:10px;border:1px solid #333;border-radius:8px;background:none;
+        color:#e53935;font-size:14px;cursor:pointer">
+        Abmelden
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB: SPIELEN -->
+  <div class="home-tab-content active" id="tab-spielen">
+
+    <!-- Cards-Übersicht (default) -->
+    <div id="spielen-cards" class="spielen-cards-wrap">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#1a1a1a;margin-bottom:16px;padding-top:4px">DART PRO</div>
+      <div class="spielen-card" onclick="showSpielenSection('lokal')">
+        <div class="spielen-card-icon">👤</div>
+        <div>
+          <div class="spielen-card-title">LOKAL SPIELEN</div>
+          <div class="spielen-card-sub">Gegen Freunde oder Bot</div>
+        </div>
+        <div class="spielen-card-arrow">→</div>
+      </div>
+      <div class="spielen-card" onclick="showSpielenSection('online')">
+        <div class="spielen-card-icon">🌐</div>
+        <div>
+          <div class="spielen-card-title">ONLINE SPIELEN</div>
+          <div class="spielen-card-sub">Gegen Freunde weltweit</div>
+        </div>
+        <div class="spielen-card-arrow">→</div>
+      </div>
+      <div class="spielen-card" onclick="openTournamentSetup()">
+        <div class="spielen-card-icon">🏆</div>
+        <div>
+          <div class="spielen-card-title">TURNIER</div>
+          <div class="spielen-card-sub">Lokal oder Online</div>
+        </div>
+        <div class="spielen-card-arrow">→</div>
+      </div>
+    </div>
+
+    <!-- LOKAL: Setup-Formular -->
+    <div id="spielen-lokal" class="spielen-section">
+      <button class="spielen-back" onclick="showSpielenCards()">← ZURÜCK</button>
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:16px">
+      <div class="setup-card">
+    <label class="field-label">SPIELMODUS</label>
+    <div class="btn-group" id="mode-group">
+      <button class="btn-toggle active" data-value="501">501</button>
+      <button class="btn-toggle" data-value="301">301</button>
+      <button class="btn-toggle" data-value="Cricket">Cricket</button>
+    </div>
+    <div id="extra-modes-wrap" style="margin-bottom:12px">
+      <button id="btn-extra-modes" style="background:none;border:1px solid #ddd;color:#888;
+        padding:6px 14px;border-radius:6px;font-size:12px;width:100%;cursor:pointer;
+        font-family:'DM Sans',sans-serif;letter-spacing:1px">▼ WEITERE MODI</button>
+      <div id="extra-modes" style="display:none;margin-top:8px">
+        <div class="btn-group" id="extra-mode-group" style="flex-wrap:wrap">
+          <button class="btn-toggle" data-value="AtC">Clock</button>
+          <button class="btn-toggle" data-value="Shanghai">Shanghai</button>
+          <button class="btn-toggle" data-value="Highscore">Highscore</button>
+          <button class="btn-toggle" data-value="Killer">Killer</button>
+          <button class="btn-toggle" data-value="Elimination">Elimination</button>
+        </div>
+      </div>
+    </div>
+    <!-- Highscore rounds selector -->
+    <div id="rounds-selector" style="display:none">
+      <label class="field-label">ANZAHL RUNDEN</label>
+      <div class="btn-group" id="rounds-group">
+        <button class="btn-toggle" data-value="5">5</button>
+        <button class="btn-toggle active" data-value="8">8</button>
+        <button class="btn-toggle" data-value="10">10</button>
+      </div>
+    </div>
+
+    <label class="field-label">SPIELER AUSWÄHLEN</label>
+    <div class="player-sel-hint" id="sel-hint">Tippe Spieler an um sie auszuwählen (Reihenfolge = Startreihenfolge)</div>
+    <div class="player-list" id="player-list">
+      <div style="color:#aaa;font-size:12px;text-align:center;padding:12px">Lade Spieler…</div>
+    </div>
+    <div class="add-player-row">
+      <input class="add-player-input" id="new-player-input" placeholder="Neuer Spieler…" />
+      <button class="btn-add-player" id="btn-add-player">+ ADD</button>
+    </div>
+
+    <label class="field-label" style="margin-top:16px">SETS (Best of)</label>
+    <div class="btn-group" id="sets-group">
+      <button class="btn-toggle active" data-value="1">1 Set</button>
+      <button class="btn-toggle" data-value="3">3 Sets</button>
+      <button class="btn-toggle" data-value="5">5 Sets</button>
+      <button class="btn-toggle" data-value="7">7 Sets</button>
+    </div>
+
+    <label class="field-label" style="margin-top:4px">LEGS PRO SET (Best of)</label>
+    <div class="btn-group" id="legs-group">
+      <button class="btn-toggle active" data-value="1">1</button>
+      <button class="btn-toggle" data-value="3">3</button>
+      <button class="btn-toggle" data-value="5">5</button>
+      <button class="btn-toggle" data-value="7">7</button>
+    </div>
+
+    <label class="field-label" style="margin-top:4px">BOT-GEGNER</label>
+    <div class="btn-group" id="bot-group">
+      <button class="btn-toggle active" data-value="none">Kein Bot</button>
+      <button class="btn-toggle" data-value="easy">🤖 Anfänger</button>
+      <button class="btn-toggle" data-value="medium">🤖 Mittel</button>
+      <button class="btn-toggle" data-value="pro">🤖 Profi</button>
+    </div>
+
+    <div id="bot-personality-section" style="display:none">
+      <label class="field-label" style="margin-top:8px">PERSÖNLICHKEIT</label>
+      <div class="btn-group" id="bot-personality-group" style="flex-wrap:wrap">
+        <button class="btn-toggle active" data-value="methodisch">🎯 Methodisch</button>
+        <button class="btn-toggle" data-value="uebermuetig">💪 Übermütig</button>
+        <button class="btn-toggle" data-value="nervoese">😰 Nervös</button>
+        <button class="btn-toggle" data-value="gluecksspieler">🎰 Glücksspieler</button>
+        <button class="btn-toggle" data-value="kaltbluetig">🧊 Kaltblütig</button>
+        <button class="btn-toggle" data-value="aufholer">📉 Aufholer</button>
+      </div>
+      <div id="bot-personality-desc" style="color:#888;font-size:11px;text-align:center;margin-top:4px;min-height:14px">
+        Spielt immer optimal und konstant
+      </div>
+    </div>
+
+    <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
+  </div><!-- end setup-card -->
+  </div><!-- end inner scroll -->
+  </div><!-- end spielen-lokal -->
+
+    <!-- ONLINE: Raum erstellen/beitreten -->
+    <div id="spielen-online" class="spielen-section">
+      <button class="spielen-back" onclick="showSpielenCards()">← ZURÜCK</button>
+      <div style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;align-items:center">
+
+    <!-- Auth bar -->
+    <div id="auth-bar" style="width:100%;max-width:480px;margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:10px"></div>
+
+    <div style="width:100%;max-width:480px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:#1a1a1a;margin-bottom:4px">🌐 ONLINE SPIELEN</div>
+      <div style="font-size:13px;color:#999;margin-bottom:24px">Spiele gegen Freunde auf anderen Geräten in Echtzeit</div>
+
+      <!-- Create room -->
+      <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px">RAUM ERSTELLEN</div>
+        <div style="font-size:12px;color:#999;margin-bottom:10px">Wähle Modus und Einstellungen, dann teile den Code mit deinem Gegner</div>
+        <div class="btn-group" id="online-mode-group" style="margin-bottom:12px">
+          <button class="btn-toggle active" data-value="501">501</button>
+          <button class="btn-toggle" data-value="301">301</button>
+          <button class="btn-toggle" data-value="Cricket">Cricket</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="flex:1">
+            <label class="field-label">LEGS</label>
+            <div class="btn-group" id="online-legs-group" style="margin-bottom:0">
+              <button class="btn-toggle active" data-value="1">1</button>
+              <button class="btn-toggle" data-value="3">3</button>
+              <button class="btn-toggle" data-value="5">5</button>
+            </div>
+          </div>
+          <div style="flex:1">
+            <label class="field-label">SETS</label>
+            <div class="btn-group" id="online-sets-group" style="margin-bottom:0">
+              <button class="btn-toggle active" data-value="1">1</button>
+              <button class="btn-toggle" data-value="3">3</button>
+              <button class="btn-toggle" data-value="5">5</button>
+            </div>
+          </div>
+        </div>
+        <input class="add-player-input" id="online-myname" placeholder="Dein Name im Spiel" style="width:100%;margin-bottom:10px">
+        <button class="btn-start" id="btn-create-room" style="font-size:18px;padding:12px">RAUM ERSTELLEN</button>
+      </div>
+
+      <!-- Join room -->
+      <div style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;margin-bottom:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px">RAUM BEITRETEN</div>
+        <input class="add-player-input" id="online-join-name" placeholder="Dein Name im Spiel" style="width:100%;margin-bottom:8px">
+        <div style="display:flex;gap:8px">
+          <input class="add-player-input" id="online-room-code" placeholder="6-stelliger Code (z.B. ABC123)"
+            style="flex:1;text-transform:uppercase;letter-spacing:3px;font-family:'Bebas Neue',sans-serif;font-size:20px">
+          <button class="btn-add-player" id="btn-join-room" style="padding:10px 20px;font-size:16px">BEITRETEN</button>
+        </div>
+      </div>
+
+      <div id="online-status" style="text-align:center;color:#aaa;font-size:13px;min-height:20px"></div>
+    </div>
+    </div>
+    </div><!-- end spielen-online -->
+
+  </div><!-- end tab-spielen -->
+
+  <!-- TAB: STATISTIKEN (sub-tabs: Statistiken + Analyse) -->
+  <div class="home-tab-content" id="tab-statistiken">
+    <div class="sub-tabs-bar">
+      <button class="sub-tab active" data-sub="stats">STATISTIKEN</button>
+      <button class="sub-tab" data-sub="analyse">ANALYSE</button>
+    </div>
+    <!-- Sub: STATISTIKEN -->
+    <div class="sub-tab-content active" id="sub-tab-stats">
+    <div style="flex:1;padding:16px 24px;overflow-y:auto;background:#f5f5f0">
+      <div class="stats-player-bar" id="stats-player-bar"></div>
+      <div class="stats-time-bar">
+        <button class="time-btn active" data-range="today">Heute</button>
+        <button class="time-btn" data-range="7d">7 Tage</button>
+        <button class="time-btn" data-range="30d">Monat</button>
+        <button class="time-btn" data-range="90d">3 Monate</button>
+        <button class="time-btn" data-range="180d">6 Monate</button>
+        <button class="time-btn" data-range="all">Alles</button>
+        <button class="time-btn" data-range="custom">📅</button>
+      </div>
+      <div class="custom-date-row" id="custom-date-row" style="display:none">
+        <input type="date" id="date-from" class="date-input" />
+        <span style="color:#999;font-size:13px">bis</span>
+        <input type="date" id="date-to" class="date-input" />
+        <button class="btn-add-player" id="btn-apply-dates" style="padding:6px 12px;font-size:13px">OK</button>
+      </div>
+      <div id="stats-content"><div class="stats-loading">Lade Statistiken…</div></div>
+    </div>
+    </div>
+    <!-- Sub: ANALYSE -->
+    <div class="sub-tab-content" id="sub-tab-analyse">
+    <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
+      <div id="analyse-player-bar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+      <div class="stats-section-title">🧠 COACH-ANALYSE</div>
+      <button class="coach-btn" id="btn-coach-analyse-tab" disabled>🧠 COACH-ANALYSE STARTEN</button>
+      <div id="coach-output-analyse-tab"></div>
+      <div class="coach-limit" id="coach-limit-analyse-tab"></div>
+      <div id="coach-history-analyse-tab" style="margin-top:12px"></div>
+      <div class="stats-section-title" style="margin-top:16px">🎥 WURF-ANALYSE</div>
+      <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px">
+        <div style="font-size:12px;color:#999;margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
+        <input type="file" id="video-upload-analyse-tab" accept="video/*" style="display:none">
+        <button id="btn-video-phone-analyse" style="width:100%;padding:11px;border:2px solid #e8c44a;border-radius:8px;background:#1a1800;cursor:pointer;font-size:13px;color:#e8c44a;font-weight:700;margin-bottom:8px">📱 MIT HANDY AUFNEHMEN</button>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid #e53935;border-radius:8px;background:#1a0a0a;cursor:pointer;font-size:13px;color:#e53935">📹 TABLET-KAMERA</button>
+          <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666">📁 HOCHLADEN</button>
+        </div>
+        <button id="btn-video-stop-analyse" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:#e53935;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">⏹ STOP</button>
+        <div id="video-preview-wrap-analyse-tab" style="display:none;margin-bottom:8px">
+          <video id="video-preview-analyse-tab" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
+          <div id="video-frames-info-analyse-tab" style="font-size:11px;color:#aaa;margin-top:4px;text-align:center"></div>
+        </div>
+        <button id="btn-video-analyze-analyse-tab" class="coach-btn" style="display:none;font-size:16px;padding:10px">🎥 WURF ANALYSIEREN</button>
+        <div id="coach-output-video-analyse-tab"></div>
+      </div>
+    </div>
+    </div>
+  </div><!-- end tab-statistiken -->
+
+  <!-- TAB: TURNIERE -->
+  <div class="home-tab-content" id="tab-turniere">
+  <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px">🏆 TURNIERE</div>
+      <button onclick="openTournamentSetup()" style="padding:9px 16px;background:#e8c44a;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">+ ERSTELLEN</button>
+    </div>
+    <div id="tournament-list"><div style="color:#aaa;font-size:13px;text-align:center;padding:20px">Noch keine Turniere</div></div>
+  </div>
+  </div>
+
+  <!-- TAB: PROFIL -->
+  <div class="home-tab-content" id="tab-profil">
+  <div style="flex:1;padding:16px;overflow-y:auto;background:#f5f5f0">
+
+    <!-- Account -->
+    <div class="profil-section">
+      <div class="profil-section-title">👤 ACCOUNT</div>
+      <div id="profil-account-info" style="margin-bottom:12px"></div>
+      <div id="profil-upgrade-inline" style="display:none">
+        <div style="font-size:12px;color:#666;margin-bottom:10px">Spieldaten gehen verloren wenn du dich abmeldest. Jetzt Account erstellen:</div>
+        <input class="auth-input" id="profil-upgrade-name" type="text" placeholder="Dein Name">
+        <input class="auth-input" id="profil-upgrade-email" type="email" placeholder="Email">
+        <input class="auth-input" id="profil-upgrade-password" type="password" placeholder="Passwort (min. 6 Zeichen)">
+        <div class="auth-error" id="profil-upgrade-error"></div>
+        <button id="btn-profil-upgrade" class="auth-btn-primary" style="font-size:15px">ACCOUNT ERSTELLEN</button>
+        <button id="btn-profil-google" class="auth-btn-google" style="margin-top:6px">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px">
+          MIT GOOGLE UPGRADEN
+        </button>
+      </div>
+      <button id="btn-profil-signout" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;background:none;color:#e53935;font-size:14px;cursor:pointer">Abmelden</button>
+    </div>
+
+    <!-- Stimme & Sound -->
+    <div class="profil-section">
+      <div class="profil-section-title">🎙️ STIMME & SOUND</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div id="voice-sync-status" style="font-size:12px;color:#aaa"></div>
+        <button id="btn-voice-sync" style="padding:5px 12px;border:1px solid #ddd;border-radius:6px;background:#f5f5f0;font-size:12px;cursor:pointer">🔄 Sync</button>
+      </div>
+      <div id="voice-selector-list"></div>
+      <div id="voice-selector-confirm" style="display:none;color:#2a7a2a;font-size:13px;padding:6px 0;text-align:center"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:#555;margin-bottom:8px">+ NEUE STIMME HINZUFÜGEN</div>
+        <input id="voice-new-name" placeholder="Name (z.B. Meine Stimme)" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:6px;box-sizing:border-box">
+        <input id="voice-new-id" placeholder="ElevenLabs Voice ID" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;font-family:monospace;font-size:13px;margin-bottom:8px;box-sizing:border-box">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button id="btn-voice-new-test-180" style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer">Test: 180</button>
+          <button id="btn-voice-new-test-gameon" style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer">Test: Game On</button>
+          <button id="btn-voice-new-test-bust" style="padding:8px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer">Test: Bust</button>
+          <button id="btn-voice-new-add" style="padding:8px 14px;border:none;border-radius:7px;background:#222;color:#fff;font-size:12px;cursor:pointer;margin-left:auto">+ Hinzufügen</button>
+        </div>
+        <div id="voice-new-error" style="color:#c00;font-size:12px;margin-top:6px;min-height:16px"></div>
+      </div>
+    </div>
+
+    <!-- App-Einstellungen -->
+    <div class="profil-section">
+      <div class="profil-section-title">⚙️ APP-EINSTELLUNGEN</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0">
+        <span style="font-size:14px;color:#333">🔊 Sprachausgabe</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-tts" checked style="opacity:0;width:0;height:0">
+          <span id="setting-tts-slider" onclick="toggleSetting('tts')" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0">
+        <span style="font-size:14px;color:#333">🎤 Sprachsteuerung</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-mic" style="opacity:0;width:0;height:0">
+          <span id="setting-mic-slider" onclick="toggleSetting('mic')" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+        <span style="font-size:14px;color:#333">🎯 Checkout-Highlight</span>
+        <label style="position:relative;display:inline-block;width:44px;height:24px">
+          <input type="checkbox" id="setting-checkout" checked style="opacity:0;width:0;height:0">
+          <span id="setting-checkout-slider" onclick="toggleSetting('checkout')" style="position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:.2s"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Rechtliches -->
+    <div class="profil-section">
+      <div class="profil-section-title">📋 RECHTLICHES</div>
+      <div style="font-size:13px;color:#666;line-height:1.7">
+        <div style="margin-bottom:6px"><strong>Dart Pro</strong> — Persönliches Dart-Score-Tracking</div>
+        <div style="margin-bottom:6px">Version: 2.0 · Firebase Hosting via GitHub Pages</div>
+        <div style="margin-bottom:6px">Datenschutz: Daten werden in Firebase (Google) gespeichert. Keine Weitergabe an Dritte.</div>
+        <div>Entwickelt von Daniel Straß · 2025</div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- Studio tab (hidden) -->
+  <div class="home-tab-content" id="tab-studio" style="display:none!important">
+  <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#1a1a1a;margin-bottom:4px">🎙️ STIMM-STUDIO</div>
+    <div style="font-size:12px;color:#999;margin-bottom:16px">Nimm deine eigene Stimme für die Ansagen auf. Alle aufgenommenen Zahlen ersetzen die synthetische Stimme.</div>
+    <div style="background:#f0f0f0;border-radius:6px;height:8px;margin-bottom:6px">
+      <div id="studio-progress-bar" style="background:#e8c44a;height:8px;border-radius:6px;width:0%;transition:width .3s"></div>
+    </div>
+    <div style="font-size:12px;color:#999;margin-bottom:16px" id="studio-progress-text">0 von 0 aufgenommen</div>
+    <div id="studio-recorder" style="background:#fff;border:1px solid #ddd;border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
+      <div style="font-size:11px;color:#999;letter-spacing:2px;margin-bottom:8px">AKTUELLE AUFNAHME</div>
+      <div id="studio-current-label" style="font-family:'Bebas Neue',sans-serif;font-size:64px;color:#1a1a1a;line-height:1">—</div>
+      <div id="studio-current-hint" style="font-size:12px;color:#aaa;margin-bottom:16px"></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button id="studio-rec-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:#e53935;border-radius:10px" disabled>⏺ Aufnehmen</button>
+        <button id="studio-play-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:#555;border-radius:10px;display:none">▶ Anhören</button>
+        <button id="studio-save-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:#2e7d32;border-radius:10px;display:none">✓ Speichern</button>
+        <button id="studio-skip-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:#888;border-radius:10px">→ Überspringen</button>
+        <button id="studio-delete-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:#c62828;border-radius:10px;display:none">🗑 Löschen</button>
+      </div>
+      <div id="studio-status" style="font-size:12px;color:#aaa;margin-top:12px;min-height:16px"></div>
+    </div>
+    <div style="font-size:11px;color:#999;letter-spacing:2px;margin-bottom:8px">ALLE ANSAGEN</div>
+    <div id="studio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px"></div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ONLINE WAITING SCREEN ═══════════════════════ -->
+<div id="online-wait" class="screen" style="background:#f5f5f0">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#e8c44a;letter-spacing:3px;margin-bottom:8px">RAUM-CODE</div>
+    <div id="online-room-display" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:#1a1a1a;letter-spacing:8px;margin-bottom:8px"></div>
+    <div style="font-size:13px;color:#999;margin-bottom:24px">Teile diesen Code mit deinem Gegner</div>
+    <div id="online-players-list" style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:16px;width:100%;max-width:320px;margin-bottom:20px"></div>
+    <div id="online-wait-status" style="font-size:13px;color:#aaa;margin-bottom:16px">Warte auf Mitspieler…</div>
+    <button id="btn-start-online" class="btn-start" style="display:none;width:320px">SPIEL STARTEN</button>
+    <button id="btn-cancel-room" style="background:none;border:1px solid #ddd;color:#999;padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:10px">Abbrechen</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TOURNAMENT SETUP SCREEN ═══════════════════════ -->
+<div id="tournament-setup" class="screen" style="background:#f5f5f0;flex-direction:column">
+  <div style="background:#1a1a1a;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));" style="background:none;border:none;color:#e8c44a;font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← ZURÜCK</button>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">TURNIER ERSTELLEN</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px">
+    <div style="max-width:480px;margin:0 auto">
+      <div style="margin-bottom:16px">
+        <label class="field-label">TURNIER NAME</label>
+        <input id="tn-name" class="add-player-input" style="width:100%;font-size:15px" placeholder="z.B. Darts-Abend">
+      </div>
+      <label class="field-label">FORMAT</label>
+      <div class="btn-group" id="tn-format-group" style="margin-bottom:16px">
+        <button class="btn-toggle active" data-value="round_robin">Jeder gegen Jeden</button>
+        <button class="btn-toggle" data-value="knockout">K.O.-System</button>
+      </div>
+      <label class="field-label">SPIELMODUS</label>
+      <div class="btn-group" id="tn-mode-group" style="margin-bottom:8px">
+        <button class="btn-toggle active" data-value="501">501</button>
+        <button class="btn-toggle" data-value="301">301</button>
+        <button class="btn-toggle" data-value="Cricket">Cricket</button>
+      </div>
+      <label class="field-label">LEGS</label>
+      <div class="btn-group" id="tn-legs-group" style="margin-bottom:16px">
+        <button class="btn-toggle active" data-value="1">1</button>
+        <button class="btn-toggle" data-value="3">3</button>
+        <button class="btn-toggle" data-value="5">5</button>
+      </div>
+      <label class="field-label">TYP</label>
+      <div class="btn-group" id="tn-type-group" style="margin-bottom:16px">
+        <button class="btn-toggle active" data-value="local">👤 Lokal</button>
+        <button class="btn-toggle" data-value="online">🌐 Online</button>
+      </div>
+      <label class="field-label">SPIELER</label>
+      <div id="tn-player-list" style="margin-bottom:12px"></div>
+      <div id="tn-online-hint" style="display:none;background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:13px;color:#666;margin-bottom:12px">
+        Online-Turnier: Nach dem Start erhalten andere Spieler einen Code zum Beitreten.
+      </div>
+      <button class="btn-start" id="btn-create-tournament">🏆 TURNIER STARTEN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ TOURNAMENT VIEW SCREEN ═══════════════════════ -->
+<div id="tournament-view" class="screen" style="background:#f5f5f0;flex-direction:column">
+  <div style="background:#1a1a1a;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));loadTournaments();" style="background:none;border:none;color:#e8c44a;font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← TURNIERE</button>
+    <div id="tv-title" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff">TURNIER</div>
+    <div id="tv-status-badge" style="margin-left:auto"></div>
+  </div>
+  <div id="tv-content" style="flex:1;overflow-y:auto;padding:16px">
+    <div style="color:#aaa;text-align:center;padding:20px">Lade Turnier…</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
+<div id="x01" class="screen" style="flex-direction:column;background:#111">
+  <div class="game-header">
+    <button class="btn-nav" id="x01-back">← Zurück</button>
+    <div class="game-title" id="x01-title">501 · Runde 1</div>
+    <button class="btn-nav" id="x01-undo">↩ Undo</button>
+  </div>
+
+  <!-- Score strip (portrait: top, landscape: hidden) -->
+  <div class="score-strip" id="score-strip"></div>
+
+  <div class="game-body">
+    <!-- Board — takes all available space -->
+    <div class="board-wrap">
+      <svg id="board-svg" viewBox="36 36 458 458"></svg>
+    </div>
+
+    <!-- Landscape right panel -->
+    <div class="landscape-panel" id="landscape-panel">
+      <div id="lp-players"></div>
+      <div class="lp-controls">
+        <div style="text-align:center">
+          <div style="font-size:10px;color:#666;letter-spacing:1px;margin-bottom:2px">VERBLEIBEND</div>
+          <div class="lp-remaining" id="lp-remaining">501</div>
+          <div class="lp-checkout" id="lp-checkout"></div>
+        </div>
+        <div class="lp-slots">
+          <div class="lp-slot" id="lp-slot-0">—</div>
+          <div class="lp-slot" id="lp-slot-1">—</div>
+          <div class="lp-slot" id="lp-slot-2">—</div>
+        </div>
+        <button class="lp-btn ok" id="lp-next" style="display:none">NÄCHSTER SPIELER</button>
+        <button class="lp-mic" id="lp-mic">🎤</button>
+        <button class="lp-mic" id="lp-bouncer" style="background:#2a1600;color:#ff9800">↩ Bouncer</button>
+        <div id="voice-feedback" style="color:#555;font-size:11px;text-align:center;min-height:14px;padding:2px 0"></div>
+      </div>
+      <div class="lp-history" id="lp-history"></div>
+    </div>
+  </div>
+
+  <!-- Bottom bar (portrait) -->
+  <div class="bottom-bar" id="bottom-bar">
+    <div style="text-align:center;flex-shrink:0;min-width:70px">
+      <div class="bottom-remaining" id="bottom-remaining">501</div>
+      <div class="bottom-checkout" id="bottom-checkout"></div>
+    </div>
+    <div class="bottom-throws">
+      <div class="bottom-slot" id="bs-0">—</div>
+      <div class="bottom-slot" id="bs-1">—</div>
+      <div class="bottom-slot" id="bs-2">—</div>
+    </div>
+    <button class="bottom-btn ok" id="bottom-next" style="display:none;white-space:nowrap">WEITER</button>
+    <button class="bottom-btn mic" id="bottom-mic">🎤</button>
+    <button class="bottom-btn mic" id="bottom-bouncer" style="background:#2a1600;color:#ff9800;flex-shrink:0">↩</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ CRICKET SCREEN ═══════════════════════ -->
+<div id="cricket" class="screen">
+  <div class="game-header">
+    <button class="btn-nav" id="cr-back">← Zurück</button>
+    <div class="game-title" id="cr-title">Cricket · Runde 1</div>
+    <button class="btn-nav" id="cr-undo">↩ Undo</button>
+  </div>
+
+  <div class="cricket-board">
+    <table class="cricket-table" id="cr-table"></table>
+  </div>
+
+  <div class="game-body">
+    <div class="board-wrap">
+      <svg id="board-svg-cricket" viewBox="36 36 458 458"></svg>
+    </div>
+    <div class="side-panel">
+      <div class="panel-box">
+        <div class="panel-label">WÜRFE</div>
+        <div class="throw-slots" id="cr-slots">
+          <div class="throw-slot" id="cr-slot-0">—</div>
+          <div class="throw-slot" id="cr-slot-1">—</div>
+          <div class="throw-slot" id="cr-slot-2">—</div>
+        </div>
+      </div>
+      <button class="btn-next ok" id="cr-next" style="display:none">NÄCHSTER SPIELER</button>
+      <div class="panel-box">
+        <div class="panel-label">LEGENDE</div>
+        <div class="cricket-legend">/ &nbsp;= 1 Mark<br>X &nbsp;= 2 Marks<br>● &nbsp;= Closed</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PARTY GAME SCREEN ═══════════════════════ -->
+<div id="party" class="screen">
+  <div class="game-header">
+    <button class="btn-nav" id="party-back">← Zurück</button>
+    <div class="game-title" id="party-title">Around the Clock</div>
+    <button class="btn-nav" id="party-undo">↩ Undo</button>
+  </div>
+
+  <div class="player-tabs" id="party-tabs"></div>
+
+  <!-- Mode info bar -->
+  <div id="party-info-bar" style="padding:6px 16px;background:#fff;border-bottom:1px solid #eee;font-size:13px;color:#555;flex-shrink:0;text-align:center"></div>
+
+  <div class="game-body">
+    <div class="board-wrap">
+      <svg id="board-svg-party" viewBox="36 36 458 458"></svg>
+    </div>
+    <div class="side-panel">
+      <div class="panel-box">
+        <div class="panel-label">WÜRFE</div>
+        <div class="throw-slots" id="party-slots">
+          <div class="throw-slot" id="pslot-0">—</div>
+          <div class="throw-slot" id="pslot-1">—</div>
+          <div class="throw-slot" id="pslot-2">—</div>
+        </div>
+        <div class="bust-label" id="party-bust-label" style="display:none"></div>
+      </div>
+      <!-- Scoreboard for party games -->
+      <div class="panel-box" id="party-scoreboard" style="flex:1;overflow-y:auto"></div>
+      <button class="btn-next ok" id="party-next" style="display:none">NÄCHSTER SPIELER</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ VIDEO REMOTE SCREEN (Phone) ═══════════════════════ -->
+<div id="video-remote" class="screen" style="flex-direction:column">
+  <div class="vr-card">
+    <div class="vr-title">📹 WURFVIDEO AUFNEHMEN</div>
+    <div id="vr-game-info" style="font-size:12px;color:#aaa;margin-bottom:12px"></div>
+    <div id="vr-camera-section">
+      <video id="vr-preview" class="vr-preview" muted playsinline style="display:none"></video>
+      <div id="vr-frames-info" style="font-size:11px;color:#aaa;margin-bottom:6px"></div>
+      <button class="vr-btn vr-btn-record" id="btn-vr-record">⏺ AUFNEHMEN (max. 10s)</button>
+      <button class="vr-btn vr-btn-stop" id="btn-vr-stop" style="display:none">⏹ STOP</button>
+      <button class="vr-btn vr-btn-send" id="btn-vr-send" style="display:none">📤 AN TABLET SENDEN</button>
+      <div class="vr-status" id="vr-status">Bereit — Handy seitlich, Hüfthöhe</div>
+    </div>
+  </div>
+</div>
+
+<div class="winner-overlay" id="winner-overlay">
+  <div style="max-width:440px;width:90vw;max-height:90vh;overflow-y:auto;padding:32px 24px;text-align:center">
+    <div class="winner-label">GEWINNER</div>
+    <div class="winner-name" id="winner-name"></div>
+    <div class="winner-round" id="winner-round"></div>
+    <div id="winner-summary" style="display:none;margin:16px 0 0"></div>
+
+    <!-- Text Coach with player selector -->
+    <div style="margin-top:16px">
+      <div id="coach-player-selector" style="display:none;margin-bottom:10px">
+        <div style="font-size:11px;color:#999;letter-spacing:1px;margin-bottom:6px">ANALYSE FÜR</div>
+        <div id="coach-player-btns" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
+      </div>
+      <button class="coach-btn" id="btn-coach-winner">🧠 STATISTIK-ANALYSE</button>
+      <div id="coach-output-winner"></div>
+      <div class="coach-limit" id="coach-limit-winner"></div>
+    </div>
+
+    <!-- Saved analyses -->
+    <div id="coach-history-wrap" style="display:none;margin-top:12px;text-align:left">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#999;margin-bottom:6px;cursor:pointer" id="btn-toggle-history">
+        📋 GESPEICHERTE ANALYSEN ▼
+      </div>
+      <div id="coach-history-list" style="display:none"></div>
+    </div>
+
+    <!-- Video Coach -->
+    <div style="margin-top:12px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;text-align:left">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px">🎥 WURF-ANALYSE (VIDEO)</div>
+      <div style="font-size:12px;color:#999;margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
+      <input type="file" id="video-upload" accept="video/*" style="display:none">
+      <button id="btn-video-phone-winner" style="width:100%;padding:11px;border:2px solid #e8c44a;border-radius:8px;background:#1a1800;cursor:pointer;font-size:13px;color:#e8c44a;font-weight:700;margin-bottom:8px">
+        📱 MIT HANDY AUFNEHMEN
+      </button>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button id="btn-video-record-winner" style="flex:1;padding:10px;border:2px solid #e53935;border-radius:8px;background:#1a0a0a;cursor:pointer;font-size:13px;color:#e53935">
+          📹 TABLET-KAMERA
+        </button>
+        <button id="btn-video-select" style="flex:1;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666">
+          📁 HOCHLADEN
+        </button>
+      </div>
+      <button id="btn-video-stop-winner" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:#e53935;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">
+        ⏹ STOP
+      </button>
+      <div id="video-preview-wrap" style="display:none;margin-bottom:8px">
+        <video id="video-preview" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
+        <div id="video-frames-info" style="font-size:11px;color:#aaa;margin-top:4px;text-align:center"></div>
+      </div>
+      <button id="btn-video-analyze" class="coach-btn" style="display:none;font-size:16px;padding:10px">
+        🎥 WURF ANALYSIEREN
+      </button>
+      <div id="coach-output-video"></div>
+    </div>
+    <button class="btn-new-game" id="btn-new-game" style="margin-top:16px">NEUES SPIEL</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SET WINNER OVERLAY ═══════════════════════ -->
+<div class="winner-overlay" id="set-overlay">
+  <div style="text-align:center;padding:32px 24px">
+    <div class="winner-label" id="set-label">SET 1 GEWONNEN</div>
+    <div class="winner-name" id="set-winner-name" style="font-size:48px"></div>
+    <div id="set-score-display" style="color:#e8c44a;font-family:'Bebas Neue',sans-serif;font-size:24px;margin-top:8px"></div>
+    <div style="color:#555;font-size:13px;margin-top:6px" id="set-to-win"></div>
+    <button class="btn-new-game" id="btn-next-set" style="margin-top:24px">NÄCHSTES SET ▶</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ LEG WINNER OVERLAY ═══════════════════════ -->
+<div class="winner-overlay" id="leg-overlay">
+  <div style="max-width:400px;width:90vw;padding:28px 24px;text-align:center">
+    <div class="winner-label" id="leg-label">LEG 1 GEWONNEN</div>
+    <div class="winner-name" id="leg-winner-name"></div>
+    <div id="leg-score-display" style="color:#e8c44a;font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-top:8px"></div>
+    <div style="color:#555;font-size:13px;margin-top:6px" id="leg-to-win"></div>
+    <div id="leg-stats-summary" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
+    <button class="btn-new-game" id="btn-next-leg" style="margin-top:20px">NÄCHSTES LEG ▶</button>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
