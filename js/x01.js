@@ -9,6 +9,19 @@ import { startMic, stopMic, maybeRestartMic, setVoiceFeedback, announceRequires,
 import { runBotTurn } from './bot.js';
 
 /**
+ * Returns appropriate delay (ms) before announcing "requires" based on turn score.
+ * @param {number} turnScore
+ * @returns {number}
+ */
+export function requiresDelay(turnScore){
+  if(turnScore===0) return 2000;
+  if(turnScore===180) return 3000;
+  if(turnScore>=100) return 2500;
+  if(turnScore>=20) return 2000;
+  return 1500;
+}
+
+/**
  * Starts a new X01 game.
  * @param {number} starter index of starting player
  */
@@ -33,6 +46,7 @@ export function startX01(starter=0){
     first9: state.cfg.players.map(()=>null),
     checkoutAttempts: state.cfg.players.map(()=>0),
     checkoutHits: state.cfg.players.map(()=>0),
+    checkoutAttemptThisTurn: false,
     doubleStats: state.cfg.players.map(()=>({})),
     bouncers: state.cfg.players.map(()=>0),
     startTime: Date.now()
@@ -229,6 +243,17 @@ export function processX01Hit(hit, svgX=null, svgY=null){
   });
 
   const throwObj={...hit,svgX,svgY};
+
+  // PDC checkout attempt: count once per turn when score at turn-start ≤170
+  if(state.x01.throws.length===0&&
+     state.x01.scores[state.x01.current]<=170&&
+     state.x01.scores[state.x01.current]>1&&
+     state.x01.scores[state.x01.current]!==25&&
+     !state.x01.checkoutAttemptThisTurn){
+    state.x01.checkoutAttemptThisTurn=true;
+    state.x01.checkoutAttempts[state.x01.current]++;
+  }
+
   state.x01.throws.push(throwObj);
   state.x01.allThrows[state.x01.current].push(throwObj);
   redrawAllHits(state.boardSVG, state.x01.historicThrows[state.x01.current], state.x01.throws);
@@ -239,9 +264,10 @@ export function processX01Hit(hit, svgX=null, svgY=null){
     renderX01();
     if(state.x01.throws.length===3){
       const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
-      if(turnScore<=9) soundLow();
-      turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
-      setTimeout(announceRequires, 1600);
+      if(turnScore===0){ soundLow(); speakKeyWithCustom("no_score","No Score!"); }
+      else if(turnScore<=9){ soundLow(); speakScoreWithCustom(turnScore); }
+      else { soundHit(); speakScoreWithCustom(turnScore); }
+      setTimeout(announceRequires, requiresDelay(turnScore));
       setTimeout(advanceX01, 800);
     }
     return;
@@ -251,8 +277,6 @@ export function processX01Hit(hit, svgX=null, svgY=null){
   const prevSpent=spent-hit.score;
   const prevRemaining=state.x01.scores[state.x01.current]-prevSpent;
   const tent=prevRemaining-hit.score;
-
-  if(prevRemaining<=170&&prevRemaining>1) state.x01.checkoutAttempts[state.x01.current]++;
 
   if(prevRemaining<=40&&prevRemaining%2===0&&prevRemaining>1)
     trackDoubleAttempt(state.x01.current, prevRemaining, hit);
@@ -284,11 +308,13 @@ export function processX01Hit(hit, svgX=null, svgY=null){
 
   const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
   if(state.x01.throws.length===3){
-    if(turnScore<=9) soundLow();
-    else if(turnScore>=100) soundApplause();
-    else soundHit();
-    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore);
-    setTimeout(announceRequires, 1600);
+    if(turnScore===0){ soundLow(); }
+    else if(turnScore<=9){ soundLow(); }
+    else if(turnScore>=100){ soundApplause(); }
+    else { soundHit(); }
+    const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
+    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
+    setTimeout(announceRequires, requiresDelay(turnScore));
   } else {
     soundHit();
   }
@@ -313,7 +339,8 @@ export function handleBouncer(){
   speakKeyWithCustom("bouncer","Bouncer!");
   renderX01();
   if(state.x01.throws.length===3){
-    setTimeout(announceRequires,1600);
+    const bouncerTurnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
+    setTimeout(announceRequires,requiresDelay(bouncerTurnScore));
     setTimeout(advanceX01,800);
   }
 }
@@ -323,6 +350,8 @@ export function handleBouncer(){
  */
 export function advanceX01(){
   const pi=state.x01.current;
+
+  state.x01.checkoutAttemptThisTurn=false;
 
   if(state.x01.bust){
     state.x01.history.push({scores:[...state.x01.scores],current:pi,round:state.x01.round,
@@ -372,6 +401,8 @@ export function advanceX01(){
 export function handleLegWin(winnerIdx){
   state.cfg.legWins[winnerIdx]++;
   const name=state.cfg.players[winnerIdx];
+  // PDC: leg starter strictly alternates regardless of winner
+  state.cfg.nextLegStarter=((state.cfg.currentLegStarter||0)+1)%state.cfg.players.length;
 
   if(window._saveGameToFirebase) window._saveGameToFirebase(winnerIdx);
 
@@ -519,4 +550,94 @@ export function getDoubleStatsForCoach(playerIdx){
     .filter(e=>e.att>=2)
     .sort((a,b)=>b.att-a.att);
   return entries;
+}
+
+// ── Target Practice ────────────────────────────────────────────────
+const SECTORS_TP=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+
+/**
+ * Calculates distance score between a target label and actual hit.
+ * Returns 0 for exact hit, higher for further away.
+ */
+export function calcTargetDistance(targetLabel, actualHit){
+  if(targetLabel===actualHit.label) return 0;
+  const tNum=parseInt(targetLabel.replace(/[TDS]/,""))||0;
+  const aNum=parseInt(actualHit.label.replace(/[TDS]/,""))||0;
+  if(tNum===aNum){
+    const tRing=targetLabel.startsWith("T")?2:targetLabel.startsWith("D")?1:0;
+    const aRing=actualHit.label.startsWith("T")?2:actualHit.label.startsWith("D")?1:0;
+    return Math.abs(tRing-aRing)*10;
+  }
+  const tIdx=SECTORS_TP.indexOf(tNum);
+  const aIdx=SECTORS_TP.indexOf(aNum);
+  if(tIdx<0||aIdx<0) return 100;
+  const diff=Math.abs(tIdx-aIdx);
+  return Math.min(diff,20-diff)*15+30;
+}
+
+/**
+ * Shows or hides the target practice overlay before a throw.
+ * @param {boolean} show
+ */
+export function showTargetOverlay(show){
+  let overlay=document.getElementById("target-practice-overlay");
+  if(!overlay){
+    overlay=document.createElement("div");
+    overlay.id="target-practice-overlay";
+    overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px";
+    overlay.innerHTML=`
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#e8c44a">ZIEL-TRAINING</div>
+      <div style="font-size:16px;color:#ccc">Was willst du treffen?</div>
+      <div id="tp-target-btns" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:320px"></div>
+      <button id="tp-custom-btn" style="padding:8px 18px;background:#333;border:1px solid #555;color:#aaa;border-radius:8px;font-size:13px;cursor:pointer">Eigenes ▼</button>
+      <div id="tp-custom-row" style="display:none;gap:8px">
+        <input id="tp-custom-input" placeholder="z.B. T20" style="padding:8px;background:#222;border:1px solid #555;color:#fff;border-radius:8px;width:80px;font-size:15px;text-align:center"/>
+        <button id="tp-custom-ok" style="padding:8px 14px;background:#e8c44a;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">OK</button>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const quickTargets=["T20","T19","T18","D20","D16","D10","Bull","S20","S19"];
+    const btnWrap=overlay.querySelector("#tp-target-btns");
+    quickTargets.forEach(t=>{
+      const b=document.createElement("button");
+      b.style.cssText="padding:10px 14px;background:#222;border:2px solid #444;color:#fff;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer";
+      b.textContent=t;
+      b.addEventListener("click",()=>{ setTargetAndHide(t); });
+      btnWrap.appendChild(b);
+    });
+
+    overlay.querySelector("#tp-custom-btn").addEventListener("click",()=>{
+      overlay.querySelector("#tp-custom-row").style.display="flex";
+    });
+    overlay.querySelector("#tp-custom-ok").addEventListener("click",()=>{
+      const val=overlay.querySelector("#tp-custom-input").value.trim().toUpperCase();
+      if(val) setTargetAndHide(val);
+    });
+  }
+  overlay.style.display=show?"flex":"none";
+}
+
+function setTargetAndHide(targetLabel){
+  if(state.x01) state.x01.currentTarget=targetLabel;
+  showTargetOverlay(false);
+  disableBoard(state.boardSVG, false);
+}
+
+/**
+ * Shows target practice feedback after a throw.
+ */
+export function showTargetFeedback(targetLabel, hit){
+  if(!targetLabel) return;
+  const dist=calcTargetDistance(targetLabel, hit);
+  const msg=dist===0?"🎯 PERFEKT!":
+    dist<=10?"✅ Richtiges Segment, falscher Ring":
+    dist<=30?"👍 Benachbartes Segment":
+    "❌ Weit daneben";
+  const el=document.getElementById("target-feedback-toast");
+  if(el){
+    el.textContent=`${msg} (Ziel: ${targetLabel} → ${hit.label})`;
+    el.style.display="";
+    clearTimeout(el._t);
+    el._t=setTimeout(()=>{ el.style.display="none"; }, 2000);
+  }
 }

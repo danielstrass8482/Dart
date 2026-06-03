@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js';
-import { soundHit, soundApplause, speak, speakScoreWithCustom } from './audio.js';
+import { soundHit, soundApplause, soundBust, speak, speakScoreWithCustom } from './audio.js';
 
 export let boardSVGparty;
 
@@ -17,8 +17,17 @@ export function setPartyBoard(svgEl){ boardSVGparty = svgEl; }
 /**
  * Starts a new party game.
  */
+const BOB27_SEQ=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25];
+
 export function startParty(){
   const n=state.cfg.players.length;
+  const coTable=window._CHECKOUTS||{};
+  const coScores=Object.keys(coTable).map(Number).filter(v=>v>=40&&v<=170);
+  const coTargets=[];
+  while(coTargets.length<Math.min(10,coScores.length)){
+    const r=coScores[Math.floor(Math.random()*coScores.length)];
+    if(!coTargets.includes(r)) coTargets.push(r);
+  }
   state.pg={
     mode: state.cfg.mode,
     current: 0,
@@ -37,6 +46,13 @@ export function startParty(){
     killerLives: state.cfg.players.map(()=>3),
     killerEliminated: state.cfg.players.map(()=>false),
     elimScores: state.cfg.players.map(()=>501),
+    bob27Score: state.cfg.players.map(()=>27),
+    bob27Round: 0,
+    coTargets,
+    coRound: 0,
+    coScore: coTargets[0]||40,
+    coHits: 0,
+    coAttempts: coTargets.length>0?1:0,
   };
   clearHits(boardSVGparty);
   renderParty();
@@ -74,6 +90,26 @@ export function partyTargetHighlight(){
   if(state.pg.mode==="AtC"){
     const t=state.pg.atcTarget[state.pg.current];
     if(t>=1&&t<=20){ const idx=SECTORS.indexOf(t); if(idx>=0) mkPath(slicePath(R.bull25,R.dblOut,idx)); }
+  } else if(state.pg.mode==="Bob27"){
+    const f=BOB27_SEQ[state.pg.bob27Round];
+    if(f===25){ mkCircle(R.bull); }
+    else if(f>=1&&f<=20){ const idx=SECTORS.indexOf(f); if(idx>=0) mkPath(slicePath(R.dblIn,R.dblOut,idx)); }
+  } else if(state.pg.mode==="CheckoutTraining"){
+    const target=state.pg.coTargets[state.pg.coRound];
+    if(target&&window._CHECKOUTS?.[target]){
+      const parts=window._CHECKOUTS[target].split(" ");
+      const coSpent=state.pg.throws.reduce((s,t)=>s+t.score,0);
+      const remaining=target-coSpent;
+      const CHECKOUTS=window._CHECKOUTS;
+      if(remaining>0&&remaining<=170&&CHECKOUTS[remaining]){
+        const nextPart=CHECKOUTS[remaining].split(" ")[0];
+        const isT=nextPart.startsWith("T"); const isD=nextPart.startsWith("D");
+        const isBull=nextPart==="Bull"||nextPart==="D25";
+        const num=isBull?25:parseInt(nextPart.replace(/[TDS]/,""))||0;
+        if(isBull){ mkCircle(isT?R.bull:R.bull25); }
+        else if(num>=1&&num<=20){ const idx=SECTORS.indexOf(num); if(idx>=0){ const r1=isT?R.triIn:isD?R.dblIn:R.bull25; const r2=isT?R.triOut:isD?R.dblOut:R.dblIn; mkPath(slicePath(r1,r2,idx)); } }
+      }
+    }
   } else if(state.pg.mode==="Shanghai"){
     const t=state.pg.shanghaiRound;
     if(t===25){ mkCircle(R.bull25); return; }
@@ -106,6 +142,8 @@ export function renderPartyTabs(){
       sub=`${num}${isK?" ☠️":""} ${lives}`;
     }
     else if(state.pg.mode==="Elimination") sub=`${state.pg.elimScores[i]}`;
+    else if(state.pg.mode==="Bob27") sub=`${state.pg.bob27Score[i]}pts`;
+    else if(state.pg.mode==="CheckoutTraining") sub=`${state.pg.coHits}/${state.pg.coAttempts}`;
     div.innerHTML=`<div class="tab-name">${name}</div><div class="tab-score" style="font-size:16px">${sub}</div>`;
     tabs.appendChild(div);
   });
@@ -149,6 +187,22 @@ export function renderPartyScoreboard(){
         <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.elimScores[i]}</span>
       </div>`).join("");
+  } else if(state.pg.mode==="Bob27"){
+    const field=BOB27_SEQ[state.pg.bob27Round];
+    const fieldLabel=field===25?"Bull":`D${field}`;
+    box.innerHTML=`<div class="panel-label">BOB'S 27 · ZIEL: ${fieldLabel} (${state.pg.bob27Round+1}/21)</div>`+
+      state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
+        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.bob27Score[i]}</span>
+      </div>`).join("");
+  } else if(state.pg.mode==="CheckoutTraining"){
+    const target=state.pg.coTargets[state.pg.coRound];
+    const path=window._CHECKOUTS?.[target]||"";
+    box.innerHTML=`<div class="panel-label">CHECKOUT-TRAINING ${state.pg.coRound+1}/${state.pg.coTargets.length}</div>
+      <div style="font-size:28px;font-family:'Bebas Neue',sans-serif;color:#e8c44a;margin:4px 0">${target}</div>
+      <div style="font-size:13px;color:#888;margin-bottom:6px">${path}</div>
+      <div style="font-size:14px;color:#555">Remaining: <strong>${state.pg.coScore}</strong></div>
+      <div style="font-size:14px;color:#555;margin-top:4px">Treffer: <strong style="color:#2e7d32">${state.pg.coHits}/${state.pg.coAttempts}</strong></div>`;
   }
 }
 
@@ -170,8 +224,10 @@ export function renderParty(){
   else if(state.pg.mode==="Highscore") info.textContent=`${state.pg.hsMaxRounds} Runden · Höchste Gesamtpunktzahl gewinnt`;
   else if(state.pg.mode==="Killer") info.textContent=`Erst eigene Zahl per Double treffen, dann andere eliminieren`;
   else if(state.pg.mode==="Elimination") info.textContent=`501 · Triffst du exakt den Score eines Gegners → er startet neu`;
+  else if(state.pg.mode==="Bob27"){ const f=BOB27_SEQ[state.pg.bob27Round]; info.textContent=`Treffe ${f===25?"Bull":`D${f}`} · Treffer: +${f===25?50:f*2} · Daneben: -${f===25?25:f}`; }
+  else if(state.pg.mode==="CheckoutTraining") info.textContent=`Cheke aus in max. 3 Darts`;
 
-  const modeNames={AtC:"Around the Clock",Shanghai:"Shanghai",Highscore:"Highscore",Killer:"Killer",Elimination:"Elimination"};
+  const modeNames={AtC:"Around the Clock",Shanghai:"Shanghai",Highscore:"Highscore",Killer:"Killer",Elimination:"Elimination",Bob27:"Bob's 27",CheckoutTraining:"Checkout-Training"};
   document.getElementById("party-title").textContent=modeNames[state.pg.mode]||state.pg.mode;
 
   const btn=document.getElementById("party-next");
@@ -198,7 +254,10 @@ export function handlePartyClick(e){
     atcTarget:[...state.pg.atcTarget],shanghaiScores:[...state.pg.shanghaiScores],shanghaiRound:state.pg.shanghaiRound,
     hsScores:[...state.pg.hsScores],hsRound:state.pg.hsRound,
     killerIsKiller:[...state.pg.killerIsKiller],killerLives:[...state.pg.killerLives],killerEliminated:[...state.pg.killerEliminated],
-    elimScores:[...state.pg.elimScores],historicLens:state.pg.historicThrows.map(a=>a.length)
+    elimScores:[...state.pg.elimScores],
+    bob27Score:[...state.pg.bob27Score],bob27Round:state.pg.bob27Round,
+    coRound:state.pg.coRound,coScore:state.pg.coScore,coHits:state.pg.coHits,coAttempts:state.pg.coAttempts,
+    historicLens:state.pg.historicThrows.map(a=>a.length)
   })));
 
   state.pg.throws.push({...hit,svgX:x,svgY:y});
@@ -269,6 +328,24 @@ export function handlePartyClick(e){
       if(newScore===0&&hit.label.startsWith("D")){ partyWin(state.pg.current); return; }
     }
   }
+  else if(state.pg.mode==="Bob27"){
+    // handled at end of turn in advanceParty
+  }
+  else if(state.pg.mode==="CheckoutTraining"){
+    const spent=state.pg.throws.reduce((s,t)=>s+t.score,0);
+    const rem=state.pg.coTargets[state.pg.coRound]-spent;
+    if(rem===0&&(hit.label.startsWith("D")||hit.label==="Bull")){
+      state.pg.coHits++;
+      soundApplause(); speak("Checkout!");
+      renderParty();
+      setTimeout(advanceParty,1000); return;
+    }
+    if(rem<0||rem===1){
+      speak("Bust!"); renderParty();
+      setTimeout(advanceParty,800); return;
+    }
+    state.pg.coScore=Math.max(0,rem);
+  }
 
   renderParty();
   if(state.pg.throws.length===3) setTimeout(advanceParty,350);
@@ -305,6 +382,38 @@ export function advanceParty(){
   if(["Shanghai","Highscore"].includes(state.pg.mode)){
     const ts=state.pg.throws.reduce((s,t)=>s+t.score,0);
     speakScoreWithCustom(ts);
+  }
+
+  if(state.pg.mode==="Bob27"){
+    const field=BOB27_SEQ[state.pg.bob27Round];
+    const fieldVal=field===25?25:field;
+    const hits=state.pg.throws.filter(t=>
+      field===25?(t.label==="Bull"):(t.label===`D${field}`)
+    ).length;
+    const misses=state.pg.throws.length-hits;
+    state.pg.bob27Score[pi]+=hits*(fieldVal*2)-misses*fieldVal;
+    if(state.pg.bob27Score[pi]<0){ speak("Game Over!"); soundBust(); }
+    if(pi===state.cfg.players.length-1){
+      state.pg.bob27Round++;
+      if(state.pg.bob27Round>20){
+        const best=Math.max(...state.pg.bob27Score);
+        const winIdx=state.pg.bob27Score.indexOf(best);
+        partyWin(winIdx); return;
+      }
+    }
+  }
+
+  if(state.pg.mode==="CheckoutTraining"){
+    // advance to next checkout target
+    const nextRound=state.pg.coRound+1;
+    if(nextRound>=state.pg.coTargets.length){
+      const pct=Math.round(state.pg.coHits/state.pg.coTargets.length*100);
+      speak(`${pct} percent. Training complete.`);
+      partyWin(pi); return;
+    }
+    state.pg.coRound=nextRound;
+    state.pg.coScore=state.pg.coTargets[nextRound];
+    state.pg.coAttempts=nextRound+1;
   }
 
   state.pg.throws=[];

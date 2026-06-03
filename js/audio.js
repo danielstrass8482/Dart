@@ -329,14 +329,17 @@ export function prewarmElevenLabs(){
 /**
  * Speaks a score with TTS fallback chain: Google TTS → Web Speech.
  * @param {number} score
+ * @param {boolean} hitBull true when turn included a Bull or Bull25 throw
  */
-export async function speakScoreWithCustom(score){
+export async function speakScoreWithCustom(score, hitBull=false){
   if(localStorage.getItem("dart_tts_enabled")==="false") return;
-  const key=`score_${score}`;
-  const text=score===180?"One Hundred and Eighty!":score===100?"One Hundred!":
-             score===50?"Bull's Eye!":numToWords(score)+"!";
-  const played=await speakElevenLabs(text,`el_${key}`);
-  if(!played) speakScore(score);
+  const text=score===180?"One Hundred and Eighty!":
+             score===100?"One Hundred!":
+             score===50&&hitBull?"Bull's Eye!":
+             numToWords(score)+"!";
+  const cacheKey=score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
+  const played=await speakElevenLabs(text,cacheKey);
+  if(!played) doSpeak(text,"en-GB");
 }
 
 /**
