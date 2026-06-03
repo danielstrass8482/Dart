@@ -974,12 +974,19 @@ function updateAuthUI(user){
     <div class="stats-section-title" style="margin-top:16px">🎥 WURF-ANALYSE</div>
     <div style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px">
       <div style="font-size:12px;color:#999;margin-bottom:10px">
-        Lade ein kurzes Video (3-5 Sek.) deines Wurfs hoch — von der Seite, Hüfthöhe.
+        Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.
       </div>
       <input type="file" id="video-upload-analyse-tab" accept="video/*" style="display:none">
-      <button id="btn-video-select-analyse-tab" style="width:100%;padding:10px;border:2px dashed #ddd;
-        border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666;margin-bottom:8px">
-        📁 Video auswählen
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid #e53935;border-radius:8px;background:#1a0a0a;cursor:pointer;font-size:13px;color:#e53935">
+          📹 VIDEO AUFNEHMEN
+        </button>
+        <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666">
+          📁 HOCHLADEN
+        </button>
+      </div>
+      <button id="btn-video-stop-analyse" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:#e53935;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">
+        ⏹ STOP
       </button>
       <div id="video-preview-wrap-analyse-tab" style="display:none;margin-bottom:8px">
         <video id="video-preview-analyse-tab" style="width:100%;border-radius:8px;max-height:160px"
@@ -1190,10 +1197,18 @@ function updateAuthUI(user){
     <!-- Video Coach -->
     <div style="margin-top:12px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;text-align:left">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px">🎥 WURF-ANALYSE (VIDEO)</div>
-      <div style="font-size:12px;color:#999;margin-bottom:10px">Lade ein kurzes Video (3-5 Sek.) deines Wurfs hoch — von der Seite, Hüfthöhe.</div>
+      <div style="font-size:12px;color:#999;margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
       <input type="file" id="video-upload" accept="video/*" style="display:none">
-      <button id="btn-video-select" style="width:100%;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666;margin-bottom:8px">
-        📁 Video auswählen
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button id="btn-video-record-winner" style="flex:1;padding:10px;border:2px solid #e53935;border-radius:8px;background:#1a0a0a;cursor:pointer;font-size:13px;color:#e53935">
+          📹 VIDEO AUFNEHMEN
+        </button>
+        <button id="btn-video-select" style="flex:1;padding:10px;border:2px dashed #ddd;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;color:#666">
+          📁 HOCHLADEN
+        </button>
+      </div>
+      <button id="btn-video-stop-winner" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:#e53935;color:#fff;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">
+        ⏹ STOP
       </button>
       <div id="video-preview-wrap" style="display:none;margin-bottom:8px">
         <video id="video-preview" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
@@ -4285,6 +4300,15 @@ function buildCoachPrompt(stats, sessionStats, allGames, playerId, healthData){
   return lines.join("\n");
 }
 
+function formatCoachText(text){
+  return text
+    .replace(/### (.+)/g, '<h4 style="font-family:\'Bebas Neue\',sans-serif;font-size:15px;letter-spacing:1px;color:#e8c44a;margin:12px 0 4px">$1</h4>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^- (.+)/gm, '<div style="padding:2px 0 2px 12px;border-left:2px solid #e8c44a;margin:3px 0">$1</div>')
+    .replace(/\n\n/g, '<br>')
+    .replace(/\n/g, '<br>');
+}
+
 async function callCoach(prompt, outputEl, limitEl, btnEl){
   // Check rate limit
   const left = coachCallsLeft();
@@ -4306,7 +4330,7 @@ async function callCoach(prompt, outputEl, limitEl, btnEl){
 
     outputEl.innerHTML=`<div class="coach-box">
       <div class="coach-header">🧠 COACH-ANALYSE</div>
-      ${text.replace(/\n/g,"<br>")}
+      ${formatCoachText(text)}
     </div>`;
     if(limitEl) limitEl.textContent=`${newLeft} von ${COACH_DAILY_LIMIT} Analysen heute verbleibend`;
     btnEl.textContent="🧠 NEUE ANALYSE";
@@ -4437,7 +4461,7 @@ async function loadCoachHistoryStats(pid){
             <span>${ds}</span>
             <span>${a.mode||""} ${a.avgPerTurn?`· Ø ${a.avgPerTurn}`:""}</span>
           </div>
-          <div style="font-size:13px;color:#333;line-height:1.7">${(a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim()}</div>
+          <div style="font-size:13px;color:#333;line-height:1.7">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
         </div>`;
       }).join("")}
     </div>`;
@@ -4455,7 +4479,7 @@ async function loadCoachHistory(pid){
     const ds=`${d.getDate()}.${d.getMonth()+1}. ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
     return `<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px">
       <div style="font-size:10px;color:#aaa;margin-bottom:4px">${ds} · ${a.mode||""} · Ø ${a.avgPerTurn||0}</div>
-      <div style="color:#333;line-height:1.6">${(a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim()}</div>
+      <div style="color:#333;line-height:1.6">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
     </div>`;
   }).join("");
 }
@@ -4641,6 +4665,85 @@ function recordVideoCoachUsage(){
   return count;
 }
 
+// ── Camera recording ─────────────────────────────────────────────
+let mediaStream = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+
+async function startVideoRecording(previewEl, recordBtn, stopBtn, wrapEl, analyzeBtn){
+  try{
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:"environment", width:{ideal:1280}, height:{ideal:720}},
+      audio:false
+    });
+    previewEl.srcObject = mediaStream;
+    previewEl.play();
+    wrapEl.style.display = "";
+    recordBtn.style.display = "none";
+    stopBtn.style.display = "";
+    stopBtn.textContent = "⏹ STOP (oder 5s warten)";
+    if(analyzeBtn) analyzeBtn.style.display = "none";
+
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(mediaStream, {mimeType:"video/webm"});
+    mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = ()=>{
+      const blob = new Blob(recordedChunks, {type:"video/webm"});
+      const url = URL.createObjectURL(blob);
+      previewEl.srcObject = null;
+      previewEl.src = url;
+      previewEl.load();
+      mediaStream.getTracks().forEach(t=>t.stop());
+      stopBtn.style.display = "none";
+      recordBtn.style.display = "";
+      recordBtn.textContent = "📹 NEU AUFNEHMEN";
+      previewEl.addEventListener("loadedmetadata",()=>{
+        if(analyzeBtn) analyzeBtn.style.display = "";
+      },{once:true});
+    };
+
+    mediaRecorder.start();
+
+    let countdown = 5;
+    const timer = setInterval(()=>{
+      countdown--;
+      stopBtn.textContent = `⏹ STOP (${countdown}s)`;
+      if(countdown<=0){
+        clearInterval(timer);
+        if(mediaRecorder?.state==="recording") mediaRecorder.stop();
+      }
+    }, 1000);
+
+    stopBtn.onclick = ()=>{
+      clearInterval(timer);
+      if(mediaRecorder?.state==="recording") mediaRecorder.stop();
+    };
+
+  }catch(err){
+    alert("Kamera nicht verfügbar: "+err.message);
+  }
+}
+
+document.getElementById("btn-video-record-winner").addEventListener("click",()=>{
+  startVideoRecording(
+    document.getElementById("video-preview"),
+    document.getElementById("btn-video-record-winner"),
+    document.getElementById("btn-video-stop-winner"),
+    document.getElementById("video-preview-wrap"),
+    document.getElementById("btn-video-analyze")
+  );
+});
+
+document.getElementById("btn-video-record-analyse").addEventListener("click",()=>{
+  startVideoRecording(
+    document.getElementById("video-preview-analyse-tab"),
+    document.getElementById("btn-video-record-analyse"),
+    document.getElementById("btn-video-stop-analyse"),
+    document.getElementById("video-preview-wrap-analyse-tab"),
+    document.getElementById("btn-video-analyze-analyse-tab")
+  );
+});
+
 // Extract N frames from video as base64 JPEG
 async function extractVideoFrames(videoEl, numFrames=5){
   return new Promise((resolve)=>{
@@ -4758,7 +4861,7 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
 
     outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">
       <div class="coach-header">🎥 WURF-ANALYSE</div>
-      ${text.replace(/\n/g,"<br>")}
+      ${formatCoachText(text)}
       <div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div>
     </div>`;
     btn.textContent="🎥 ERNEUT ANALYSIEREN";
@@ -4800,7 +4903,7 @@ async function loadCoachHistoryAnalyseTab(pid){
           <div style="font-size:10px;color:#aaa;margin-bottom:6px;display:flex;justify-content:space-between">
             <span>${ds}</span><span>${a.mode||""} ${a.avgPerTurn?`· Ø ${a.avgPerTurn}`:""}</span>
           </div>
-          <div style="font-size:13px;color:#333;line-height:1.7">${(a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim()}</div>
+          <div style="font-size:13px;color:#333;line-height:1.7">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
         </div>`;
       }).join("")}
     </div>`;
@@ -4916,7 +5019,7 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
     const newLeft = videoCoachCallsLeft();
     outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">
       <div class="coach-header">🎥 WURF-ANALYSE</div>
-      ${text.replace(/\n/g,"<br>")}
+      ${formatCoachText(text)}
       <div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div>
     </div>`;
     btn.textContent="🎥 ERNEUT ANALYSIEREN";
