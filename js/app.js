@@ -6,7 +6,10 @@
 import './firebase.js';
 
 // ── Premium ──────────────────────────────────────────────────────
-import { registerBetaUser, BETA_MODE } from './premium.js';
+import { registerBetaUser, BETA_MODE, canUseFeature, showPremiumOverlay } from './premium.js';
+
+// ── Onboarding & Help ────────────────────────────────────────────
+import { checkOnboarding, showOnboarding, showHelp } from './onboarding.js';
 
 // ── State ────────────────────────────────────────────────────────
 import { state } from './state.js';
@@ -340,7 +343,7 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
   if(state.selectedPlayers.length<1){ alert("Bitte mindestens 1 Spieler auswählen!"); return; }
   if(selectedMode==="Killer"&&state.selectedPlayers.length<2&&selectedBot==="none"){ alert("Killer braucht mindestens 2 Spieler!"); return; }
 
-  const healthData = await collectHealthData();
+  const healthData = localStorage.getItem("dart_health_enabled") !== "false" ? await collectHealthData() : null;
 
   const players=[...state.selectedPlayers.map(p=>p.name)];
   const playerIds=[...state.selectedPlayers.map(p=>p.id)];
@@ -631,7 +634,7 @@ document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=
 document.getElementById("btn-profil-google")?.addEventListener("click",async()=>{ try{ await window.signInWithGoogle(); initProfilTab(); }catch(e){} });
 
 // ── Settings toggles ──────────────────────────────────────────────
-const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight" };
+const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", health:"dart_health_enabled" };
 window.toggleSetting = function(key){
   const cb=document.getElementById("setting-"+key);
   const slider=document.getElementById("setting-"+key+"-slider");
@@ -758,6 +761,8 @@ document.getElementById("video-upload").addEventListener("change",e=>{
 });
 
 document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
+  const access = await canUseFeature("videoAnalysis");
+  if(!access.allowed){ showPremiumOverlay("videoAnalysis"); return; }
   const left=videoCoachCallsLeft();
   const outputEl=document.getElementById("coach-output-video");
   const btn=document.getElementById("btn-video-analyze");
@@ -906,6 +911,8 @@ document.getElementById("video-upload-analyse-tab").addEventListener("change",e=
   preview.addEventListener("loadedmetadata",()=>{ const dur=Math.round(preview.duration); document.getElementById("video-frames-info-analyse-tab").textContent=`${dur}s · ${Math.round(preview.videoWidth)}×${Math.round(preview.videoHeight)}px · 5 Frames werden analysiert`; document.getElementById("btn-video-analyze-analyse-tab").style.display=""; document.getElementById("coach-output-video-analyse-tab").innerHTML=""; },{once:true});
 });
 document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click",async()=>{
+  const access = await canUseFeature("videoAnalysis");
+  if(!access.allowed){ showPremiumOverlay("videoAnalysis"); return; }
   const left=videoCoachCallsLeft(), outputEl=document.getElementById("coach-output-video-analyse-tab"), btn=document.getElementById("btn-video-analyze-analyse-tab");
   if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">Du hast heute dein Video-Analyse-Limit (${VIDEO_COACH_LIMIT}x) erreicht.</div>`; return; }
   const videoEl=document.getElementById("video-preview-analyse-tab");
@@ -1016,3 +1023,8 @@ window.openTournamentSetup = openTournamentSetup;
 window.openTournamentView = openTournamentView;
 window.loadTournaments = loadTournaments;
 window.showSetup = showSetup;
+window.showOnboarding = showOnboarding;
+window.showHelp = showHelp;
+
+// ── Onboarding ────────────────────────────────────────────────────
+checkOnboarding();

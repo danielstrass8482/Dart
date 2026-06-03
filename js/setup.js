@@ -34,7 +34,14 @@ export function playerColor(name){
 export function renderPlayerList(){
   const list=document.getElementById("player-list");
   if(!state.allPlayers.length){
-    list.innerHTML=`<div style="color:#aaa;font-size:12px;text-align:center;padding:12px">Noch keine Spieler — füge welche hinzu!</div>`;
+    list.innerHTML=`
+      <div style="background:#1a1800;border:1px solid #e8c44a;border-radius:12px;padding:16px;text-align:center;margin-bottom:8px">
+        <div style="font-size:28px;margin-bottom:8px">👋</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#e8c44a;letter-spacing:2px;margin-bottom:6px">WILLKOMMEN BEI DARTTRAINER</div>
+        <div style="font-size:13px;color:#ccc;margin-bottom:14px">Leg deinen ersten Spieler an um loszuspielen!</div>
+        <button onclick="document.getElementById('new-player-input').focus()" style="width:100%;padding:11px;background:#e8c44a;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#000;cursor:pointer;margin-bottom:8px">+ SPIELER ANLEGEN</button>
+        <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:8px;background:none;border:1px solid #555;border-radius:8px;color:#888;font-size:13px;cursor:pointer">Tutorial anzeigen</button>
+      </div>`;
     return;
   }
   list.innerHTML="";

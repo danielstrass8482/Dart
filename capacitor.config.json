@@ -1,6 +1,6 @@
 {
   "appId": "com.danielstrass.dartpro",
-  "appName": "Dart Pro",
+  "appName": "DartTrainer",
   "webDir": "www",
   "server": {
     "androidScheme": "https"
