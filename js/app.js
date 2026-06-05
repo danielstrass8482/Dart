@@ -611,7 +611,7 @@ function openProfileModal(){
   if(resetBtn) resetBtn.style.display = (!user.isAnonymous && provId==="password") ? "" : "none";
   document.getElementById("profile-modal-backdrop").classList.add("visible");
 }
-document.getElementById("profile-btn").addEventListener("click", openProfileModal);
+document.getElementById("profile-btn")?.addEventListener("click", openProfileModal);
 document.getElementById("btn-profile-close").addEventListener("click",()=>{ document.getElementById("profile-modal-backdrop").classList.remove("visible"); });
 document.getElementById("profile-modal-backdrop").addEventListener("click",e=>{
   if(e.target === document.getElementById("profile-modal-backdrop")) document.getElementById("profile-modal-backdrop").classList.remove("visible");
