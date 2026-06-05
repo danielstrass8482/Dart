@@ -79,30 +79,56 @@ export function analyzeSegments(scatterData){
 }
 
 /**
- * Renders scatter comparison boards for current month vs. previous month.
- * @param {string} pid player ID
- * @param {Array} gamesCache all games from Firebase
+ * Returns {from, to} timestamps for a named time range.
+ * @param {string} range "thismonth"|"lastmonth"|"prev2month"|"7d"|"30d"|"all"
+ * @returns {{from:number, to:number}}
  */
-export function loadScatterForComparison(pid, gamesCache){
+function getCmpTimeRange(range){
   const now=Date.now();
   const mStart=new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
-  const mEnd=now;
-  const pm=new Date(mStart); pm.setMonth(pm.getMonth()-1);
-  const pmStart=pm.getTime(), pmEnd=mStart.getTime()-1;
-  const scatterA=gamesCache.filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=mStart.getTime()&&g.ts<=mEnd)
-    .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
-    .filter(s=>s.x!=null&&s.y!=null);
-  const scatterB=gamesCache.filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=pmStart&&g.ts<=pmEnd)
-    .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
-    .filter(s=>s.x!=null&&s.y!=null);
-  const svgA=document.getElementById("scatter-cmp-a");
-  const svgB=document.getElementById("scatter-cmp-b");
-  if(svgA) drawMiniBoard(svgA, scatterA);
-  if(svgB) drawMiniBoard(svgB, scatterB);
-  const infoA=document.getElementById("scatter-cmp-a-info");
-  const infoB=document.getElementById("scatter-cmp-b-info");
-  if(infoA) infoA.textContent=`${scatterA.length} Würfe`;
-  if(infoB) infoB.textContent=`${scatterB.length} Würfe`;
+  if(range==="thismonth") return {from:mStart.getTime(), to:now};
+  if(range==="lastmonth"){
+    const pm=new Date(mStart); pm.setMonth(pm.getMonth()-1);
+    return {from:pm.getTime(), to:mStart.getTime()-1};
+  }
+  if(range==="prev2month"){
+    const pm2=new Date(mStart); pm2.setMonth(pm2.getMonth()-2);
+    const pm=new Date(mStart); pm.setMonth(pm.getMonth()-1);
+    return {from:pm2.getTime(), to:pm.getTime()-1};
+  }
+  if(range==="7d") return {from:now-7*86400000, to:now};
+  if(range==="30d") return {from:now-30*86400000, to:now};
+  return {from:0, to:now+86400000};
+}
+
+/**
+ * Loads scatter data for one comparison board and renders it.
+ * @param {string} pid player ID
+ * @param {Array} gamesCache all games from Firebase
+ * @param {Object} options
+ * @param {string} side "a"|"b"
+ */
+export async function loadScatterForComparison(pid, gamesCache, options={}, side="a"){
+  const {type="timerange", timeFrom=0, timeTo=Date.now()+86400000, gameIdx=null, legNum="all"}=options;
+  let scatter=[];
+  if(type==="timerange"){
+    scatter=gamesCache
+      .filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=timeFrom&&g.ts<=timeTo&&g.mode!=="Cricket")
+      .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
+      .filter(s=>s.x!=null&&s.y!=null);
+  } else if(type==="game" && gameIdx!==null){
+    const pidGames=[...gamesCache].filter(g=>(g.playerIds||[]).includes(pid)&&g.mode!=="Cricket").sort((a,b)=>b.ts-a.ts);
+    const g=pidGames[gameIdx];
+    if(g){
+      let pts=(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]).filter(s=>s.x!=null&&s.y!=null);
+      if(legNum!=="all") pts=pts.filter(s=>String(s.leg||1)===String(legNum));
+      scatter=pts;
+    }
+  }
+  const svg=document.getElementById(`scatter-cmp-${side}`);
+  const info=document.getElementById(`scatter-cmp-${side}-info`);
+  if(svg) drawMiniBoard(svg, scatter);
+  if(info) info.textContent=`${scatter.length} Würfe`;
 }
 
 /** Renders the player selector bar for stats. */
@@ -252,24 +278,42 @@ export async function loadAndRenderStats(){
           <svg id="scatter-svg" viewBox="36 36 458 458" style="display:block;width:100%;max-width:500px;max-height:500px;border-radius:8px;background:#0a0a0f;margin:0 auto"></svg>
         </div>`;
 
-      // FEATURE 6: Scatter comparison (Premium)
+      // FEATURE 6: Scatter comparison (Premium) — hierarchical per-board selectors
       if(pid){
-        html+=`<div class="stats-section-title" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('scatter-compare-wrap').style.display=document.getElementById('scatter-compare-wrap').style.display==='none'?'':'none';this.querySelector('.sc-arrow').textContent=this.querySelector('.sc-arrow').textContent==='▼'?'▲':'▼'">
+        const pidGames=[...allGamesCache].filter(g=>(g.playerIds||[]).includes(pid)&&g.mode!=="Cricket").sort((a,b)=>b.ts-a.ts).slice(0,20);
+        const gameOpts=pidGames.map((g,i)=>{const d=new Date(g.ts);return `<option value="${i}">${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}</option>`;}).join("");
+        const boardHtml=(side)=>{
+          const S=side.toUpperCase();
+          return `<div>
+            <div style="display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap;justify-content:center">
+              <button class="cmp-type-btn" data-side="${side}" data-type="timerange" style="flex:1;min-width:80px;padding:4px 6px;font-size:10px;border-radius:6px;border:1px solid #444;background:#1e88e5;color:#fff;cursor:pointer">Zeitraum</button>
+              <button class="cmp-type-btn" data-side="${side}" data-type="game" style="flex:1;min-width:80px;padding:4px 6px;font-size:10px;border-radius:6px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">Spiel</button>
+            </div>
+            <div id="cmp-timerange-${side}" style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;margin-bottom:4px">
+              <button class="cmp-tr-btn" data-side="${side}" data-range="thismonth" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#1e88e5;color:#fff;cursor:pointer">${side==="a"?"Dieser Monat":"Vormonat"}</button>
+              <button class="cmp-tr-btn" data-side="${side}" data-range="lastmonth" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">${side==="a"?"Vormonat":"Vor 2 Monate"}</button>
+              <button class="cmp-tr-btn" data-side="${side}" data-range="7d" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">7 Tage</button>
+              <button class="cmp-tr-btn" data-side="${side}" data-range="30d" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">30 Tage</button>
+              <button class="cmp-tr-btn" data-side="${side}" data-range="all" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">Alles</button>
+            </div>
+            <div id="cmp-game-${side}" style="display:none;margin-bottom:4px">
+              <select id="cmp-game-sel-${side}" style="width:100%;padding:4px;border-radius:6px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:11px">${gameOpts}</select>
+              <select id="cmp-leg-sel-${side}" style="width:100%;padding:4px;border-radius:6px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:11px;margin-top:4px">
+                <option value="all">Alle Legs</option>
+              </select>
+            </div>
+            <svg id="scatter-cmp-${side}" viewBox="36 36 458 458" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
+            <div id="scatter-cmp-${side}-info" style="font-size:10px;color:#aaa;text-align:center;margin-top:2px"></div>
+          </div>`;
+        };
+        html+=`<div class="stats-section-title" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="const w=document.getElementById('scatter-compare-wrap');w.style.display=w.style.display==='none'?'':'none';this.querySelector('.sc-arrow').textContent=this.querySelector('.sc-arrow').textContent==='▼'?'▲':'▼'">
           📊 TREFFERBILD VERGLEICH <span style="font-size:10px;background:#e8c44a;color:#000;padding:2px 6px;border-radius:8px;font-family:'DM Sans',sans-serif">PREMIUM</span>
           <span class="sc-arrow" style="color:#aaa;font-size:12px">▼</span>
         </div>
-        <div id="scatter-compare-wrap" style="display:none">
+        <div id="scatter-compare-wrap" style="display:none" data-pid="${pid}" data-game-json='${JSON.stringify(pidGames.map((g,i)=>({i,ts:g.ts,id:g.id||null})))}'>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-            <div>
-              <div style="font-size:11px;color:#888;margin-bottom:4px;text-align:center">LETZTER MONAT</div>
-              <svg id="scatter-cmp-a" viewBox="36 36 458 458" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
-              <div id="scatter-cmp-a-info" style="font-size:10px;color:#aaa;text-align:center;margin-top:2px"></div>
-            </div>
-            <div>
-              <div style="font-size:11px;color:#888;margin-bottom:4px;text-align:center">VORLETZTER MONAT</div>
-              <svg id="scatter-cmp-b" viewBox="36 36 458 458" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
-              <div id="scatter-cmp-b-info" style="font-size:10px;color:#aaa;text-align:center;margin-top:2px"></div>
-            </div>
+            ${boardHtml("a")}
+            ${boardHtml("b")}
           </div>
         </div>`;
       }
@@ -300,12 +344,12 @@ export async function loadAndRenderStats(){
         <div class="history-header" style="grid-template-columns:1fr 70px 70px 70px"><span>FELD</span><span>VERSUCHE</span><span>TREFFER</span><span>QUOTE</span></div>`;
       doubleEntries.forEach(e=>{
         const color=e.pct>=50?"#2e7d32":e.pct>=25?"#fb8c00":"#e53935";
-        const barW=Math.round(e.pct/100*80);
+        const barW=Math.round(e.pct);
         html+=`<div class="history-row" style="grid-template-columns:1fr 70px 70px 70px">
           <span style="display:flex;align-items:center;gap:8px">
             <strong>${e.field}</strong>
-            <span style="flex:1;height:6px;background:#f0f0f0;border-radius:3px;max-width:80px;display:inline-block">
-              <span style="display:block;height:6px;width:${barW}%;background:${color};border-radius:3px"></span>
+            <span style="width:100px;height:6px;background:#f0f0f0;border-radius:3px;display:inline-block;overflow:hidden;flex-shrink:0">
+              <span style="display:block;height:6px;width:${barW}%;background:${color};border-radius:3px;transition:width 0.3s"></span>
             </span>
           </span>
           <span>${e.att}</span><span>${e.hit}</span>
@@ -340,8 +384,78 @@ export async function loadAndRenderStats(){
       const svg=document.getElementById("scatter-svg");
       if(svg) drawMiniBoard(svg, allScatter);
 
-      // Render scatter comparison boards
-      if(pid) loadScatterForComparison(pid, allGamesCache);
+      // Render scatter comparison boards with hierarchical selectors
+      if(pid){
+        const wrap=document.getElementById("scatter-compare-wrap");
+        if(wrap){
+          const cmpState={
+            a:{type:"timerange",range:"thismonth",gameIdx:0,legNum:"all"},
+            b:{type:"timerange",range:"lastmonth",gameIdx:0,legNum:"all"}
+          };
+
+          const pidGamesAll=[...allGamesCache].filter(g=>(g.playerIds||[]).includes(pid)&&g.mode!=="Cricket").sort((a,b)=>b.ts-a.ts).slice(0,20);
+
+          function populateLegSel(side){
+            const st=cmpState[side];
+            const sel=document.getElementById(`cmp-leg-sel-${side}`);
+            if(!sel) return;
+            if(st.type!=="game"){sel.innerHTML=`<option value="all">Alle Legs</option>`; return;}
+            const g=pidGamesAll[st.gameIdx];
+            if(!g){sel.innerHTML=`<option value="all">Alle Legs</option>`; return;}
+            const pts=(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]).filter(s=>s.x!=null&&s.y!=null);
+            const legs=[...new Set(pts.map(s=>s.leg||1))].sort((a,b)=>a-b);
+            sel.innerHTML=`<option value="all">Alle Legs</option>`+legs.map(l=>`<option value="${l}">Leg ${l}</option>`).join("");
+            sel.value=st.legNum;
+          }
+
+          function refreshBoard(side){
+            const st=cmpState[side];
+            const {from,to}=getCmpTimeRange(st.range);
+            loadScatterForComparison(pid, allGamesCache, {type:st.type, timeFrom:from, timeTo:to, gameIdx:st.gameIdx, legNum:st.legNum}, side);
+          }
+
+          ["a","b"].forEach(side=>{
+            // type buttons
+            wrap.querySelectorAll(`.cmp-type-btn[data-side="${side}"]`).forEach(btn=>{
+              btn.addEventListener("click",()=>{
+                cmpState[side].type=btn.dataset.type;
+                wrap.querySelectorAll(`.cmp-type-btn[data-side="${side}"]`).forEach(b=>{b.style.background="#2a2a2a";b.style.color="#888";});
+                btn.style.background="#1e88e5"; btn.style.color="#fff";
+                const trDiv=document.getElementById(`cmp-timerange-${side}`);
+                const gDiv=document.getElementById(`cmp-game-${side}`);
+                if(trDiv) trDiv.style.display=btn.dataset.type==="timerange"?"flex":"none";
+                if(gDiv) gDiv.style.display=btn.dataset.type==="game"?"block":"none";
+                populateLegSel(side);
+                refreshBoard(side);
+              });
+            });
+            // timerange buttons
+            wrap.querySelectorAll(`.cmp-tr-btn[data-side="${side}"]`).forEach(btn=>{
+              btn.addEventListener("click",()=>{
+                cmpState[side].range=btn.dataset.range;
+                wrap.querySelectorAll(`.cmp-tr-btn[data-side="${side}"]`).forEach(b=>{b.style.background="#2a2a2a";b.style.color="#888";});
+                btn.style.background="#1e88e5"; btn.style.color="#fff";
+                refreshBoard(side);
+              });
+            });
+            // game dropdown
+            const gameSel=document.getElementById(`cmp-game-sel-${side}`);
+            if(gameSel) gameSel.addEventListener("change",()=>{
+              cmpState[side].gameIdx=parseInt(gameSel.value)||0;
+              populateLegSel(side);
+              refreshBoard(side);
+            });
+            // leg dropdown
+            const legSel=document.getElementById(`cmp-leg-sel-${side}`);
+            if(legSel) legSel.addEventListener("change",()=>{
+              cmpState[side].legNum=legSel.value;
+              refreshBoard(side);
+            });
+            populateLegSel(side);
+            refreshBoard(side);
+          });
+        }
+      }
 
       // Render segment frequency table
       const segWrap=document.getElementById("segment-analysis-wrap");

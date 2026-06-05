@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout } from './board.js';
-import { soundBust, soundHit, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio } from './audio.js';
+import { soundBust, soundHit, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue } from './audio.js';
 import { startMic, stopMic, maybeRestartMic, setVoiceFeedback, announceRequires, micEnabled, micActive } from './speech.js';
 import { runBotTurn } from './bot.js';
 
@@ -22,14 +22,15 @@ export function requiresDelay(turnScore){
 }
 
 /**
- * Starts a new X01 game.
+ * Starts a new X01 game. Board is locked until "Game on!" audio completes.
  * @param {number} starter index of starting player
  */
-export function startX01(starter=0){
+export async function startX01(starter=0){
   if(window.audioCtx&&window.audioCtx.state==="suspended") window.audioCtx.resume().catch(()=>{});
   const ac = getAudio();
   if(ac&&ac.state==="suspended") ac.resume().catch(()=>{});
   if(window.speechSynthesis?.paused) window.speechSynthesis.resume();
+  clearAudioQueue();
   state.x01={
     scores: state.cfg.players.map(()=>state.cfg.startScore),
     current: starter,
@@ -52,26 +53,14 @@ export function startX01(starter=0){
     startTime: Date.now()
   };
   clearHits(state.boardSVG);
+  disableBoard(state.boardSVG, true);
   renderX01();
   window.showScreen("x01");
-  gameOnWhenLandscape();
   prewarmElevenLabs();
+  await queueAudio("Game on!","game_on");
+  await new Promise(r=>setTimeout(r,300));
+  disableBoard(state.boardSVG, false);
   if(state.cfg.isBot?.[state.x01.current]) setTimeout(runBotTurn,800);
-}
-
-/**
- * Plays "Game On" announcement once landscape is confirmed.
- */
-function gameOnWhenLandscape(){
-  if(!window.matchMedia("(orientation:portrait)").matches){
-    setTimeout(()=>speakKeyWithCustom("game_on","Game on!"), 300);
-    return;
-  }
-  let done=false;
-  const fire=()=>{ if(done) return; done=true; setTimeout(()=>speakKeyWithCustom("game_on","Game on!"),300); };
-  const handler=()=>{ if(!window.matchMedia("(orientation:portrait)").matches){ window.removeEventListener("orientationchange",handler); fire(); } };
-  window.addEventListener("orientationchange",handler);
-  setTimeout(()=>{ window.removeEventListener("orientationchange",handler); fire(); }, 6000);
 }
 
 /**
@@ -242,7 +231,7 @@ export function processX01Hit(hit, svgX=null, svgY=null){
     turnScores:state.x01.turnScores.map(a=>[...a])
   });
 
-  const throwObj={...hit,svgX,svgY};
+  const throwObj={...hit,svgX,svgY,leg:state.cfg.currentLeg||1};
 
   // PDC checkout attempt: count once per turn when score at turn-start ≤170
   if(state.x01.throws.length===0&&

@@ -283,6 +283,27 @@ document.getElementById("btn-next-leg").addEventListener("click",()=>{
   state.cfg.currentLegStarter=state.cfg.nextLegStarter||0;
   startX01(state.cfg.currentLegStarter);
 });
+document.getElementById("btn-coach-leg")?.addEventListener("click",async()=>{
+  const btn=document.getElementById("btn-coach-leg");
+  const outputEl=document.getElementById("coach-output-winner");
+  const limitEl=document.getElementById("coach-limit-winner");
+  const i=coachSelectedPlayerIdx>=0?coachSelectedPlayerIdx:0;
+  const playerName=state.cfg.players[i]||state.cfg.players[0];
+  let playerStats=null;
+  let pid=state.cfg.playerIds?.[i]||null;
+  if(window.dartDB&&pid){ const players=await window.dartDB.loadPlayers(); const p=players.find(x=>x.id===pid); if(p) playerStats=p.stats; }
+  const turns=state.x01.turnScores?.[i]||[];
+  const avg=turns.length?Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10:0;
+  const best=turns.length?Math.max(...turns):0;
+  const legNum=state.cfg.currentLeg||1;
+  const sessionStats={ mode:state.cfg.mode, rounds:state.x01.round, legNum, players:[{ name:playerName, id:pid, avg3:avg, best3:best, checkoutAtt:state.x01.checkoutAttempts?.[i]||0, checkoutHit:state.x01.checkoutHits?.[i]||0, first9:state.x01.first9?.[i]||null, winner:true }] };
+  const prompt=buildCoachPrompt(playerStats, sessionStats, allGamesCache, pid, state.cfg.healthData||null);
+  document.getElementById("winner-overlay").classList.remove("visible");
+  document.getElementById("leg-overlay").classList.remove("visible");
+  document.querySelector(".screen.active")?.scrollTo?.(0,0);
+  if(outputEl) outputEl.innerHTML="";
+  await callCoach(prompt, outputEl, limitEl, btn);
+});
 
 // ── Setup form ────────────────────────────────────────────────────
 let selectedMode="501";
@@ -713,11 +734,16 @@ function buildCoachPlayerSelector(){
     const realIdx=state.cfg.players.indexOf(name);
     const col=playerColor(name);
     const btn=document.createElement("button");
-    btn.style.cssText=`padding:6px 14px;border-radius:20px;border:2px solid ${col};background:${hi===0?"#fffbea":"#fff"};cursor:pointer;font-size:13px;font-weight:600;color:#1a1a1a`;
+    btn.style.cssText=`padding:6px 14px;border-radius:20px;border:2px solid ${col};background:${hi===0?col:"#2a2a2a"};cursor:pointer;font-size:13px;font-weight:600;color:${hi===0?"#fff":"#666"};box-shadow:${hi===0?"0 0 8px "+col:"none"}`;
     btn.textContent=name;
     btn.addEventListener("click",()=>{
       coachSelectedPlayerIdx=realIdx;
-      btns.querySelectorAll("button").forEach((b,bi)=>{ b.style.background=bi===hi?"#fffbea":"#fff"; b.style.borderWidth=bi===hi?"2px":"1px"; });
+      btns.querySelectorAll("button").forEach((b,bi)=>{
+        const bcol=playerColor(humanPlayers[bi]);
+        b.style.background=bi===hi?bcol:"#2a2a2a";
+        b.style.color=bi===hi?"#fff":"#666";
+        b.style.boxShadow=bi===hi?"0 0 8px "+bcol:"none";
+      });
     });
     btns.appendChild(btn);
   });
