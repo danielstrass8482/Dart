@@ -51,6 +51,60 @@ function playerColor(name){
   return AVATAR_COLORS[h];
 }
 
+/**
+ * Analyzes segment frequency from scatter data.
+ * @param {Array<{x:number,y:number,l:string}>} scatterData
+ * @returns {Array<{num:number,single:number,double:number,triple:number,total:number}>}
+ */
+export function analyzeSegments(scatterData){
+  const segments={};
+  [...Array(20)].forEach((_,i)=>{ segments[i+1]={single:0,double:0,triple:0}; });
+  segments[25]={single:0,double:0,triple:0};
+  scatterData.forEach(p=>{
+    if(!p.l||p.l==="Miss") return;
+    const isTriple=p.l.startsWith("T");
+    const isDouble=p.l.startsWith("D");
+    const isBull=p.l==="Bull";
+    const isBull25=p.l==="Bull 25";
+    const num=isBull||isBull25?25:parseInt(p.l.replace(/[TDS]/,""))||0;
+    if(!segments[num]) return;
+    if(isTriple) segments[num].triple=(segments[num].triple||0)+1;
+    else if(isDouble||isBull) segments[num].double++;
+    else segments[num].single++;
+  });
+  return Object.entries(segments).map(([num,v])=>{
+    const total=(v.single||0)+(v.double||0)+(v.triple||0);
+    return {num:parseInt(num),single:v.single||0,double:v.double||0,triple:v.triple||0,total};
+  }).filter(e=>e.total>0).sort((a,b)=>b.total-a.total);
+}
+
+/**
+ * Renders scatter comparison boards for current month vs. previous month.
+ * @param {string} pid player ID
+ * @param {Array} gamesCache all games from Firebase
+ */
+export function loadScatterForComparison(pid, gamesCache){
+  const now=Date.now();
+  const mStart=new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
+  const mEnd=now;
+  const pm=new Date(mStart); pm.setMonth(pm.getMonth()-1);
+  const pmStart=pm.getTime(), pmEnd=mStart.getTime()-1;
+  const scatterA=gamesCache.filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=mStart.getTime()&&g.ts<=mEnd)
+    .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
+    .filter(s=>s.x!=null&&s.y!=null);
+  const scatterB=gamesCache.filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=pmStart&&g.ts<=pmEnd)
+    .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
+    .filter(s=>s.x!=null&&s.y!=null);
+  const svgA=document.getElementById("scatter-cmp-a");
+  const svgB=document.getElementById("scatter-cmp-b");
+  if(svgA) drawMiniBoard(svgA, scatterA);
+  if(svgB) drawMiniBoard(svgB, scatterB);
+  const infoA=document.getElementById("scatter-cmp-a-info");
+  const infoB=document.getElementById("scatter-cmp-b-info");
+  if(infoA) infoA.textContent=`${scatterA.length} Würfe`;
+  if(infoB) infoB.textContent=`${scatterB.length} Würfe`;
+}
+
 /** Renders the player selector bar for stats. */
 export function renderStatsPlayerBar(){
   const bar=document.getElementById("stats-player-bar");
@@ -287,53 +341,13 @@ export async function loadAndRenderStats(){
       if(svg) drawMiniBoard(svg, allScatter);
 
       // Render scatter comparison boards
-      if(pid){
-        const now=Date.now(), day=86400000;
-        const mStart=new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
-        const mEnd=now;
-        const pm=new Date(mStart); pm.setMonth(pm.getMonth()-1);
-        const pmStart=pm.getTime();
-        const pmEnd=mStart.getTime()-1;
-        const scatterA=allGamesCache.filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=mStart.getTime()&&g.ts<=mEnd)
-          .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
-          .filter(s=>s.x!=null&&s.y!=null);
-        const scatterB=allGamesCache.filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=pmStart&&g.ts<=pmEnd)
-          .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
-          .filter(s=>s.x!=null&&s.y!=null);
-        const svgA=document.getElementById("scatter-cmp-a");
-        const svgB=document.getElementById("scatter-cmp-b");
-        if(svgA) drawMiniBoard(svgA, scatterA);
-        if(svgB) drawMiniBoard(svgB, scatterB);
-        const infoA=document.getElementById("scatter-cmp-a-info");
-        const infoB=document.getElementById("scatter-cmp-b-info");
-        const avgA=x01Data.filter(p=>{const g=games.find(g=>g.ts>=mStart.getTime());return g;}).map(p=>p.avg3||0).filter(v=>v>0);
-        if(infoA) infoA.textContent=`${scatterA.length} Würfe`;
-        if(infoB) infoB.textContent=`${scatterB.length} Würfe`;
-      }
+      if(pid) loadScatterForComparison(pid, allGamesCache);
 
       // Render segment frequency table
       const segWrap=document.getElementById("segment-analysis-wrap");
       if(segWrap){
         const scatterData=JSON.parse(segWrap.dataset.scatterJson||"[]");
-        const segments={};
-        [...Array(20)].forEach((_,i)=>{ segments[i+1]={single:0,double:0,triple:0}; });
-        segments[25]={single:0,double:0};
-        scatterData.forEach(p=>{
-          if(!p.l||p.l==="Miss") return;
-          const isTriple=p.l.startsWith("T");
-          const isDouble=p.l.startsWith("D");
-          const isBull=p.l==="Bull";
-          const isBull25=p.l==="Bull 25";
-          const num=isBull||isBull25?25:parseInt(p.l.replace(/[TDS]/,""))||0;
-          if(!segments[num]) return;
-          if(isTriple) segments[num].triple=(segments[num].triple||0)+1;
-          else if(isDouble||isBull) segments[num].double++;
-          else segments[num].single++;
-        });
-        const entries=Object.entries(segments).map(([num,v])=>{
-          const total=(v.single||0)+(v.double||0)+(v.triple||0);
-          return {num:parseInt(num),single:v.single||0,double:v.double||0,triple:v.triple||0,total};
-        }).filter(e=>e.total>0).sort((a,b)=>b.total-a.total);
+        const entries=analyzeSegments(scatterData);
         if(entries.length>0){
           const totalThrows=scatterData.filter(p=>p.l&&p.l!=="Miss").length||1;
           const fav=entries[0];
@@ -345,17 +359,14 @@ export async function loadAndRenderStats(){
             ${rarest?` &nbsp;·&nbsp; <span style="font-size:12px;color:#aaa">Seltenst: <strong>${rarest.num}</strong> (${rarest.total}×)</span>`:""}
           </div>
           <div class="history-list">
-            <div class="history-header" style="grid-template-columns:50px 1fr 55px 55px 55px 45px">
-              <span>FELD</span><span></span><span>SINGLE</span><span>DOUBLE</span><span>TRIPLE</span><span>%</span>
+            <div class="history-header" style="grid-template-columns:50px 55px 55px 55px 55px 45px">
+              <span>FELD</span><span>GESAMT</span><span>SINGLE</span><span>DOUBLE</span><span>TRIPLE</span><span>%</span>
             </div>`;
           entries.slice(0,20).forEach(e=>{
             const pct=Math.round(e.total/totalThrows*100);
-            const barW=Math.round(pct/Math.max(1,Math.round(entries[0].total/totalThrows*100))*80);
-            segHtml+=`<div class="history-row" style="grid-template-columns:50px 1fr 55px 55px 55px 45px">
+            segHtml+=`<div class="history-row" style="grid-template-columns:50px 55px 55px 55px 55px 45px">
               <strong>${e.num===25?"Bull":e.num}</strong>
-              <span style="height:6px;background:#f0f0f0;border-radius:3px;align-self:center">
-                <span style="display:block;height:6px;width:${barW}%;background:#1e88e5;border-radius:3px"></span>
-              </span>
+              <span>${e.total}</span>
               <span>${e.single||"—"}</span><span>${e.double||"—"}</span><span>${e.triple||"—"}</span>
               <span style="font-weight:700;color:#555">${pct}%</span>
             </div>`;

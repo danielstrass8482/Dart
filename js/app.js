@@ -48,7 +48,8 @@ import { startParty, renderParty, handlePartyClick, advanceParty, partyWin, setP
 import {
   loadPlayers, renderPlayerList, togglePlayer, playerColor, showScreen,
   showSetup, showSpielenCards, showSpielenSection, saveGameToFirebase,
-  updateAllPlayerStats, updateAuthUI, applySettings, BOT_PERSONALITY_DESCS, updateRotateOverlay
+  updateAllPlayerStats, updateAuthUI, applySettings, BOT_PERSONALITY_DESCS,
+  updateRotateOverlay, detectContext
 } from './setup.js';
 
 // ── Stats ────────────────────────────────────────────────────────
@@ -385,8 +386,7 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
 
   const humans=players.filter((_,i)=>!isBot[i]);
   const hasBot=isBot.some(Boolean);
-  const detectedContext=selectedContext!=="auto"?selectedContext:
-    (humans.length===1&&!hasBot?"training":"casual");
+  const detectedContext=detectContext(selectedContext, humans, hasBot);
 
   state.cfg={
     mode:selectedMode, startScore:selectedMode==="301"?301:501,
