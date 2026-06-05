@@ -78,57 +78,269 @@ export function analyzeSegments(scatterData){
   }).filter(e=>e.total>0).sort((a,b)=>b.total-a.total);
 }
 
-/**
- * Returns {from, to} timestamps for a named time range.
- * @param {string} range "thismonth"|"lastmonth"|"prev2month"|"7d"|"30d"|"all"
- * @returns {{from:number, to:number}}
- */
-function getCmpTimeRange(range){
-  const now=Date.now();
-  const mStart=new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
-  if(range==="thismonth") return {from:mStart.getTime(), to:now};
-  if(range==="lastmonth"){
-    const pm=new Date(mStart); pm.setMonth(pm.getMonth()-1);
-    return {from:pm.getTime(), to:mStart.getTime()-1};
-  }
-  if(range==="prev2month"){
-    const pm2=new Date(mStart); pm2.setMonth(pm2.getMonth()-2);
-    const pm=new Date(mStart); pm.setMonth(pm.getMonth()-1);
-    return {from:pm2.getTime(), to:pm.getTime()-1};
-  }
-  if(range==="7d") return {from:now-7*86400000, to:now};
-  if(range==="30d") return {from:now-30*86400000, to:now};
-  return {from:0, to:now+86400000};
+// ── Advanced statistics state ─────────────────────────────────────
+let advFilter={type:"timerange",timeRange:"30d",sessionId:null,legNum:"all"};
+let advFilterB={type:"timerange",timeRange:"90d",sessionId:null,legNum:"all"};
+
+function groupGamesIntoSessions(games){
+  const sessions=[];
+  const sorted=[...games].sort((a,b)=>a.ts-b.ts);
+  sorted.forEach(game=>{
+    const last=sessions[sessions.length-1];
+    const sameP=last&&JSON.stringify((game.playerIds||[]).slice().sort())===JSON.stringify((last.playerIds||[]).slice().sort());
+    const within4h=last&&game.ts-last.lastTs<4*60*60*1000;
+    if(last&&sameP&&within4h){
+      last.games.push(game); last.lastTs=game.ts; last.legs++;
+    } else {
+      const d=new Date(game.ts);
+      const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}`;
+      const players=(game.players||[]).map(p=>p.name).join(" vs ");
+      sessions.push({id:game.ts.toString(),label:`${ds} · ${game.mode} · ${players}`,games:[game],playerIds:game.playerIds||[],firstTs:game.ts,lastTs:game.ts,legs:1});
+    }
+  });
+  return sessions;
 }
 
-/**
- * Loads scatter data for one comparison board and renders it.
- * @param {string} pid player ID
- * @param {Array} gamesCache all games from Firebase
- * @param {Object} options
- * @param {string} side "a"|"b"
- */
-export async function loadScatterForComparison(pid, gamesCache, options={}, side="a"){
-  const {type="timerange", timeFrom=0, timeTo=Date.now()+86400000, gameIdx=null, legNum="all"}=options;
-  let scatter=[];
-  if(type==="timerange"){
-    scatter=gamesCache
-      .filter(g=>(g.playerIds||[]).includes(pid)&&g.ts>=timeFrom&&g.ts<=timeTo&&g.mode!=="Cricket")
-      .flatMap(g=>(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]))
-      .filter(s=>s.x!=null&&s.y!=null);
-  } else if(type==="game" && gameIdx!==null){
-    const pidGames=[...gamesCache].filter(g=>(g.playerIds||[]).includes(pid)&&g.mode!=="Cricket").sort((a,b)=>b.ts-a.ts);
-    const g=pidGames[gameIdx];
-    if(g){
-      let pts=(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]).filter(s=>s.x!=null&&s.y!=null);
-      if(legNum!=="all") pts=pts.filter(s=>String(s.leg||1)===String(legNum));
-      scatter=pts;
-    }
+function getAdvTimeRange(range){
+  const now=Date.now(); const day=86400000;
+  if(range==="7d")   return {from:now-7*day,   to:now+day};
+  if(range==="30d")  return {from:now-30*day,  to:now+day};
+  if(range==="90d")  return {from:now-90*day,  to:now+day};
+  if(range==="180d") return {from:now-180*day, to:now+day};
+  const mStart=new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
+  if(range==="thismonth") return {from:mStart.getTime(), to:now+day};
+  if(range==="lastmonth"){const pm=new Date(mStart);pm.setMonth(pm.getMonth()-1);return {from:pm.getTime(),to:mStart.getTime()-1};}
+  return {from:0,to:now+day};
+}
+
+function extractScatterFromGames(games, pid){
+  return games.flatMap(g=>(g.players||[]).filter(p=>pid?p.id===pid:true).flatMap(p=>p.scatter||[])).filter(s=>s.x!=null&&s.y!=null);
+}
+
+function getFilteredScatter(pid, filter){
+  if(filter.type==="timerange"){
+    const {from,to}=getAdvTimeRange(filter.timeRange);
+    const games=allGamesCache.filter(g=>g.ts>=from&&g.ts<=to&&g.mode!=="Cricket"&&(pid?(g.playerIds||[]).includes(pid):true));
+    return extractScatterFromGames(games,pid);
   }
-  const svg=document.getElementById(`scatter-cmp-${side}`);
-  const info=document.getElementById(`scatter-cmp-${side}-info`);
-  if(svg) drawMiniBoard(svg, scatter);
-  if(info) info.textContent=`${scatter.length} Würfe`;
+  if(filter.type==="session"&&filter.sessionId){
+    const allSess=groupGamesIntoSessions(allGamesCache.filter(g=>g.mode!=="Cricket"&&(pid?(g.playerIds||[]).includes(pid):true)));
+    const sess=allSess.find(s=>s.id===filter.sessionId);
+    if(!sess) return [];
+    if(filter.legNum==="all") return extractScatterFromGames(sess.games,pid);
+    const legIdx=(parseInt(filter.legNum)||1)-1;
+    const g=sess.games[legIdx];
+    if(!g) return [];
+    return extractScatterFromGames([g],pid);
+  }
+  return [];
+}
+
+function renderSegmentTable(entries, totalThrows){
+  if(!entries.length) return `<div style="color:#aaa;font-size:13px;padding:8px">Keine Treffer-Koordinaten vorhanden (nur bei Touch-Eingabe auf dem Board).</div>`;
+  const fav=entries[0];
+  const bestTriple=[...entries].sort((a,b)=>b.triple-a.triple)[0];
+  const rarest=[...entries].sort((a,b)=>a.total-b.total)[0];
+  let h=`<div style="margin-bottom:8px">
+    <span style="font-size:12px;color:#aaa">Lieblings-Feld: <strong>${fav.num}</strong> (${fav.total}×)</span>
+    ${bestTriple?.triple>0?` &nbsp;·&nbsp; <span style="font-size:12px;color:#aaa">Bestes Triple: <strong>T${bestTriple.num}</strong> (${bestTriple.triple}×)</span>`:""}
+    ${rarest?` &nbsp;·&nbsp; <span style="font-size:12px;color:#aaa">Seltenst: <strong>${rarest.num}</strong> (${rarest.total}×)</span>`:""}
+  </div><div class="history-list"><div class="history-header" style="grid-template-columns:50px 55px 55px 55px 55px 45px"><span>FELD</span><span>GESAMT</span><span>SINGLE</span><span>DOUBLE</span><span>TRIPLE</span><span>%</span></div>`;
+  entries.slice(0,20).forEach(e=>{
+    const pct=Math.round(e.total/(totalThrows||1)*100);
+    h+=`<div class="history-row" style="grid-template-columns:50px 55px 55px 55px 55px 45px"><strong>${e.num===25?"Bull":e.num}</strong><span>${e.total}</span><span>${e.single||"—"}</span><span>${e.double||"—"}</span><span>${e.triple||"—"}</span><span style="font-weight:700;color:#555">${pct}%</span></div>`;
+  });
+  return h+`</div>`;
+}
+
+function updateFilterSummary(){
+  const el=document.getElementById("adv-filter-summary");
+  if(!el) return;
+  const labels={"7d":"Letzte 7 Tage","30d":"Letzter Monat","90d":"Letzte 3 Monate","180d":"Letzte 6 Monate","all":"Alle Spiele","thismonth":"Dieser Monat","lastmonth":"Letzter Monat"};
+  if(advFilter.type==="timerange"){
+    el.textContent=`📅 ${labels[advFilter.timeRange]||advFilter.timeRange}`;
+  } else {
+    const pid=statsSelectedPlayer;
+    const sess=groupGamesIntoSessions(allGamesCache.filter(g=>g.mode!=="Cricket"&&(pid?(g.playerIds||[]).includes(pid):true))).find(s=>s.id===advFilter.sessionId);
+    el.textContent=sess?`🎮 ${sess.label} · ${advFilter.legNum==="all"?"Alle Legs":"Leg "+advFilter.legNum}`:"🎮 Kein Spiel gewählt";
+  }
+}
+
+function updateAdvancedStats(pid){
+  updateFilterSummary();
+  const scatter=getFilteredScatter(pid,advFilter);
+  const svgA=document.getElementById("adv-scatter-a");
+  if(svgA) drawMiniBoard(svgA,scatter);
+  const infoA=document.getElementById("adv-scatter-a-info");
+  if(infoA) infoA.textContent=`${scatter.length} Würfe`;
+  const segWrap=document.getElementById("adv-segment-wrap");
+  if(segWrap){
+    const entries=analyzeSegments(scatter);
+    const total=scatter.filter(s=>s.l&&s.l!=="Miss").length;
+    segWrap.innerHTML=renderSegmentTable(entries,total);
+  }
+}
+
+function updateAdvancedStatsB(pid){
+  const scatter=getFilteredScatter(pid,advFilterB);
+  const svgB=document.getElementById("adv-scatter-b");
+  if(svgB) drawMiniBoard(svgB,scatter);
+  const infoB=document.getElementById("adv-scatter-b-info");
+  if(infoB) infoB.textContent=`${scatter.length} Würfe`;
+}
+
+function buildSessionDropdown(containerId, sessions, onSelect, btnClass, activeColor, inactiveColor){
+  const sel=document.getElementById(containerId);
+  if(!sel) return;
+  sessions.forEach(s=>{
+    const opt=document.createElement("option");
+    opt.value=s.id; opt.textContent=`${s.label} (${s.legs} Leg${s.legs!==1?"s":""})`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change",()=>onSelect(sel.value||null,sessions));
+}
+
+function setupAdvancedFilterUI(pid){
+  const sessionsAll=groupGamesIntoSessions(allGamesCache.filter(g=>g.mode!=="Cricket"&&(pid?(g.playerIds||[]).includes(pid):true))).reverse();
+
+  // ── Board A / Segment (common advFilter) ──────────────────────────
+  function setAdvType(type){
+    advFilter.type=type;
+    document.querySelectorAll(".adv-type-btn").forEach(b=>{
+      const on=b.dataset.type===type;
+      b.style.border=`2px solid ${on?"#e8c44a":"#ddd"}`;
+      b.style.background=on?"#1a1800":"#f5f5f5";
+      b.style.color=on?"#e8c44a":"#555";
+      b.style.fontWeight=on?"700":"400";
+    });
+    const tr=document.getElementById("adv-timerange-selector");
+    const ss=document.getElementById("adv-session-selector");
+    if(tr) tr.style.display=type==="timerange"?"":"none";
+    if(ss) ss.style.display=type==="session"?"":"none";
+    updateAdvancedStats(pid);
+  }
+  document.querySelectorAll(".adv-type-btn").forEach(b=>b.addEventListener("click",()=>setAdvType(b.dataset.type)));
+
+  function setAdvTimeRange(range){
+    advFilter.timeRange=range;
+    document.querySelectorAll(".adv-time-btn").forEach(b=>{
+      const on=b.dataset.range===range;
+      b.style.border=`${on?"2":"1"}px solid ${on?"#e8c44a":"#ddd"}`;
+      b.style.background=on?"#1a1800":"#f5f5f5";
+      b.style.color=on?"#e8c44a":"#555";
+      b.style.fontWeight=on?"700":"400";
+    });
+    updateAdvancedStats(pid);
+  }
+  document.querySelectorAll(".adv-time-btn").forEach(b=>b.addEventListener("click",()=>setAdvTimeRange(b.dataset.range)));
+
+  buildSessionDropdown("adv-session-select",sessionsAll,(sessionId,sessions)=>{
+    advFilter.sessionId=sessionId; advFilter.legNum="all";
+    const legBtns=document.getElementById("adv-leg-btns");
+    if(legBtns){
+      legBtns.innerHTML="";
+      const sess=sessions.find(s=>s.id===sessionId);
+      if(sess){
+        const allBtn=document.createElement("button");
+        allBtn.className="adv-leg-btn"; allBtn.dataset.leg="all"; allBtn.textContent="Alle";
+        allBtn.style.cssText="padding:5px 10px;border-radius:6px;border:2px solid #e8c44a;background:#1a1800;color:#e8c44a;cursor:pointer;font-size:12px;font-weight:700";
+        legBtns.appendChild(allBtn);
+        sess.games.forEach((g,idx)=>{
+          const btn=document.createElement("button");
+          btn.className="adv-leg-btn"; btn.dataset.leg=String(idx+1);
+          btn.textContent=`Leg ${idx+1} (${g.winner||"?"})`;
+          btn.style.cssText="padding:5px 10px;border-radius:6px;border:1px solid #ddd;background:#f5f5f5;color:#555;cursor:pointer;font-size:12px";
+          legBtns.appendChild(btn);
+        });
+        const legSel=document.getElementById("adv-leg-selector");
+        if(legSel) legSel.style.display="";
+      }
+    }
+    updateAdvancedStats(pid);
+  },sessionsAll);
+
+  document.getElementById("adv-leg-btns")?.addEventListener("click",e=>{
+    const btn=e.target.closest(".adv-leg-btn"); if(!btn) return;
+    advFilter.legNum=btn.dataset.leg==="all"?"all":parseInt(btn.dataset.leg);
+    document.querySelectorAll(".adv-leg-btn").forEach(b=>{
+      const on=b.dataset.leg===btn.dataset.leg;
+      b.style.border=`${on?"2":"1"}px solid ${on?"#e8c44a":"#ddd"}`;
+      b.style.background=on?"#1a1800":"#f5f5f5";
+      b.style.color=on?"#e8c44a":"#555"; b.style.fontWeight=on?"700":"400";
+    });
+    updateAdvancedStats(pid);
+  });
+
+  // ── Board B (independent advFilterB) ─────────────────────────────
+  function setAdvTypeB(type){
+    advFilterB.type=type;
+    document.querySelectorAll(".advB-type-btn").forEach(b=>{
+      const on=b.dataset.type===type;
+      b.style.border=`2px solid ${on?"#1e88e5":"#ddd"}`;
+      b.style.background=on?"#e3f0fd":"#f5f5f5";
+      b.style.color=on?"#1e88e5":"#555"; b.style.fontWeight=on?"700":"400";
+    });
+    const tr=document.getElementById("advB-timerange-selector");
+    const ss=document.getElementById("advB-session-selector");
+    if(tr) tr.style.display=type==="timerange"?"":"none";
+    if(ss) ss.style.display=type==="session"?"":"none";
+    updateAdvancedStatsB(pid);
+  }
+  document.querySelectorAll(".advB-type-btn").forEach(b=>b.addEventListener("click",()=>setAdvTypeB(b.dataset.type)));
+
+  document.querySelectorAll(".advB-time-btn").forEach(b=>{
+    b.addEventListener("click",()=>{
+      advFilterB.timeRange=b.dataset.range;
+      document.querySelectorAll(".advB-time-btn").forEach(bb=>{
+        const on=bb.dataset.range===advFilterB.timeRange;
+        bb.style.border=`${on?"2":"1"}px solid ${on?"#1e88e5":"#ddd"}`;
+        bb.style.background=on?"#e3f0fd":"#f5f5f5";
+        bb.style.color=on?"#1e88e5":"#555"; bb.style.fontWeight=on?"700":"400";
+      });
+      updateAdvancedStatsB(pid);
+    });
+  });
+
+  buildSessionDropdown("advB-session-select",sessionsAll,(sessionId,sessions)=>{
+    advFilterB.sessionId=sessionId; advFilterB.legNum="all";
+    const legBtns=document.getElementById("advB-leg-btns");
+    if(legBtns){
+      legBtns.innerHTML="";
+      const sess=sessions.find(s=>s.id===sessionId);
+      if(sess){
+        const allBtn=document.createElement("button");
+        allBtn.className="advB-leg-btn"; allBtn.dataset.leg="all"; allBtn.textContent="Alle";
+        allBtn.style.cssText="padding:4px 8px;border-radius:5px;border:2px solid #1e88e5;background:#e3f0fd;color:#1e88e5;cursor:pointer;font-size:11px;font-weight:700";
+        legBtns.appendChild(allBtn);
+        sess.games.forEach((g,idx)=>{
+          const btn=document.createElement("button");
+          btn.className="advB-leg-btn"; btn.dataset.leg=String(idx+1);
+          btn.textContent=`Leg ${idx+1} (${g.winner||"?"})`;
+          btn.style.cssText="padding:4px 8px;border-radius:5px;border:1px solid #ddd;background:#f5f5f5;color:#555;cursor:pointer;font-size:11px";
+          legBtns.appendChild(btn);
+        });
+        const legSelB=document.getElementById("advB-leg-selector");
+        if(legSelB) legSelB.style.display="";
+      }
+    }
+    updateAdvancedStatsB(pid);
+  },sessionsAll);
+
+  document.getElementById("advB-leg-btns")?.addEventListener("click",e=>{
+    const btn=e.target.closest(".advB-leg-btn"); if(!btn) return;
+    advFilterB.legNum=btn.dataset.leg==="all"?"all":parseInt(btn.dataset.leg);
+    document.querySelectorAll(".advB-leg-btn").forEach(b=>{
+      const on=b.dataset.leg===btn.dataset.leg;
+      b.style.border=`${on?"2":"1"}px solid ${on?"#1e88e5":"#ddd"}`;
+      b.style.background=on?"#e3f0fd":"#f5f5f5";
+      b.style.color=on?"#1e88e5":"#555"; b.style.fontWeight=on?"700":"400";
+    });
+    updateAdvancedStatsB(pid);
+  });
+
+  // Initial renders
+  updateAdvancedStats(pid);
+  updateAdvancedStatsB(pid);
 }
 
 /** Renders the player selector bar for stats. */
@@ -278,52 +490,82 @@ export async function loadAndRenderStats(){
           <svg id="scatter-svg" viewBox="36 36 458 458" style="display:block;width:100%;max-width:500px;max-height:500px;border-radius:8px;background:#0a0a0f;margin:0 auto"></svg>
         </div>`;
 
-      // FEATURE 6: Scatter comparison (Premium) — hierarchical per-board selectors
-      if(pid){
-        const pidGames=[...allGamesCache].filter(g=>(g.playerIds||[]).includes(pid)&&g.mode!=="Cricket").sort((a,b)=>b.ts-a.ts).slice(0,20);
-        const gameOpts=pidGames.map((g,i)=>{const d=new Date(g.ts);return `<option value="${i}">${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}</option>`;}).join("");
-        const boardHtml=(side)=>{
-          const S=side.toUpperCase();
-          return `<div>
-            <div style="display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap;justify-content:center">
-              <button class="cmp-type-btn" data-side="${side}" data-type="timerange" style="flex:1;min-width:80px;padding:4px 6px;font-size:10px;border-radius:6px;border:1px solid #444;background:#1e88e5;color:#fff;cursor:pointer">Zeitraum</button>
-              <button class="cmp-type-btn" data-side="${side}" data-type="game" style="flex:1;min-width:80px;padding:4px 6px;font-size:10px;border-radius:6px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">Spiel</button>
-            </div>
-            <div id="cmp-timerange-${side}" style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;margin-bottom:4px">
-              <button class="cmp-tr-btn" data-side="${side}" data-range="thismonth" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#1e88e5;color:#fff;cursor:pointer">${side==="a"?"Dieser Monat":"Vormonat"}</button>
-              <button class="cmp-tr-btn" data-side="${side}" data-range="lastmonth" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">${side==="a"?"Vormonat":"Vor 2 Monate"}</button>
-              <button class="cmp-tr-btn" data-side="${side}" data-range="7d" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">7 Tage</button>
-              <button class="cmp-tr-btn" data-side="${side}" data-range="30d" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">30 Tage</button>
-              <button class="cmp-tr-btn" data-side="${side}" data-range="all" style="padding:3px 6px;font-size:10px;border-radius:5px;border:1px solid #444;background:#2a2a2a;color:#888;cursor:pointer">Alles</button>
-            </div>
-            <div id="cmp-game-${side}" style="display:none;margin-bottom:4px">
-              <select id="cmp-game-sel-${side}" style="width:100%;padding:4px;border-radius:6px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:11px">${gameOpts}</select>
-              <select id="cmp-leg-sel-${side}" style="width:100%;padding:4px;border-radius:6px;border:1px solid #444;background:#1a1a1a;color:#fff;font-size:11px;margin-top:4px">
-                <option value="all">Alle Legs</option>
-              </select>
-            </div>
-            <svg id="scatter-cmp-${side}" viewBox="36 36 458 458" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
-            <div id="scatter-cmp-${side}-info" style="font-size:10px;color:#aaa;text-align:center;margin-top:2px"></div>
-          </div>`;
-        };
-        html+=`<div class="stats-section-title" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="const w=document.getElementById('scatter-compare-wrap');w.style.display=w.style.display==='none'?'':'none';this.querySelector('.sc-arrow').textContent=this.querySelector('.sc-arrow').textContent==='▼'?'▲':'▼'">
-          📊 TREFFERBILD VERGLEICH <span style="font-size:10px;background:#e8c44a;color:#000;padding:2px 6px;border-radius:8px;font-family:'DM Sans',sans-serif">PREMIUM</span>
-          <span class="sc-arrow" style="color:#aaa;font-size:12px">▼</span>
-        </div>
-        <div id="scatter-compare-wrap" style="display:none" data-pid="${pid}" data-game-json='${JSON.stringify(pidGames.map((g,i)=>({i,ts:g.ts,id:g.id||null})))}'>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-            ${boardHtml("a")}
-            ${boardHtml("b")}
-          </div>
-        </div>`;
-      }
+      // Reset filter state on each re-render
+      advFilter={type:"timerange",timeRange:"30d",sessionId:null,legNum:"all"};
+      advFilterB={type:"timerange",timeRange:"90d",sessionId:null,legNum:"all"};
 
-      // FEATURE 7: Segment frequency table (Premium)
-      html+=`<div class="stats-section-title" style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="document.getElementById('segment-analysis-wrap').style.display=document.getElementById('segment-analysis-wrap').style.display==='none'?'':'none';this.querySelector('.sa-arrow').textContent=this.querySelector('.sa-arrow').textContent==='▼'?'▲':'▼'">
-        🎯 SEGMENT-ANALYSE <span style="font-size:10px;background:#e8c44a;color:#000;padding:2px 6px;border-radius:8px;font-family:'DM Sans',sans-serif">PREMIUM</span>
-        <span class="sa-arrow" style="color:#aaa;font-size:12px">▼</span>
+      html+=`<div class="stats-section-title" style="display:flex;align-items:center;gap:8px">
+        🔬 ERWEITERTE STATISTIKEN
+        <span style="font-size:9px;background:#e8c44a;color:#000;padding:2px 6px;border-radius:10px;font-family:'DM Sans',sans-serif">PREMIUM</span>
       </div>
-      <div id="segment-analysis-wrap" style="display:none" data-scatter-json='${JSON.stringify(allScatter.slice(0,600))}'></div>`;
+
+      <!-- Gemeinsamer Filter -->
+      <div id="advanced-filter" style="background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;color:#999;letter-spacing:1px;margin-bottom:8px">ANALYSE-GRUNDLAGE</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button class="adv-type-btn" data-type="timerange" style="flex:1;padding:8px;border-radius:8px;border:2px solid #e8c44a;background:#1a1800;color:#e8c44a;font-size:12px;font-weight:700;cursor:pointer">📅 Zeitraum</button>
+          <button class="adv-type-btn" data-type="session" style="flex:1;padding:8px;border-radius:8px;border:2px solid #ddd;background:#f5f5f5;color:#555;font-size:12px;cursor:pointer">🎮 Einzelnes Spiel</button>
+        </div>
+        <div id="adv-timerange-selector" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+          <button class="adv-time-btn" data-range="30d" style="padding:5px 10px;border-radius:6px;border:2px solid #e8c44a;background:#1a1800;color:#e8c44a;font-size:12px;font-weight:700;cursor:pointer">Letzter Monat</button>
+          <button class="adv-time-btn" data-range="7d" style="padding:5px 10px;border-radius:6px;border:1px solid #ddd;background:#f5f5f5;color:#555;font-size:12px;cursor:pointer">7 Tage</button>
+          <button class="adv-time-btn" data-range="90d" style="padding:5px 10px;border-radius:6px;border:1px solid #ddd;background:#f5f5f5;color:#555;font-size:12px;cursor:pointer">3 Monate</button>
+          <button class="adv-time-btn" data-range="all" style="padding:5px 10px;border-radius:6px;border:1px solid #ddd;background:#f5f5f5;color:#555;font-size:12px;cursor:pointer">Alles</button>
+        </div>
+        <div id="adv-session-selector" style="display:none">
+          <select id="adv-session-select" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:12px;margin-bottom:8px;background:#fff;color:#333">
+            <option value="">Spiel wählen…</option>
+          </select>
+          <div id="adv-leg-selector" style="display:none">
+            <div style="font-size:11px;color:#999;margin-bottom:6px">LEG AUSWÄHLEN</div>
+            <div id="adv-leg-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+          </div>
+        </div>
+        <div id="adv-filter-summary" style="margin-top:8px;font-size:11px;color:#e8c44a;min-height:16px"></div>
+      </div>
+
+      <!-- Trefferbild-Vergleich -->
+      <div class="stats-section-title" style="cursor:pointer;display:flex;align-items:center;gap:8px" onclick="const w=document.getElementById('adv-scatter-wrap');w.style.display=w.style.display==='none'?'':'none';this.querySelector('.sc2-arrow').textContent=this.querySelector('.sc2-arrow').textContent==='▼'?'▲':'▼'">
+        📊 TREFFERBILD VERGLEICH <span class="sc2-arrow" style="color:#aaa;font-size:12px">▼</span>
+      </div>
+      <div id="adv-scatter-wrap" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <div style="font-size:10px;color:#888;margin-bottom:4px;text-align:center;font-weight:600;letter-spacing:1px">BOARD A · AKTUELLER FILTER</div>
+            <svg id="adv-scatter-a" viewBox="36 36 458 458" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
+            <div id="adv-scatter-a-info" style="font-size:10px;color:#aaa;text-align:center;margin-top:2px"></div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:#1e88e5;margin-bottom:4px;text-align:center;font-weight:600;letter-spacing:1px">BOARD B · VERGLEICHEN MIT</div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;justify-content:center">
+              <button class="advB-type-btn" data-type="timerange" style="flex:1;min-width:60px;padding:3px 5px;border-radius:6px;border:2px solid #1e88e5;background:#e3f0fd;color:#1e88e5;font-size:10px;font-weight:700;cursor:pointer">Zeitraum</button>
+              <button class="advB-type-btn" data-type="session" style="flex:1;min-width:60px;padding:3px 5px;border-radius:6px;border:1px solid #ddd;background:#f5f5f5;color:#555;font-size:10px;cursor:pointer">Spiel</button>
+            </div>
+            <div id="advB-timerange-selector" style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;margin-bottom:4px">
+              <button class="advB-time-btn" data-range="90d" style="padding:3px 6px;border-radius:5px;border:2px solid #1e88e5;background:#e3f0fd;color:#1e88e5;font-size:10px;font-weight:700;cursor:pointer">3 Monate</button>
+              <button class="advB-time-btn" data-range="30d" style="padding:3px 6px;border-radius:5px;border:1px solid #ddd;background:#f5f5f5;color:#555;font-size:10px;cursor:pointer">Monat</button>
+              <button class="advB-time-btn" data-range="7d" style="padding:3px 6px;border-radius:5px;border:1px solid #ddd;background:#f5f5f5;color:#555;font-size:10px;cursor:pointer">7 Tage</button>
+              <button class="advB-time-btn" data-range="all" style="padding:3px 6px;border-radius:5px;border:1px solid #ddd;background:#f5f5f5;color:#555;font-size:10px;cursor:pointer">Alles</button>
+            </div>
+            <div id="advB-session-selector" style="display:none;margin-bottom:4px">
+              <select id="advB-session-select" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:6px;font-size:11px;background:#fff;color:#333">
+                <option value="">Spiel wählen…</option>
+              </select>
+              <div id="advB-leg-selector" style="display:none;margin-top:4px">
+                <div id="advB-leg-btns" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+              </div>
+            </div>
+            <svg id="adv-scatter-b" viewBox="36 36 458 458" style="display:block;width:100%;border-radius:8px;background:#0a0a0f"></svg>
+            <div id="adv-scatter-b-info" style="font-size:10px;color:#aaa;text-align:center;margin-top:2px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segment-Analyse -->
+      <div class="stats-section-title" style="cursor:pointer;display:flex;align-items:center;gap:8px" onclick="const w=document.getElementById('adv-segment-wrap');w.style.display=w.style.display==='none'?'':'none';this.querySelector('.sa2-arrow').textContent=this.querySelector('.sa2-arrow').textContent==='▼'?'▲':'▼'">
+        🎯 SEGMENT-ANALYSE <span class="sa2-arrow" style="color:#aaa;font-size:12px">▼</span>
+      </div>
+      <div id="adv-segment-wrap" style="display:none;padding:4px 0"></div>`;
     }
 
     const doubleAgg={};
@@ -382,115 +624,9 @@ export async function loadAndRenderStats(){
 
     if(allScatter.length){
       const svg=document.getElementById("scatter-svg");
-      if(svg) drawMiniBoard(svg, allScatter);
-
-      // Render scatter comparison boards with hierarchical selectors
-      if(pid){
-        const wrap=document.getElementById("scatter-compare-wrap");
-        if(wrap){
-          const cmpState={
-            a:{type:"timerange",range:"thismonth",gameIdx:0,legNum:"all"},
-            b:{type:"timerange",range:"lastmonth",gameIdx:0,legNum:"all"}
-          };
-
-          const pidGamesAll=[...allGamesCache].filter(g=>(g.playerIds||[]).includes(pid)&&g.mode!=="Cricket").sort((a,b)=>b.ts-a.ts).slice(0,20);
-
-          function populateLegSel(side){
-            const st=cmpState[side];
-            const sel=document.getElementById(`cmp-leg-sel-${side}`);
-            if(!sel) return;
-            if(st.type!=="game"){sel.innerHTML=`<option value="all">Alle Legs</option>`; return;}
-            const g=pidGamesAll[st.gameIdx];
-            if(!g){sel.innerHTML=`<option value="all">Alle Legs</option>`; return;}
-            const pts=(g.players||[]).filter(p=>p.id===pid).flatMap(p=>p.scatter||[]).filter(s=>s.x!=null&&s.y!=null);
-            const legs=[...new Set(pts.map(s=>s.leg||1))].sort((a,b)=>a-b);
-            sel.innerHTML=`<option value="all">Alle Legs</option>`+legs.map(l=>`<option value="${l}">Leg ${l}</option>`).join("");
-            sel.value=st.legNum;
-          }
-
-          function refreshBoard(side){
-            const st=cmpState[side];
-            const {from,to}=getCmpTimeRange(st.range);
-            loadScatterForComparison(pid, allGamesCache, {type:st.type, timeFrom:from, timeTo:to, gameIdx:st.gameIdx, legNum:st.legNum}, side);
-          }
-
-          ["a","b"].forEach(side=>{
-            // type buttons
-            wrap.querySelectorAll(`.cmp-type-btn[data-side="${side}"]`).forEach(btn=>{
-              btn.addEventListener("click",()=>{
-                cmpState[side].type=btn.dataset.type;
-                wrap.querySelectorAll(`.cmp-type-btn[data-side="${side}"]`).forEach(b=>{b.style.background="#2a2a2a";b.style.color="#888";});
-                btn.style.background="#1e88e5"; btn.style.color="#fff";
-                const trDiv=document.getElementById(`cmp-timerange-${side}`);
-                const gDiv=document.getElementById(`cmp-game-${side}`);
-                if(trDiv) trDiv.style.display=btn.dataset.type==="timerange"?"flex":"none";
-                if(gDiv) gDiv.style.display=btn.dataset.type==="game"?"block":"none";
-                populateLegSel(side);
-                refreshBoard(side);
-              });
-            });
-            // timerange buttons
-            wrap.querySelectorAll(`.cmp-tr-btn[data-side="${side}"]`).forEach(btn=>{
-              btn.addEventListener("click",()=>{
-                cmpState[side].range=btn.dataset.range;
-                wrap.querySelectorAll(`.cmp-tr-btn[data-side="${side}"]`).forEach(b=>{b.style.background="#2a2a2a";b.style.color="#888";});
-                btn.style.background="#1e88e5"; btn.style.color="#fff";
-                refreshBoard(side);
-              });
-            });
-            // game dropdown
-            const gameSel=document.getElementById(`cmp-game-sel-${side}`);
-            if(gameSel) gameSel.addEventListener("change",()=>{
-              cmpState[side].gameIdx=parseInt(gameSel.value)||0;
-              populateLegSel(side);
-              refreshBoard(side);
-            });
-            // leg dropdown
-            const legSel=document.getElementById(`cmp-leg-sel-${side}`);
-            if(legSel) legSel.addEventListener("change",()=>{
-              cmpState[side].legNum=legSel.value;
-              refreshBoard(side);
-            });
-            populateLegSel(side);
-            refreshBoard(side);
-          });
-        }
-      }
-
-      // Render segment frequency table
-      const segWrap=document.getElementById("segment-analysis-wrap");
-      if(segWrap){
-        const scatterData=JSON.parse(segWrap.dataset.scatterJson||"[]");
-        const entries=analyzeSegments(scatterData);
-        if(entries.length>0){
-          const totalThrows=scatterData.filter(p=>p.l&&p.l!=="Miss").length||1;
-          const fav=entries[0];
-          const bestTriple=[...entries].sort((a,b)=>b.triple-a.triple)[0];
-          const rarest=[...entries].sort((a,b)=>a.total-b.total)[0];
-          let segHtml=`<div style="margin-bottom:8px">
-            <span style="font-size:12px;color:#aaa">Lieblings-Feld: <strong>${fav.num}</strong> (${fav.total}×)</span>
-            ${bestTriple?.triple>0?` &nbsp;·&nbsp; <span style="font-size:12px;color:#aaa">Bestes Triple: <strong>T${bestTriple.num}</strong> (${bestTriple.triple}×)</span>`:""}
-            ${rarest?` &nbsp;·&nbsp; <span style="font-size:12px;color:#aaa">Seltenst: <strong>${rarest.num}</strong> (${rarest.total}×)</span>`:""}
-          </div>
-          <div class="history-list">
-            <div class="history-header" style="grid-template-columns:50px 55px 55px 55px 55px 45px">
-              <span>FELD</span><span>GESAMT</span><span>SINGLE</span><span>DOUBLE</span><span>TRIPLE</span><span>%</span>
-            </div>`;
-          entries.slice(0,20).forEach(e=>{
-            const pct=Math.round(e.total/totalThrows*100);
-            segHtml+=`<div class="history-row" style="grid-template-columns:50px 55px 55px 55px 55px 45px">
-              <strong>${e.num===25?"Bull":e.num}</strong>
-              <span>${e.total}</span>
-              <span>${e.single||"—"}</span><span>${e.double||"—"}</span><span>${e.triple||"—"}</span>
-              <span style="font-weight:700;color:#555">${pct}%</span>
-            </div>`;
-          });
-          segHtml+=`</div>`;
-          segWrap.innerHTML=segHtml;
-        } else {
-          segWrap.innerHTML=`<div style="color:#aaa;font-size:13px;padding:8px">Keine Treffer-Koordinaten vorhanden (nur bei Touch-Eingabe auf dem Board).</div>`;
-        }
-      }
+      if(svg) drawMiniBoard(svg,allScatter.slice(0,600));
+      // Wire advanced filter UI (boards A+B, segment analysis)
+      setupAdvancedFilterUI(pid);
     }
 
     if(chartGames.length>=2){
