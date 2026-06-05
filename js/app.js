@@ -283,26 +283,29 @@ document.getElementById("btn-next-leg").addEventListener("click",()=>{
   state.cfg.currentLegStarter=state.cfg.nextLegStarter||0;
   startX01(state.cfg.currentLegStarter);
 });
-document.getElementById("btn-coach-leg")?.addEventListener("click",async()=>{
+document.getElementById("btn-coach-leg")?.addEventListener("click",async(e)=>{
+  e.preventDefault();
+  e.stopPropagation();
+  // Overlay bleibt offen — kein close, kein advanceX01
   const btn=document.getElementById("btn-coach-leg");
-  const outputEl=document.getElementById("coach-output-winner");
-  const limitEl=document.getElementById("coach-limit-winner");
-  const i=coachSelectedPlayerIdx>=0?coachSelectedPlayerIdx:0;
+  const outputEl=document.getElementById("coach-output-leg");
+  if(!btn||!outputEl) return;
+  const i=state.x01.winner??0;
   const playerName=state.cfg.players[i]||state.cfg.players[0];
-  let playerStats=null;
   let pid=state.cfg.playerIds?.[i]||null;
-  if(window.dartDB&&pid){ const players=await window.dartDB.loadPlayers(); const p=players.find(x=>x.id===pid); if(p) playerStats=p.stats; }
   const turns=state.x01.turnScores?.[i]||[];
   const avg=turns.length?Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10:0;
   const best=turns.length?Math.max(...turns):0;
-  const legNum=state.cfg.currentLeg||1;
-  const sessionStats={ mode:state.cfg.mode, rounds:state.x01.round, legNum, players:[{ name:playerName, id:pid, avg3:avg, best3:best, checkoutAtt:state.x01.checkoutAttempts?.[i]||0, checkoutHit:state.x01.checkoutHits?.[i]||0, first9:state.x01.first9?.[i]||null, winner:true }] };
-  const prompt=buildCoachPrompt(playerStats, sessionStats, allGamesCache, pid, state.cfg.healthData||null);
-  document.getElementById("winner-overlay").classList.remove("visible");
-  document.getElementById("leg-overlay").classList.remove("visible");
-  document.querySelector(".screen.active")?.scrollTo?.(0,0);
-  if(outputEl) outputEl.innerHTML="";
-  await callCoach(prompt, outputEl, limitEl, btn);
+  const sessionStats={ mode:state.cfg.mode, rounds:state.x01.round, legOnly:true, players:[{ name:playerName, id:pid, avg3:avg, best3:best, checkoutAtt:state.x01.checkoutAttempts?.[i]||0, checkoutHit:state.x01.checkoutHits?.[i]||0, first9:state.x01.first9?.[i]||null, winner:true }] };
+  const prompt=buildCoachPrompt(null, sessionStats, allGamesCache, pid, state.cfg.healthData||null);
+  outputEl.innerHTML="";
+  await callCoach(prompt, outputEl, null, btn);
+  if(outputEl.querySelector(".coach-box")&&window.dartDB&&pid){
+    const text=outputEl.querySelector(".coach-box").innerText;
+    if(text&&!text.includes("Fehler")){
+      await window.dartDB.saveCoachAnalysis({ playerId:pid, playerName, type:"leg", text, mode:state.cfg.mode, avgPerTurn:avg, legNumber:state.cfg.currentLeg||1 });
+    }
+  }
 });
 
 // ── Setup form ────────────────────────────────────────────────────
