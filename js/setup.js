@@ -274,6 +274,18 @@ export function updateAuthUI(user){
   }
 }
 
+/**
+ * Detects the game context from the selected setup option and player config.
+ * @param {string} selectedContext "auto"|"training"|"casual"|"tournament"
+ * @param {string[]} humans human player names
+ * @param {boolean} hasBot whether a bot is in the game
+ * @returns {"training"|"casual"|"tournament"}
+ */
+export function detectContext(selectedContext, humans, hasBot){
+  if(selectedContext !== "auto") return selectedContext;
+  return (humans.length === 1 && !hasBot) ? "training" : "casual";
+}
+
 /** Applies stored settings to the UI. */
 export function applySettings(){
   const micOn=localStorage.getItem("dart_mic_enabled")!=="false";
