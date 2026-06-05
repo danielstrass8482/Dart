@@ -222,6 +222,40 @@ export async function playCustomAudio(key){
 export const elTTSCache={};
 let currentAudio=null;
 
+// ── Audio Queue ───────────────────────────────────────────────────
+const audioQueue=[];
+let audioPlaying=false;
+
+async function playAudioQueue(){
+  if(audioPlaying||audioQueue.length===0) return;
+  audioPlaying=true;
+  const {text,key,resolve}=audioQueue.shift();
+  try{
+    const played=await speakElevenLabs(text,key);
+    if(!played) await new Promise(r=>{
+      doSpeak(text,"en-GB");
+      setTimeout(r,Math.max(800,text.length*80));
+    });
+  }catch(e){}
+  audioPlaying=false;
+  if(resolve) resolve();
+  setTimeout(playAudioQueue,150);
+}
+
+export function queueAudio(text,key){
+  return new Promise(resolve=>{
+    audioQueue.push({text,key,resolve});
+    playAudioQueue();
+  });
+}
+
+export function clearAudioQueue(){
+  audioQueue.length=0;
+  audioPlaying=false;
+  if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; }
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
 const COACH_FUNCTION_URL="https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartCoach";
 export const TTS_FUNCTION_URL="https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartTTS";
 
@@ -327,7 +361,7 @@ export function prewarmElevenLabs(){
 }
 
 /**
- * Speaks a score with TTS fallback chain: Google TTS → Web Speech.
+ * Speaks a score via the audio queue (prevents overlapping announcements).
  * @param {number} score
  * @param {boolean} hitBull true when turn included a Bull or Bull25 throw
  */
@@ -337,18 +371,16 @@ export async function speakScoreWithCustom(score, hitBull=false){
              score===100?"One Hundred!":
              score===50&&hitBull?"Bull's Eye!":
              numToWords(score)+"!";
-  const cacheKey=score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
-  const played=await speakElevenLabs(text,cacheKey);
-  if(!played) doSpeak(text,"en-GB");
+  const key=score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
+  await queueAudio(text,key);
 }
 
 /**
- * Speaks a keyed message with TTS fallback chain.
+ * Speaks a keyed message via the audio queue.
  * @param {string} key
  * @param {string} fallbackText
  */
 export async function speakKeyWithCustom(key, fallbackText){
   if(localStorage.getItem("dart_tts_enabled")==="false") return;
-  const played=await speakElevenLabs(fallbackText,`el_${key}`);
-  if(!played) speak(fallbackText);
+  await queueAudio(fallbackText,`el_${key}`);
 }
