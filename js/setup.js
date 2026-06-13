@@ -11,6 +11,16 @@ import { BOT_PERSONALITIES } from './bot.js';
 
 export const AVATAR_COLORS=["#e53935","#1e88e5","#43a047","#fb8c00","#8e24aa","#00897b","#e91e63","#546e7a"];
 
+/**
+ * Returns the display name (nickname if set, otherwise name).
+ * @param {{name:string, nickname?:string}|null} player
+ * @param {string} [fallback]
+ */
+export function getDisplayName(player, fallback=""){
+  if(!player) return fallback;
+  return player.nickname||player.name||fallback;
+}
+
 export const BOT_PERSONALITY_DESCS = {
   methodisch:"Spielt immer optimal und konstant",
   uebermuetig:"Zielt immer auf T20, ignoriert bessere Optionen",
@@ -53,15 +63,25 @@ export function renderPlayerList(){
     const avg=p.stats?.avgPerTurn?.toFixed(1)||"0.0";
     const co=p.stats?.checkoutPct?.toFixed(0)||"0";
     const hi=p.stats?.highscore||0;
+    const displayName=getDisplayName(p);
+    const avatarHtml=p.photoUrl
+      ? `<img src="${p.photoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+      : `<div class="pi-avatar" style="background:${playerColor(p.name)}">${p.name[0].toUpperCase()}</div>`;
     div.innerHTML=`
-      <div class="pi-avatar" style="background:${playerColor(p.name)}">${p.name[0].toUpperCase()}</div>
-      <div style="flex:1">
-        <div class="pi-name">${p.name}</div>
-        <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}</div>
+      ${avatarHtml}
+      <div style="flex:1;min-width:0">
+        <div class="pi-name">${displayName}${p.nickname&&p.nickname!==p.name?`<span style="font-size:11px;color:#aaa;font-weight:400;margin-left:4px">(${p.name})</span>`:""}</div>
+        <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}${p.dartWeight?` · ${p.dartWeight}g`:""}</div>
       </div>
       <div class="pi-order">${selected?selIdx+1:""}</div>
+      <button class="pi-edit" data-id="${p.id}" title="Spieler bearbeiten">✏</button>
       <button class="pi-delete" data-id="${p.id}" data-name="${p.name}" title="Spieler löschen">✕</button>`;
     div.addEventListener("click",()=>togglePlayer(p));
+    const editBtn=div.querySelector(".pi-edit");
+    editBtn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openPlayerEditDialog(p);
+    });
     const delBtn=div.querySelector(".pi-delete");
     delBtn.addEventListener("click", async (e)=>{
       e.stopPropagation();
@@ -285,6 +305,117 @@ export function detectContext(selectedContext, humans, hasBot){
   if(selectedContext !== "auto") return selectedContext;
   return (humans.length === 1 && !hasBot) ? "training" : "casual";
 }
+
+// ── Player Edit Dialog ────────────────────────────────────────────
+let _editingPlayer = null;
+let _editPhotoFile = null;
+
+/** Opens the player edit dialog for the given player. */
+export function openPlayerEditDialog(player){
+  _editingPlayer = player;
+  _editPhotoFile = null;
+
+  const backdrop = document.getElementById("player-edit-backdrop");
+  const avatarEl = document.getElementById("player-edit-avatar");
+  if(!backdrop || !avatarEl) return;
+
+  // Populate fields
+  document.getElementById("player-edit-name").value = player.name||"";
+  document.getElementById("player-edit-nickname").value = player.nickname||"";
+  document.getElementById("player-edit-brand").value = player.dartBrand||"";
+  document.getElementById("player-edit-weight").value = player.dartWeight||"";
+  document.getElementById("player-edit-error").textContent = "";
+
+  // Avatar preview
+  _renderEditAvatar(player.photoUrl, player);
+
+  backdrop.classList.add("open");
+}
+
+function _renderEditAvatar(photoUrl, player){
+  const el = document.getElementById("player-edit-avatar");
+  if(!el) return;
+  if(photoUrl){
+    el.innerHTML = `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover">`;
+  } else {
+    el.style.background = playerColor(player.name);
+    el.style.color = "#fff";
+    el.textContent = (player.name||"?")[0].toUpperCase();
+  }
+}
+
+function _closeEditDialog(){
+  const backdrop = document.getElementById("player-edit-backdrop");
+  if(backdrop) backdrop.classList.remove("open");
+  _editingPlayer = null;
+  _editPhotoFile = null;
+}
+
+// Wire edit dialog events once DOM is ready
+document.addEventListener("DOMContentLoaded", ()=>{
+  const closeBtn = document.getElementById("btn-player-edit-close");
+  if(closeBtn) closeBtn.addEventListener("click", _closeEditDialog);
+
+  const photoBtn = document.getElementById("btn-player-photo");
+  const photoInput = document.getElementById("player-edit-photo-input");
+  const avatarEl = document.getElementById("player-edit-avatar");
+
+  if(photoBtn && photoInput){
+    photoBtn.addEventListener("click", ()=> photoInput.click());
+    if(avatarEl) avatarEl.addEventListener("click", ()=> photoInput.click());
+    photoInput.addEventListener("change", (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+      _editPhotoFile = file;
+      const url = URL.createObjectURL(file);
+      avatarEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+    });
+  }
+
+  const saveBtn = document.getElementById("btn-player-edit-save");
+  if(saveBtn){
+    saveBtn.addEventListener("click", async ()=>{
+      if(!_editingPlayer) return;
+      const errEl = document.getElementById("player-edit-error");
+      const name = document.getElementById("player-edit-name").value.trim();
+      if(!name){ errEl.textContent = "Name ist erforderlich."; return; }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = "Speichere…";
+      errEl.textContent = "";
+
+      try{
+        let photoUrl = _editingPlayer.photoUrl||null;
+        if(_editPhotoFile && window.dartDB?.uploadPlayerPhoto){
+          photoUrl = await window.dartDB.uploadPlayerPhoto(_editingPlayer.id, _editPhotoFile);
+        }
+        const profileData = {
+          name,
+          nickname: document.getElementById("player-edit-nickname").value.trim()||null,
+          dartBrand: document.getElementById("player-edit-brand").value.trim()||null,
+          dartWeight: parseFloat(document.getElementById("player-edit-weight").value)||null,
+          ...(photoUrl !== (_editingPlayer.photoUrl||null) ? {photoUrl} : {})
+        };
+        await window.dartDB.updatePlayerProfile(_editingPlayer.id, profileData);
+        _closeEditDialog();
+        await loadPlayers();
+      }catch(e){
+        errEl.textContent = "Fehler: " + e.message;
+      }finally{
+        saveBtn.disabled = false;
+        saveBtn.textContent = "SPEICHERN";
+      }
+    });
+  }
+
+  // Close on backdrop click
+  const backdrop = document.getElementById("player-edit-backdrop");
+  if(backdrop){
+    backdrop.addEventListener("click", (e)=>{
+      if(e.target === backdrop) _closeEditDialog();
+    });
+  }
+});
 
 /** Applies stored settings to the UI. */
 export function applySettings(){

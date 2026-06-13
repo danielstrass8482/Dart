@@ -87,6 +87,14 @@ function initDartDB(){
     async updatePlayerStats(playerId, stats){
       return updateDoc(doc(db,"dart_players",playerId), {stats});
     },
+    async updatePlayerProfile(playerId, data){
+      return updateDoc(doc(db,"dart_players",playerId), data);
+    },
+    async uploadPlayerPhoto(playerId, file){
+      const r = ref(storage, `dart_photos/${playerId}.jpg`);
+      await uploadBytes(r, file, {contentType: file.type||'image/jpeg'});
+      return getDownloadURL(r);
+    },
     async loadPlayerGames(playerId){
       const snap = await getDocs(query(collection(db,"dart_games"),
         where("playerIds","array-contains",playerId), orderBy("ts","desc"), limit(100)));

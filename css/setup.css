@@ -115,6 +115,14 @@
 .pi-delete { background: none; border: none; color: #ccc; font-size: 16px; padding: 4px 6px;
   border-radius: 4px; cursor: pointer; line-height: 1; transition: all .15s; flex-shrink: 0; }
 .pi-delete:hover { background: #fdecea; color: #e53935; }
+.pi-edit { background: none; border: none; color: #bbb; font-size: 14px; padding: 4px 6px;
+  border-radius: 4px; cursor: pointer; line-height: 1; transition: all .15s; flex-shrink: 0; }
+.pi-edit:hover { background: #fff9e6; color: #e8c44a; }
+.player-edit-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:2000;align-items:flex-end;justify-content:center; }
+.player-edit-backdrop.open { display:flex; }
+.player-edit-modal { background:#fff;border-radius:16px 16px 0 0;padding:24px;
+  width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-sizing:border-box; }
 .add-player-row { display: flex; gap: 8px; }
 .add-player-input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
   font-family: 'DM Sans',sans-serif; font-size: 14px; outline: none; background: #f8f8f8; }
