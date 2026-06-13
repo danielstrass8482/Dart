@@ -79,6 +79,12 @@ export function renderX01(){
   if(strip){
     strip.innerHTML=state.cfg.players.map((name,i)=>{
       const isActive=i===state.x01.current&&!state.x01.winner;
+      const playerObj=state.allPlayers?.find(pl=>pl.id===state.cfg.playerIds?.[i]);
+      const displayName=playerObj?.nickname||name;
+      const photoUrl=playerObj?.photoUrl||null;
+      const playerScore=state.x01.scores[i];
+      const playerRemaining=isActive?remaining:playerScore;
+      const isCheckout=playerRemaining<=170&&playerRemaining>1&&!state.x01.bust;
       const throwChips=isActive&&state.x01.throws.length
         ? state.x01.throws.map(t=>{
             const col=t.miss?"#e53935":t.label.startsWith("T")?"#6bba8a":t.label.startsWith("D")?"#6aaada":"#ccc";
@@ -89,9 +95,22 @@ export function renderX01(){
       const f9=state.x01.first9[i];
       const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legInfo=state.cfg.totalSets>1?`S${state.cfg.setWins[i]} `:state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])} `:"";
+      const scoreStyle=`transition:background .3s,color .3s;${isCheckout?"background:#e8c44a;color:#000;border-radius:5px;padding:0 5px;":""}`;
+      const activeHeader=isActive?`
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+          ${photoUrl
+            ?`<img src="${photoUrl}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #e8c44a;flex-shrink:0">`
+            :`<div style="width:34px;height:34px;border-radius:50%;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#e8c44a;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+          }
+          <div style="min-width:0">
+            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+            <div style="font-size:9px;color:#e8c44a;letter-spacing:1px">AM ZUG</div>
+          </div>
+        </div>`
+        :`<div class="sc-name">${legInfo}${displayName}</div>`;
       return `<div class="score-cell${isActive?" active":""}">
-        <div class="sc-name">${legInfo}${name}</div>
-        <div class="sc-score">${state.x01.scores[i]}</div>
+        ${activeHeader}
+        <div class="sc-score" style="${scoreStyle}">${playerRemaining}</div>
         <div class="sc-throws">${throwChips}${coHint||(!throwChips?`<span style="color:#555;font-size:11px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`:"")}</div>
       </div>`;
     }).join("");
@@ -102,6 +121,12 @@ export function renderX01(){
   if(lpPlayers){
     lpPlayers.innerHTML=state.cfg.players.map((name,i)=>{
       const isActive=i===state.x01.current&&!state.x01.winner;
+      const playerObj=state.allPlayers?.find(pl=>pl.id===state.cfg.playerIds?.[i]);
+      const displayName=playerObj?.nickname||name;
+      const photoUrl=playerObj?.photoUrl||null;
+      const playerScore=state.x01.scores[i];
+      const lpRemaining=isActive?remaining:playerScore;
+      const lpCheckout=lpRemaining<=170&&lpRemaining>1&&!state.x01.bust;
       const chips=isActive?state.x01.throws.map(t=>{
         const cls=t.miss?"color:#e53935":t.label.startsWith("T")?"color:#6bba8a":t.label.startsWith("D")?"color:#6aaada":"color:#aaa";
         return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:2px 5px;background:#2a2a2a;border-radius:4px;${cls}">${t.label}</span>`;
@@ -110,9 +135,21 @@ export function renderX01(){
       const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legDots=state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])}${"▫".repeat(Math.max(0,state.cfg.legsToWin-state.cfg.legWins[i]))} `:"";
       const setDots=state.cfg.totalSets>1?`Set ${state.cfg.setWins[i]} `:"";
+      const lpScoreStyle=`transition:background .3s,color .3s;${lpCheckout?"background:#e8c44a;color:#000;border-radius:8px;padding:0 8px;display:inline-block;":""}`;
+      const activeAvatarHtml=isActive?`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          ${photoUrl
+            ?`<img src="${photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #e8c44a;flex-shrink:0">`
+            :`<div style="width:40px;height:40px;border-radius:50%;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#e8c44a;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+          }
+          <div style="min-width:0">
+            <div style="font-size:15px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+            <div style="font-size:9px;color:#e8c44a;letter-spacing:1px">AM ZUG</div>
+          </div>
+        </div>`:"";
       return `<div class="lp-player${isActive?" active":""}">
-        <div class="lp-name">${setDots}${legDots}${name}</div>
-        <div class="lp-score">${state.x01.scores[i]}</div>
+        ${isActive?activeAvatarHtml:`<div class="lp-name">${setDots}${legDots}${displayName}</div>`}
+        <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
         <div class="lp-throws">${isActive&&chips?chips:`Ø ${avgVal}${f9?` · F9 ${f9}`:""}`}</div>
       </div>`;
     }).join("");
@@ -120,13 +157,22 @@ export function renderX01(){
 
   // ── Remaining + checkout ──────────────────────────────────────
   const setEl=(id,val)=>{ const e=document.getElementById(id); if(e) e.textContent=val||""; };
-  setEl("lp-remaining", remaining);
+  const inCheckoutZone=remaining<=170&&remaining>1&&!state.x01.bust;
+  const lprEl=document.getElementById("lp-remaining");
+  if(lprEl){
+    lprEl.textContent=remaining;
+    lprEl.style.cssText+=`;transition:background .3s,color .3s;background:${inCheckoutZone?"#e8c44a":"transparent"};color:${inCheckoutZone?"#000":"#fff"};border-radius:${inCheckoutZone?"10px":"0"};padding:${inCheckoutZone?"2px 12px":"0"};`;
+  }
   const lpCoEl=document.getElementById("lp-checkout");
   if(lpCoEl){
     if(co){ const dc=co.split(" ").length; lpCoEl.innerHTML=`${co}<br><span style="font-size:10px">${dc}-Dart Finish</span>`; }
     else lpCoEl.textContent="";
   }
-  setEl("bottom-remaining", remaining);
+  const btrEl=document.getElementById("bottom-remaining");
+  if(btrEl){
+    btrEl.textContent=remaining;
+    btrEl.style.cssText+=`;transition:background .3s,color .3s;background:${inCheckoutZone?"#e8c44a":"transparent"};color:${inCheckoutZone?"#000":"#fff"};border-radius:${inCheckoutZone?"8px":"0"};padding:${inCheckoutZone?"2px 8px":"0"};`;
+  }
   setEl("bottom-checkout", co||"");
 
   // ── Throw slots ───────────────────────────────────────────────
@@ -475,30 +521,93 @@ export function showWinner(name,round){
 
   const sumEl=document.getElementById("winner-summary");
   if(sumEl&&state.cfg.mode!=="Cricket"&&state.x01.turnScores){
-    let html="";
-    state.cfg.players.forEach((p,i)=>{
-      if(state.cfg.isBot?.[i]) return;
+    // Compute per-player stats
+    const playerStats=state.cfg.players.map((p,i)=>{
+      if(state.cfg.isBot?.[i]) return null;
       const turns=state.x01.turnScores[i];
-      if(!turns.length) return;
+      if(!turns.length) return null;
       const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
       const best=Math.max(...turns);
       const f9=state.x01.first9?.[i];
       const coAtt=state.x01.checkoutAttempts?.[i]||0;
       const coHit=state.x01.checkoutHits?.[i]||0;
       const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
-      html+=`<div style="margin-bottom:10px;text-align:left;background:rgba(255,255,255,0.05);border-radius:8px;padding:10px 14px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#e8c44a;letter-spacing:1px;margin-bottom:6px">${p}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:13px;color:#ccc">
-          <span>Ø Aufnahme</span><span style="color:#fff;font-weight:600">${avg}</span>
-          <span>Highscore</span><span style="color:#fff;font-weight:600">${best}</span>
-          ${f9!==null?`<span>First 9 Ø</span><span style="color:#fff;font-weight:600">${f9}</span>`:""}
-          <span>Checkout</span><span style="color:#fff;font-weight:600">${coHit}/${coAtt} (${coPct}%)</span>
-          <span>Aufnahmen</span><span style="color:#fff;font-weight:600">${turns.length}</span>
-        </div>
-      </div>`;
+      const pid=state.cfg.playerIds?.[i];
+      const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
+      const displayName=playerObj?.nickname||p;
+      const photoUrl=playerObj?.photoUrl||null;
+      const isWinner=i===state.x01.winner;
+      return {avg,best,f9,coAtt,coHit,coPct,displayName,photoUrl,isWinner,idx:i,pid,playerObj};
     });
-    sumEl.innerHTML=html;
-    sumEl.style.display=html?"block":"none";
+    const humanStats=playerStats.filter(Boolean);
+
+    if(!humanStats.length){ sumEl.style.display="none"; }
+    else {
+      const cols=humanStats.length>1?"1fr 1fr":"1fr";
+      let html=`<div style="display:grid;grid-template-columns:${cols};gap:12px;margin-bottom:16px">`;
+      humanStats.forEach(s=>{
+        html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;
+          border:${s.isWinner?"2px solid #e8c44a":"1px solid rgba(255,255,255,0.12)"};text-align:left">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            ${s.photoUrl
+              ?`<img src="${s.photoUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+              :`<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0">${s.displayName.slice(0,2).toUpperCase()}</div>`
+            }
+            <div style="min-width:0">
+              <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff">${s.displayName}</div>
+              ${s.isWinner?"<div style=\"font-size:10px;color:#e8c44a;letter-spacing:1px\">SIEGER</div>":""}
+            </div>
+          </div>
+          <table style="width:100%;font-size:12px;border-collapse:collapse">
+            <tr><td style="color:#888;padding:2px 0">Ø Aufnahme</td><td style="text-align:right;font-weight:600;color:#fff">${s.avg}</td></tr>
+            <tr><td style="color:#888;padding:2px 0">First 9</td><td style="text-align:right;color:#fff">${s.f9!==null&&s.f9!==undefined?s.f9:"—"}</td></tr>
+            <tr><td style="color:#888;padding:2px 0">Highscore</td><td style="text-align:right;color:#fff">${s.best}</td></tr>
+            <tr><td style="color:#888;padding:2px 0">Checkout</td><td style="text-align:right;color:#fff">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
+          </table>
+        </div>`;
+      });
+      html+="</div>";
+
+      // Feature 4: Before / After overall stats
+      humanStats.forEach(s=>{
+        if(!s.pid) return;
+        const pObj=s.playerObj;
+        if(!pObj?.stats) return;
+        const gamesBefore=pObj.stats.games||0;
+        if(gamesBefore<1) return;
+        const avgBefore=pObj.stats.avgPerTurn||0;
+        const turns=state.x01.turnScores[s.idx]||[];
+        if(!turns.length) return;
+        const currentGameAvg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
+        const avgAfter=Math.round((avgBefore*gamesBefore+currentGameAvg)/(gamesBefore+1)*10)/10;
+        const delta=Math.abs(Math.round((avgAfter-avgBefore)*10)/10);
+        const improved=avgAfter>avgBefore;
+        const declined=avgAfter<avgBefore;
+        const statusText=improved?"↑ Verbesserung":declined?"↓ Leichter Rückgang":"→ Unverändert";
+        const statusColor=improved?"#43a047":declined?"#e53935":"#888";
+        const afterColor=improved?"#43a047":declined?"#e53935":"#fff";
+        html+=`<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px;text-align:left">
+          <div style="font-size:11px;color:#666;letter-spacing:1px;margin-bottom:10px">${humanStats.length>1?s.displayName+" — ":""}GESAMTSTATISTIK</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="text-align:center">
+              <div style="font-size:10px;color:#666">VORHER</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:#777">${avgBefore}</div>
+              <div style="font-size:10px;color:#555">${gamesBefore} Spiele</div>
+            </div>
+            <div style="font-size:22px;color:#e8c44a">→</div>
+            <div style="text-align:center">
+              <div style="font-size:10px;color:#666">JETZT</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:${afterColor}">${avgAfter}</div>
+              <div style="font-size:10px;color:#555">${gamesBefore+1} Spiele</div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-top:8px;font-size:12px;color:${statusColor}">${statusText} (${delta})</div>
+        </div>`;
+      });
+
+      sumEl.innerHTML=html;
+      sumEl.style.display="block";
+    }
   }
 
   document.getElementById("winner-overlay").classList.add("visible");
