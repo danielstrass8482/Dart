@@ -74,14 +74,8 @@ export function renderPlayerList(){
         <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}${p.dartWeight?` · ${p.dartWeight}g`:""}</div>
       </div>
       <div class="pi-order">${selected?selIdx+1:""}</div>
-      <button class="pi-edit" data-id="${p.id}" title="Spieler bearbeiten">✏</button>
       <button class="pi-delete" data-id="${p.id}" data-name="${p.name}" title="Spieler löschen">✕</button>`;
     div.addEventListener("click",()=>togglePlayer(p));
-    const editBtn=div.querySelector(".pi-edit");
-    editBtn.addEventListener("click", (e)=>{
-      e.stopPropagation();
-      openPlayerEditDialog(p);
-    });
     const delBtn=div.querySelector(".pi-delete");
     delBtn.addEventListener("click", async (e)=>{
       e.stopPropagation();
@@ -117,7 +111,47 @@ export async function loadPlayers(){
   try{
     state.allPlayers=await window.dartDB.loadPlayers();
     renderPlayerList();
+    renderProfilPlayerList();
   }catch(e){ console.warn("loadPlayers failed",e); }
+}
+
+/** Renders the player list in the Profil tab. */
+export function renderProfilPlayerList(){
+  const el=document.getElementById("profil-player-list");
+  if(!el) return;
+  if(!state.allPlayers.length){
+    el.innerHTML=`<div style="color:#aaa;font-size:13px;text-align:center;padding:12px 0">Noch keine Spieler angelegt</div>`;
+    return;
+  }
+  el.innerHTML=state.allPlayers.map(p=>{
+    const displayName=getDisplayName(p);
+    const avatarHtml=p.photoUrl
+      ?`<img src="${p.photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #e8c44a">`
+      :`<div style="width:52px;height:52px;border-radius:50%;background:${playerColor(p.name)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;flex-shrink:0">${p.name[0].toUpperCase()}</div>`;
+    const infoLine=[
+      p.nickname&&p.nickname!==p.name?`"${p.nickname}"`:"",
+      p.dartBrand||"",
+      p.dartWeight?`${p.dartWeight}g`:"",
+    ].filter(Boolean).join(" · ");
+    const avg=p.stats?.avgPerTurn?.toFixed(1)||"0.0";
+    const co=p.stats?.checkoutPct?.toFixed(0)||"0";
+    return `<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f0f0f0">
+      ${avatarHtml}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:15px;color:#1a1a1a">${displayName}</div>
+        ${infoLine?`<div style="font-size:12px;color:#999;margin-top:2px">${infoLine}</div>`:""}
+        <div style="font-size:11px;color:#bbb;margin-top:2px">Ø ${avg} · CO ${co}%</div>
+      </div>
+      <button data-profil-edit="${p.id}" style="padding:8px 14px;border:1px solid #ddd;border-radius:8px;
+        background:#f8f8f8;color:#333;font-size:13px;cursor:pointer;flex-shrink:0">✏ Bearbeiten</button>
+    </div>`;
+  }).join("");
+  el.querySelectorAll("[data-profil-edit]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const player=state.allPlayers.find(p=>p.id===btn.dataset.profilEdit);
+      if(player) openPlayerEditDialog(player);
+    });
+  });
 }
 
 // ── Screen switching ──────────────────────────────────────────────

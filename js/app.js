@@ -46,7 +46,7 @@ import { startParty, renderParty, handlePartyClick, advanceParty, partyWin, setP
 
 // ── Setup ────────────────────────────────────────────────────────
 import {
-  loadPlayers, renderPlayerList, togglePlayer, playerColor, showScreen,
+  loadPlayers, renderPlayerList, renderProfilPlayerList, togglePlayer, playerColor, showScreen,
   showSetup, showSpielenCards, showSpielenSection, saveGameToFirebase,
   updateAllPlayerStats, updateAuthUI, applySettings, BOT_PERSONALITY_DESCS,
   updateRotateOverlay, detectContext
@@ -391,6 +391,18 @@ document.getElementById("btn-add-player").addEventListener("click", async ()=>{
 });
 document.getElementById("new-player-input").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("btn-add-player").click(); });
 
+// Neuer Spieler im Profil-Tab
+document.getElementById("profil-btn-add-player")?.addEventListener("click", async ()=>{
+  const input=document.getElementById("profil-new-player-input");
+  const name=input.value.trim();
+  if(!name) return;
+  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert("Spieler existiert bereits!"); return; }
+  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  try{ await window.dartDB.savePlayer(name); input.value=""; await loadPlayers(); }
+  catch(e){ alert("Fehler: "+e.message); }
+});
+document.getElementById("profil-new-player-input")?.addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("profil-btn-add-player")?.click(); });
+
 document.getElementById("btn-start").addEventListener("click",async()=>{
   if(state.selectedPlayers.length<1){ alert("Bitte mindestens 1 Spieler auswählen!"); return; }
   if(selectedMode==="Killer"&&state.selectedPlayers.length<2&&selectedBot==="none"){ alert("Killer braucht mindestens 2 Spieler!"); return; }
@@ -654,6 +666,7 @@ function initProfilTab(){
   renderPremiumStatus(isAnon, displayName, email);
   renderVoiceSelector();
   syncVoicesFromFirestore();
+  renderProfilPlayerList();
 }
 
 function renderPremiumStatus(isAnon, displayName, email){
