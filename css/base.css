@@ -1,15 +1,42 @@
-/* ── CSS Variables ── */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+/* ── Design Tokens ── */
 :root {
-  --gold: #e8c44a;
-  --dark: #1a1a1a;
-  --darker: #111;
-  --green: #2e7d32;
-  --red: #e53935;
-  --bg: #f5f5f0;
+  --dart-bg-app:      #08080A;
+  --dart-bg-screen:   #0B0B0E;
+  --dart-bg-card:     #121216;
+  --dart-bg-card-alt: #0E0E11;
+  --dart-bg-input:    #0F0F12;
+  --dart-bg-chip:     #16161A;
+  --dart-border:      #1f1f24;
+  --dart-border-alt:  #26262C;
+  --dart-divider:     #1a1a1f;
+  --dart-text:        #FBFBF8;
+  --dart-text-sec:    #C9C9D1;
+  --dart-text-ter:    #9A9AA2;
+  --dart-text-muted:  #6E6E78;
+  --dart-gold:        #D4AF37;
+  --dart-gold-light:  #F4D77E;
+  --dart-gold-dark:   #C9A227;
+  --dart-gold-dim:    #8f7327;
+  --dart-warning:     #E8A53A;
+  --dart-success:     #2EC971;
+  --dart-danger:      #C8362B;
+  --dart-r-sm:        7px;
+  --dart-r-md:        12px;
+  --dart-r-lg:        16px;
+  --dart-r-xl:        24px;
+  --dart-r-pill:      99px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: var(--bg); color: #111; font-family: 'DM Sans', sans-serif; overflow: hidden; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Manrope', system-ui, sans-serif;
+  background: var(--dart-bg-app);
+  color: var(--dart-text);
+  font-variant-numeric: tabular-nums;
+}
 .screen { display: none; height: 100svh; }
 .screen.active { display: flex; flex-direction: column; }
 
@@ -17,13 +44,13 @@ html, body { height: 100%; background: var(--bg); color: #111; font-family: 'DM 
 
 .help-btn {
   background: none;
-  border: 1px solid #ddd;
+  border: 1px solid var(--dart-border-alt);
   border-radius: 50%;
   width: 20px;
   height: 20px;
   font-size: 11px;
   cursor: pointer;
-  color: #999;
+  color: var(--dart-text-muted);
   padding: 0;
   vertical-align: middle;
   margin-left: 6px;
@@ -32,8 +59,8 @@ html, body { height: 100%; background: var(--bg); color: #111; font-family: 'DM 
   display: inline-block;
 }
 .help-btn:hover {
-  border-color: var(--gold);
-  color: var(--gold);
+  border-color: var(--dart-gold);
+  color: var(--dart-gold);
 }
 @keyframes rotate-hint {
   0%,100% { transform: rotate(0deg); }
