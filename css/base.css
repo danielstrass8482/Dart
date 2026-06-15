@@ -35,7 +35,28 @@ body {
   font-family: 'Manrope', system-ui, sans-serif;
   background: var(--dart-bg-app);
   color: var(--dart-text);
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
+}
+
+h2, .screen-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--dart-text);
+  margin: 0;
+}
+
+.page-subtitle, .sub-label {
+  font-size: 11px;
+  color: var(--dart-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+.small-label {
+  font-size: 11px;
+  color: var(--dart-text-sec);
 }
 .screen { display: none; height: 100svh; }
 .screen.active { display: flex; flex-direction: column; }

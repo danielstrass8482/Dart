@@ -80,8 +80,8 @@
 
 /* ── Profil-Tab ── */
 .profil-section { background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:18px;margin-bottom:14px; }
-.profil-section-title { font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;
-  color:var(--dart-text);margin-bottom:12px; }
+.profil-section-title { font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--dart-text-muted);margin-bottom:8px; }
 
 /* ── Turnier-Tab ── */
 .tournament-card { background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:16px;
