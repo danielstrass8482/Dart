@@ -1,9 +1,9 @@
 /* ── Winner overlay ── */
-.winner-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.88);
+.winner-overlay { position: fixed; inset: 0; background: var(--dart-bg-screen);
   display: none; align-items: center; justify-content: center; z-index: 100; text-align: center; }
 .winner-overlay.visible { display: flex; }
 .winner-label { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--dart-gold); letter-spacing: 3px; margin-bottom: 6px; }
-.winner-name { font-family: 'Bebas Neue', sans-serif; font-size: 60px; color: var(--dart-text); letter-spacing: 2px; }
+.winner-name { font-family: 'Bebas Neue', sans-serif; font-size: 60px; color: var(--dart-gold); letter-spacing: 2px; }
 .winner-round { color: var(--dart-text-sec); font-size: 14px; margin-top: 6px; }
 .btn-new-game { margin-top: 28px; padding: 14px 36px; background: var(--dart-gold); border: none; border-radius: 10px;
   font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; }
