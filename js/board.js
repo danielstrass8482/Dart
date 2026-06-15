@@ -7,17 +7,17 @@ import { state } from './state.js';
 // ── Geometry constants ────────────────────────────────────────────
 export const SECTORS = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
 export const R = {
-  bull:    13,
-  bull25:  32,
-  triIn:   109,
-  triOut:  125,
-  dblIn:   186,
-  dblOut:  200,
-  numR:    216,
-  board:   228,
-  miss:    229
+  bull:    7,
+  bull25:  17,
+  triIn:   100,
+  triOut:  115,
+  dblIn:   171,
+  dblOut:  184,
+  numR:    194.5,
+  board:   214,
+  miss:    243
 };
-export const CX = 265, CY = 265;
+export const CX = 210, CY = 210;
 export const CRICKET_TARGETS = [20,19,18,17,16,15,25];
 
 /** @param {number} d degrees */
@@ -69,45 +69,67 @@ export function hitFromXY(sx,sy){
  */
 export function buildBoard(svgEl){
   svgEl.innerHTML="";
+  svgEl.setAttribute("viewBox","-38 -38 496 496");
   const ns="http://www.w3.org/2000/svg";
   function el(tag,attrs){
     const e=document.createElementNS(ns,tag);
     for(const [k,v] of Object.entries(attrs)) e.setAttribute(k,v);
     return e;
   }
-  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.miss,fill:"#1a0a0a"}));
-  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.miss-1,fill:"none",
-    stroke:"#5a2020","stroke-width":"1.5","stroke-dasharray":"4 3"}));
-  const missLabel=el("text",{x:CX,y:CY+R.miss-8,"text-anchor":"middle","dominant-baseline":"middle",
-    fill:"#5a2020","font-size":"9","font-family":"'DM Sans',sans-serif","letter-spacing":"3"});
-  missLabel.textContent="MISS ZONE";
-  svgEl.appendChild(missLabel);
-  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.board,fill:"#1a1008"}));
+
+  // ── Miss-Ring background (drawn first, behind everything) ─────
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"243",fill:"#16110F"}));
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"242",fill:"none",
+    stroke:"rgba(255,77,79,.22)","stroke-width":"1"}));
+  const missTop=el("text",{x:CX,y:CY-225,"text-anchor":"middle","dominant-baseline":"central",
+    fill:"rgba(255,92,94,.6)","font-size":"13","font-weight":"800","letter-spacing":"2",
+    "font-family":"Manrope, sans-serif"});
+  missTop.textContent="MISS";
+  svgEl.appendChild(missTop);
+  const missBot=el("text",{x:CX,y:CY+225,"text-anchor":"middle","dominant-baseline":"central",
+    fill:"rgba(255,92,94,.6)","font-size":"13","font-weight":"800","letter-spacing":"2",
+    "font-family":"Manrope, sans-serif"});
+  missBot.textContent="MISS";
+  svgEl.appendChild(missBot);
+
+  // ── Board band (dark circle behind segments) ──────────────────
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"214",fill:"#0c0b09"}));
+
+  // ── Segments ──────────────────────────────────────────────────
+  const cream="#E8DCBE", black="#17150F", red="#C8362B", green="#1E9B55";
+  const so={"stroke":"#070708","stroke-width":"1.4"};
   for(let i=0;i<20;i++){
     const even=i%2===0;
-    svgEl.appendChild(el("path",{d:slicePath(R.bull25,R.triIn,i),  fill:even?"#1c1c1c":"#f0ead6"}));
-    svgEl.appendChild(el("path",{d:slicePath(R.triIn, R.triOut,i), fill:even?"#c0392b":"#27ae60"}));
-    svgEl.appendChild(el("path",{d:slicePath(R.triOut,R.dblIn,i),  fill:even?"#1c1c1c":"#f0ead6"}));
-    svgEl.appendChild(el("path",{d:slicePath(R.dblIn, R.dblOut,i), fill:even?"#c0392b":"#27ae60"}));
+    const singleFill=even?black:cream;
+    const scoreFill=even?red:green;
+    svgEl.appendChild(el("path",{d:slicePath(R.bull25,R.triIn, i),fill:singleFill,...so}));
+    svgEl.appendChild(el("path",{d:slicePath(R.triIn, R.triOut,i),fill:scoreFill,...so}));
+    svgEl.appendChild(el("path",{d:slicePath(R.triOut,R.dblIn, i),fill:singleFill,...so}));
+    svgEl.appendChild(el("path",{d:slicePath(R.dblIn, R.dblOut,i),fill:scoreFill,...so}));
   }
-  for(let i=0;i<20;i++){
-    const a=sectorAngle(i);
-    const [x1,y1]=polarXY(R.bull25,a),[x2,y2]=polarXY(R.dblOut,a);
-    svgEl.appendChild(el("line",{x1,y1,x2,y2,stroke:"#888","stroke-width":"1"}));
-  }
-  [R.bull25,R.triIn,R.triOut,R.dblIn,R.dblOut].forEach(r=>{
-    svgEl.appendChild(el("circle",{cx:CX,cy:CY,r,fill:"none",stroke:"#888","stroke-width":"1"}));
-  });
-  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.bull25,fill:"#27ae60"}));
-  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.bull,  fill:"#c0392b"}));
+
+  // ── Outer Bull and Bull ───────────────────────────────────────
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.bull25,fill:green}));
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:R.bull,  fill:red}));
+
+  // ── Number ring ───────────────────────────────────────────────
   for(let i=0;i<20;i++){
     const mid=sectorAngle(i)+toRad(9);
     const [x,y]=polarXY(R.numR,mid);
-    const t=el("text",{x,y,"text-anchor":"middle","dominant-baseline":"middle",
-      fill:"#ffffff","font-size":"17","font-family":"'Bebas Neue',sans-serif"});
+    const t=el("text",{x,y,"text-anchor":"middle","dominant-baseline":"central",
+      fill:"#F3ECD8","font-size":"16","font-weight":"700",
+      "font-family":"Manrope, sans-serif"});
     t.textContent=SECTORS[i];
     svgEl.appendChild(t);
   }
+
+  // ── Separator + Gold frame (outside number ring) ──────────────
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"208",fill:"none",
+    stroke:"rgba(0,0,0,.55)","stroke-width":"2"}));
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"213",fill:"none",
+    stroke:"#8f7327","stroke-width":"1.5"}));
+
+  // ── Groups for dynamic content ────────────────────────────────
   const coG=document.createElementNS(ns,"g");
   coG.id=svgEl.id+"-checkout";
   svgEl.appendChild(coG);
@@ -129,31 +151,24 @@ export function buildBoard(svgEl){
 export function addHitDot(svgEl, x, y, faded=false, isMiss=false){
   const ns="http://www.w3.org/2000/svg";
   const g=svgEl.querySelector("#"+svgEl.id+"-hits");
-  if(isMiss){
-    const op = faded ? 0.15 : 0.85;
-    const outer=document.createElementNS(ns,"circle");
-    outer.setAttribute("cx",x); outer.setAttribute("cy",y); outer.setAttribute("r","7");
-    outer.setAttribute("fill",`rgba(220,50,50,${faded?0.08:0.2})`);
-    const mid=document.createElementNS(ns,"circle");
-    mid.setAttribute("cx",x); mid.setAttribute("cy",y); mid.setAttribute("r","4");
-    mid.setAttribute("fill","#e53935"); mid.setAttribute("opacity",op);
-    const inner=document.createElementNS(ns,"circle");
-    inner.setAttribute("cx",x); inner.setAttribute("cy",y); inner.setAttribute("r","1.5");
-    inner.setAttribute("fill","#fff"); inner.setAttribute("opacity",faded?"0.2":"0.8");
-    g.appendChild(outer); g.appendChild(mid); g.appendChild(inner);
-  } else {
-    const op = faded ? 0.12 : 0.9;
-    const outer=document.createElementNS(ns,"circle");
-    outer.setAttribute("cx",x); outer.setAttribute("cy",y); outer.setAttribute("r","7");
-    outer.setAttribute("fill",`rgba(255,220,0,${faded?0.08:0.25})`);
-    const mid=document.createElementNS(ns,"circle");
-    mid.setAttribute("cx",x); mid.setAttribute("cy",y); mid.setAttribute("r","4");
-    mid.setAttribute("fill","#ffdd00"); mid.setAttribute("opacity",op);
-    const inner=document.createElementNS(ns,"circle");
-    inner.setAttribute("cx",x); inner.setAttribute("cy",y); inner.setAttribute("r","1.5");
-    inner.setAttribute("fill","#fff"); inner.setAttribute("opacity",faded?"0.2":"1");
-    g.appendChild(outer); g.appendChild(mid); g.appendChild(inner);
-  }
+  const markerFill=isMiss
+    ?(faded?"rgba(220,50,50,.4)":"#e53935")
+    :(faded?"rgba(244,215,126,.4)":"#F4D77E");
+
+  const shadow=document.createElementNS(ns,"circle");
+  shadow.setAttribute("cx",x); shadow.setAttribute("cy",y); shadow.setAttribute("r","8");
+  shadow.setAttribute("fill","rgba(0,0,0,.5)");
+
+  const marker=document.createElementNS(ns,"circle");
+  marker.setAttribute("cx",x); marker.setAttribute("cy",y); marker.setAttribute("r","6.5");
+  marker.setAttribute("fill",markerFill);
+  marker.setAttribute("stroke","#0c0b08"); marker.setAttribute("stroke-width","1.8");
+
+  const dot=document.createElementNS(ns,"circle");
+  dot.setAttribute("cx",x); dot.setAttribute("cy",y); dot.setAttribute("r","2");
+  dot.setAttribute("fill","#0c0b08");
+
+  g.appendChild(shadow); g.appendChild(marker); g.appendChild(dot);
 }
 
 /**
@@ -286,7 +301,7 @@ export function flashSegment(svgEl, hit, durationMs=600){
   } else if(hit.miss){
     flashEl=document.createElementNS(ns,"circle");
     flashEl.setAttribute("cx",CX); flashEl.setAttribute("cy",CY);
-    flashEl.setAttribute("r",R.miss);
+    flashEl.setAttribute("r",R.board);
     flashEl.setAttribute("fill","rgba(220,50,50,0.3)");
   } else {
     const isTriple=hit.label.startsWith("T");
@@ -350,11 +365,22 @@ export function svgCoords(svgEl,e){
 export function drawMiniBoard(svgEl, dots){
   const ns="http://www.w3.org/2000/svg";
   svgEl.innerHTML="";
+  svgEl.setAttribute("viewBox","-38 -38 496 496");
   function mkEl(tag,attrs){ const e=document.createElementNS(ns,tag); for(const[k,v] of Object.entries(attrs)) e.setAttribute(k,v); return e; }
-  const cx=265,cy=265;
-  svgEl.appendChild(mkEl("circle",{cx,cy,r:228,fill:"#1a1008"}));
-  const SR=[{r1:32,r2:109},{r1:109,r2:125},{r1:125,r2:186},{r1:186,r2:200}];
-  const cols=[["#1c1c1c","#f0ead6"],["#c0392b","#27ae60"],["#1c1c1c","#f0ead6"],["#c0392b","#27ae60"]];
+  const cx=CX, cy=CY;
+  svgEl.appendChild(mkEl("circle",{cx,cy,r:R.board,fill:"#0c0b09"}));
+  const SR=[
+    {r1:R.bull25,r2:R.triIn},
+    {r1:R.triIn, r2:R.triOut},
+    {r1:R.triOut,r2:R.dblIn},
+    {r1:R.dblIn, r2:R.dblOut}
+  ];
+  const cols=[
+    ["#17150F","#E8DCBE"],
+    ["#C8362B","#1E9B55"],
+    ["#17150F","#E8DCBE"],
+    ["#C8362B","#1E9B55"]
+  ];
   function sA(i){ return (-90-9+i*18)*Math.PI/180; }
   function pXY(r,a){ return [cx+r*Math.cos(a),cy+r*Math.sin(a)]; }
   function sPth(r1,r2,i){
@@ -365,15 +391,15 @@ export function drawMiniBoard(svgEl, dots){
   SR.forEach(({r1,r2},ri)=>{
     for(let i=0;i<20;i++) svgEl.appendChild(mkEl("path",{d:sPth(r1,r2,i),fill:cols[ri][i%2]}));
   });
-  svgEl.appendChild(mkEl("circle",{cx,cy,r:32,fill:"#27ae60"}));
-  svgEl.appendChild(mkEl("circle",{cx,cy,r:13,fill:"#c0392b"}));
+  svgEl.appendChild(mkEl("circle",{cx,cy,r:R.bull25,fill:"#1E9B55"}));
+  svgEl.appendChild(mkEl("circle",{cx,cy,r:R.bull,  fill:"#C8362B"}));
   dots.slice(-600).forEach(s=>{
     if(s.x==null||s.y==null||isNaN(s.x)||isNaN(s.y)) return;
     const isMiss=s.l==="Miss";
     svgEl.appendChild(mkEl("circle",{
       cx:s.x, cy:s.y, r:"5",
-      fill: isMiss?"rgba(220,50,50,0.4)":"rgba(255,220,0,0.4)",
-      stroke: isMiss?"rgba(200,30,30,0.8)":"rgba(255,200,0,0.8)",
+      fill: isMiss?"rgba(220,50,50,0.4)":"rgba(244,215,126,0.4)",
+      stroke: isMiss?"rgba(200,30,30,0.8)":"rgba(200,160,40,0.8)",
       "stroke-width":"0.8"
     }));
   });
