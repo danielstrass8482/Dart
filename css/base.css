@@ -89,12 +89,12 @@ h2, .screen-title {
 }
 
 @keyframes glowPulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
-  50%      { box-shadow: 0 0 10px 3px rgba(212,175,55,.18); }
+  0%,100% { box-shadow: 0 0 0 1.5px rgba(212,175,55,.55), 0 0 24px rgba(212,175,55,.16); }
+  50%      { box-shadow: 0 0 0 1.5px rgba(212,175,55,.95), 0 0 40px rgba(212,175,55,.32); }
 }
 @keyframes coPulse {
-  0%,100% { opacity: 1; }
-  50%      { opacity: .65; }
+  0%,100% { opacity: .9; }
+  50%      { opacity: 1; }
 }
 .player-active { animation: glowPulse 2.6s ease-in-out infinite; }
 .checkout-banner { animation: coPulse 2s ease-in-out infinite; }

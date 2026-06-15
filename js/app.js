@@ -655,11 +655,11 @@ function initProfilTab(){
   const isAnon=user.isAnonymous;
   infoEl.innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-      <div style="width:44px;height:44px;border-radius:50%;background:var(--dart-gold);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--dart-bg-card);flex-shrink:0">${displayName[0].toUpperCase()}</div>
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName[0].toUpperCase()}</div>
       <div>
-        <div style="font-weight:600;font-size:15px;color:var(--dart-text)">${displayName}</div>
-        <div style="font-size:12px;color:var(--dart-text-sec)">${email}</div>
-        <div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px">${isAnon?"GAST-ACCOUNT":"REGISTRIERT"}</div>
+        <div style="font-weight:800;font-size:16px;color:#FBFBF8">${displayName}</div>
+        <div style="font-size:12px;color:#9A9AA2">${email}</div>
+        <div style="font-size:10px;font-weight:700;color:#6E6E78;letter-spacing:.1em">${isAnon?"GAST-ACCOUNT":"REGISTRIERT"}</div>
       </div>
     </div>`;
   if(upgradeEl) upgradeEl.style.display=isAnon?"":"none";
@@ -720,7 +720,7 @@ window.toggleSetting = function(key){
   const slider=document.getElementById("setting-"+key+"-slider");
   if(!cb||!SETTING_KEYS[key]) return;
   cb.checked=!cb.checked;
-  slider.style.background=cb.checked?"var(--dart-gold)":"var(--dart-border-alt)";
+  slider.style.background=cb.checked?"linear-gradient(135deg,#F4D77E,#C9A227)":"#26262C";
   localStorage.setItem(SETTING_KEYS[key], cb.checked?"true":"false");
   applySettings();
 };
@@ -730,7 +730,7 @@ window.toggleSetting = function(key){
     const sl=document.getElementById("setting-"+k+"-slider");
     if(!cb||!sl) return;
     cb.checked=localStorage.getItem(lsKey)!=="false";
-    sl.style.background=cb.checked?"var(--dart-gold)":"var(--dart-border)";
+    sl.style.background=cb.checked?"linear-gradient(135deg,#F4D77E,#C9A227)":"#26262C";
   });
   applySettings();
 })();

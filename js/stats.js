@@ -532,12 +532,10 @@ export async function loadAndRenderStats(){
           const ctx=canvas.getContext("2d");
           ctx.scale(2,2);
           const w=W, h=180, pad={t:24,r:48,b:28,l:38};
-          const cs=getComputedStyle(document.documentElement);
-          const bgCard=cs.getPropertyValue('--dart-bg-card').trim()||'#121216';
-          const divider=cs.getPropertyValue('--dart-divider').trim()||'#1a1a1f';
-          const textMuted=cs.getPropertyValue('--dart-text-muted').trim()||'#6E6E78';
+          const divider='#1a1a1f';
+          const textMuted='#6E6E78';
           ctx.clearRect(0,0,w,h);
-          ctx.fillStyle=bgCard; ctx.fillRect(0,0,w,h);
+          ctx.fillStyle='#121216'; ctx.fillRect(0,0,w,h);
           ctx.strokeStyle=divider; ctx.lineWidth=1;
           for(let i=0;i<=4;i++){ const y=pad.t+(h-pad.t-pad.b)*i/4; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke(); }
           const step=Math.max(1,Math.floor(chartGames.length/6));

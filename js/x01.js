@@ -95,23 +95,35 @@ export function renderX01(){
       const f9=state.x01.first9[i];
       const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legInfo=state.cfg.totalSets>1?`S${state.cfg.setWins[i]} `:state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])} `:"";
-      const scoreStyle=`transition:background .3s,color .3s;${isCheckout?"background:var(--dart-gold);color:#000;border-radius:5px;padding:0 5px;":""}`;
+      const scoreStyle=isActive
+        ?`font-size:66px;font-weight:800;line-height:.85;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .3s,color .3s;${isCheckout?"background:var(--dart-gold);color:#000;border-radius:5px;padding:0 5px;":""}`
+        :`font-size:32px;font-weight:800;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .3s,color .3s;${isCheckout?"background:var(--dart-gold);color:#000;border-radius:5px;padding:0 5px;":""}`;
       const activeHeader=isActive?`
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
           ${photoUrl
-            ?`<img src="${photoUrl}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--dart-gold);flex-shrink:0">`
-            :`<div style="width:34px;height:34px;border-radius:50%;background:var(--dart-border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dart-gold);flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+            ?`<img src="${photoUrl}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex-shrink:0">`
+            :`<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
           }
           <div style="min-width:0">
-            <div style="font-size:13px;font-weight:600;color:var(--dart-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
-            <div style="font-size:9px;color:var(--dart-gold);letter-spacing:1px">AM ZUG</div>
+            <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+            <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">AM ZUG</div>
           </div>
         </div>`
-        :`<div class="sc-name">${legInfo}${displayName}</div>`;
+        :`<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          ${photoUrl
+            ?`<img src="${photoUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid #303038;flex-shrink:0">`
+            :`<div style="width:26px;height:26px;border-radius:50%;background:#1C1C21;border:1px solid #303038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#9A9AA2;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+          }
+          <div style="min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#C9C9D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${legInfo}${displayName}</div>
+            ${avgVal?`<div style="font-size:10px;font-weight:700;color:#6E6E78">Ø ${avgVal}</div>`:""}
+          </div>
+        </div>`;
       return `<div class="score-cell${isActive?" active":""}">
         ${activeHeader}
+        ${isActive?`<div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:#7E7E86;margin-top:2px">VERBLEIBEND</div>`:""}
         <div class="sc-score" style="${scoreStyle}">${playerRemaining}</div>
-        <div class="sc-throws">${throwChips}${coHint||(!throwChips?`<span style="color:var(--dart-text-muted);font-size:11px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`:"")}</div>
+        <div class="sc-throws">${throwChips}${coHint||(!throwChips?`<span style="color:#7E7E86;font-size:11px;font-weight:700">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`:"")}</div>
       </div>`;
     }).join("");
   }
@@ -135,22 +147,36 @@ export function renderX01(){
       const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legDots=state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])}${"▫".repeat(Math.max(0,state.cfg.legsToWin-state.cfg.legWins[i]))} `:"";
       const setDots=state.cfg.totalSets>1?`Set ${state.cfg.setWins[i]} `:"";
-      const lpScoreStyle=`transition:background .3s,color .3s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:8px;padding:0 8px;display:inline-block;":""}`;
+      const lpScoreStyle=isActive
+        ?`font-size:66px;font-weight:800;line-height:.85;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .3s,color .3s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:8px;padding:0 8px;display:inline-block;":""}`
+        :`font-size:32px;font-weight:800;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .3s,color .3s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:8px;padding:0 8px;display:inline-block;":""}`;
       const activeAvatarHtml=isActive?`
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           ${photoUrl
-            ?`<img src="${photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--dart-gold);flex-shrink:0">`
-            :`<div style="width:40px;height:40px;border-radius:50%;background:var(--dart-border);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--dart-gold);flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+            ?`<img src="${photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex-shrink:0">`
+            :`<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
           }
           <div style="min-width:0">
-            <div style="font-size:15px;font-weight:600;color:var(--dart-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
-            <div style="font-size:9px;color:var(--dart-gold);letter-spacing:1px">AM ZUG</div>
+            <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+            <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">AM ZUG</div>
           </div>
         </div>`:"";
+      const inactivePlayerHtml=`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          ${photoUrl
+            ?`<img src="${photoUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid #303038;flex-shrink:0">`
+            :`<div style="width:26px;height:26px;border-radius:50%;background:#1C1C21;border:1px solid #303038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#9A9AA2;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+          }
+          <div style="min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#C9C9D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${setDots}${legDots}${displayName}</div>
+            ${avgVal?`<div style="font-size:10px;font-weight:700;color:#6E6E78">Ø ${avgVal}</div>`:""}
+          </div>
+        </div>`;
       return `<div class="lp-player${isActive?" active":""}">
-        ${isActive?activeAvatarHtml:`<div class="lp-name">${setDots}${legDots}${displayName}</div>`}
+        ${isActive?activeAvatarHtml:inactivePlayerHtml}
+        ${isActive?`<div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:#7E7E86;margin-bottom:2px">VERBLEIBEND</div>`:""}
         <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
-        <div class="lp-throws">${isActive&&chips?chips:`Ø ${avgVal}${f9?` · F9 ${f9}`:""}`}</div>
+        <div class="lp-throws">${isActive&&chips?chips:`<span style="color:#7E7E86;font-size:10px;font-weight:700">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`}</div>
       </div>`;
     }).join("");
   }

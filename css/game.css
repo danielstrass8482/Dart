@@ -1,8 +1,10 @@
 /* ── Game header ── */
 .game-header { display: flex; align-items: center; justify-content: space-between;
   padding: 5px 12px; background: var(--dart-bg-card); border-bottom: 1px solid var(--dart-border); flex-shrink: 0; }
-.game-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--dart-gold); letter-spacing: 2px; }
-.btn-nav { background: none; border: 1px solid var(--dart-border-alt); color: var(--dart-text-sec); padding: 4px 10px; border-radius: 6px; font-size: 12px; }
+.game-title { font-size: 14px; font-weight: 700; letter-spacing: .2em; color: #9A9AA2; }
+.btn-nav { background: #16161A; border: 1px solid #26262C; color: #A6A6AE; padding: 9px 14px;
+  border-radius: 10px; font-size: 12px; font-weight: 700; letter-spacing: .06em; cursor: pointer;
+  font-family: 'Manrope', sans-serif; }
 
 /* ── PORTRAIT: Scoreboard rows above/below board ── */
 .game-body { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; background: var(--dart-bg-card); align-items: stretch; }
@@ -21,17 +23,17 @@
   .bottom-bar { display: none !important; }
   .landscape-panel { display: flex !important; }
   .game-header { padding: 4px 10px; }
-  .game-title { font-size: 15px; }
+  .game-title { font-size: 13px; }
 }
 
 /* ── Scoreboard strip (portrait top) ── */
 .score-strip { display: flex; background: var(--dart-bg-card); flex-shrink: 0; border-bottom: 1px solid var(--dart-border); }
 .score-cell { flex: 1; padding: 6px 10px; border-right: 1px solid var(--dart-border); min-width: 0; }
 .score-cell:last-child { border-right: none; }
-.score-cell.active { background: linear-gradient(160deg, rgba(212,175,55,.09) 0%, var(--dart-bg-card) 65%); border-bottom: 3px solid var(--dart-gold); animation: glowPulse 2.6s ease-in-out infinite; }
+.score-cell.active { background: linear-gradient(150deg, rgba(212,175,55,.13) 0%, rgba(212,175,55,.02) 100%); border-bottom: 3px solid #D4AF37; animation: glowPulse 2.6s ease-in-out infinite; }
 .score-cell .sc-name { font-size: 10px; color: var(--dart-text-muted); letter-spacing: 1px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .score-cell.active .sc-name { color: var(--dart-gold); }
-.score-cell .sc-score { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--dart-text); line-height: 1; }
+.score-cell .sc-score { font-size: 32px; font-weight: 800; color: #9A9AA2; line-height: 1; font-variant-numeric: tabular-nums; }
 .score-cell .sc-throws { font-size: 11px; color: var(--dart-text-muted); margin-top: 2px; min-height: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 3px; }
 
 /* ── Bottom controls bar (portrait) ── */
@@ -41,12 +43,12 @@
   min-width: 60px; text-align: center; line-height: 1; }
 .bottom-checkout { font-size: 10px; color: var(--dart-gold); text-align: center; margin-top: 1px; }
 .bottom-throws { display: flex; gap: 4px; flex: 1; }
-.bottom-slot { flex: 1; height: 34px; border-radius: 8px; display: flex; align-items: center;
-  justify-content: center; background: var(--dart-bg-card-alt); border: 1px dashed rgba(100,100,120,.35);
-  font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: var(--dart-text-muted); }
-.bottom-slot.hit { background: rgba(212,175,55,.10); border: 1px solid rgba(212,175,55,.40); color: var(--dart-gold-light); font-size: 17px; border-radius: 10px; }
-.bottom-slot.bust { background: rgba(200,54,43,.15); border: 1px solid rgba(200,54,43,.45); color: var(--dart-danger); border-radius: 10px; }
-.bottom-slot.bouncer { background: rgba(232,165,58,.10); border: 1px solid rgba(232,165,58,.40); color: var(--dart-warning); border-radius: 10px; }
+.bottom-slot { flex: 1; border-radius: 12px; display: flex; align-items: center;
+  justify-content: center; background: #121216; border: none;
+  font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: #3a3a40; padding: 14px 0; }
+.bottom-slot.hit { background: rgba(212,175,55,.14); color: #F4D77E; }
+.bottom-slot.bust { background: rgba(200,54,43,.15); border: 1px solid rgba(200,54,43,.45); color: var(--dart-danger); }
+.bottom-slot.bouncer { background: rgba(232,165,58,.10); border: 1px solid rgba(232,165,58,.40); color: var(--dart-warning); }
 .bottom-btn { padding: 7px 10px; border-radius: 8px; border: none; cursor: pointer;
   font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; flex-shrink: 0; }
 .bottom-btn.ok { background: var(--dart-gold); color: #000; }
@@ -57,23 +59,32 @@
 /* ── Landscape panel (right side) ── */
 .landscape-panel { display: none; flex-direction: column; flex: 1; min-width: 140px; max-width: 240px;
   background: var(--dart-bg-card); overflow-y: auto; gap: 0; }
-.lp-player { padding: 10px 14px; border-bottom: 1px solid var(--dart-border); }
-.lp-player.active { background: linear-gradient(135deg, rgba(212,175,55,.09) 0%, var(--dart-bg-card) 70%); border-left: 3px solid var(--dart-gold); animation: glowPulse 2.6s ease-in-out infinite; }
+.lp-player { padding: 11px 16px; border-bottom: 1px solid #1f1f24; background: #121216; }
+.lp-player.active { background: linear-gradient(150deg, rgba(212,175,55,.13), rgba(212,175,55,.02)); border-left: 3px solid #D4AF37; animation: glowPulse 2.6s ease-in-out infinite; }
 .lp-player .lp-name { font-size: 10px; color: var(--dart-text-sec); letter-spacing: 1px; }
 .lp-player.active .lp-name { color: var(--dart-gold); }
-.lp-player .lp-score { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: var(--dart-text); line-height: 1; }
+.lp-player .lp-score { font-size: 32px; font-weight: 800; color: #9A9AA2; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .lp-player .lp-throws { font-size: 11px; color: var(--dart-text-muted); margin-top: 2px; }
 .lp-player .lp-sub { font-size: 10px; color: var(--dart-text-muted); }
 .lp-controls { padding: 10px 12px; border-bottom: 1px solid var(--dart-border); display: flex; flex-direction: column; gap: 6px; }
 .lp-remaining { font-family: 'Bebas Neue', sans-serif; font-size: 60px; font-weight: 800; color: var(--dart-text); text-align: center; line-height: 1; }
-.lp-checkout { font-size: 12px; color: var(--dart-gold); text-align: center; min-height: 16px; }
+.lp-checkout { font-size: 12px; color: var(--dart-gold); text-align: center; transition: padding .2s, background .2s; }
+.lp-checkout:not(:empty) {
+  background: linear-gradient(135deg, rgba(212,175,55,.18), rgba(212,175,55,.06));
+  border: 1px solid rgba(212,175,55,.35);
+  border-radius: 12px;
+  padding: 11px 15px;
+  color: #F4D77E;
+  font-weight: 700;
+  animation: coPulse 2s ease-in-out infinite;
+}
 .lp-slots { display: flex; gap: 4px; }
-.lp-slot { flex: 1; height: 40px; border-radius: 8px; background: var(--dart-bg-card-alt); border: 1px dashed rgba(100,100,120,.35);
+.lp-slot { flex: 1; border-radius: 12px; background: #121216; border: none;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--dart-text-muted); }
-.lp-slot.hit { background: rgba(212,175,55,.10); border: 1px solid rgba(212,175,55,.40); color: var(--dart-gold-light); font-size: 18px; border-radius: 10px; }
-.lp-slot.bust { background: rgba(200,54,43,.15); border: 1px solid rgba(200,54,43,.45); color: var(--dart-danger); border-radius: 10px; }
-.lp-slot.bouncer { background: rgba(232,165,58,.10); border: 1px solid rgba(232,165,58,.40); color: var(--dart-warning); border-radius: 10px; }
+  font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: #3a3a40; padding: 14px 0; }
+.lp-slot.hit { background: rgba(212,175,55,.14); color: #F4D77E; }
+.lp-slot.bust { background: rgba(200,54,43,.15); border: 1px solid rgba(200,54,43,.45); color: var(--dart-danger); }
+.lp-slot.bouncer { background: rgba(232,165,58,.10); border: 1px solid rgba(232,165,58,.40); color: var(--dart-warning); }
 .lp-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer;
   font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
 .lp-btn.ok { background: var(--dart-gold); color: #000; }
