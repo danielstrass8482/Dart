@@ -155,7 +155,7 @@ export function renderPartyScoreboard(){
   if(state.pg.mode==="AtC"){
     box.innerHTML=`<div class="panel-label">FORTSCHRITT</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:6px">
-        <div style="font-size:11px;color:#999">${p}</div>
+        <div style="font-size:11px;color:var(--dart-text-sec)">${p}</div>
         <div style="font-size:20px;font-family:'Bebas Neue',sans-serif;color:${i===state.pg.current?"#e8c44a":"#555"}">
           ${state.pg.atcTarget[i]===21?"FERTIG ✓":`Ziel: ${state.pg.atcTarget[i]}`}</div>
       </div>`).join("");
@@ -174,7 +174,7 @@ export function renderPartyScoreboard(){
   } else if(state.pg.mode==="Killer"){
     box.innerHTML=`<div class="panel-label">KILLER</div>`+
       state.cfg.players.map((p,i)=>{
-        if(state.pg.killerEliminated[i]) return `<div style="margin-bottom:4px;color:#ccc;text-decoration:line-through;font-size:13px">${p} — OUT</div>`;
+        if(state.pg.killerEliminated[i]) return `<div style="margin-bottom:4px;color:var(--dart-text-sec);text-decoration:line-through;font-size:13px">${p} — OUT</div>`;
         const isK=state.pg.killerIsKiller[i];
         return `<div style="margin-bottom:6px">
           <div style="font-size:12px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p} · Zahl: <strong>${state.pg.killerNumbers[i]}</strong>${isK?" ☠️":""}</div>
@@ -199,10 +199,10 @@ export function renderPartyScoreboard(){
     const target=state.pg.coTargets[state.pg.coRound];
     const path=window._CHECKOUTS?.[target]||"";
     box.innerHTML=`<div class="panel-label">CHECKOUT-TRAINING ${state.pg.coRound+1}/${state.pg.coTargets.length}</div>
-      <div style="font-size:28px;font-family:'Bebas Neue',sans-serif;color:#e8c44a;margin:4px 0">${target}</div>
-      <div style="font-size:13px;color:#888;margin-bottom:6px">${path}</div>
-      <div style="font-size:14px;color:#555">Remaining: <strong>${state.pg.coScore}</strong></div>
-      <div style="font-size:14px;color:#555;margin-top:4px">Treffer: <strong style="color:#2e7d32">${state.pg.coHits}/${state.pg.coAttempts}</strong></div>`;
+      <div style="font-size:28px;font-family:'Bebas Neue',sans-serif;color:var(--dart-gold);margin:4px 0">${target}</div>
+      <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:6px">${path}</div>
+      <div style="font-size:14px;color:var(--dart-text-muted)">Remaining: <strong>${state.pg.coScore}</strong></div>
+      <div style="font-size:14px;color:var(--dart-text-muted);margin-top:4px">Treffer: <strong style="color:var(--dart-success)">${state.pg.coHits}/${state.pg.coAttempts}</strong></div>`;
   }
 }
 

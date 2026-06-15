@@ -68,7 +68,7 @@ export function renderCricketTable(){
     });
     html+=`</tr>`;
   });
-  html+=`<tr style="border-top:1px solid #1e1e2e"><td style="color:#555;font-size:10px;font-family:'DM Sans',sans-serif;letter-spacing:1px">PTS</td>`;
+  html+=`<tr style="border-top:1px solid #1e1e2e"><td style="color:var(--dart-text-muted);font-size:10px;font-family:'DM Sans',sans-serif;letter-spacing:1px">PTS</td>`;
   state.cr.points.forEach((p,i)=>{ html+=`<td class="cricket-points${i===state.cr.current?" active":""}">${p}</td>`; });
   html+=`</tr></tbody>`;
   table.innerHTML=html;

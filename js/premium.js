@@ -133,7 +133,7 @@ export function showPremiumOverlay(featureId){
     z-index:1000;padding:20px
   `;
   overlay.innerHTML = `
-    <div style="background:#1a1a1a;border:1px solid var(--gold);
+    <div style="background:var(--dart-bg-card);border:1px solid var(--gold);
       border-radius:16px;padding:32px;max-width:360px;
       width:100%;text-align:center">
       <div style="font-size:48px;margin-bottom:12px">
@@ -144,18 +144,18 @@ export function showPremiumOverlay(featureId){
         margin-bottom:8px">
         PREMIUM FEATURE
       </div>
-      <div style="font-size:16px;color:#fff;font-weight:600;
+      <div style="font-size:16px;color:var(--dart-text);font-weight:600;
         margin-bottom:8px">
         ${feature.name}
       </div>
-      <div style="font-size:13px;color:#aaa;margin-bottom:24px">
+      <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px">
         ${feature.description}
       </div>
       <div style="background:rgba(232,196,74,0.1);
         border:1px solid var(--gold);border-radius:8px;
-        padding:12px;margin-bottom:20px;font-size:12px;color:#e8c44a">
+        padding:12px;margin-bottom:20px;font-size:12px;color:var(--dart-gold)">
         🎉 Während der Beta kostenlos für alle!<br>
-        <span style="color:#aaa">
+        <span style="color:var(--dart-text-sec)">
           Registriere dich jetzt um deine Features
           dauerhaft zu sichern.
         </span>
@@ -169,7 +169,7 @@ export function showPremiumOverlay(featureId){
       </button>
       <button onclick="this.closest('[style*=fixed]').remove()"
         style="width:100%;padding:10px;background:none;
-        border:1px solid #444;border-radius:10px;color:#666;
+        border:1px solid var(--dart-border);border-radius:10px;color:var(--dart-text-muted);
         font-size:13px;cursor:pointer">
         Schließen
       </button>
