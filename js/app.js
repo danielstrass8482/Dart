@@ -1046,7 +1046,7 @@ function activateVoice(voiceId, voiceName){ localStorage.setItem("dart_active_vo
 function renderVoiceSelector(){
   const list=document.getElementById("voice-selector-list"); if(!list) return;
   const voices=loadVoices(); const activeId=getVoiceId();
-  const tvBtn="padding:7px 11px;border:1px solid var(--dart-border);border-radius:7px;background:var(--dart-bg-card);font-size:12px;cursor:pointer;";
+  const tvBtn="padding:7px 11px;border:1px solid var(--dart-border);border-radius:7px;background:var(--dart-bg-card);font-size:12px;cursor:pointer;color:var(--dart-text-sec);";
   list.innerHTML=voices.map((v,i)=>{
     const isActive=v.id===activeId; const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
     const premiumBadge=!v.builtin?` <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
