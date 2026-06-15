@@ -123,9 +123,10 @@ function renderSegmentTable(entries, totalThrows){
   let h=`<div style="margin-bottom:6px;font-size:11px;color:var(--dart-text-sec)">Lieblings: <strong style="color:var(--dart-text-sec)">${fav.num}</strong> (${fav.total}×)${bestTriple?.triple>0?` · Triple: <strong style="color:var(--dart-text-sec)">T${bestTriple.num}</strong>`:""}
   </div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">
   <tr style="color:var(--dart-text-sec);font-size:10px"><th style="text-align:left;padding:2px 4px">FELD</th><th style="padding:2px 4px">GES</th><th style="padding:2px 4px">S</th><th style="padding:2px 4px">D</th><th style="padding:2px 4px">T</th><th style="padding:2px 4px">%</th></tr>`;
-  entries.slice(0,15).forEach(e=>{
+  entries.slice(0,15).forEach((e,idx)=>{
     const pct=Math.round(e.total/(totalThrows||1)*100);
-    h+=`<tr style="border-top:1px solid #f0f0f0"><td style="padding:2px 4px;font-weight:600">${e.num===25?"Bull":e.num}</td><td style="padding:2px 4px;text-align:center">${e.total}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-text-muted)">${e.single||"—"}</td><td style="padding:2px 4px;text-align:center;color:#1e88e5">${e.double||"—"}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-danger)">${e.triple||"—"}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-text-sec)">${pct}%</td></tr>`;
+    const top3=idx<3?`color:var(--dart-gold);`:"";
+    h+=`<tr style="border-top:1px solid var(--dart-divider)"><td style="padding:2px 4px;font-weight:600;${top3}">${e.num===25?"Bull":e.num}</td><td style="padding:2px 4px;text-align:center">${e.total}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-text-muted)">${e.single||"—"}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-text-sec)">${e.double||"—"}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-danger)">${e.triple||"—"}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-text-sec)">${pct}%</td></tr>`;
   });
   return h+`</table></div>`;
 }
@@ -135,7 +136,7 @@ function buildAdvancedColumn(side){
   const rl={"7d":"7T","30d":"1M","90d":"3M","all":"∞"};
   const trBtns=["7d","30d","90d","all"].map(r=>{
     const on=r===defaultRange;
-    return `<button class="tr-btn${on?" active":""}" data-side="${side}" data-range="${r}" style="padding:3px 7px;border-radius:4px;border:1px solid ${on?"#1a1a1a":"#ddd"};background:${on?"#1a1a1a":"#fff"};color:${on?"#e8c44a":"#666"};font-size:11px;cursor:pointer;font-weight:${on?"700":"400"}">${rl[r]}</button>`;
+    return `<button class="tr-btn${on?" active":""}" data-side="${side}" data-range="${r}" style="padding:3px 8px;border-radius:99px;border:1px solid transparent;background:${on?"var(--dart-gold)":"var(--dart-bg-chip)"};color:${on?"#000":"var(--dart-text-muted)"};font-size:11px;cursor:pointer;font-weight:${on?"700":"600"}">${rl[r]}</button>`;
   }).join("");
   return `
     <div style="font-size:10px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px;text-align:center;font-weight:600">BOARD ${side.toUpperCase()}</div>
@@ -209,7 +210,7 @@ function populateLegBtns(side, sessionId, sessions){
   const mkBtn=(leg,label,active)=>{
     const btn=document.createElement("button");
     btn.className="leg-btn"; btn.dataset.leg=leg; btn.textContent=label;
-    btn.style.cssText=`padding:3px 7px;border-radius:4px;border:1px solid ${active?"#1a1a1a":"#ddd"};background:${active?"#1a1a1a":"#fff"};color:${active?"#e8c44a":"#666"};font-size:11px;cursor:pointer;font-weight:${active?"700":"400"}`;
+    btn.style.cssText=`padding:3px 8px;border-radius:99px;border:1px solid transparent;background:${active?"var(--dart-gold)":"var(--dart-bg-chip)"};color:${active?"#000":"var(--dart-text-muted)"};font-size:11px;cursor:pointer;font-weight:${active?"700":"600"}`;
     return btn;
   };
   wrap.appendChild(mkBtn("all","Alle",true));
@@ -231,9 +232,9 @@ function setupAdvancedUI(pid){
         columnState[side].type=type;
         document.querySelectorAll(`.col-type-btn[data-side="${side}"]`).forEach(b=>{
           const on=b.dataset.type===type;
-          b.style.border=`1px solid ${on?"#e8c44a":"#ddd"}`;
-          b.style.background=on?"#1a1800":"#fff";
-          b.style.color=on?"#e8c44a":"#666";
+          b.style.border=`1px solid ${on?"var(--dart-gold)":"var(--dart-border)"}`;
+          b.style.background=on?"var(--dart-bg-chip)":"var(--dart-bg-card)";
+          b.style.color=on?"var(--dart-gold)":"var(--dart-text-muted)";
           b.style.fontWeight=on?"700":"400";
         });
         const tr=document.getElementById(`timerange-${side}`);
@@ -250,10 +251,10 @@ function setupAdvancedUI(pid){
         columnState[side].range=range;
         document.querySelectorAll(`.tr-btn[data-side="${side}"]`).forEach(b=>{
           const on=b.dataset.range===range;
-          b.style.border=`1px solid ${on?"#1a1a1a":"#ddd"}`;
-          b.style.background=on?"#1a1a1a":"#fff";
-          b.style.color=on?"#e8c44a":"#666";
-          b.style.fontWeight=on?"700":"400";
+          b.style.border=`1px solid transparent`;
+          b.style.background=on?"var(--dart-gold)":"var(--dart-bg-chip)";
+          b.style.color=on?"#000":"var(--dart-text-muted)";
+          b.style.fontWeight=on?"700":"600";
         });
         updateColumn(side,pid);
       });
@@ -281,10 +282,10 @@ function setupAdvancedUI(pid){
       columnState[side].legNum=btn.dataset.leg==="all"?"all":parseInt(btn.dataset.leg);
       document.querySelectorAll(`#legs-${side} .leg-btn`).forEach(b=>{
         const on=b.dataset.leg===btn.dataset.leg;
-        b.style.border=`1px solid ${on?"#1a1a1a":"#ddd"}`;
-        b.style.background=on?"#1a1a1a":"#fff";
-        b.style.color=on?"#e8c44a":"#666";
-        b.style.fontWeight=on?"700":"400";
+        b.style.border=`1px solid transparent`;
+        b.style.background=on?"var(--dart-gold)":"var(--dart-bg-chip)";
+        b.style.color=on?"#000":"var(--dart-text-muted)";
+        b.style.fontWeight=on?"700":"600";
       });
       updateColumn(side,pid);
     });
@@ -443,7 +444,7 @@ export async function loadAndRenderStats(){
       const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}`;
       const isWin=pid?g.winnerId===pid:true;
       html+=`<div class="history-row">
-        <span class="winner-tag" style="color:${isWin&&pid?"#2e7d32":"#1a1a1a"}">${g.winner||"—"}</span>
+        <span class="winner-tag" style="color:${isWin&&pid?"var(--dart-success)":"var(--dart-text)"}">${g.winner||"—"}</span>
         <span class="mode-tag">${g.mode||"—"}</span>
         <span>${(g.rounds||0)*3}</span>
         <span style="color:var(--dart-text-sec);font-size:11px">${ds}</span>
@@ -469,12 +470,12 @@ export async function loadAndRenderStats(){
       <div class="history-list" style="margin-bottom:14px">
         <div class="history-header" style="grid-template-columns:1fr 70px 70px 70px"><span>FELD</span><span>VERSUCHE</span><span>TREFFER</span><span>QUOTE</span></div>`;
       doubleEntries.forEach(e=>{
-        const color=e.pct>=50?"#2e7d32":e.pct>=25?"#fb8c00":"#e53935";
+        const color=e.pct>=50?"var(--dart-success)":e.pct>=25?"var(--dart-warning)":"var(--dart-danger)";
         const barW=Math.round(e.pct);
         html+=`<div class="history-row" style="grid-template-columns:1fr 70px 70px 70px">
           <span style="display:flex;align-items:center;gap:8px">
             <strong>${e.field}</strong>
-            <span style="width:100px;height:6px;background:var(--dart-bg-card);border-radius:3px;display:inline-block;overflow:hidden;flex-shrink:0">
+            <span style="width:100px;height:6px;background:var(--dart-border);border-radius:3px;display:inline-block;overflow:hidden;flex-shrink:0">
               <span style="display:block;height:6px;width:${barW}%;background:${color};border-radius:3px;transition:width 0.3s"></span>
             </span>
           </span>
@@ -494,10 +495,9 @@ export async function loadAndRenderStats(){
         🔬 ERWEITERTE STATISTIKEN
         <span style="font-size:9px;background:var(--dart-gold);color:#000;padding:2px 6px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700">PREMIUM</span>
       </div>
-      <style>.adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}@media(max-width:600px){.adv-grid{grid-template-columns:1fr}}</style>
       <div class="adv-grid">
-        <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:12px">${buildAdvancedColumn("a")}</div>
-        <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:12px">${buildAdvancedColumn("b")}</div>
+        <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:14px;padding:12px">${buildAdvancedColumn("a")}</div>
+        <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:14px;padding:12px">${buildAdvancedColumn("b")}</div>
       </div>`;
     }
 
@@ -532,12 +532,16 @@ export async function loadAndRenderStats(){
           const ctx=canvas.getContext("2d");
           ctx.scale(2,2);
           const w=W, h=180, pad={t:24,r:48,b:28,l:38};
+          const cs=getComputedStyle(document.documentElement);
+          const bgCard=cs.getPropertyValue('--dart-bg-card').trim()||'#121216';
+          const divider=cs.getPropertyValue('--dart-divider').trim()||'#1a1a1f';
+          const textMuted=cs.getPropertyValue('--dart-text-muted').trim()||'#6E6E78';
           ctx.clearRect(0,0,w,h);
-          ctx.fillStyle="#fff"; ctx.fillRect(0,0,w,h);
-          ctx.strokeStyle="#f0f0f0"; ctx.lineWidth=1;
+          ctx.fillStyle=bgCard; ctx.fillRect(0,0,w,h);
+          ctx.strokeStyle=divider; ctx.lineWidth=1;
           for(let i=0;i<=4;i++){ const y=pad.t+(h-pad.t-pad.b)*i/4; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke(); }
           const step=Math.max(1,Math.floor(chartGames.length/6));
-          ctx.fillStyle="#bbb"; ctx.font="9px 'DM Sans',sans-serif"; ctx.textAlign="center";
+          ctx.fillStyle=textMuted; ctx.font="9px 'DM Sans',sans-serif"; ctx.textAlign="center";
           chartGames.forEach((g,i)=>{ if(i%step!==0&&i!==chartGames.length-1) return; const x=pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1); const d=new Date(g.ts); ctx.fillText(`${d.getDate()}.${d.getMonth()+1}`,x,h-6); });
           activeKPIs.forEach((kpiKey,ki)=>{
             const kpi=KPI_DEFS[kpiKey];

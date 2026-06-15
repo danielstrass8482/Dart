@@ -674,7 +674,7 @@ function renderPremiumStatus(isAnon, displayName, email){
   if(!el) return;
   if(isAnon || !displayName || displayName === "Gast"){
     el.innerHTML = `
-      <div style="background:var(--dart-bg-chip);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
+      <div style="background:var(--dart-bg-card);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);
           letter-spacing:2px;margin-bottom:6px">🎉 BETA-NUTZER</div>
         <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:10px;line-height:1.5">
@@ -690,7 +690,7 @@ function renderPremiumStatus(isAnon, displayName, email){
       </div>`;
   } else {
     el.innerHTML = `
-      <div style="background:var(--dart-bg-chip);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
+      <div style="background:var(--dart-bg-card);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);
           letter-spacing:2px;margin-bottom:4px">✅ BETA-NUTZER (Grandfathered)</div>
         <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:6px">${email}</div>
@@ -720,7 +720,7 @@ window.toggleSetting = function(key){
   const slider=document.getElementById("setting-"+key+"-slider");
   if(!cb||!SETTING_KEYS[key]) return;
   cb.checked=!cb.checked;
-  slider.style.background=cb.checked?"var(--dart-gold)":"var(--dart-border)";
+  slider.style.background=cb.checked?"var(--dart-gold)":"var(--dart-border-alt)";
   localStorage.setItem(SETTING_KEYS[key], cb.checked?"true":"false");
   applySettings();
 };
@@ -1050,15 +1050,15 @@ function renderVoiceSelector(){
   list.innerHTML=voices.map((v,i)=>{
     const isActive=v.id===activeId; const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
     const premiumBadge=!v.builtin?` <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
-    return `<div style="border-radius:8px;padding:12px;margin-bottom:8px;border:${isActive?"2px solid #222":"1px solid #eee"};background:${isActive?"#f9f9f7":"#fff"}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px">🎙️ ${v.name}${premiumBadge}</span>${isActive?`<span style="background:var(--dart-bg-chip);color:var(--dart-text);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
-      <div style="font-size:11px;color:var(--dart-text-sec);font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
+    return `<div style="border-radius:10px;padding:12px;margin-bottom:8px;border:${isActive?"2px solid var(--dart-gold)":"1px solid var(--dart-border)"};background:${isActive?"var(--dart-bg-chip)":"var(--dart-bg-card)"};transition:all .15s">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)">🎙️ ${v.name}${premiumBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
+      <div style="font-size:11px;color:var(--dart-text-muted);font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">Test: 180</button>
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Test: Game On</button>
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Test: Bust</button>
         ${isActive?`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled>✓ Aktiv</button>`:`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}">✓ Aktivieren</button>`}
-        ${!v.builtin?`<button style="padding:7px 11px;border:1px solid var(--dart-danger);border-radius:7px;background:#fff5f5;font-size:12px;cursor:pointer;" data-delete-idx="${i}">🗑</button>`:""}
+        ${!v.builtin?`<button style="padding:7px 11px;border:1px solid var(--dart-danger);border-radius:7px;background:rgba(200,54,43,.12);color:var(--dart-danger);font-size:12px;cursor:pointer;" data-delete-idx="${i}">🗑</button>`:""}
       </div>
     </div>`;
   }).join("");
