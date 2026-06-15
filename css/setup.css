@@ -122,13 +122,13 @@
 .setup-card { background: var(--dart-bg-card); border: 1px solid var(--dart-border); }
 .field-label { color: var(--dart-text-muted); }
 .btn-toggle { background: var(--dart-bg-card); color: var(--dart-text-muted); border: 1px solid var(--dart-border); }
-.player-input { background: var(--dart-bg-card); border: 1px solid var(--dart-border); color: #111; }
+.player-input { background: var(--dart-bg-card); border: 1px solid var(--dart-border); color: var(--dart-text); }
 
 /* ── Player management ── */
 .player-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
 .player-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-  border-radius: 8px; border: 2px solid var(--dart-border); background: #fafafa; cursor: pointer; transition: all .15s; }
-.player-item.selected { border-color: var(--dart-gold); background: #fffbea; }
+  border-radius: 8px; border: 2px solid var(--dart-border); background: var(--dart-bg-card-alt); cursor: pointer; transition: all .15s; }
+.player-item.selected { border-color: var(--dart-gold); background: rgba(212,175,55,.1); }
 .player-item .pi-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
   justify-content: center; font-family: 'Bebas Neue',sans-serif; font-size: 16px; color: var(--dart-text); flex-shrink: 0; }
 .player-item .pi-name { font-weight: 600; font-size: 14px; flex: 1; }
@@ -137,10 +137,10 @@
   width: 20px; text-align: center; }
 .pi-delete { background: none; border: none; color: var(--dart-text-sec); font-size: 16px; padding: 4px 6px;
   border-radius: 4px; cursor: pointer; line-height: 1; transition: all .15s; flex-shrink: 0; }
-.pi-delete:hover { background: #fdecea; color: var(--dart-danger); }
+.pi-delete:hover { background: rgba(200,54,43,.15); color: var(--dart-danger); }
 .pi-edit { background: none; border: none; color: var(--dart-text-muted); font-size: 14px; padding: 4px 6px;
   border-radius: 4px; cursor: pointer; line-height: 1; transition: all .15s; flex-shrink: 0; }
-.pi-edit:hover { background: #fff9e6; color: var(--dart-gold); }
+.pi-edit:hover { background: rgba(212,175,55,.12); color: var(--dart-gold); }
 .player-edit-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
   z-index:2000;align-items:flex-end;justify-content:center; }
 .player-edit-backdrop.open { display:flex; }
@@ -154,3 +154,27 @@
 .player-sel-hint { font-size: 11px; color: var(--dart-text-sec); text-align: center; margin-bottom: 6px; }
 
 /* duplicate removed — see "Home tabs" block above */
+
+/* ── Settings toggle knob ── */
+[id$="-slider"]::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--dart-text);
+  top: 3px;
+  left: 3px;
+  transition: transform .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4);
+  pointer-events: none;
+}
+input:checked + [id$="-slider"]::before {
+  transform: translateX(20px);
+}
+
+/* ── Theme switcher (future) ── */
+.theme-btn { flex: 1; padding: 12px; border: 2px solid var(--dart-border); border-radius: 10px;
+  background: var(--dart-bg-chip); color: var(--dart-text-muted); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all .15s; text-align: center; }
+.theme-btn.active { border-color: var(--dart-gold); background: rgba(212,175,55,.1); color: var(--dart-text); }
