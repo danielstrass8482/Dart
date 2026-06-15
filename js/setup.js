@@ -45,12 +45,12 @@ export function renderPlayerList(){
   const list=document.getElementById("player-list");
   if(!state.allPlayers.length){
     list.innerHTML=`
-      <div style="background:#1a1800;border:1px solid #e8c44a;border-radius:12px;padding:16px;text-align:center;margin-bottom:8px">
+      <div style="background:var(--dart-bg-chip);border:1px solid var(--dart-gold);border-radius:12px;padding:16px;text-align:center;margin-bottom:8px">
         <div style="font-size:28px;margin-bottom:8px">👋</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#e8c44a;letter-spacing:2px;margin-bottom:6px">WILLKOMMEN BEI DARTTRAINER</div>
-        <div style="font-size:13px;color:#ccc;margin-bottom:14px">Leg deinen ersten Spieler an um loszuspielen!</div>
-        <button onclick="document.getElementById('new-player-input').focus()" style="width:100%;padding:11px;background:#e8c44a;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#000;cursor:pointer;margin-bottom:8px">+ SPIELER ANLEGEN</button>
-        <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:8px;background:none;border:1px solid #555;border-radius:8px;color:#888;font-size:13px;cursor:pointer">Tutorial anzeigen</button>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);letter-spacing:2px;margin-bottom:6px">WILLKOMMEN BEI DARTTRAINER</div>
+        <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:14px">Leg deinen ersten Spieler an um loszuspielen!</div>
+        <button onclick="document.getElementById('new-player-input').focus()" style="width:100%;padding:11px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#000;cursor:pointer;margin-bottom:8px">+ SPIELER ANLEGEN</button>
+        <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:8px;background:none;border:1px solid var(--dart-border-alt);border-radius:8px;color:var(--dart-text-sec);font-size:13px;cursor:pointer">Tutorial anzeigen</button>
       </div>`;
     return;
   }
@@ -70,7 +70,7 @@ export function renderPlayerList(){
     div.innerHTML=`
       ${avatarHtml}
       <div style="flex:1;min-width:0">
-        <div class="pi-name">${displayName}${p.nickname&&p.nickname!==p.name?`<span style="font-size:11px;color:#aaa;font-weight:400;margin-left:4px">(${p.name})</span>`:""}</div>
+        <div class="pi-name">${displayName}${p.nickname&&p.nickname!==p.name?`<span style="font-size:11px;color:var(--dart-text-sec);font-weight:400;margin-left:4px">(${p.name})</span>`:""}</div>
         <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}${p.dartWeight?` · ${p.dartWeight}g`:""}</div>
       </div>
       <div class="pi-order">${selected?selIdx+1:""}</div>
@@ -120,14 +120,14 @@ export function renderProfilPlayerList(){
   const el=document.getElementById("profil-player-list");
   if(!el) return;
   if(!state.allPlayers.length){
-    el.innerHTML=`<div style="color:#aaa;font-size:13px;text-align:center;padding:12px 0">Noch keine Spieler angelegt</div>`;
+    el.innerHTML=`<div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:12px 0">Noch keine Spieler angelegt</div>`;
     return;
   }
   el.innerHTML=state.allPlayers.map(p=>{
     const displayName=getDisplayName(p);
     const avatarHtml=p.photoUrl
-      ?`<img src="${p.photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #e8c44a">`
-      :`<div style="width:52px;height:52px;border-radius:50%;background:${playerColor(p.name)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;flex-shrink:0">${p.name[0].toUpperCase()}</div>`;
+      ?`<img src="${p.photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--dart-gold)">`
+      :`<div style="width:52px;height:52px;border-radius:50%;background:${playerColor(p.name)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dart-text);flex-shrink:0">${p.name[0].toUpperCase()}</div>`;
     const infoLine=[
       p.nickname&&p.nickname!==p.name?`"${p.nickname}"`:"",
       p.dartBrand||"",
@@ -138,12 +138,12 @@ export function renderProfilPlayerList(){
     return `<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f0f0f0">
       ${avatarHtml}
       <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:15px;color:#1a1a1a">${displayName}</div>
-        ${infoLine?`<div style="font-size:12px;color:#999;margin-top:2px">${infoLine}</div>`:""}
+        <div style="font-weight:600;font-size:15px;color:var(--dart-text)">${displayName}</div>
+        ${infoLine?`<div style="font-size:12px;color:var(--dart-text-sec);margin-top:2px">${infoLine}</div>`:""}
         <div style="font-size:11px;color:#bbb;margin-top:2px">Ø ${avg} · CO ${co}%</div>
       </div>
-      <button data-profil-edit="${p.id}" style="padding:8px 14px;border:1px solid #ddd;border-radius:8px;
-        background:#f8f8f8;color:#333;font-size:13px;cursor:pointer;flex-shrink:0">✏ Bearbeiten</button>
+      <button data-profil-edit="${p.id}" style="padding:8px 14px;border:1px solid var(--dart-border);border-radius:8px;
+        background:var(--dart-bg-card);color:var(--dart-text-sec);font-size:13px;cursor:pointer;flex-shrink:0">✏ Bearbeiten</button>
     </div>`;
   }).join("");
   el.querySelectorAll("[data-profil-edit]").forEach(btn=>{
@@ -299,10 +299,10 @@ export function updateAuthUI(user){
   const bar=document.getElementById("auth-bar");
   if(bar){
     if(user && !user.isAnonymous){
-      bar.innerHTML=`<span style="font-size:12px;color:#aaa">${user.displayName||user.email}</span>
-        <button onclick="signOutUser()" style="background:none;border:1px solid #444;color:#888;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">Abmelden</button>`;
+      bar.innerHTML=`<span style="font-size:12px;color:var(--dart-text-sec)">${user.displayName||user.email}</span>
+        <button onclick="signOutUser()" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">Abmelden</button>`;
     } else {
-      bar.innerHTML=`<button onclick="signInWithGoogle()" style="background:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+      bar.innerHTML=`<button onclick="signInWithGoogle()" style="background:var(--dart-bg-card);border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px"> Mit Google anmelden</button>`;
     }
   }
@@ -318,12 +318,12 @@ export function updateAuthUI(user){
         const col = playerColor(name);
         profBtn.textContent = initials;
         profBtn.style.background = col;
-        profBtn.style.color = "#fff";
+        profBtn.style.color = "var(--dart-text)";
       }
     } else {
       profBtn.textContent = "👤";
-      profBtn.style.background = "#2a2a2a";
-      profBtn.style.color = "#666";
+      profBtn.style.background = "var(--dart-border)";
+      profBtn.style.color = "var(--dart-text-muted)";
     }
   }
 }
@@ -373,7 +373,7 @@ function _renderEditAvatar(photoUrl, player){
     el.innerHTML = `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover">`;
   } else {
     el.style.background = playerColor(player.name);
-    el.style.color = "#fff";
+    el.style.color = "var(--dart-text)";
     el.textContent = (player.name||"?")[0].toUpperCase();
   }
 }

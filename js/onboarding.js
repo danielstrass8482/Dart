@@ -57,13 +57,13 @@ export function showOnboarding(){
   `;
   _overlay.innerHTML = `
     <div id="onboarding-card" style="
-      background:#1a1a1a;border:1px solid #333;border-radius:18px;
+      background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:18px;
       padding:28px 24px;max-width:400px;width:100%;position:relative;
       overflow:hidden;
     ">
       <div style="
         position:absolute;top:0;left:0;right:0;height:3px;
-        background:#333;border-radius:3px 3px 0 0
+        background:var(--dart-bg-chip);border-radius:3px 3px 0 0
       ">
         <div id="onboarding-progress" style="
           height:100%;background:var(--gold);border-radius:3px;
@@ -72,7 +72,7 @@ export function showOnboarding(){
       </div>
       <button id="onboarding-skip" style="
         position:absolute;top:14px;right:16px;
-        background:none;border:none;color:#555;font-size:12px;
+        background:none;border:none;color:var(--dart-text-muted);font-size:12px;
         cursor:pointer;padding:4px 8px;border-radius:4px
       ">Überspringen</button>
       <div id="onboarding-body" style="text-align:center;margin-top:8px"></div>
@@ -104,14 +104,14 @@ function renderScreen(idx){
       color:var(--gold);letter-spacing:2px;margin-bottom:12px;line-height:1.2">
       ${s.title}
     </div>
-    <div style="font-size:14px;color:#ccc;line-height:1.65;margin-bottom:16px;white-space:pre-line">
+    <div style="font-size:14px;color:var(--dart-text-sec);line-height:1.65;margin-bottom:16px;white-space:pre-line">
       ${s.text}
     </div>
-    ${s.tip ? `<div style="background:#1a1800;border:1px solid #444;border-radius:8px;
-      padding:10px 12px;font-size:12px;color:#aaa;margin-bottom:16px;
+    ${s.tip ? `<div style="background:var(--dart-bg-chip);border:1px solid var(--dart-border);border-radius:8px;
+      padding:10px 12px;font-size:12px;color:var(--dart-text-sec);margin-bottom:16px;
       text-align:left;white-space:pre-line">${s.tip}</div>` : ""}
     ${s.badge ? `<div style="background:rgba(232,196,74,0.12);border:1px solid var(--gold);
-      border-radius:8px;padding:10px;font-size:13px;color:#e8c44a;margin-bottom:16px">
+      border-radius:8px;padding:10px;font-size:13px;color:var(--dart-gold);margin-bottom:16px">
       ${s.badge}</div>` : ""}
     <button id="onboarding-next" style="
       width:100%;padding:14px;background:var(--gold);border:none;
@@ -164,17 +164,17 @@ export function showHelp(title, text){
   `;
   overlay.innerHTML = `
     <div style="
-      background:#1a1a1a;border:1px solid var(--gold);border-radius:14px;
+      background:var(--dart-bg-card);border:1px solid var(--gold);border-radius:14px;
       padding:20px 18px;max-width:280px;width:100%;
     ">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;
         color:var(--gold);letter-spacing:1px;margin-bottom:8px">
         ${title}
       </div>
-      <div style="font-size:13px;color:#ccc;line-height:1.6">${text}</div>
+      <div style="font-size:13px;color:var(--dart-text-sec);line-height:1.6">${text}</div>
       <button onclick="document.getElementById('help-modal-overlay').remove()"
         style="margin-top:14px;width:100%;padding:9px;background:none;
-        border:1px solid #444;border-radius:8px;color:#aaa;
+        border:1px solid var(--dart-border);border-radius:8px;color:var(--dart-text-sec);
         font-size:13px;cursor:pointer">
         Schließen
       </button>

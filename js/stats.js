@@ -117,15 +117,15 @@ function extractScatterFromGames(games, pid){
 }
 
 function renderSegmentTable(entries, totalThrows){
-  if(!entries.length) return `<div style="color:#aaa;font-size:12px;padding:8px;text-align:center">Keine Treffer-Koordinaten vorhanden.</div>`;
+  if(!entries.length) return `<div style="color:var(--dart-text-sec);font-size:12px;padding:8px;text-align:center">Keine Treffer-Koordinaten vorhanden.</div>`;
   const fav=entries[0];
   const bestTriple=[...entries].sort((a,b)=>b.triple-a.triple)[0];
-  let h=`<div style="margin-bottom:6px;font-size:11px;color:#aaa">Lieblings: <strong style="color:#333">${fav.num}</strong> (${fav.total}×)${bestTriple?.triple>0?` · Triple: <strong style="color:#333">T${bestTriple.num}</strong>`:""}
+  let h=`<div style="margin-bottom:6px;font-size:11px;color:var(--dart-text-sec)">Lieblings: <strong style="color:var(--dart-text-sec)">${fav.num}</strong> (${fav.total}×)${bestTriple?.triple>0?` · Triple: <strong style="color:var(--dart-text-sec)">T${bestTriple.num}</strong>`:""}
   </div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">
-  <tr style="color:#999;font-size:10px"><th style="text-align:left;padding:2px 4px">FELD</th><th style="padding:2px 4px">GES</th><th style="padding:2px 4px">S</th><th style="padding:2px 4px">D</th><th style="padding:2px 4px">T</th><th style="padding:2px 4px">%</th></tr>`;
+  <tr style="color:var(--dart-text-sec);font-size:10px"><th style="text-align:left;padding:2px 4px">FELD</th><th style="padding:2px 4px">GES</th><th style="padding:2px 4px">S</th><th style="padding:2px 4px">D</th><th style="padding:2px 4px">T</th><th style="padding:2px 4px">%</th></tr>`;
   entries.slice(0,15).forEach(e=>{
     const pct=Math.round(e.total/(totalThrows||1)*100);
-    h+=`<tr style="border-top:1px solid #f0f0f0"><td style="padding:2px 4px;font-weight:600">${e.num===25?"Bull":e.num}</td><td style="padding:2px 4px;text-align:center">${e.total}</td><td style="padding:2px 4px;text-align:center;color:#555">${e.single||"—"}</td><td style="padding:2px 4px;text-align:center;color:#1e88e5">${e.double||"—"}</td><td style="padding:2px 4px;text-align:center;color:#e53935">${e.triple||"—"}</td><td style="padding:2px 4px;text-align:center;color:#888">${pct}%</td></tr>`;
+    h+=`<tr style="border-top:1px solid #f0f0f0"><td style="padding:2px 4px;font-weight:600">${e.num===25?"Bull":e.num}</td><td style="padding:2px 4px;text-align:center">${e.total}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-text-muted)">${e.single||"—"}</td><td style="padding:2px 4px;text-align:center;color:#1e88e5">${e.double||"—"}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-danger)">${e.triple||"—"}</td><td style="padding:2px 4px;text-align:center;color:var(--dart-text-sec)">${pct}%</td></tr>`;
   });
   return h+`</table></div>`;
 }
@@ -138,25 +138,25 @@ function buildAdvancedColumn(side){
     return `<button class="tr-btn${on?" active":""}" data-side="${side}" data-range="${r}" style="padding:3px 7px;border-radius:4px;border:1px solid ${on?"#1a1a1a":"#ddd"};background:${on?"#1a1a1a":"#fff"};color:${on?"#e8c44a":"#666"};font-size:11px;cursor:pointer;font-weight:${on?"700":"400"}">${rl[r]}</button>`;
   }).join("");
   return `
-    <div style="font-size:10px;color:#999;letter-spacing:1px;margin-bottom:8px;text-align:center;font-weight:600">BOARD ${side.toUpperCase()}</div>
+    <div style="font-size:10px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px;text-align:center;font-weight:600">BOARD ${side.toUpperCase()}</div>
     <div style="margin-bottom:10px">
       <div style="display:flex;gap:4px;margin-bottom:6px">
-        <button class="col-type-btn active" data-side="${side}" data-type="timerange" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid #e8c44a;background:#1a1800;color:#e8c44a;cursor:pointer;font-weight:700">📅 Zeit</button>
-        <button class="col-type-btn" data-side="${side}" data-type="session" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid #ddd;background:#fff;color:#666;cursor:pointer">🎮 Spiel</button>
+        <button class="col-type-btn active" data-side="${side}" data-type="timerange" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-gold);background:var(--dart-bg-chip);color:var(--dart-gold);cursor:pointer;font-weight:700">📅 Zeit</button>
+        <button class="col-type-btn" data-side="${side}" data-type="session" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-border);background:var(--dart-bg-card);color:var(--dart-text-muted);cursor:pointer">🎮 Spiel</button>
       </div>
       <div id="timerange-${side}" style="display:flex;gap:4px;flex-wrap:wrap">${trBtns}</div>
       <div id="session-${side}" style="display:none">
-        <select class="session-select" data-side="${side}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:11px;margin-bottom:6px;background:#fff;color:#333">
+        <select class="session-select" data-side="${side}" style="width:100%;padding:6px;border:1px solid var(--dart-border);border-radius:6px;font-size:11px;margin-bottom:6px;background:var(--dart-bg-card);color:var(--dart-text-sec)">
           <option value="">Spiel wählen…</option>
         </select>
         <div id="legs-${side}" style="display:none;gap:4px;flex-wrap:wrap"></div>
       </div>
-      <div id="filter-label-${side}" style="font-size:10px;color:#e8c44a;margin-top:4px;min-height:14px;text-align:center"></div>
+      <div id="filter-label-${side}" style="font-size:10px;color:var(--dart-gold);margin-top:4px;min-height:14px;text-align:center"></div>
     </div>
-    <svg id="scatter-board-${side}" viewBox="36 36 458 458" style="display:block;width:100%;aspect-ratio:1;border-radius:8px;background:#0a0a0f;margin-bottom:6px"></svg>
-    <div id="board-stats-${side}" style="text-align:center;font-size:11px;color:#999;margin-bottom:10px">— Keine Daten —</div>
-    <div style="font-size:10px;color:#999;letter-spacing:1px;margin-bottom:4px;font-weight:600;border-top:1px solid #eee;padding-top:8px">SEGMENT-ANALYSE</div>
-    <div id="segment-table-${side}"><div style="color:#ccc;font-size:12px;text-align:center;padding:8px">Filter wählen</div></div>`;
+    <svg id="scatter-board-${side}" viewBox="36 36 458 458" style="display:block;width:100%;aspect-ratio:1;border-radius:8px;background:var(--dart-bg-app);margin-bottom:6px"></svg>
+    <div id="board-stats-${side}" style="text-align:center;font-size:11px;color:var(--dart-text-sec);margin-bottom:10px">— Keine Daten —</div>
+    <div style="font-size:10px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:4px;font-weight:600;border-top:1px solid var(--dart-border);padding-top:8px">SEGMENT-ANALYSE</div>
+    <div id="segment-table-${side}"><div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:8px">Filter wählen</div></div>`;
 }
 
 function updateColumn(side, pid){
@@ -196,7 +196,7 @@ function updateColumn(side, pid){
   if(tableEl){
     const entries=analyzeSegments(scatter);
     const total=scatter.filter(s=>s.l&&s.l!=="Miss").length;
-    tableEl.innerHTML=scatter.length?renderSegmentTable(entries,total):`<div style="color:#ccc;font-size:12px;text-align:center;padding:8px">Keine Daten</div>`;
+    tableEl.innerHTML=scatter.length?renderSegmentTable(entries,total):`<div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:8px">Keine Daten</div>`;
   }
 }
 
@@ -363,7 +363,7 @@ export async function loadAndRenderStats(){
     let html=`<div class="stats-section-title">${playerName} · ${games.length} Spiel${games.length!==1?"e":""}</div>`;
 
     if(x01Games.length>0){
-      html+=`<div class="stats-section-title" style="font-size:13px;color:#aaa">501 / 301</div>`;
+      html+=`<div class="stats-section-title" style="font-size:13px;color:var(--dart-text-sec)">501 / 301</div>`;
       html+=`<div class="stats-grid">
         <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${x01Games.length}</div></div>
         <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${wins}</div><div class="s-sub">${x01Games.length?Math.round(wins/x01Games.length*100):0}% Quote</div></div>
@@ -376,7 +376,7 @@ export async function loadAndRenderStats(){
     }
 
     if(crGames.length>0){
-      html+=`<div class="stats-section-title" style="font-size:13px;color:#aaa">CRICKET</div>`;
+      html+=`<div class="stats-section-title" style="font-size:13px;color:var(--dart-text-sec)">CRICKET</div>`;
       html+=`<div class="stats-grid">
         <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${crGames.length}</div></div>
         <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${crWins}</div><div class="s-sub">${crGames.length?Math.round(crWins/crGames.length*100):0}% Quote</div></div>
@@ -422,7 +422,7 @@ export async function loadAndRenderStats(){
     if(chartGames.length>=2){
       html+=`<div class="stats-section-title">VERLAUF</div>
         <div class="chart-kpi-bar" id="chart-kpi-bar">
-          <button class="chart-kpi-btn active" data-kpi="avg" style="background:#1e88e5;border-color:#1e88e5;color:#fff">⌀ Aufnahme</button>
+          <button class="chart-kpi-btn active" data-kpi="avg" style="background:#1e88e5;border-color:#1e88e5;color:var(--dart-text)">⌀ Aufnahme</button>
           <button class="chart-kpi-btn" data-kpi="f9">First 9 Ø</button>
           <button class="chart-kpi-btn" data-kpi="best">Highscore</button>
           <button class="chart-kpi-btn" data-kpi="co">Checkout %</button>
@@ -446,7 +446,7 @@ export async function loadAndRenderStats(){
         <span class="winner-tag" style="color:${isWin&&pid?"#2e7d32":"#1a1a1a"}">${g.winner||"—"}</span>
         <span class="mode-tag">${g.mode||"—"}</span>
         <span>${(g.rounds||0)*3}</span>
-        <span style="color:#aaa;font-size:11px">${ds}</span>
+        <span style="color:var(--dart-text-sec);font-size:11px">${ds}</span>
       </div>`;
     });
     html+=`</div>`;
@@ -474,7 +474,7 @@ export async function loadAndRenderStats(){
         html+=`<div class="history-row" style="grid-template-columns:1fr 70px 70px 70px">
           <span style="display:flex;align-items:center;gap:8px">
             <strong>${e.field}</strong>
-            <span style="width:100px;height:6px;background:#f0f0f0;border-radius:3px;display:inline-block;overflow:hidden;flex-shrink:0">
+            <span style="width:100px;height:6px;background:var(--dart-bg-card);border-radius:3px;display:inline-block;overflow:hidden;flex-shrink:0">
               <span style="display:block;height:6px;width:${barW}%;background:${color};border-radius:3px;transition:width 0.3s"></span>
             </span>
           </span>
@@ -489,15 +489,15 @@ export async function loadAndRenderStats(){
 
     // ── Premium: Erweiterte Statistiken (2-Spalten, am Ende) ──────────
     if(allScatter.length){
-      html+=`<div style="border-top:2px solid #e8c44a;margin-top:24px;padding-top:16px"></div>
+      html+=`<div style="border-top:2px solid var(--dart-gold);margin-top:24px;padding-top:16px"></div>
       <div class="stats-section-title" style="display:flex;align-items:center;gap:8px;margin-top:0">
         🔬 ERWEITERTE STATISTIKEN
-        <span style="font-size:9px;background:#e8c44a;color:#000;padding:2px 6px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700">PREMIUM</span>
+        <span style="font-size:9px;background:var(--dart-gold);color:#000;padding:2px 6px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700">PREMIUM</span>
       </div>
       <style>.adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}@media(max-width:600px){.adv-grid{grid-template-columns:1fr}}</style>
       <div class="adv-grid">
-        <div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:12px">${buildAdvancedColumn("a")}</div>
-        <div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:12px">${buildAdvancedColumn("b")}</div>
+        <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:12px">${buildAdvancedColumn("a")}</div>
+        <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:12px">${buildAdvancedColumn("b")}</div>
       </div>`;
     }
 
@@ -569,13 +569,13 @@ export async function loadAndRenderStats(){
               if(activeKPIs.length===1) return;
               activeKPIs=activeKPIs.filter(k=>k!==kpi);
               btn.classList.remove("active");
-              btn.style.background=""; btn.style.color="#666"; btn.style.borderColor="#ddd";
+              btn.style.background=""; btn.style.color="var(--dart-text-muted)"; btn.style.borderColor="var(--dart-border)";
             } else {
               if(activeKPIs.length>=3) return;
               activeKPIs.push(kpi);
               btn.classList.add("active");
               const col=COLORS[kpiKeys.indexOf(kpi)];
-              btn.style.background=col; btn.style.color="#fff"; btn.style.borderColor=col;
+              btn.style.background=col; btn.style.color="var(--dart-text)"; btn.style.borderColor=col;
             }
             drawChart();
           });

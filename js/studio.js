@@ -77,7 +77,7 @@ export function selectStudioItem(idx){
   document.getElementById("studio-save-btn").style.display="none";
   document.getElementById("studio-rec-btn").disabled=false;
   document.getElementById("studio-rec-btn").textContent="⏺ Aufnehmen";
-  document.getElementById("studio-rec-btn").style.background="#e53935";
+  document.getElementById("studio-rec-btn").style.background="var(--dart-danger)";
 
   const hasSample=studioRecorded.has(item.key);
   document.getElementById("studio-delete-btn").style.display=hasSample?"":"none";
@@ -109,13 +109,13 @@ export function wireStudioButtons(){
         studioBlob=new Blob(studioChunks,{type:"audio/webm"});
         const url=URL.createObjectURL(studioBlob);
         studioAudioEl=new Audio(url);
-        btn.textContent="⏺ Nochmal"; btn.style.background="#e53935";
+        btn.textContent="⏺ Nochmal"; btn.style.background="var(--dart-danger)";
         document.getElementById("studio-play-btn").style.display="";
         document.getElementById("studio-save-btn").style.display="";
         document.getElementById("studio-status").textContent="Aufnahme bereit — anhören oder speichern";
       };
       studioMediaRecorder.start();
-      btn.textContent="⏹ Stop"; btn.style.background="#555";
+      btn.textContent="⏹ Stop"; btn.style.background="var(--dart-bg-chip)";
       document.getElementById("studio-status").textContent="🔴 Aufnahme läuft…";
       document.getElementById("studio-play-btn").style.display="none";
       document.getElementById("studio-save-btn").style.display="none";

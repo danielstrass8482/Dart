@@ -590,7 +590,7 @@ document.getElementById("btn-google-login").addEventListener("click",async()=>{ 
 document.getElementById("btn-forgot-password").addEventListener("click",async()=>{
   const email=document.getElementById("login-email").value.trim();
   if(!email){ authError("login-error","Bitte Email eingeben."); return; }
-  try{ await window.resetPassword(email); authError("login-error",""); document.getElementById("login-error").style.color="#2e7d32"; document.getElementById("login-error").textContent="Reset-Email gesendet!"; }
+  try{ await window.resetPassword(email); authError("login-error",""); document.getElementById("login-error").style.color="var(--dart-success)"; document.getElementById("login-error").textContent="Reset-Email gesendet!"; }
   catch(e){ authError("login-error",e.message); }
 });
 document.getElementById("btn-guest").addEventListener("click",async()=>{ try{ await window.signInAsGuest(); }catch(e){ authError("login-error",e.message); } });
@@ -649,17 +649,17 @@ function initProfilTab(){
   const infoEl=document.getElementById("profil-account-info");
   const upgradeEl=document.getElementById("profil-upgrade-inline");
   if(!infoEl) return;
-  if(!user){ infoEl.innerHTML=`<div style="font-size:14px;color:#aaa">Nicht angemeldet</div>`; if(upgradeEl) upgradeEl.style.display=""; return; }
+  if(!user){ infoEl.innerHTML=`<div style="font-size:14px;color:var(--dart-text-sec)">Nicht angemeldet</div>`; if(upgradeEl) upgradeEl.style.display=""; return; }
   const displayName=user.displayName||"Gast";
   const email=user.email||"—";
   const isAnon=user.isAnonymous;
   infoEl.innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-      <div style="width:44px;height:44px;border-radius:50%;background:#e8c44a;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1a1a1a;flex-shrink:0">${displayName[0].toUpperCase()}</div>
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--dart-gold);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--dart-bg-card);flex-shrink:0">${displayName[0].toUpperCase()}</div>
       <div>
-        <div style="font-weight:600;font-size:15px;color:#1a1a1a">${displayName}</div>
-        <div style="font-size:12px;color:#999">${email}</div>
-        <div style="font-size:11px;color:#aaa;letter-spacing:1px">${isAnon?"GAST-ACCOUNT":"REGISTRIERT"}</div>
+        <div style="font-weight:600;font-size:15px;color:var(--dart-text)">${displayName}</div>
+        <div style="font-size:12px;color:var(--dart-text-sec)">${email}</div>
+        <div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px">${isAnon?"GAST-ACCOUNT":"REGISTRIERT"}</div>
       </div>
     </div>`;
   if(upgradeEl) upgradeEl.style.display=isAnon?"":"none";
@@ -674,15 +674,15 @@ function renderPremiumStatus(isAnon, displayName, email){
   if(!el) return;
   if(isAnon || !displayName || displayName === "Gast"){
     el.innerHTML = `
-      <div style="background:#1a1800;border:1px solid #e8c44a;border-radius:12px;padding:16px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#e8c44a;
+      <div style="background:var(--dart-bg-chip);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);
           letter-spacing:2px;margin-bottom:6px">🎉 BETA-NUTZER</div>
-        <div style="font-size:13px;color:#ccc;margin-bottom:10px;line-height:1.5">
+        <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:10px;line-height:1.5">
           Du hast Zugriff auf alle Features während der Beta.
           Registriere dich jetzt um deine Beta-Vorteile dauerhaft zu sichern wenn Premium startet.
         </div>
         <button onclick="document.getElementById('profil-upgrade-inline').style.display=''"
-          style="width:100%;padding:11px;background:#e8c44a;border:none;border-radius:8px;
+          style="width:100%;padding:11px;background:var(--dart-gold);border:none;border-radius:8px;
           font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;
           color:#000;cursor:pointer">
           ACCOUNT ERSTELLEN →
@@ -690,11 +690,11 @@ function renderPremiumStatus(isAnon, displayName, email){
       </div>`;
   } else {
     el.innerHTML = `
-      <div style="background:#1a1800;border:1px solid #e8c44a;border-radius:12px;padding:16px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#e8c44a;
+      <div style="background:var(--dart-bg-chip);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);
           letter-spacing:2px;margin-bottom:4px">✅ BETA-NUTZER (Grandfathered)</div>
-        <div style="font-size:13px;color:#aaa;margin-bottom:6px">${email}</div>
-        <div style="font-size:13px;color:#ccc;line-height:1.5">
+        <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:6px">${email}</div>
+        <div style="font-size:13px;color:var(--dart-text-sec);line-height:1.5">
           Deine Beta-Vorteile sind gesichert. Du bekommst Premium dauerhaft kostenlos.
         </div>
       </div>`;
@@ -720,7 +720,7 @@ window.toggleSetting = function(key){
   const slider=document.getElementById("setting-"+key+"-slider");
   if(!cb||!SETTING_KEYS[key]) return;
   cb.checked=!cb.checked;
-  slider.style.background=cb.checked?"#e8c44a":"#ccc";
+  slider.style.background=cb.checked?"var(--dart-gold)":"var(--dart-border)";
   localStorage.setItem(SETTING_KEYS[key], cb.checked?"true":"false");
   applySettings();
 };
@@ -730,7 +730,7 @@ window.toggleSetting = function(key){
     const sl=document.getElementById("setting-"+k+"-slider");
     if(!cb||!sl) return;
     cb.checked=localStorage.getItem(lsKey)!=="false";
-    sl.style.background=cb.checked?"#e8c44a":"#ccc";
+    sl.style.background=cb.checked?"var(--dart-gold)":"var(--dart-border)";
   });
   applySettings();
 })();
@@ -750,14 +750,14 @@ function buildCoachPlayerSelector(){
     const realIdx=state.cfg.players.indexOf(name);
     const col=playerColor(name);
     const btn=document.createElement("button");
-    btn.style.cssText=`padding:6px 14px;border-radius:20px;border:2px solid ${col};background:${hi===0?col:"#2a2a2a"};cursor:pointer;font-size:13px;font-weight:600;color:${hi===0?"#fff":"#666"};box-shadow:${hi===0?"0 0 8px "+col:"none"}`;
+    btn.style.cssText=`padding:6px 14px;border-radius:20px;border:2px solid ${col};background:${hi===0?col:"#2a2a2a"};cursor:pointer;font-size:13px;font-weight:600;color:${hi===0?"var(--dart-text)":"var(--dart-text-muted)"};box-shadow:${hi===0?"0 0 8px "+col:"none"}`;
     btn.textContent=name;
     btn.addEventListener("click",()=>{
       coachSelectedPlayerIdx=realIdx;
       btns.querySelectorAll("button").forEach((b,bi)=>{
         const bcol=playerColor(humanPlayers[bi]);
-        b.style.background=bi===hi?bcol:"#2a2a2a";
-        b.style.color=bi===hi?"#fff":"#666";
+        b.style.background=bi===hi?bcol:"var(--dart-border)";
+        b.style.color=bi===hi?"var(--dart-text)":"var(--dart-text-muted)";
         b.style.boxShadow=bi===hi?"0 0 8px "+bcol:"none";
       });
     });
@@ -855,7 +855,7 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
   const videoEl=document.getElementById("video-preview");
   if(!videoEl.src){ alert("Bitte zuerst ein Video auswählen"); return; }
   btn.disabled=true; btn.textContent="⏳ Extrahiere Frames…";
-  outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:#aaa">Analysiere deine Wurftechnik…</span></div>`;
+  outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">Analysiere deine Wurftechnik…</span></div>`;
   try{
     const frames=await extractVideoFrames(videoEl, 5); btn.textContent="⏳ Claude analysiert…";
     const content=[{type:"text",text:buildVideoCoachPrompt(frames.length,null)},...frames.map((b64,i)=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}})),{type:"text",text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}];
@@ -867,7 +867,7 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
     btn.textContent="🎥 ERNEUT ANALYSIEREN"; btn.disabled=newLeft<=0;
     if(window.dartDB){ const pi=coachSelectedPlayerIdx; const pid=state.cfg.playerIds?.[pi]||null; const pName=state.cfg.players?.[pi]||"Unbekannt"; await window.dartDB.saveCoachAnalysis({playerId:pid,playerName:pName,type:"video",text,frameCount:frames.length}); }
   }catch(err){
-    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:#e53935">Fehler: ${err.message}</div>`;
+    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">Fehler: ${err.message}</div>`;
     btn.disabled=false; btn.textContent="🎥 WURF ANALYSIEREN";
   }
 });
@@ -1003,7 +1003,7 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
   const videoEl=document.getElementById("video-preview-analyse-tab");
   if(!videoEl.src){ alert("Bitte zuerst ein Video auswählen"); return; }
   btn.disabled=true; btn.textContent="⏳ Extrahiere Frames…";
-  outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:#aaa">Analysiere deine Wurftechnik…</span></div>`;
+  outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">Analysiere deine Wurftechnik…</span></div>`;
   try{
     const frames=await extractVideoFrames(videoEl,5); btn.textContent="⏳ Claude analysiert…";
     const playerName=analyseSelectedPlayer?(state.allPlayers.find(x=>x.id===analyseSelectedPlayer)?.name||null):null;
@@ -1014,7 +1014,7 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
     outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header">🎥 WURF-ANALYSE</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div></div>`;
     btn.textContent="🎥 ERNEUT ANALYSIEREN"; btn.disabled=newLeft<=0;
     if(window.dartDB&&analyseSelectedPlayer){ const p=state.allPlayers.find(x=>x.id===analyseSelectedPlayer); await window.dartDB.saveCoachAnalysis({playerId:analyseSelectedPlayer,playerName:playerName||p?.name||"Unbekannt",type:"video",text,frameCount:frames.length}); loadCoachHistoryAnalyseTab(analyseSelectedPlayer); }
-  }catch(err){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:#e53935">Fehler: ${err.message}</div>`; btn.disabled=false; btn.textContent="🎥 WURF ANALYSIEREN"; }
+  }catch(err){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">Fehler: ${err.message}</div>`; btn.disabled=false; btn.textContent="🎥 WURF ANALYSIEREN"; }
 });
 
 // ── Voice Settings ────────────────────────────────────────────────
@@ -1046,19 +1046,19 @@ function activateVoice(voiceId, voiceName){ localStorage.setItem("dart_active_vo
 function renderVoiceSelector(){
   const list=document.getElementById("voice-selector-list"); if(!list) return;
   const voices=loadVoices(); const activeId=getVoiceId();
-  const tvBtn="padding:7px 11px;border:1px solid #ddd;border-radius:7px;background:#f5f5f0;font-size:12px;cursor:pointer;";
+  const tvBtn="padding:7px 11px;border:1px solid var(--dart-border);border-radius:7px;background:var(--dart-bg-card);font-size:12px;cursor:pointer;";
   list.innerHTML=voices.map((v,i)=>{
     const isActive=v.id===activeId; const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
-    const premiumBadge=!v.builtin?` <span style="background:#e8c44a;color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
+    const premiumBadge=!v.builtin?` <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
     return `<div style="border-radius:8px;padding:12px;margin-bottom:8px;border:${isActive?"2px solid #222":"1px solid #eee"};background:${isActive?"#f9f9f7":"#fff"}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px">🎙️ ${v.name}${premiumBadge}</span>${isActive?`<span style="background:#222;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
-      <div style="font-size:11px;color:#aaa;font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px">🎙️ ${v.name}${premiumBadge}</span>${isActive?`<span style="background:var(--dart-bg-chip);color:var(--dart-text);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
+      <div style="font-size:11px;color:var(--dart-text-sec);font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">Test: 180</button>
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Test: Game On</button>
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Test: Bust</button>
-        ${isActive?`<button style="padding:7px 11px;border:none;border-radius:7px;background:#2a7a2a;color:#fff;font-size:12px;cursor:default;" disabled>✓ Aktiv</button>`:`<button style="padding:7px 11px;border:none;border-radius:7px;background:#222;color:#fff;font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}">✓ Aktivieren</button>`}
-        ${!v.builtin?`<button style="padding:7px 11px;border:1px solid #fdd;border-radius:7px;background:#fff5f5;font-size:12px;cursor:pointer;" data-delete-idx="${i}">🗑</button>`:""}
+        ${isActive?`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled>✓ Aktiv</button>`:`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}">✓ Aktivieren</button>`}
+        ${!v.builtin?`<button style="padding:7px 11px;border:1px solid var(--dart-danger);border-radius:7px;background:#fff5f5;font-size:12px;cursor:pointer;" data-delete-idx="${i}">🗑</button>`:""}
       </div>
     </div>`;
   }).join("");

@@ -282,9 +282,9 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
  */
 export function formatCoachText(text){
   return text
-    .replace(/### (.+)/g, '<h4 style="font-family:\'Bebas Neue\',sans-serif;font-size:15px;letter-spacing:1px;color:#e8c44a;margin:12px 0 4px">$1</h4>')
+    .replace(/### (.+)/g, '<h4 style="font-family:\'Bebas Neue\',sans-serif;font-size:15px;letter-spacing:1px;color:var(--dart-gold);margin:12px 0 4px">$1</h4>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^- (.+)/gm, '<div style="padding:2px 0 2px 12px;border-left:2px solid #e8c44a;margin:3px 0">$1</div>')
+    .replace(/^- (.+)/gm, '<div style="padding:2px 0 2px 12px;border-left:2px solid var(--dart-gold);margin:3px 0">$1</div>')
     .replace(/\n\n/g, '<br>')
     .replace(/\n/g, '<br>');
 }
@@ -322,7 +322,7 @@ export async function callCoach(prompt, outputEl, limitEl, btnEl){
   }
   btnEl.disabled=true;
   btnEl.textContent="⏳ Analysiere…";
-  outputEl.innerHTML=`<div class="coach-box"><div class="coach-header">🧠 COACH</div><span style="color:#aaa">Coach denkt nach…</span></div>`;
+  outputEl.innerHTML=`<div class="coach-box"><div class="coach-header">🧠 COACH</div><span style="color:var(--dart-text-sec)">Coach denkt nach…</span></div>`;
   try{
     const data = await callClaudeViaProxy([{role:"user",content:prompt}]);
     const text = data.content?.[0]?.text || "Keine Antwort erhalten.";
@@ -333,7 +333,7 @@ export async function callCoach(prompt, outputEl, limitEl, btnEl){
     btnEl.textContent="🧠 NEUE ANALYSE";
     btnEl.disabled = newLeft<=0;
   }catch(e){
-    outputEl.innerHTML=`<div class="coach-box" style="border-color:#e53935">Fehler: ${e.message}</div>`;
+    outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-danger)">Fehler: ${e.message}</div>`;
     btnEl.disabled=false;
     btnEl.textContent="🧠 COACH-ANALYSE";
   }
@@ -406,9 +406,9 @@ export async function loadCoachHistory(pid){
   list.innerHTML=analyses.map(a=>{
     const d=new Date(a.ts);
     const ds=`${d.getDate()}.${d.getMonth()+1}. ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
-    return `<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px">
-      <div style="font-size:10px;color:#aaa;margin-bottom:4px">${ds} · ${a.mode||""} · Ø ${a.avgPerTurn||0}</div>
-      <div style="color:#333;line-height:1.6">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
+    return `<div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:8px;padding:10px;margin-bottom:6px;font-size:13px">
+      <div style="font-size:10px;color:var(--dart-text-sec);margin-bottom:4px">${ds} · ${a.mode||""} · Ø ${a.avgPerTurn||0}</div>
+      <div style="color:var(--dart-text-sec);line-height:1.6">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
     </div>`;
   }).join("");
 }
@@ -423,7 +423,7 @@ export async function loadCoachHistoryStats(pid){
   const analyses=await window.dartDB.loadCoachAnalyses(pid);
   if(!analyses.length){ container.innerHTML=""; return; }
   container.innerHTML=`
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#555;margin-bottom:8px;cursor:pointer"
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-muted);margin-bottom:8px;cursor:pointer"
       onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?this.textContent.replace('▼','▲'):this.textContent.replace('▲','▼')">
       📋 GESPEICHERTE ANALYSEN (${analyses.length}) ▼
     </div>
@@ -431,11 +431,11 @@ export async function loadCoachHistoryStats(pid){
       ${analyses.map(a=>{
         const d=new Date(a.ts);
         const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
-        return `<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:8px">
-          <div style="font-size:10px;color:#aaa;margin-bottom:6px;display:flex;justify-content:space-between">
+        return `<div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--dart-text-sec);margin-bottom:6px;display:flex;justify-content:space-between">
             <span>${ds}</span><span>${a.mode||""} ${a.avgPerTurn?`· Ø ${a.avgPerTurn}`:""}</span>
           </div>
-          <div style="font-size:13px;color:#333;line-height:1.7">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
+          <div style="font-size:13px;color:var(--dart-text-sec);line-height:1.7">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
         </div>`;
       }).join("")}
     </div>`;
@@ -451,7 +451,7 @@ export async function loadCoachHistoryAnalyseTab(pid){
   const analyses = await window.dartDB.loadCoachAnalyses(pid);
   if(!analyses.length){ container.innerHTML=""; return; }
   container.innerHTML=`
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#555;margin-bottom:8px;cursor:pointer"
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-muted);margin-bottom:8px;cursor:pointer"
       onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?this.textContent.replace('▼','▲'):this.textContent.replace('▲','▼')">
       📋 GESPEICHERTE ANALYSEN (${analyses.length}) ▼
     </div>
@@ -459,11 +459,11 @@ export async function loadCoachHistoryAnalyseTab(pid){
       ${analyses.map(a=>{
         const d=new Date(a.ts);
         const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)} ${d.getHours()}:${String(d.getMinutes()).padStart(2,"0")}`;
-        return `<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:12px;margin-bottom:8px">
-          <div style="font-size:10px;color:#aaa;margin-bottom:6px;display:flex;justify-content:space-between">
+        return `<div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--dart-text-sec);margin-bottom:6px;display:flex;justify-content:space-between">
             <span>${ds}</span><span>${a.mode||""} ${a.avgPerTurn?`· Ø ${a.avgPerTurn}`:""}</span>
           </div>
-          <div style="font-size:13px;color:#333;line-height:1.7">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
+          <div style="font-size:13px;color:var(--dart-text-sec);line-height:1.7">${formatCoachText((a.type==="video"?"🎥 ":"")+(a.text||"").replace("🧠 COACH-ANALYSE","").replace("COACH-ANALYSE","").replace("🎥 WURF-ANALYSE","").trim())}</div>
         </div>`;
       }).join("")}
     </div>`;

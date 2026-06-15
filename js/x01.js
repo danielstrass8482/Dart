@@ -88,30 +88,30 @@ export function renderX01(){
       const throwChips=isActive&&state.x01.throws.length
         ? state.x01.throws.map(t=>{
             const col=t.miss?"#e53935":t.label.startsWith("T")?"#6bba8a":t.label.startsWith("D")?"#6aaada":"#ccc";
-            return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:1px 5px;background:#2a2a2a;border-radius:4px;color:${col}">${t.label}</span>`;
+            return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:1px 5px;background:var(--dart-border);border-radius:4px;color:${col}">${t.label}</span>`;
           }).join(" ")
         : "";
-      const coHint=isActive&&co?`<span style="color:#e8c44a;font-size:11px;margin-left:6px">→ ${co} · ${co.split(" ").length}-Dart Finish</span>`:"";
+      const coHint=isActive&&co?`<span style="color:var(--dart-gold);font-size:11px;margin-left:6px">→ ${co} · ${co.split(" ").length}-Dart Finish</span>`:"";
       const f9=state.x01.first9[i];
       const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legInfo=state.cfg.totalSets>1?`S${state.cfg.setWins[i]} `:state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])} `:"";
-      const scoreStyle=`transition:background .3s,color .3s;${isCheckout?"background:#e8c44a;color:#000;border-radius:5px;padding:0 5px;":""}`;
+      const scoreStyle=`transition:background .3s,color .3s;${isCheckout?"background:var(--dart-gold);color:#000;border-radius:5px;padding:0 5px;":""}`;
       const activeHeader=isActive?`
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
           ${photoUrl
-            ?`<img src="${photoUrl}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #e8c44a;flex-shrink:0">`
-            :`<div style="width:34px;height:34px;border-radius:50%;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#e8c44a;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+            ?`<img src="${photoUrl}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--dart-gold);flex-shrink:0">`
+            :`<div style="width:34px;height:34px;border-radius:50%;background:var(--dart-border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dart-gold);flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
           }
           <div style="min-width:0">
-            <div style="font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
-            <div style="font-size:9px;color:#e8c44a;letter-spacing:1px">AM ZUG</div>
+            <div style="font-size:13px;font-weight:600;color:var(--dart-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+            <div style="font-size:9px;color:var(--dart-gold);letter-spacing:1px">AM ZUG</div>
           </div>
         </div>`
         :`<div class="sc-name">${legInfo}${displayName}</div>`;
       return `<div class="score-cell${isActive?" active":""}">
         ${activeHeader}
         <div class="sc-score" style="${scoreStyle}">${playerRemaining}</div>
-        <div class="sc-throws">${throwChips}${coHint||(!throwChips?`<span style="color:#555;font-size:11px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`:"")}</div>
+        <div class="sc-throws">${throwChips}${coHint||(!throwChips?`<span style="color:var(--dart-text-muted);font-size:11px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`:"")}</div>
       </div>`;
     }).join("");
   }
@@ -128,23 +128,23 @@ export function renderX01(){
       const lpRemaining=isActive?remaining:playerScore;
       const lpCheckout=lpRemaining<=170&&lpRemaining>1&&!state.x01.bust;
       const chips=isActive?state.x01.throws.map(t=>{
-        const cls=t.miss?"color:#e53935":t.label.startsWith("T")?"color:#6bba8a":t.label.startsWith("D")?"color:#6aaada":"color:#aaa";
-        return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:2px 5px;background:#2a2a2a;border-radius:4px;${cls}">${t.label}</span>`;
+        const cls=t.miss?"color:var(--dart-danger)":t.label.startsWith("T")?"color:var(--dart-success)":t.label.startsWith("D")?"color:#6aaada":"color:var(--dart-text-sec)";
+        return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:2px 5px;background:var(--dart-border);border-radius:4px;${cls}">${t.label}</span>`;
       }).join(" "):"";
       const f9=state.x01.first9[i];
       const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legDots=state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])}${"▫".repeat(Math.max(0,state.cfg.legsToWin-state.cfg.legWins[i]))} `:"";
       const setDots=state.cfg.totalSets>1?`Set ${state.cfg.setWins[i]} `:"";
-      const lpScoreStyle=`transition:background .3s,color .3s;${lpCheckout?"background:#e8c44a;color:#000;border-radius:8px;padding:0 8px;display:inline-block;":""}`;
+      const lpScoreStyle=`transition:background .3s,color .3s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:8px;padding:0 8px;display:inline-block;":""}`;
       const activeAvatarHtml=isActive?`
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
           ${photoUrl
-            ?`<img src="${photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #e8c44a;flex-shrink:0">`
-            :`<div style="width:40px;height:40px;border-radius:50%;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#e8c44a;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+            ?`<img src="${photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--dart-gold);flex-shrink:0">`
+            :`<div style="width:40px;height:40px;border-radius:50%;background:var(--dart-border);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--dart-gold);flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
           }
           <div style="min-width:0">
-            <div style="font-size:15px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
-            <div style="font-size:9px;color:#e8c44a;letter-spacing:1px">AM ZUG</div>
+            <div style="font-size:15px;font-weight:600;color:var(--dart-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+            <div style="font-size:9px;color:var(--dart-gold);letter-spacing:1px">AM ZUG</div>
           </div>
         </div>`:"";
       return `<div class="lp-player${isActive?" active":""}">
@@ -215,25 +215,25 @@ export function renderTurnTableLP(){
   if(!box) return;
   const maxRounds=Math.max(...state.x01.turnScores.map(a=>a.length),1);
   let html=`<table style="width:100%;border-collapse:collapse;font-size:13px">
-    <thead><tr style="background:#222">
-      <th style="padding:5px 8px;color:#666;font-size:10px;letter-spacing:1px;text-align:left">WURF</th>`;
-  state.cfg.players.forEach(p=>{ html+=`<th style="padding:5px 6px;color:#999;font-size:10px;letter-spacing:1px" colspan="2">${p}</th>`; });
+    <thead><tr style="background:var(--dart-bg-chip)">
+      <th style="padding:5px 8px;color:var(--dart-text-muted);font-size:10px;letter-spacing:1px;text-align:left">WURF</th>`;
+  state.cfg.players.forEach(p=>{ html+=`<th style="padding:5px 6px;color:var(--dart-text-sec);font-size:10px;letter-spacing:1px" colspan="2">${p}</th>`; });
   html+=`</tr></thead><tbody>`;
   let starts=state.cfg.players.map(()=>state.cfg.startScore);
   for(let r=0;r<maxRounds;r++){
     const isCur=r===maxRounds-1&&state.x01.throws.length>0;
     html+=`<tr style="background:${isCur?"#1a1a00":"transparent"};border-bottom:1px solid #222">
-      <td style="padding:4px 8px;color:#555;font-size:11px">${r+1}</td>`;
+      <td style="padding:4px 8px;color:var(--dart-text-muted);font-size:11px">${r+1}</td>`;
     state.cfg.players.forEach((_,i)=>{
       const sc=state.x01.turnScores[i][r];
       const rest=sc!==undefined?starts[i]-sc:null;
       if(sc!==undefined){
         const col=sc>=100?"#6bba8a":sc>=60?"#aaa":sc<10?"#e53935":"#888";
         html+=`<td style="padding:4px 6px;font-family:'Bebas Neue',sans-serif;font-size:16px;color:${col};text-align:center">${sc}</td>
-          <td style="padding:4px 6px;color:#666;font-size:13px;text-align:center">${rest||0}</td>`;
+          <td style="padding:4px 6px;color:var(--dart-text-muted);font-size:13px;text-align:center">${rest||0}</td>`;
         starts[i]=rest||0;
       } else {
-        html+=`<td style="padding:4px 6px;color:#333;text-align:center">—</td><td style="color:#333;text-align:center">—</td>`;
+        html+=`<td style="padding:4px 6px;color:var(--dart-text-sec);text-align:center">—</td><td style="color:var(--dart-text-sec);text-align:center">—</td>`;
       }
     });
     html+=`</tr>`;
@@ -488,15 +488,15 @@ export function handleLegWin(winnerIdx){
       return `<div style="background:${isWinner?"rgba(232,196,74,0.15)":"rgba(255,255,255,0.05)"};
         border:1px solid ${isWinner?"#e8c44a":"rgba(255,255,255,0.1)"};
         border-radius:10px;padding:10px 14px;text-align:left">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${isWinner?"#e8c44a":"#ccc"};letter-spacing:1px;margin-bottom:6px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${isWinner?"var(--dart-gold)":"var(--dart-border)"};letter-spacing:1px;margin-bottom:6px">
           ${isWinner?"🏆 ":""}${p}
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr${f9?` 1fr`:""};gap:4px 12px;font-size:12px;color:#aaa">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr${f9?` 1fr`:""};gap:4px 12px;font-size:12px;color:var(--dart-text-sec)">
           <span>Ø Aufnahme</span><span>Best</span><span>CO%</span>${f9?"<span>First 9</span>":""}
-          <span style="color:#fff;font-weight:600;font-size:15px">${avg}</span>
-          <span style="color:#fff;font-weight:600;font-size:15px">${best}</span>
-          <span style="color:#fff;font-weight:600;font-size:15px">${coPct}%</span>
-          ${f9?`<span style="color:#fff;font-weight:600;font-size:15px">${f9}</span>`:""}
+          <span style="color:var(--dart-text);font-weight:600;font-size:15px">${avg}</span>
+          <span style="color:var(--dart-text);font-weight:600;font-size:15px">${best}</span>
+          <span style="color:var(--dart-text);font-weight:600;font-size:15px">${coPct}%</span>
+          ${f9?`<span style="color:var(--dart-text);font-weight:600;font-size:15px">${f9}</span>`:""}
         </div>
       </div>`;
     }).join("");
@@ -551,18 +551,18 @@ export function showWinner(name,round){
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
             ${s.photoUrl
               ?`<img src="${s.photoUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-              :`<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0">${s.displayName.slice(0,2).toUpperCase()}</div>`
+              :`<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dart-text);flex-shrink:0">${s.displayName.slice(0,2).toUpperCase()}</div>`
             }
             <div style="min-width:0">
-              <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff">${s.displayName}</div>
-              ${s.isWinner?"<div style=\"font-size:10px;color:#e8c44a;letter-spacing:1px\">SIEGER</div>":""}
+              <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dart-text)">${s.displayName}</div>
+              ${s.isWinner?"<div style=\"font-size:10px;color:var(--dart-gold);letter-spacing:1px\">SIEGER</div>":""}
             </div>
           </div>
           <table style="width:100%;font-size:12px;border-collapse:collapse">
-            <tr><td style="color:#888;padding:2px 0">Ø Aufnahme</td><td style="text-align:right;font-weight:600;color:#fff">${s.avg}</td></tr>
-            <tr><td style="color:#888;padding:2px 0">First 9</td><td style="text-align:right;color:#fff">${s.f9!==null&&s.f9!==undefined?s.f9:"—"}</td></tr>
-            <tr><td style="color:#888;padding:2px 0">Highscore</td><td style="text-align:right;color:#fff">${s.best}</td></tr>
-            <tr><td style="color:#888;padding:2px 0">Checkout</td><td style="text-align:right;color:#fff">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Ø Aufnahme</td><td style="text-align:right;font-weight:600;color:var(--dart-text)">${s.avg}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;color:var(--dart-text)">${s.f9!==null&&s.f9!==undefined?s.f9:"—"}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Highscore</td><td style="text-align:right;color:var(--dart-text)">${s.best}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Checkout</td><td style="text-align:right;color:var(--dart-text)">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
           </table>
         </div>`;
       });
@@ -587,18 +587,18 @@ export function showWinner(name,round){
         const statusColor=improved?"#43a047":declined?"#e53935":"#888";
         const afterColor=improved?"#43a047":declined?"#e53935":"#fff";
         html+=`<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px;text-align:left">
-          <div style="font-size:11px;color:#666;letter-spacing:1px;margin-bottom:10px">${humanStats.length>1?s.displayName+" — ":""}GESAMTSTATISTIK</div>
+          <div style="font-size:11px;color:var(--dart-text-muted);letter-spacing:1px;margin-bottom:10px">${humanStats.length>1?s.displayName+" — ":""}GESAMTSTATISTIK</div>
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div style="text-align:center">
-              <div style="font-size:10px;color:#666">VORHER</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:#777">${avgBefore}</div>
-              <div style="font-size:10px;color:#555">${gamesBefore} Spiele</div>
+              <div style="font-size:10px;color:var(--dart-text-muted)">VORHER</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:var(--dart-text-muted)">${avgBefore}</div>
+              <div style="font-size:10px;color:var(--dart-text-muted)">${gamesBefore} Spiele</div>
             </div>
-            <div style="font-size:22px;color:#e8c44a">→</div>
+            <div style="font-size:22px;color:var(--dart-gold)">→</div>
             <div style="text-align:center">
-              <div style="font-size:10px;color:#666">JETZT</div>
+              <div style="font-size:10px;color:var(--dart-text-muted)">JETZT</div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:${afterColor}">${avgAfter}</div>
-              <div style="font-size:10px;color:#555">${gamesBefore+1} Spiele</div>
+              <div style="font-size:10px;color:var(--dart-text-muted)">${gamesBefore+1} Spiele</div>
             </div>
           </div>
           <div style="text-align:center;margin-top:8px;font-size:12px;color:${statusColor}">${statusText} (${delta})</div>
@@ -684,13 +684,13 @@ export function showTargetOverlay(show){
     overlay.id="target-practice-overlay";
     overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px";
     overlay.innerHTML=`
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#e8c44a">ZIEL-TRAINING</div>
-      <div style="font-size:16px;color:#ccc">Was willst du treffen?</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--dart-gold)">ZIEL-TRAINING</div>
+      <div style="font-size:16px;color:var(--dart-text-sec)">Was willst du treffen?</div>
       <div id="tp-target-btns" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:320px"></div>
-      <button id="tp-custom-btn" style="padding:8px 18px;background:#333;border:1px solid #555;color:#aaa;border-radius:8px;font-size:13px;cursor:pointer">Eigenes ▼</button>
+      <button id="tp-custom-btn" style="padding:8px 18px;background:var(--dart-bg-chip);border:1px solid var(--dart-border-alt);color:var(--dart-text-sec);border-radius:8px;font-size:13px;cursor:pointer">Eigenes ▼</button>
       <div id="tp-custom-row" style="display:none;gap:8px">
-        <input id="tp-custom-input" placeholder="z.B. T20" style="padding:8px;background:#222;border:1px solid #555;color:#fff;border-radius:8px;width:80px;font-size:15px;text-align:center"/>
-        <button id="tp-custom-ok" style="padding:8px 14px;background:#e8c44a;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">OK</button>
+        <input id="tp-custom-input" placeholder="z.B. T20" style="padding:8px;background:var(--dart-bg-chip);border:1px solid var(--dart-border-alt);color:var(--dart-text);border-radius:8px;width:80px;font-size:15px;text-align:center"/>
+        <button id="tp-custom-ok" style="padding:8px 14px;background:var(--dart-gold);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">OK</button>
       </div>`;
     document.body.appendChild(overlay);
 
@@ -698,7 +698,7 @@ export function showTargetOverlay(show){
     const btnWrap=overlay.querySelector("#tp-target-btns");
     quickTargets.forEach(t=>{
       const b=document.createElement("button");
-      b.style.cssText="padding:10px 14px;background:#222;border:2px solid #444;color:#fff;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer";
+      b.style.cssText="padding:10px 14px;background:var(--dart-bg-chip);border:2px solid var(--dart-border);color:var(--dart-text);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;cursor:pointer";
       b.textContent=t;
       b.addEventListener("click",()=>{ setTargetAndHide(t); });
       btnWrap.appendChild(b);
