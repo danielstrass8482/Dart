@@ -24,31 +24,37 @@
 /* ── Home tabs ── */
 .home-tabs {
   display: flex;
+  height: 74px;
   background: rgba(11,11,14,.92);
   backdrop-filter: blur(12px);
-  border-top: 1px solid var(--dart-divider);
+  border-top: 1px solid #1a1a1f;
   flex-shrink: 0;
   width: 100%;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding-top: 13px;
 }
 .home-tab {
   flex: 1;
-  padding: 10px 0 8px;
+  padding: 0;
   border: none;
-  border-top: 2px solid transparent;
   background: none;
-  color: var(--dart-text-muted);
+  color: #6E6E78;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .1em;
   cursor: pointer;
-  transition: color .2s, border-color .2s;
+  transition: color .2s;
   white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
 }
 .home-tab.active {
-  color: var(--dart-gold);
-  border-top-color: var(--dart-gold);
+  color: #D4AF37;
 }
 .home-tab-content { display: none; }
 .home-tab-content.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
@@ -79,7 +85,7 @@
 .sub-tab-content.active { display:flex; }
 
 /* ── Profil-Tab ── */
-.profil-section { background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:18px;margin-bottom:14px; }
+.profil-section { background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:16px;padding:14px 16px;margin-bottom:14px; }
 .profil-section-title { font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;
   text-transform:uppercase;letter-spacing:.1em;color:var(--dart-text-muted);margin-bottom:8px; }
 
@@ -159,18 +165,19 @@
 [id$="-slider"]::before {
   content: '';
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 21px;
+  height: 21px;
   border-radius: 50%;
-  background: var(--dart-text);
+  background: #6E6E78;
   top: 3px;
   left: 3px;
-  transition: transform .2s;
+  transition: transform .2s, background .2s;
   box-shadow: 0 1px 4px rgba(0,0,0,.4);
   pointer-events: none;
 }
 input:checked + [id$="-slider"]::before {
-  transform: translateX(20px);
+  background: #0c0b08;
+  transform: translateX(19px);
 }
 
 /* ── Theme switcher (future) ── */
