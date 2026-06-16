@@ -681,12 +681,21 @@ document.getElementById("btn-profil-google")?.addEventListener("click",async()=>
 
 // ── Settings toggles ──────────────────────────────────────────────
 const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", health:"dart_health_enabled", targetpractice:"dart_target_practice" };
+function updateToggleVisual(slider, isOn){
+  slider.style.background=isOn?"linear-gradient(135deg,#F4D77E,#C9A227)":"#26262C";
+  const knob=slider.querySelector(":scope > div")||slider.firstElementChild;
+  if(knob){
+    knob.style.left=isOn?"auto":"3px";
+    knob.style.right=isOn?"3px":"auto";
+    knob.style.background=isOn?"#0c0b08":"#6E6E78";
+  }
+}
 window.toggleSetting = function(key){
   const cb=document.getElementById("setting-"+key);
   const slider=document.getElementById("setting-"+key+"-slider");
   if(!cb||!SETTING_KEYS[key]) return;
   cb.checked=!cb.checked;
-  slider.style.background=cb.checked?"linear-gradient(135deg,#F4D77E,#C9A227)":"#26262C";
+  updateToggleVisual(slider, cb.checked);
   localStorage.setItem(SETTING_KEYS[key], cb.checked?"true":"false");
   applySettings();
 };
@@ -696,7 +705,7 @@ window.toggleSetting = function(key){
     const sl=document.getElementById("setting-"+k+"-slider");
     if(!cb||!sl) return;
     cb.checked=localStorage.getItem(lsKey)!=="false";
-    sl.style.background=cb.checked?"linear-gradient(135deg,#F4D77E,#C9A227)":"#26262C";
+    updateToggleVisual(sl, cb.checked);
   });
   applySettings();
 })();
