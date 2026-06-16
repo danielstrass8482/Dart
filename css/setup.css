@@ -16,11 +16,6 @@
 .auth-error { color:var(--dart-danger);font-size:12px;min-height:16px;margin-bottom:8px;text-align:center; }
 .auth-link { background:none;border:none;color:var(--dart-text-sec);font-size:13px;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif; }
 
-/* ── Profile modal ── */
-.profile-modal-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center; }
-.profile-modal-backdrop.visible { display:flex; }
-.profile-modal { background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:16px;padding:24px;width:90%;max-width:320px;position:relative; }
-
 /* ── Home tabs ── */
 .home-tabs {
   display: flex;
@@ -42,9 +37,9 @@
   color: #6E6E78;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
-  font-size: 10px;
+  font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: .1em;
+  letter-spacing: .04em;
   cursor: pointer;
   transition: color .2s;
   white-space: nowrap;
@@ -54,7 +49,10 @@
   gap: 5px;
 }
 .home-tab.active {
-  color: #D4AF37;
+  color: var(--dart-gold);
+  border-top: 2px solid var(--dart-gold);
+  border-bottom: none;
+  background: none;
 }
 .home-tab-content { display: none; }
 .home-tab-content.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }

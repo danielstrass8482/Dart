@@ -77,6 +77,17 @@ export function buildBoard(svgEl){
     return e;
   }
 
+  // ── Marker glow filter (used for the most recent hit dot) ─────
+  const defs=document.createElementNS(ns,"defs");
+  const filter=el("filter",{id:svgEl.id+"-markerGlow",x:"-50%",y:"-50%",width:"200%",height:"200%"});
+  const blur=el("feGaussianBlur",{stdDeviation:"2",result:"blur"});
+  const merge=document.createElementNS(ns,"feMerge");
+  merge.appendChild(el("feMergeNode",{in:"blur"}));
+  merge.appendChild(el("feMergeNode",{in:"SourceGraphic"}));
+  filter.appendChild(blur); filter.appendChild(merge);
+  defs.appendChild(filter);
+  svgEl.appendChild(defs);
+
   // ── Miss-Ring background (drawn first, behind everything) ─────
   svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"243",fill:"#16110F"}));
   svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"242",fill:"none",
@@ -145,34 +156,38 @@ export function buildBoard(svgEl){
  * @param {SVGElement} svgEl
  * @param {number} x
  * @param {number} y
- * @param {boolean} faded
  * @param {boolean} isMiss
+ * @param {boolean} recent marks the most recent throw with a glow ring
  */
-export function addHitDot(svgEl, x, y, faded=false, isMiss=false){
+export function addHitDot(svgEl, x, y, isMiss=false, recent=false){
   const ns="http://www.w3.org/2000/svg";
   const g=svgEl.querySelector("#"+svgEl.id+"-hits");
   const markerFill=isMiss
-    ?(faded?"rgba(220,50,50,.4)":"#e53935")
-    :(faded?"rgba(244,215,126,.4)":"#F4D77E");
+    ?(recent?"#e53935":"rgba(220,50,50,.5)")
+    :(recent?"#F4D77E":"rgba(244,215,126,.5)");
+  const glowColor=isMiss?"rgba(220,50,50,.35)":"rgba(244,215,126,.35)";
 
-  const shadow=document.createElementNS(ns,"circle");
-  shadow.setAttribute("cx",x); shadow.setAttribute("cy",y); shadow.setAttribute("r","8");
-  shadow.setAttribute("fill","rgba(0,0,0,.5)");
+  if(recent){
+    const glow=document.createElementNS(ns,"circle");
+    glow.setAttribute("cx",x); glow.setAttribute("cy",y); glow.setAttribute("r","6");
+    glow.setAttribute("fill","none");
+    glow.setAttribute("stroke",glowColor); glow.setAttribute("stroke-width","3");
+    glow.setAttribute("filter","url(#"+svgEl.id+"-markerGlow)");
+    g.appendChild(glow);
+  }
 
   const marker=document.createElementNS(ns,"circle");
-  marker.setAttribute("cx",x); marker.setAttribute("cy",y); marker.setAttribute("r","6.5");
+  marker.setAttribute("cx",x); marker.setAttribute("cy",y); marker.setAttribute("r","3");
   marker.setAttribute("fill",markerFill);
-  marker.setAttribute("stroke","#0c0b08"); marker.setAttribute("stroke-width","1.8");
+  marker.setAttribute("stroke",recent?"#0c0b08":"rgba(0,0,0,.3)");
+  marker.setAttribute("stroke-width",recent?"1":"0.5");
+  if(recent) marker.setAttribute("filter","url(#"+svgEl.id+"-markerGlow)");
 
-  const dot=document.createElementNS(ns,"circle");
-  dot.setAttribute("cx",x); dot.setAttribute("cy",y); dot.setAttribute("r","2");
-  dot.setAttribute("fill","#0c0b08");
-
-  g.appendChild(shadow); g.appendChild(marker); g.appendChild(dot);
+  g.appendChild(marker);
 }
 
 /**
- * Redraws all hit dots (historic faded, current bright).
+ * Redraws all hit dots (historic faded, current bright, last one glowing).
  * @param {SVGElement} svgEl
  * @param {Array} allThrows
  * @param {Array} currentThrows
@@ -180,8 +195,9 @@ export function addHitDot(svgEl, x, y, faded=false, isMiss=false){
 export function redrawAllHits(svgEl, allThrows, currentThrows){
   const g=svgEl.querySelector("#"+svgEl.id+"-hits");
   if(g) g.innerHTML="";
-  allThrows.forEach(t=>{ if(t.svgX!=null) addHitDot(svgEl, t.svgX, t.svgY, true, t.miss||false); });
-  currentThrows.forEach(t=>{ if(t.svgX!=null) addHitDot(svgEl, t.svgX, t.svgY, false, t.miss||false); });
+  const lastIdx=currentThrows.length-1;
+  allThrows.forEach(t=>{ if(t.svgX!=null) addHitDot(svgEl, t.svgX, t.svgY, t.miss||false, false); });
+  currentThrows.forEach((t,i)=>{ if(t.svgX!=null) addHitDot(svgEl, t.svgX, t.svgY, t.miss||false, i===lastIdx); });
 }
 
 /**

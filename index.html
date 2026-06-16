@@ -133,44 +133,6 @@
     <button class="home-tab" data-tab="profil">⚙️ PROFIL</button>
   </div>
 
-  <!-- Profile button (absolute, top-right) -->
-  <div id="profile-btn" style="position:absolute;top:8px;right:12px;z-index:10;cursor:pointer;
-    width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-family:'Bebas Neue',sans-serif;font-size:15px;background:var(--dart-border);color:var(--dart-text-muted);
-    overflow:hidden;flex-shrink:0"></div>
-
-  <!-- Profile modal -->
-  <div class="profile-modal-backdrop" id="profile-modal-backdrop">
-    <div class="profile-modal">
-      <button id="btn-profile-close" style="position:absolute;top:12px;right:14px;background:none;
-        border:none;color:var(--dart-text-muted);font-size:20px;cursor:pointer;line-height:1">✕</button>
-      <div id="profile-name" style="font-weight:600;color:var(--dart-text);font-size:16px;margin-bottom:2px;padding-right:28px"></div>
-      <div id="profile-email" style="font-size:12px;color:var(--dart-text-muted);margin-bottom:4px"></div>
-      <div id="profile-type" style="font-size:11px;color:var(--dart-text-muted);letter-spacing:1px;margin-bottom:20px"></div>
-
-      <div id="profile-upgrade-section" style="display:none;margin-bottom:16px;padding:16px;
-        background:var(--dart-bg-card);border-radius:10px;border:1px solid var(--dart-border)">
-        <div style="font-size:13px;color:var(--dart-gold);font-weight:600;margin-bottom:4px">⚠ Gast-Modus</div>
-        <div style="font-size:12px;color:var(--dart-text-muted);margin-bottom:12px">Spieldaten gehen verloren wenn du dich abmeldest.</div>
-        <input class="auth-input" id="upgrade-name" type="text" placeholder="Dein Name">
-        <input class="auth-input" id="upgrade-email" type="email" placeholder="Email">
-        <input class="auth-input" id="upgrade-password" type="password" placeholder="Passwort (min. 6 Zeichen)">
-        <div class="auth-error" id="upgrade-error"></div>
-        <button id="btn-upgrade-account" class="auth-btn-primary" style="font-size:15px">ACCOUNT ERSTELLEN</button>
-      </div>
-
-      <button id="btn-profile-reset-pw" style="display:none;width:100%;padding:10px;border:1px solid var(--dart-border);
-        border-radius:8px;background:none;color:var(--dart-text-sec);font-size:14px;cursor:pointer;margin-bottom:8px">
-        🔑 Passwort ändern
-      </button>
-      <button onclick="signOutUser();document.getElementById('profile-modal-backdrop').classList.remove('visible')"
-        style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;
-        color:var(--dart-danger);font-size:14px;cursor:pointer">
-        Abmelden
-      </button>
-    </div>
-  </div>
-
   <!-- TAB: SPIELEN -->
   <div class="home-tab-content active" id="tab-spielen">
 
