@@ -322,12 +322,12 @@ export function detectContext(selectedContext, humans, hasBot){
 
 // ── Player Edit Dialog ────────────────────────────────────────────
 let _editingPlayer = null;
-let _editPhotoFile = null;
+let _pendingPhotoData = null;
 
 /** Opens the player edit dialog for the given player. */
 export function openPlayerEditDialog(player){
   _editingPlayer = player;
-  _editPhotoFile = null;
+  _pendingPhotoData = null;
 
   const backdrop = document.getElementById("player-edit-backdrop");
   const avatarEl = document.getElementById("player-edit-avatar");
@@ -362,7 +362,7 @@ function _closeEditDialog(){
   const backdrop = document.getElementById("player-edit-backdrop");
   if(backdrop) backdrop.classList.remove("open");
   _editingPlayer = null;
-  _editPhotoFile = null;
+  _pendingPhotoData = null;
 }
 
 // Wire edit dialog events once DOM is ready
@@ -380,9 +380,12 @@ document.addEventListener("DOMContentLoaded", ()=>{
     photoInput.addEventListener("change", (e)=>{
       const file = e.target.files?.[0];
       if(!file) return;
-      _editPhotoFile = file;
-      const url = URL.createObjectURL(file);
-      avatarEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+      const reader = new FileReader();
+      reader.onload = (ev)=>{
+        _pendingPhotoData = ev.target.result;
+        avatarEl.innerHTML = `<img src="${_pendingPhotoData}" style="width:100%;height:100%;object-fit:cover">`;
+      };
+      reader.readAsDataURL(file);
     });
   }
 
@@ -400,8 +403,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
       try{
         let photoUrl = _editingPlayer.photoUrl||null;
-        if(_editPhotoFile && window.dartDB?.uploadPlayerPhoto){
-          photoUrl = await window.dartDB.uploadPlayerPhoto(_editingPlayer.id, _editPhotoFile);
+        if(_pendingPhotoData && window.dartDB?.uploadPlayerPhoto){
+          const blob = await (await fetch(_pendingPhotoData)).blob();
+          photoUrl = await window.dartDB.uploadPlayerPhoto(_editingPlayer.id, blob);
         }
         const profileData = {
           name,
@@ -419,14 +423,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
         saveBtn.disabled = false;
         saveBtn.textContent = "SPEICHERN";
       }
-    });
-  }
-
-  // Close on backdrop click
-  const backdrop = document.getElementById("player-edit-backdrop");
-  if(backdrop){
-    backdrop.addEventListener("click", (e)=>{
-      if(e.target === backdrop) _closeEditDialog();
     });
   }
 });
