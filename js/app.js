@@ -1016,7 +1016,7 @@ function renderVoiceSelector(){
   list.innerHTML=voices.map((v,i)=>{
     const isActive=v.id===activeId; const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
     const premiumBadge=!v.builtin?` <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
-    return `<div style="border-radius:10px;padding:12px;margin-bottom:8px;border:${isActive?"2px solid var(--dart-gold)":"1px solid var(--dart-border)"};background:${isActive?"var(--dart-bg-chip)":"var(--dart-bg-card)"};transition:all .15s">
+    return `<div style="border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;${isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border-top:1px solid var(--dart-divider);"}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)">🎙️ ${v.name}${premiumBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
       <div style="font-size:11px;color:var(--dart-text-muted);font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
