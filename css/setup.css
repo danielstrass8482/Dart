@@ -20,8 +20,7 @@
 .home-tabs {
   display: flex;
   height: 74px;
-  background: rgba(11,11,14,.92);
-  backdrop-filter: blur(12px);
+  background: #08080A;
   border-top: 1px solid #1a1a1f;
   flex-shrink: 0;
   width: 100%;
@@ -104,7 +103,9 @@
 .bracket-round-title { font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;
   color:var(--dart-text-sec);margin:10px 0 4px; }
 
-.setup-card { background: var(--dart-bg-card); border: 1px solid var(--dart-border); border-radius: 16px; padding: 36px 32px; width: 420px; max-width: 95vw; }
+.setup-card { background: var(--dart-bg-card); border: 1px solid var(--dart-border); border-radius: 16px; padding: 24px 48px; width: 100%; max-width: 960px; }
+#mode-group { display: flex; gap: 12px; }
+#mode-group .btn-toggle { flex: 1; padding: 16px; }
 .logo { text-align: center; margin-bottom: 28px; }
 .logo-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; color: var(--dart-gold); line-height: 1; }
 .logo-sub { color: var(--dart-text-sec); font-size: 12px; letter-spacing: 3px; margin-top: 2px; }
@@ -146,10 +147,13 @@
   border-radius: 4px; cursor: pointer; line-height: 1; transition: all .15s; flex-shrink: 0; }
 .pi-edit:hover { background: rgba(212,175,55,.12); color: var(--dart-gold); }
 .player-edit-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
-  z-index:2000;align-items:flex-end;justify-content:center; }
+  z-index:2000;align-items:flex-start;justify-content:center;padding-top:60px; }
 .player-edit-backdrop.open { display:flex; }
 .player-edit-modal { background:var(--dart-bg-card);border-radius:16px 16px 0 0;padding:24px;
   width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-sizing:border-box; }
+.player-edit-modal input { color: var(--dart-text) !important; background: var(--dart-bg-input);
+  border: 1px solid var(--dart-border); border-radius: 10px; padding: 10px 14px; }
+.player-edit-modal input::placeholder { color: var(--dart-text-muted); }
 .add-player-row { display: flex; gap: 8px; }
 .add-player-input { flex: 1; padding: 8px 12px; border: 1px solid var(--dart-border); border-radius: 8px;
   font-family: 'DM Sans',sans-serif; font-size: 14px; outline: none; background: var(--dart-bg-card); }
