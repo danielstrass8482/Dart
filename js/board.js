@@ -13,7 +13,7 @@ export const R = {
   triOut:  115,
   dblIn:   171,
   dblOut:  184,
-  numR:    194.5,
+  numR:    198,
   board:   214,
   miss:    243
 };
@@ -121,9 +121,9 @@ export function buildBoard(svgEl){
 
   // ── Separator + Gold frame (outside number ring) ──────────────
   svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"208",fill:"none",
-    stroke:"rgba(0,0,0,.55)","stroke-width":"2"}));
+    stroke:"rgba(0,0,0,.7)","stroke-width":"2"}));
   svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"213",fill:"none",
-    stroke:"#8f7327","stroke-width":"1.5"}));
+    stroke:"#C9A227","stroke-width":"2.5"}));
 
   // ── Groups for dynamic content ────────────────────────────────
   const coG=document.createElementNS(ns,"g");
