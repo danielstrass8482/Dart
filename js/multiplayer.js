@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { startX01, processX01Hit, advanceX01 } from './x01.js';
+import { startX01, processX01Hit, advanceX01 } from './x01.js?v=2';
 import { soundHit } from './audio.js';
 
 export let onlineMode="501", onlineLegs=1, onlineSets=1;

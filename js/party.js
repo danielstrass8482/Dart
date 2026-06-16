@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js';
+import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js?v=2';
 import { soundHit, soundApplause, soundBust, speak, speakScoreWithCustom } from './audio.js';
 
 export let boardSVGparty;

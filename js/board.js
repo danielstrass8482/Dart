@@ -366,7 +366,7 @@ export function svgCoords(svgEl,e){
 export function drawMiniBoard(svgEl, dots){
   const ns="http://www.w3.org/2000/svg";
   svgEl.innerHTML="";
-  svgEl.setAttribute("viewBox","-38 -38 496 496");
+  svgEl.setAttribute("viewBox","0 0 420 420");
   function mkEl(tag,attrs){ const e=document.createElementNS(ns,tag); for(const[k,v] of Object.entries(attrs)) e.setAttribute(k,v); return e; }
   const cx=CX, cy=CY;
   svgEl.appendChild(mkEl("circle",{cx,cy,r:R.board,fill:"#0c0b09"}));

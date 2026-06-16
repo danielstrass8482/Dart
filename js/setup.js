@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { startX01 } from './x01.js';
+import { startX01 } from './x01.js?v=2';
 import { startCricket } from './cricket.js';
 import { startParty } from './party.js';
 import { collectHealthData } from './coach.js';

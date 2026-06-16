@@ -19,7 +19,7 @@ import {
   buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout,
   disableBoard, highlightCheckout, drawMiniBoard, SECTORS, R, CX, CY,
   slicePath, CRICKET_TARGETS
-} from './board.js';
+} from './board.js?v=2';
 
 // ── Audio ────────────────────────────────────────────────────────
 import {
@@ -36,7 +36,7 @@ import { initMic, startMic, stopMic, setVoiceFeedback, announceRequires, maybeRe
 import { runBotTurn, BOT_PERSONALITIES } from './bot.js';
 
 // ── X01 ──────────────────────────────────────────────────────────
-import { startX01, renderX01, handleX01Click, processX01Hit, advanceX01, handleLegWin, showWinner, handleBouncer, trackDoubleAttempt, getDoubleStatsForCoach, showTargetOverlay, showTargetFeedback, calcTargetDistance } from './x01.js';
+import { startX01, renderX01, handleX01Click, processX01Hit, advanceX01, handleLegWin, showWinner, handleBouncer, trackDoubleAttempt, getDoubleStatsForCoach, showTargetOverlay, showTargetFeedback, calcTargetDistance } from './x01.js?v=2';
 
 // ── Cricket ──────────────────────────────────────────────────────
 import { startCricket, renderCricket, handleCricketClick, advanceCricket, setCricketBoard } from './cricket.js';
@@ -50,7 +50,7 @@ import {
   showSetup, showSpielenCards, showSpielenSection, saveGameToFirebase,
   updateAllPlayerStats, updateAuthUI, applySettings, BOT_PERSONALITY_DESCS,
   updateRotateOverlay, detectContext
-} from './setup.js';
+} from './setup.js?v=2';
 
 // ── Stats ────────────────────────────────────────────────────────
 import {
