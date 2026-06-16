@@ -69,7 +69,7 @@ export function hitFromXY(sx,sy){
  */
 export function buildBoard(svgEl){
   svgEl.innerHTML="";
-  svgEl.setAttribute("viewBox","-38 -38 496 496");
+  svgEl.setAttribute("viewBox","0 0 420 420");
   const ns="http://www.w3.org/2000/svg";
   function el(tag,attrs){
     const e=document.createElementNS(ns,tag);
@@ -88,27 +88,12 @@ export function buildBoard(svgEl){
   defs.appendChild(filter);
   svgEl.appendChild(defs);
 
-  // ── Miss-Ring background (drawn first, behind everything) ─────
-  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"243",fill:"#16110F"}));
-  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"242",fill:"none",
-    stroke:"rgba(255,77,79,.22)","stroke-width":"1"}));
-  const missTop=el("text",{x:CX,y:CY-225,"text-anchor":"middle","dominant-baseline":"central",
-    fill:"rgba(255,92,94,.6)","font-size":"13","font-weight":"800","letter-spacing":"2",
-    "font-family":"Manrope, sans-serif"});
-  missTop.textContent="MISS";
-  svgEl.appendChild(missTop);
-  const missBot=el("text",{x:CX,y:CY+225,"text-anchor":"middle","dominant-baseline":"central",
-    fill:"rgba(255,92,94,.6)","font-size":"13","font-weight":"800","letter-spacing":"2",
-    "font-family":"Manrope, sans-serif"});
-  missBot.textContent="MISS";
-  svgEl.appendChild(missBot);
-
   // ── Board band (dark circle behind segments) ──────────────────
-  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"214",fill:"#0c0b09"}));
+  svgEl.appendChild(el("circle",{cx:CX,cy:CY,r:"215",fill:"#0c0b09"}));
 
   // ── Segments ──────────────────────────────────────────────────
   const cream="#E8DCBE", black="#17150F", red="#C8362B", green="#1E9B55";
-  const so={"stroke":"#070708","stroke-width":"1.4"};
+  const so={"stroke":"#070708","stroke-width":"1"};
   for(let i=0;i<20;i++){
     const even=i%2===0;
     const singleFill=even?black:cream;

@@ -11,7 +11,7 @@
 
 /* Board wrap — always square SVG centered */
 .board-wrap { flex: 1; min-height: 0; min-width: 0; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.board-wrap svg { touch-action: none; user-select: none; display: block; aspect-ratio: 1 / 1; width: 100%; height: 100%; max-width: min(100vw, 100%); max-height: 100%; object-fit: contain; }
+.board-wrap svg { touch-action: none; user-select: none; display: block; shape-rendering: crispEdges; aspect-ratio: 1 / 1; width: 100%; height: 100%; max-width: min(100vw, 100%); max-height: 100%; object-fit: contain; }
 #board-svg, #board-svg-cricket, #board-svg-party { touch-action: none; user-select: none; }
 
 /* ── Landscape: side-by-side ── */
@@ -33,7 +33,7 @@
 .score-cell.active { background: linear-gradient(150deg, rgba(212,175,55,.13) 0%, rgba(212,175,55,.02) 100%); border-bottom: 3px solid #D4AF37; animation: glowPulse 2.6s ease-in-out infinite; }
 .score-cell .sc-name { font-size: 10px; color: var(--dart-text-muted); letter-spacing: 1px; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .score-cell.active .sc-name { color: var(--dart-gold); }
-.score-cell .sc-score { font-size: 32px; font-weight: 800; color: #9A9AA2; line-height: 1; font-variant-numeric: tabular-nums; }
+.score-cell .sc-score { font-family: 'Manrope', sans-serif !important; font-variant-numeric: tabular-nums; font-size: 32px; font-weight: 800; color: #9A9AA2; line-height: 1; }
 .score-cell .sc-throws { font-size: 11px; color: var(--dart-text-muted); margin-top: 2px; min-height: 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 3px; }
 
 /* ── Bottom controls bar (portrait) ── */
@@ -63,11 +63,11 @@
 .lp-player.active { background: linear-gradient(150deg, rgba(212,175,55,.13), rgba(212,175,55,.02)); border-left: 3px solid #D4AF37; animation: glowPulse 2.6s ease-in-out infinite; }
 .lp-player .lp-name { font-size: 10px; color: var(--dart-text-sec); letter-spacing: 1px; }
 .lp-player.active .lp-name { color: var(--dart-gold); }
-.lp-player .lp-score { font-size: 32px; font-weight: 800; color: #9A9AA2; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.lp-player .lp-score { font-family: 'Manrope', sans-serif !important; font-variant-numeric: tabular-nums; font-size: 32px; font-weight: 800; color: #9A9AA2; line-height: 1; letter-spacing: -0.04em; }
 .lp-player .lp-throws { font-size: 11px; color: var(--dart-text-muted); margin-top: 2px; }
 .lp-player .lp-sub { font-size: 10px; color: var(--dart-text-muted); }
 .lp-controls { padding: 10px 12px; border-bottom: 1px solid var(--dart-border); display: flex; flex-direction: column; gap: 6px; }
-.lp-remaining { font-family: 'Bebas Neue', sans-serif; font-size: 60px; font-weight: 800; color: var(--dart-text); text-align: center; line-height: 1; }
+.lp-remaining { font-family: 'Manrope', sans-serif !important; font-variant-numeric: tabular-nums; font-size: 60px; font-weight: 800; color: var(--dart-text); text-align: center; line-height: 1; }
 .lp-checkout { font-size: 12px; color: var(--dart-gold); text-align: center; transition: padding .2s, background .2s; }
 .lp-checkout:not(:empty) {
   background: linear-gradient(135deg, rgba(212,175,55,.18), rgba(212,175,55,.06));
@@ -105,7 +105,7 @@
 .throw-slot.bust { background: rgba(200,54,43,.12); border: 1px solid var(--dart-danger); }
 .bust-label { color: var(--dart-danger); text-align: center; margin-top: 8px; font-size: 13px; font-weight: 600; }
 .remaining-box { text-align: center; }
-.remaining-num { font-family: 'Bebas Neue', sans-serif; font-size: 66px; font-weight: 800; letter-spacing: -0.04em; color: var(--dart-text); line-height: 1.1; }
+.remaining-num { font-family: 'Manrope', sans-serif !important; font-variant-numeric: tabular-nums; font-size: 66px; font-weight: 800; letter-spacing: -0.04em; color: var(--dart-text); line-height: 1.1; }
 .checkout-label { font-size: 10px; color: var(--dart-text-sec); letter-spacing: 1px; margin-top: 4px; }
 .checkout-suggestion { color: var(--dart-success); font-size: 13px; font-weight: 600; margin-top: 2px; }
 .throw-sum { color: var(--dart-text-sec); font-size: 12px; text-align: center; }
