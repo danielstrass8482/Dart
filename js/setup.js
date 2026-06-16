@@ -294,7 +294,7 @@ export async function updateAllPlayerStats(){
   }catch(e){ console.warn("updatePlayerStats failed",e); }
 }
 
-/** Updates the auth UI (profile button + auth bar). */
+/** Updates the auth UI (auth bar). */
 export function updateAuthUI(user){
   const bar=document.getElementById("auth-bar");
   if(bar){
@@ -304,26 +304,6 @@ export function updateAuthUI(user){
     } else {
       bar.innerHTML=`<button onclick="signInWithGoogle()" style="background:var(--dart-bg-card);border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px"> Mit Google anmelden</button>`;
-    }
-  }
-  const profBtn = document.getElementById("profile-btn");
-  if(profBtn){
-    if(user && !user.isAnonymous){
-      const name = user.displayName || user.email || "?";
-      if(user.photoURL){
-        profBtn.innerHTML=`<img src="${user.photoURL}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
-        profBtn.style.background="transparent";
-      } else {
-        const initials = name.charAt(0).toUpperCase();
-        const col = playerColor(name);
-        profBtn.textContent = initials;
-        profBtn.style.background = col;
-        profBtn.style.color = "var(--dart-text)";
-      }
-    } else {
-      profBtn.textContent = "👤";
-      profBtn.style.background = "var(--dart-border)";
-      profBtn.style.color = "var(--dart-text-muted)";
     }
   }
 }

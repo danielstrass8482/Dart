@@ -609,40 +609,6 @@ document.getElementById("btn-email-register").addEventListener("click",async()=>
 });
 document.getElementById("btn-google-register").addEventListener("click",async()=>{ authError("reg-error",""); try{ await window.signInWithGoogle(); }catch(e){ authError("reg-error",e.message); } });
 
-// ── Profile modal ─────────────────────────────────────────────────
-function openProfileModal(){
-  const user = window.currentUser;
-  if(!user) return;
-  document.getElementById("profile-name").textContent = user.displayName || "Gast";
-  document.getElementById("profile-email").textContent = user.isAnonymous ? "" : (user.email||"");
-  const typeMap = {google:"GOOGLE ACCOUNT", password:"EMAIL ACCOUNT", anonymous:"GAST-MODUS"};
-  const provId = user.providerData?.[0]?.providerId || (user.isAnonymous?"anonymous":"");
-  document.getElementById("profile-type").textContent = typeMap[provId] || provId.toUpperCase();
-  document.getElementById("profile-upgrade-section").style.display = user.isAnonymous ? "" : "none";
-  const resetBtn = document.getElementById("btn-profile-reset-pw");
-  if(resetBtn) resetBtn.style.display = (!user.isAnonymous && provId==="password") ? "" : "none";
-  document.getElementById("profile-modal-backdrop").classList.add("visible");
-}
-document.getElementById("profile-btn")?.addEventListener("click", openProfileModal);
-document.getElementById("btn-profile-close").addEventListener("click",()=>{ document.getElementById("profile-modal-backdrop").classList.remove("visible"); });
-document.getElementById("profile-modal-backdrop").addEventListener("click",e=>{
-  if(e.target === document.getElementById("profile-modal-backdrop")) document.getElementById("profile-modal-backdrop").classList.remove("visible");
-});
-document.getElementById("btn-profile-reset-pw").addEventListener("click",async()=>{
-  const user = window.currentUser;
-  if(!user||!user.email) return;
-  try{ await window.resetPassword(user.email); alert("Reset-Email gesendet an "+user.email); }catch(e){ alert(e.message); }
-});
-document.getElementById("btn-upgrade-account").addEventListener("click",async()=>{
-  const name = document.getElementById("upgrade-name").value.trim();
-  const email = document.getElementById("upgrade-email").value.trim();
-  const pw = document.getElementById("upgrade-password").value;
-  authError("upgrade-error","");
-  if(!name||!email||pw.length<6){ authError("upgrade-error","Alle Felder ausfüllen (PW min. 6 Zeichen)."); return; }
-  try{ await window.upgradeAnonymousAccount(email, pw, name); document.getElementById("profile-modal-backdrop").classList.remove("visible"); alert("Account erstellt! Deine Spieldaten wurden übernommen."); }
-  catch(e){ authError("upgrade-error", e.code==="auth/email-already-in-use"?"Diese Email ist bereits vergeben.":e.message); }
-});
-
 // ── Profil-Tab ────────────────────────────────────────────────────
 function initProfilTab(){
   const user=window.currentUser;
