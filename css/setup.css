@@ -162,25 +162,6 @@
 
 /* duplicate removed — see "Home tabs" block above */
 
-/* ── Settings toggle knob ── */
-[id$="-slider"]::before {
-  content: '';
-  position: absolute;
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
-  background: #6E6E78;
-  top: 3px;
-  left: 3px;
-  transition: transform .2s, background .2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.4);
-  pointer-events: none;
-}
-input:checked + [id$="-slider"]::before {
-  background: #0c0b08;
-  transform: translateX(19px);
-}
-
 /* ── Theme switcher (future) ── */
 .theme-btn { flex: 1; padding: 12px; border: 2px solid var(--dart-border); border-radius: 10px;
   background: var(--dart-bg-chip); color: var(--dart-text-muted); font-size: 13px;
