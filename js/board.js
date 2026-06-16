@@ -69,7 +69,7 @@ export function hitFromXY(sx,sy){
  */
 export function buildBoard(svgEl){
   svgEl.innerHTML="";
-  svgEl.setAttribute("viewBox","0 0 430 430");
+  svgEl.setAttribute("viewBox","-3 -3 426 426");
   const ns="http://www.w3.org/2000/svg";
   function el(tag,attrs){
     const e=document.createElementNS(ns,tag);
