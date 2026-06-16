@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout } from './board.js';
+import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout } from './board.js?v=2';
 import { soundBust, soundHit, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue } from './audio.js';
 import { startMic, stopMic, maybeRestartMic, setVoiceFeedback, announceRequires, micEnabled, micActive } from './speech.js';
 import { runBotTurn } from './bot.js';

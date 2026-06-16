@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { drawMiniBoard } from './board.js';
+import { drawMiniBoard } from './board.js?v=2';
 import { loadCoachHistoryStats } from './coach.js';
 
 export let statsSelectedPlayer = null;

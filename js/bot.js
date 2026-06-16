@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { soundHit, soundBust, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom } from './audio.js';
-import { SECTORS, R, clearCheckout, disableBoard, redrawAllHits } from './board.js';
+import { SECTORS, R, clearCheckout, disableBoard, redrawAllHits } from './board.js?v=2';
 
 export const BOT_ACCURACY={ easy:0.22, medium:0.52, pro:0.82 };
 
