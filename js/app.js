@@ -633,6 +633,7 @@ function initProfilTab(){
   renderVoiceSelector();
   syncVoicesFromFirestore();
   renderProfilPlayerList();
+  initToggles();
 }
 
 function renderPremiumStatus(isAnon, displayName, email){
@@ -680,35 +681,47 @@ document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=
 document.getElementById("btn-profil-google")?.addEventListener("click",async()=>{ try{ await window.signInWithGoogle(); initProfilTab(); }catch(e){} });
 
 // ── Settings toggles ──────────────────────────────────────────────
-const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", health:"dart_health_enabled", targetpractice:"dart_target_practice" };
-function updateToggleVisual(slider, isOn){
+// Checkbox lives inside its <label>, so a native click already toggles
+// it once; an additional manual toggle (old onclick-based approach)
+// raced with that and made the switch flip back on alternating clicks.
+// Fix: rely solely on the checkbox's own "change" event, and clone+replace
+// it on every init so re-opening the Profil tab can't stack listeners.
+const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", health:"dart_health_enabled" };
+const SETTING_DEFAULTS = { tts:true, mic:true, checkout:true, health:true };
+
+function updateToggleVisual(checkbox){
+  const isOn=checkbox.checked;
+  const slider=document.getElementById(checkbox.id+"-slider");
+  if(!slider) return;
   slider.style.background=isOn?"linear-gradient(135deg,#F4D77E,#C9A227)":"#26262C";
-  const knob=slider.querySelector(":scope > div")||slider.firstElementChild;
-  if(knob){
-    knob.style.left=isOn?"auto":"3px";
-    knob.style.right=isOn?"3px":"auto";
-    knob.style.background=isOn?"#0c0b08":"#6E6E78";
-  }
+  const knob=slider.firstElementChild;
+  if(!knob) return;
+  knob.style.left=isOn?"auto":"3px";
+  knob.style.right=isOn?"3px":"auto";
+  knob.style.background=isOn?"#0c0b08":"#6E6E78";
 }
-window.toggleSetting = function(key){
-  const cb=document.getElementById("setting-"+key);
-  const slider=document.getElementById("setting-"+key+"-slider");
-  if(!cb||!SETTING_KEYS[key]) return;
-  cb.checked=!cb.checked;
-  updateToggleVisual(slider, cb.checked);
-  localStorage.setItem(SETTING_KEYS[key], cb.checked?"true":"false");
-  applySettings();
-};
-(function initSettings(){
-  Object.entries(SETTING_KEYS).forEach(([k, lsKey])=>{
-    const cb=document.getElementById("setting-"+k);
-    const sl=document.getElementById("setting-"+k+"-slider");
-    if(!cb||!sl) return;
-    cb.checked=localStorage.getItem(lsKey)!=="false";
-    updateToggleVisual(sl, cb.checked);
+
+function initToggles(){
+  Object.entries(SETTING_KEYS).forEach(([key, lsKey])=>{
+    const old=document.getElementById("setting-"+key);
+    if(!old) return;
+    const stored=localStorage.getItem(lsKey);
+    const isOn=stored!==null?stored==="true":SETTING_DEFAULTS[key];
+
+    const fresh=old.cloneNode(true);
+    fresh.checked=isOn;
+    old.parentNode.replaceChild(fresh, old);
+    updateToggleVisual(fresh);
+
+    fresh.addEventListener("change",()=>{
+      localStorage.setItem(lsKey, fresh.checked?"true":"false");
+      updateToggleVisual(fresh);
+      applySettings();
+    });
   });
   applySettings();
-})();
+}
+initToggles();
 
 // ── Coach (winner overlay) ────────────────────────────────────────
 let coachSelectedPlayerIdx=0;
