@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { numToWords } from './audio.js';
 import { getDoubleStatsForCoach } from './x01.js?v=2';
+import { t } from './i18n.js';
 
 export const COACH_DAILY_LIMIT = 999;
 export const COACH_STORAGE_KEY = "dart_coach_usage";
@@ -333,33 +334,33 @@ export async function callCoach(prompt, outputEl, limitEl, btnEl){
     return;
   }
   btnEl.disabled=true;
-  btnEl.textContent="Analysiere…";
-  outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div><span style="color:var(--dart-text-sec)">Coach denkt nach…</span></div>`; window.refreshIcons?.();
+  btnEl.textContent=t('coach_analysiere');
+  outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div><span style="color:var(--dart-text-sec)">${t('coach_denkt')}</span></div>`; window.refreshIcons?.();
   try{
     const data = await callClaudeViaProxy([{role:"user",content:prompt}]);
     const text = data.content?.[0]?.text || "Keine Antwort erhalten.";
     const count = recordCoachUsage();
     const newLeft = COACH_DAILY_LIMIT - count;
     outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE</div>${formatCoachText(text)}</div>`; window.refreshIcons?.();
-    if(limitEl) limitEl.textContent=`${newLeft} von ${COACH_DAILY_LIMIT} Analysen heute verbleibend`;
-    btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> NEUE ANALYSE`; window.refreshIcons?.();
+    if(limitEl) limitEl.textContent=`${newLeft} / ${COACH_DAILY_LIMIT} ${t('coach_limit')} ${t('coach_verbleibend')}`;
+    btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('coach_neue_analyse')}`; window.refreshIcons?.();
     btnEl.disabled = newLeft<=0;
   }catch(e){
     if(e.status===429){
       const d=e.data||{};
-      outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-warning)"><div class="coach-header" style="color:var(--dart-warning)"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> TAGESLIMIT ERREICHT</div>Du hast heute bereits ${d.used??'?'} von ${d.limit??10} Coach-Analysen genutzt.<br><small style="color:var(--dart-text-muted)">Reset um Mitternacht.</small></div>`; window.refreshIcons?.();
+      outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-warning)"><div class="coach-header" style="color:var(--dart-warning)"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${t('coach_limit_erreicht')}</div>Du hast heute bereits ${d.used??'?'} von ${d.limit??10} Coach-Analysen genutzt.<br><small style="color:var(--dart-text-muted)">Reset um Mitternacht.</small></div>`; window.refreshIcons?.();
       btnEl.disabled=true;
       return;
     }
     if(e.status===503){
-      outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div><span style="color:var(--dart-text-muted)">Coach ist momentan nicht verfügbar. Bitte später nochmal versuchen.</span></div>`; window.refreshIcons?.();
+      outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div><span style="color:var(--dart-text-muted)">${t('coach_nicht_verfuegbar')}</span></div>`; window.refreshIcons?.();
       btnEl.disabled=false;
-      btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE`; window.refreshIcons?.();
+      btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('coach_analyse')}`; window.refreshIcons?.();
       return;
     }
     outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-danger)">Fehler: ${e.message}</div>`;
     btnEl.disabled=false;
-    btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE`; window.refreshIcons?.();
+    btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('coach_analyse')}`; window.refreshIcons?.();
   }
 }
 
@@ -498,7 +499,7 @@ export function updateCoachLimitDisplay(){
   const left=coachCallsLeft();
   const limitEl=document.getElementById("coach-limit-winner");
   const btn=document.getElementById("btn-coach-winner");
-  if(limitEl) limitEl.textContent=`${left} von ${COACH_DAILY_LIMIT} Analysen heute verfügbar`;
+  if(limitEl) limitEl.textContent=`${left} / ${COACH_DAILY_LIMIT} ${t('coach_limit')} ${t('coach_verfuegbar')}`;
   if(btn) btn.disabled=left<=0;
   const outputEl=document.getElementById("coach-output-winner");
   if(outputEl) outputEl.innerHTML="";

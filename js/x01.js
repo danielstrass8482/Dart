@@ -7,6 +7,7 @@ import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearChecko
 import { soundBust, soundHit, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue } from './audio.js';
 import { startMic, stopMic, maybeRestartMic, setVoiceFeedback, announceRequires, micEnabled, micActive } from './speech.js';
 import { runBotTurn } from './bot.js';
+import { t } from './i18n.js';
 
 /**
  * Returns appropriate delay (ms) before announcing "requires" based on turn score.
@@ -106,7 +107,7 @@ export function renderX01(){
           }
           <div style="min-width:0">
             <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
-            <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">AM ZUG</div>
+            <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">${t('am_zug')}</div>
           </div>
         </div>`
         :`<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
@@ -121,7 +122,7 @@ export function renderX01(){
         </div>`;
       return `<div class="score-cell${isActive?" active":""}">
         ${activeHeader}
-        ${isActive?`<div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:#7E7E86;margin-top:2px">VERBLEIBEND</div>`:""}
+        ${isActive?`<div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:#7E7E86;margin-top:2px">${t('verbleibend')}</div>`:""}
         <div class="sc-score" style="${scoreStyle}">${playerRemaining}</div>
         <div class="sc-throws">${throwChips}${coHint||(!throwChips?`<span style="color:#7E7E86;font-size:11px;font-weight:700">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`:"")}</div>
       </div>`;
@@ -158,7 +159,7 @@ export function renderX01(){
           }
           <div style="min-width:0">
             <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
-            <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">AM ZUG</div>
+            <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">${t('am_zug')}</div>
           </div>
         </div>`:"";
       const inactivePlayerHtml=`
@@ -174,7 +175,7 @@ export function renderX01(){
         </div>`;
       return `<div class="lp-player${isActive?" active":""}">
         ${isActive?activeAvatarHtml:inactivePlayerHtml}
-        ${isActive?`<div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:#7E7E86;margin-bottom:2px">VERBLEIBEND</div>`:""}
+        ${isActive?`<div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:#7E7E86;margin-bottom:2px">${t('verbleibend')}</div>`:""}
         <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
         <div class="lp-throws">${isActive&&chips?chips:`<span style="color:#7E7E86;font-size:10px;font-weight:700">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`}</div>
       </div>`;
@@ -191,7 +192,7 @@ export function renderX01(){
   }
   const lpCoEl=document.getElementById("lp-checkout");
   if(lpCoEl){
-    if(co){ const dc=co.split(" ").length; lpCoEl.innerHTML=`${co}<br><span style="font-size:10px">${dc}-Dart Finish</span>`; }
+    if(co){ const dc=co.split(" ").length; lpCoEl.innerHTML=`${co}<br><span style="font-size:10px">${dc}-${t('dart_finish')}</span>`; }
     else lpCoEl.textContent="";
   }
   const btrEl=document.getElementById("bottom-remaining");
@@ -213,7 +214,7 @@ export function renderX01(){
   }
 
   // ── Next button ───────────────────────────────────────────────
-  const nextTxt=state.x01.throws.length<3?"ZÄHLEN":"WEITER";
+  const nextTxt=state.x01.throws.length<3?t('zaehlen'):t('weiter');
   ["lp-next","bottom-next"].forEach(id=>{
     const el=document.getElementById(id);
     if(el){ el.style.display=(showNext&&!isBust)?"":"none"; el.textContent=nextTxt; el.className=(id==="lp-next"?"lp-btn":"bottom-btn")+" ok"; }
@@ -224,7 +225,7 @@ export function renderX01(){
   if(titleEl){
     const legInfo=state.cfg.totalSets>1?`Set ${state.cfg.currentSet}/${state.cfg.totalSets} · Leg ${state.cfg.currentLeg}/${state.cfg.totalLegs}`:
       state.cfg.totalLegs>1?`Leg ${state.cfg.currentLeg}/${state.cfg.totalLegs}`:"";
-    titleEl.textContent=`${state.cfg.mode}${legInfo?" · "+legInfo:""} · Runde ${state.x01.round}`;
+    titleEl.textContent=`${state.cfg.mode}${legInfo?" · "+legInfo:""} · ${t('runde')} ${state.x01.round}`;
   }
 
   if(remaining<=170&&remaining>1&&!state.x01.bust) highlightCheckout(state.boardSVG,remaining);
@@ -242,7 +243,7 @@ export function renderTurnTableLP(){
   const maxRounds=Math.max(...state.x01.turnScores.map(a=>a.length),1);
   let html=`<table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="background:var(--dart-bg-chip)">
-      <th style="padding:5px 8px;color:var(--dart-text-muted);font-size:10px;letter-spacing:1px;text-align:left">WURF</th>`;
+      <th style="padding:5px 8px;color:var(--dart-text-muted);font-size:10px;letter-spacing:1px;text-align:left">${t('wurf')}</th>`;
   state.cfg.players.forEach(p=>{ html+=`<th style="padding:5px 6px;color:var(--dart-text-sec);font-size:10px;letter-spacing:1px" colspan="2">${p}</th>`; });
   html+=`</tr></thead><tbody>`;
   let starts=state.cfg.players.map(()=>state.cfg.startScore);
@@ -542,7 +543,7 @@ export function showWinner(name,round){
     ? `${state.cfg.players.map((p,i)=>`${p}: ${state.cfg.setWins[i]} Set${state.cfg.setWins[i]!==1?'s':''}`).join(' | ')}`
     : state.cfg.totalLegs>1
       ? `${state.cfg.legWins.map((w,i)=>state.cfg.players[i]+": "+w+" Leg"+( w!==1?"s":"")).join(" | ")}`
-      : `Runde ${round}`;
+      : `${t('runde')} ${round}`;
   document.getElementById("winner-round").textContent=legInfo;
 
   const sumEl=document.getElementById("winner-summary");

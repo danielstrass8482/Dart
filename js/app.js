@@ -5,6 +5,27 @@
 // ── Firebase (sets window.dartDB etc.) ───────────────────────────
 import './firebase.js';
 
+// ── i18n ─────────────────────────────────────────────────────────
+import { t, setLang, getLang } from './i18n.js';
+
+// ── Browser language detection (first visit only) ─────────────────
+if(!localStorage.getItem('dart_lang')){
+  const browserLang = navigator.language.startsWith('de') ? 'de' : 'en';
+  localStorage.setItem('dart_lang', browserLang);
+}
+
+// ── Apply data-i18n translations ──────────────────────────────────
+document.querySelectorAll('[data-i18n]').forEach(el => {
+  el.textContent = t(el.dataset.i18n);
+});
+
+// ── Input placeholders ────────────────────────────────────────────
+const newPlayerInput = document.getElementById('new-player-input');
+if(newPlayerInput) newPlayerInput.placeholder = t('neuer_spieler');
+const profilNewInput = document.getElementById('profil-new-player-input');
+if(profilNewInput) profilNewInput.placeholder = t('neuer_spieler');
+
+
 // ── Premium ──────────────────────────────────────────────────────
 import { registerBetaUser, BETA_MODE, canUseFeature, showPremiumOverlay } from './premium.js';
 
@@ -609,6 +630,22 @@ document.getElementById("btn-email-register").addEventListener("click",async()=>
 });
 document.getElementById("btn-google-register").addEventListener("click",async()=>{ authError("reg-error",""); try{ await window.signInWithGoogle(); }catch(e){ authError("reg-error",e.message); } });
 
+// ── Language Switcher ─────────────────────────────────────────────
+function initLangSwitcher(){
+  const lang = getLang();
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    const isActive = btn.dataset.lang === lang;
+    btn.style.border = `2px solid ${isActive ? 'var(--dart-gold)' : 'var(--dart-border)'}`;
+    btn.style.background = isActive ? 'var(--dart-accent-bg, rgba(212,175,55,.1))' : 'var(--dart-bg-chip)';
+    btn.style.color = isActive ? 'var(--dart-gold)' : 'var(--dart-text-sec)';
+  });
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+initLangSwitcher();
+
 // ── Profil-Tab ────────────────────────────────────────────────────
 function initProfilTab(){
   const user=window.currentUser;
@@ -625,7 +662,7 @@ function initProfilTab(){
       <div>
         <div style="font-weight:800;font-size:16px;color:#FBFBF8">${displayName}</div>
         <div style="font-size:12px;color:#9A9AA2">${email}</div>
-        <div style="font-size:10px;font-weight:700;color:#6E6E78;letter-spacing:.1em">${isAnon?"GAST-ACCOUNT":"REGISTRIERT"}</div>
+        <div style="font-size:10px;font-weight:700;color:#6E6E78;letter-spacing:.1em">${isAnon?t('gast_account'):t('registriert')}</div>
       </div>
     </div>`;
   if(upgradeEl) upgradeEl.style.display=isAnon?"":"none";
@@ -634,6 +671,7 @@ function initProfilTab(){
   syncVoicesFromFirestore();
   renderProfilPlayerList();
   initToggles();
+  initLangSwitcher();
 }
 
 function renderPremiumStatus(isAnon, displayName, email){
@@ -955,7 +993,7 @@ async function initAnalyseTab(){
   const coachLeft=coachCallsLeft();
   const limitEl=document.getElementById("coach-limit-analyse-tab");
   const coachBtn=document.getElementById("btn-coach-analyse-tab");
-  if(limitEl) limitEl.textContent=`${coachLeft} von ${COACH_DAILY_LIMIT} Analysen heute verfügbar`;
+  if(limitEl) limitEl.textContent=`${coachLeft} / ${COACH_DAILY_LIMIT} ${t('coach_limit')}`;
   if(coachBtn) coachBtn.disabled=coachLeft<=0;
   loadCoachHistoryAnalyseTab(analyseSelectedPlayer);
   renderVoiceSelector(); syncVoicesFromFirestore();

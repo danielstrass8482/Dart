@@ -7,6 +7,7 @@ import { startX01, handleLegWin } from './x01.js?v=2';
 import { startCricket } from './cricket.js';
 import { startParty } from './party.js';
 import { showScreen } from './setup.js?v=2';
+import { t } from './i18n.js';
 
 export let tnFormat="round_robin", tnMode="501", tnLegs=1, tnType="local";
 export let activeTournamentId=null, tournamentUnsubscribe=null;

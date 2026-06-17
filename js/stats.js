@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { drawMiniBoard } from './board.js?v=2';
 import { loadCoachHistoryStats } from './coach.js';
+import { t } from './i18n.js';
 
 export let statsSelectedPlayer = null;
 export let statsRange = 'all';
@@ -299,7 +300,7 @@ export function renderStatsPlayerBar(){
   const bar=document.getElementById("stats-player-bar");
   if(!bar) return;
   let html=`<button class="stats-player-btn${statsSelectedPlayer===null?" active":""}" data-pid="all">
-    Alle Spieler</button>`;
+    ${t('alle_spieler')}</button>`;
   state.allPlayers.forEach(p=>{
     const col=playerColor(p.name);
     const active=statsSelectedPlayer===p.id?" active":"";
@@ -320,7 +321,7 @@ export function renderStatsPlayerBar(){
 export async function loadAndRenderStats(){
   const box=document.getElementById("stats-content");
   if(!box) return;
-  box.innerHTML='<div class="stats-loading">Lade…</div>';
+  box.innerHTML=`<div class="stats-loading">${t('lade')}</div>`;
   if(!window.dartDB){ box.innerHTML='<div class="stats-loading">Datenbank nicht bereit.</div>'; return; }
 
   renderStatsPlayerBar();
@@ -333,7 +334,7 @@ export async function loadAndRenderStats(){
     if(statsContext!=="all"){ games=games.filter(g=>g.context===statsContext||(statsContext==="casual"&&!g.context)); }
 
     if(!games.length){
-      box.innerHTML='<div class="stats-loading">Keine Spiele im gewählten Zeitraum.</div>'; return;
+      box.innerHTML=`<div class="stats-loading">${t('keine_spiele')}</div>`; return;
     }
 
     const getPlayerData=(pid)=>games.flatMap(g=>(g.players||[]).filter(p=>pid?p.id===pid:true));
@@ -366,31 +367,31 @@ export async function loadAndRenderStats(){
     if(x01Games.length>0){
       html+=`<div class="stats-section-title" style="font-size:13px;color:var(--dart-text-sec)">501 / 301</div>`;
       html+=`<div class="stats-grid">
-        <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${x01Games.length}</div></div>
-        <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${wins}</div><div class="s-sub">${x01Games.length?Math.round(wins/x01Games.length*100):0}% Quote</div></div>
-        <div class="stat-card"><div class="s-label">⌀ AUFNAHME</div><div class="s-value">${avg||"—"}</div></div>
-        <div class="stat-card"><div class="s-label">FIRST 9 Ø</div><div class="s-value">${f9avg||"—"}</div><div class="s-sub">erste 9 Darts</div></div>
-        <div class="stat-card"><div class="s-label">HIGHSCORE</div><div class="s-value">${best||"—"}</div></div>
-        <div class="stat-card"><div class="s-label">CHECKOUT-QUOTE</div><div class="s-value">${coPct}%</div><div class="s-sub">${coHits}/${coAtts}</div></div>
-        <div class="stat-card"><div class="s-label">⌀ DARTS</div><div class="s-value">${x01Games.length?Math.round(x01Games.reduce((s,g)=>s+(g.rounds||0),0)/x01Games.length*3):0}</div><div class="s-sub">pro Leg</div></div>
+        <div class="stat-card"><div class="s-label">${t('spiele')}</div><div class="s-value">${x01Games.length}</div></div>
+        <div class="stat-card"><div class="s-label">${t('siege')}</div><div class="s-value">${wins}</div><div class="s-sub">${x01Games.length?Math.round(wins/x01Games.length*100):0}% ${t('quote')}</div></div>
+        <div class="stat-card"><div class="s-label">${t('average')}</div><div class="s-value">${avg||"—"}</div></div>
+        <div class="stat-card"><div class="s-label">${t('first9')}</div><div class="s-value">${f9avg||"—"}</div><div class="s-sub">${t('erste_9')}</div></div>
+        <div class="stat-card"><div class="s-label">${t('highscore')}</div><div class="s-value">${best||"—"}</div></div>
+        <div class="stat-card"><div class="s-label">${t('checkout_quote')}</div><div class="s-value">${coPct}%</div><div class="s-sub">${coHits}/${coAtts}</div></div>
+        <div class="stat-card"><div class="s-label">${t('darts')}</div><div class="s-value">${x01Games.length?Math.round(x01Games.reduce((s,g)=>s+(g.rounds||0),0)/x01Games.length*3):0}</div><div class="s-sub">${t('pro_leg')}</div></div>
       </div>`;
     }
 
     if(crGames.length>0){
       html+=`<div class="stats-section-title" style="font-size:13px;color:var(--dart-text-sec)">CRICKET</div>`;
       html+=`<div class="stats-grid">
-        <div class="stat-card"><div class="s-label">SPIELE</div><div class="s-value">${crGames.length}</div></div>
-        <div class="stat-card"><div class="s-label">SIEGE</div><div class="s-value">${crWins}</div><div class="s-sub">${crGames.length?Math.round(crWins/crGames.length*100):0}% Quote</div></div>
+        <div class="stat-card"><div class="s-label">${t('spiele')}</div><div class="s-value">${crGames.length}</div></div>
+        <div class="stat-card"><div class="s-label">${t('siege')}</div><div class="s-value">${crWins}</div><div class="s-sub">${crGames.length?Math.round(crWins/crGames.length*100):0}% ${t('quote')}</div></div>
         <div class="stat-card"><div class="s-label">⌀ MARKS/AUFNAHME</div><div class="s-value">${crAvg||"—"}</div></div>
-        <div class="stat-card"><div class="s-label">⌀ DARTS</div><div class="s-value">${crGames.length?Math.round(crGames.reduce((s,g)=>s+(g.rounds||0),0)/crGames.length*3):0}</div><div class="s-sub">pro Leg</div></div>
+        <div class="stat-card"><div class="s-label">${t('darts')}</div><div class="s-value">${crGames.length?Math.round(crGames.reduce((s,g)=>s+(g.rounds||0),0)/crGames.length*3):0}</div><div class="s-sub">${t('pro_leg')}</div></div>
       </div>`;
     }
 
     if(!pid && state.allPlayers.length>1){
-      html+=`<div class="stats-section-title">SPIELER VERGLEICH</div>
+      html+=`<div class="stats-section-title">${t('spieler_vergleich')}</div>
         <div class="history-list">
         <div class="history-header" style="grid-template-columns:1fr 45px 45px 45px 45px 45px 55px">
-          <span>SPIELER</span><span>SIEGE</span><span>⌀</span><span>F9</span><span>BEST</span><span>CO%</span><span>CR ⌀M</span>
+          <span>SPIELER</span><span>${t('siege')}</span><span>⌀</span><span>F9</span><span>BEST</span><span>CO%</span><span>CR ⌀M</span>
         </div>`;
       state.allPlayers.forEach(p=>{
         const pd=getPlayerData(p.id);
@@ -421,7 +422,7 @@ export async function loadAndRenderStats(){
 
     const chartGames=[...games].reverse();
     if(chartGames.length>=2){
-      html+=`<div class="stats-section-title">VERLAUF</div>
+      html+=`<div class="stats-section-title">${t('verlauf')}</div>
         <div class="chart-kpi-bar" id="chart-kpi-bar">
           <button class="chart-kpi-btn active" data-kpi="avg" style="background:#1e88e5;border-color:#1e88e5;color:var(--dart-text)">⌀ Aufnahme</button>
           <button class="chart-kpi-btn" data-kpi="f9">First 9 Ø</button>
@@ -436,9 +437,9 @@ export async function loadAndRenderStats(){
     }
 
     // ── Standard stats: Letzte Spiele ────────────────────────────────
-    html+=`<div class="stats-section-title">LETZTE SPIELE</div>
+    html+=`<div class="stats-section-title">${t('letzte_spiele')}</div>
       <div class="history-list">
-      <div class="history-header"><span>GEWINNER</span><span>MODUS</span><span>DARTS</span><span>DATUM</span></div>`;
+      <div class="history-header"><span>${t('gewinner_col')}</span><span>${t('modus_col')}</span><span>${t('darts')}</span><span>${t('datum_col')}</span></div>`;
     games.slice(0,15).forEach(g=>{
       const d=new Date(g.ts);
       const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}`;
