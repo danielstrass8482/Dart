@@ -8,6 +8,7 @@ import { startCricket } from './cricket.js';
 import { startParty } from './party.js';
 import { collectHealthData } from './coach.js';
 import { BOT_PERSONALITIES } from './bot.js';
+import { t } from './i18n.js';
 
 export const AVATAR_COLORS=["#e53935","#1e88e5","#43a047","#fb8c00","#8e24aa","#00897b","#e91e63","#546e7a"];
 
@@ -47,10 +48,10 @@ export function renderPlayerList(){
     list.innerHTML=`
       <div style="background:var(--dart-bg-chip);border:1px solid var(--dart-gold);border-radius:12px;padding:16px;text-align:center;margin-bottom:8px">
         <div style="font-size:28px;margin-bottom:8px">👋</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);letter-spacing:2px;margin-bottom:6px">WILLKOMMEN BEI DARTTRAINER</div>
-        <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:14px">Leg deinen ersten Spieler an um loszuspielen!</div>
-        <button onclick="document.getElementById('new-player-input').focus()" style="width:100%;padding:11px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#000;cursor:pointer;margin-bottom:8px">+ SPIELER ANLEGEN</button>
-        <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:8px;background:none;border:1px solid var(--dart-border-alt);border-radius:8px;color:var(--dart-text-sec);font-size:13px;cursor:pointer">Tutorial anzeigen</button>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);letter-spacing:2px;margin-bottom:6px">DARTTRAINER</div>
+        <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:14px">${t('neuer_spieler')}</div>
+        <button onclick="document.getElementById('new-player-input').focus()" style="width:100%;padding:11px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#000;cursor:pointer;margin-bottom:8px">+ ${t('spieler_auswaehlen')}</button>
+        <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:8px;background:none;border:1px solid var(--dart-border-alt);border-radius:8px;color:var(--dart-text-sec);font-size:13px;cursor:pointer">${t('tutorial')}</button>
       </div>`;
     return;
   }

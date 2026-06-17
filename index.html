@@ -128,10 +128,10 @@
 <div id="setup" class="screen" style="position:relative">
   <!-- Tab bar -->
   <div class="home-tabs">
-    <button class="home-tab active" data-tab="spielen"><i data-lucide="target" style="width:22px;height:22px;stroke-width:2"></i> SPIELEN</button>
-    <button class="home-tab" data-tab="statistiken"><i data-lucide="bar-chart-2" style="width:22px;height:22px;stroke-width:2"></i> STATS</button>
-    <button class="home-tab" data-tab="turniere"><i data-lucide="trophy" style="width:22px;height:22px;stroke-width:2"></i> TURNIERE</button>
-    <button class="home-tab" data-tab="profil"><i data-lucide="user-circle" style="width:22px;height:22px;stroke-width:2"></i> PROFIL</button>
+    <button class="home-tab active" data-tab="spielen"><i data-lucide="target" style="width:22px;height:22px;stroke-width:2"></i> <span data-i18n="nav_spielen">SPIELEN</span></button>
+    <button class="home-tab" data-tab="statistiken"><i data-lucide="bar-chart-2" style="width:22px;height:22px;stroke-width:2"></i> <span data-i18n="nav_stats">STATS</span></button>
+    <button class="home-tab" data-tab="turniere"><i data-lucide="trophy" style="width:22px;height:22px;stroke-width:2"></i> <span data-i18n="nav_turniere">TURNIERE</span></button>
+    <button class="home-tab" data-tab="profil"><i data-lucide="user-circle" style="width:22px;height:22px;stroke-width:2"></i> <span data-i18n="nav_profil">PROFIL</span></button>
   </div>
 
   <!-- TAB: SPIELEN -->
@@ -143,24 +143,24 @@
       <div class="spielen-card" onclick="showSpielenSection('lokal')">
         <div class="spielen-card-icon"><i data-lucide="users" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
         <div>
-          <div class="spielen-card-title">LOKAL SPIELEN</div>
-          <div class="spielen-card-sub">Gegen Freunde oder Bot</div>
+          <div class="spielen-card-title" data-i18n="lokal_spielen">LOKAL SPIELEN</div>
+          <div class="spielen-card-sub" data-i18n="lokal_sub">Gegen Freunde oder Bot</div>
         </div>
         <div class="spielen-card-arrow"><i data-lucide="chevron-right" style="width:20px;height:20px;stroke-width:2;color:var(--dart-text-muted)"></i></div>
       </div>
       <div class="spielen-card" onclick="showSpielenSection('online')">
         <div class="spielen-card-icon"><i data-lucide="globe" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
         <div>
-          <div class="spielen-card-title">ONLINE SPIELEN</div>
-          <div class="spielen-card-sub">Gegen Freunde weltweit</div>
+          <div class="spielen-card-title" data-i18n="online_spielen">ONLINE SPIELEN</div>
+          <div class="spielen-card-sub" data-i18n="online_sub">Gegen Freunde weltweit</div>
         </div>
         <div class="spielen-card-arrow"><i data-lucide="chevron-right" style="width:20px;height:20px;stroke-width:2;color:var(--dart-text-muted)"></i></div>
       </div>
       <div class="spielen-card" onclick="openTournamentSetup()">
         <div class="spielen-card-icon"><i data-lucide="trophy" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
         <div>
-          <div class="spielen-card-title">TURNIER</div>
-          <div class="spielen-card-sub">Lokal oder Online</div>
+          <div class="spielen-card-title" data-i18n="turnier">TURNIER</div>
+          <div class="spielen-card-sub" data-i18n="turnier_sub">Lokal oder Online</div>
         </div>
         <div class="spielen-card-arrow"><i data-lucide="chevron-right" style="width:20px;height:20px;stroke-width:2;color:var(--dart-text-muted)"></i></div>
       </div>
@@ -178,7 +178,7 @@
       <button class="btn-toggle" data-value="Cricket">Cricket</button>
     </div>
     <div id="extra-modes-wrap" style="margin-bottom:12px">
-      <button id="btn-extra-modes" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);
+      <button id="btn-extra-modes" data-i18n="weitere_modi" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);
         padding:6px 14px;border-radius:6px;font-size:12px;width:100%;cursor:pointer;
         font-family:'DM Sans',sans-serif;letter-spacing:1px">▼ WEITERE MODI</button>
       <div id="extra-modes" style="display:none;margin-top:8px">
@@ -203,8 +203,8 @@
       </div>
     </div>
 
-    <label class="field-label">SPIELER AUSWÄHLEN</label>
-    <div class="player-sel-hint" id="sel-hint">Tippe Spieler an um sie auszuwählen (Reihenfolge = Startreihenfolge)</div>
+    <label class="field-label" data-i18n="spieler_auswaehlen">SPIELER AUSWÄHLEN</label>
+    <div class="player-sel-hint" id="sel-hint" data-i18n="spieler_hint">Tippe Spieler an um sie auszuwählen (Reihenfolge = Startreihenfolge)</div>
     <div class="player-list" id="player-list">
       <div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:12px">Lade Spieler…</div>
     </div>
@@ -213,7 +213,7 @@
       <button class="btn-add-player" id="btn-add-player">+ ADD</button>
     </div>
 
-    <label class="field-label" style="margin-top:16px">SETS (Best of)</label>
+    <label class="field-label" style="margin-top:16px" data-i18n="sets">SETS (Best of)</label>
     <div class="btn-group" id="sets-group">
       <button class="btn-toggle active" data-value="1">1 Set</button>
       <button class="btn-toggle" data-value="3">3 Sets</button>
@@ -221,7 +221,7 @@
       <button class="btn-toggle" data-value="7">7 Sets</button>
     </div>
 
-    <label class="field-label" style="margin-top:4px">LEGS PRO SET (Best of)</label>
+    <label class="field-label" style="margin-top:4px" data-i18n="legs">LEGS PRO SET (Best of)</label>
     <div class="btn-group" id="legs-group">
       <button class="btn-toggle active" data-value="1">1</button>
       <button class="btn-toggle" data-value="3">3</button>
@@ -229,9 +229,9 @@
       <button class="btn-toggle" data-value="7">7</button>
     </div>
 
-    <label class="field-label" style="margin-top:4px">BOT-GEGNER</label>
+    <label class="field-label" style="margin-top:4px" data-i18n="bot_gegner">BOT-GEGNER</label>
     <div class="btn-group" id="bot-group">
-      <button class="btn-toggle active" data-value="none">Kein Bot</button>
+      <button class="btn-toggle active" data-value="none" data-i18n="kein_bot">Kein Bot</button>
       <button class="btn-toggle" data-value="easy"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Anfänger</button>
       <button class="btn-toggle" data-value="medium"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Mittel</button>
       <button class="btn-toggle" data-value="pro"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Profi</button>
@@ -252,7 +252,7 @@
       </div>
     </div>
 
-    <label class="field-label" style="margin-top:4px">SPIELKONTEXT</label>
+    <label class="field-label" style="margin-top:4px" data-i18n="spielkontext">SPIELKONTEXT</label>
     <div class="btn-group" id="context-group">
       <button class="btn-toggle active" data-value="auto"><i data-lucide="cpu" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Auto</button>
       <button class="btn-toggle" data-value="training"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Training</button>
@@ -260,7 +260,7 @@
       <button class="btn-toggle" data-value="tournament"><i data-lucide="trophy" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Turnier</button>
     </div>
 
-    <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
+    <button class="btn-start" id="btn-start" data-i18n="spiel_starten">SPIEL STARTEN</button>
   </div><!-- end setup-card -->
   </div><!-- end inner scroll -->
   </div><!-- end spielen-lokal -->
@@ -337,12 +337,12 @@
     <div style="flex:1;padding:16px 24px;overflow-y:auto;background:var(--dart-bg-card)">
       <div class="stats-player-bar" id="stats-player-bar"></div>
       <div class="stats-time-bar">
-        <button class="time-btn active" data-range="today">Heute</button>
-        <button class="time-btn" data-range="7d">7 Tage</button>
-        <button class="time-btn" data-range="30d">Monat</button>
-        <button class="time-btn" data-range="90d">3 Monate</button>
-        <button class="time-btn" data-range="180d">6 Monate</button>
-        <button class="time-btn" data-range="all">Alles</button>
+        <button class="time-btn active" data-range="today" data-i18n="heute">Heute</button>
+        <button class="time-btn" data-range="7d" data-i18n="sieben_tage">7 Tage</button>
+        <button class="time-btn" data-range="30d" data-i18n="monat">Monat</button>
+        <button class="time-btn" data-range="90d" data-i18n="drei_monate">3 Monate</button>
+        <button class="time-btn" data-range="180d" data-i18n="sechs_monate">6 Monate</button>
+        <button class="time-btn" data-range="all" data-i18n="alles">Alles</button>
         <button class="time-btn" data-range="custom"><i data-lucide="calendar" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i></button>
       </div>
       <div class="custom-date-row" id="custom-date-row" style="display:none">
@@ -408,7 +408,7 @@
 
     <!-- Spielerprofile -->
     <div class="profil-section">
-      <div class="profil-section-title"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> SPIELERPROFILE</div>
+      <div class="profil-section-title"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="spielerprofile">SPIELERPROFILE</span></div>
       <div id="profil-player-list">
         <div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:10px">Lade Spieler…</div>
       </div>
@@ -420,7 +420,7 @@
 
     <!-- Account -->
     <div class="profil-section account-card">
-      <div class="profil-section-title"><i data-lucide="user" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ACCOUNT</div>
+      <div class="profil-section-title"><i data-lucide="user" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="account">ACCOUNT</span></div>
       <div id="profil-account-info" style="margin-bottom:12px"></div>
       <div id="profil-upgrade-inline" style="display:none">
         <div style="font-size:12px;color:var(--dart-text-muted);margin-bottom:10px">Spieldaten gehen verloren wenn du dich abmeldest. Jetzt Account erstellen:</div>
@@ -434,8 +434,8 @@
           MIT GOOGLE UPGRADEN
         </button>
       </div>
-      <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-text-muted);font-size:14px;cursor:pointer;margin-bottom:8px"><i data-lucide="book-open" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Tutorial wiederholen</button>
-      <button id="btn-profil-signout" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-danger);font-size:14px;cursor:pointer"><i data-lucide="log-out" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Abmelden</button>
+      <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-text-muted);font-size:14px;cursor:pointer;margin-bottom:8px"><i data-lucide="book-open" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="tutorial">Tutorial wiederholen</span></button>
+      <button id="btn-profil-signout" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-danger);font-size:14px;cursor:pointer"><i data-lucide="log-out" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="abmelden">Abmelden</span></button>
     </div>
 
     <!-- Premium Status -->
@@ -443,7 +443,7 @@
 
     <!-- Stimme & Sound -->
     <div class="profil-section">
-      <div class="profil-section-title" style="display:flex;align-items:center"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> STIMME & SOUND <button class="help-btn" onclick="showHelp('Stimme & Sound','Wähle zwischen verschiedenen Ansage-Stimmen oder füge eigene ElevenLabs Voice IDs hinzu. Die Stimme wird für alle Score-Ansagen verwendet.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
+      <div class="profil-section-title" style="display:flex;align-items:center"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="stimme_sound">STIMME & SOUND</span> <button class="help-btn" onclick="showHelp('Stimme & Sound','Wähle zwischen verschiedenen Ansage-Stimmen oder füge eigene ElevenLabs Voice IDs hinzu. Die Stimme wird für alle Score-Ansagen verwendet.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div id="voice-sync-status" style="font-size:12px;color:var(--dart-text-sec)"></div>
         <button id="btn-voice-sync" style="padding:5px 12px;border:1px solid var(--dart-border);border-radius:6px;background:var(--dart-bg-card);font-size:12px;cursor:pointer"><i data-lucide="refresh-cw" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> Sync</button>
@@ -466,23 +466,23 @@
 
     <!-- App-Einstellungen -->
     <div class="profil-section">
-      <div class="profil-section-title"><i data-lucide="settings" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> APP-EINSTELLUNGEN</div>
+      <div class="profil-section-title"><i data-lucide="settings" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="app_einstellungen">APP-EINSTELLUNGEN</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
-        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="volume-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Sprachausgabe</span>
+        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="volume-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="sprachausgabe">Sprachausgabe</span></span>
         <label style="position:relative;display:inline-block;width:46px;height:27px">
           <input type="checkbox" id="setting-tts" checked style="opacity:0;width:0;height:0">
           <span id="setting-tts-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
-        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="mic" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Sprachsteuerung</span>
+        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="mic" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="sprachsteuerung">Sprachsteuerung</span></span>
         <label style="position:relative;display:inline-block;width:46px;height:27px">
           <input type="checkbox" id="setting-mic" style="opacity:0;width:0;height:0">
           <span id="setting-mic-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
-        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Checkout-Highlight</span>
+        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="checkout_highlight">Checkout-Highlight</span></span>
         <label style="position:relative;display:inline-block;width:46px;height:27px">
           <input type="checkbox" id="setting-checkout" checked style="opacity:0;width:0;height:0">
           <span id="setting-checkout-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
@@ -490,14 +490,23 @@
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
         <div>
-          <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="heart-pulse" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Gesundheitsdaten abfragen</span>
+          <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="heart-pulse" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="gesundheit">Gesundheitsdaten abfragen</span></span>
           <button class="help-btn" onclick="showHelp('Gesundheitsdaten','Vor jedem Spiel wirst du nach Schlaf und Befinden gefragt. Verknüpfe Fitness mit deiner Spielleistung und sieh ob du an ausgeruhten Tagen besser spielst.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
-          <div style="font-size:11px;color:var(--dart-text-sec);margin-top:2px">Vor jedem Spiel nach Schlaf und Befinden fragen</div>
+          <div style="font-size:11px;color:var(--dart-text-sec);margin-top:2px" data-i18n="gesundheit_sub">Vor jedem Spiel nach Schlaf und Befinden fragen</div>
         </div>
         <label style="position:relative;display:inline-block;width:46px;height:27px;flex-shrink:0">
           <input type="checkbox" id="setting-health" checked style="opacity:0;width:0;height:0">
           <span id="setting-health-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
+      </div>
+    </div>
+
+    <!-- Sprache -->
+    <div class="profil-section">
+      <div class="profil-section-title"><i data-lucide="globe" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="sprache">SPRACHE</span></div>
+      <div style="display:flex;gap:8px" id="lang-switcher">
+        <button class="lang-btn" data-lang="de" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--dart-border);background:var(--dart-bg-chip);color:var(--dart-text-sec)">🇩🇪 Deutsch</button>
+        <button class="lang-btn" data-lang="en" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--dart-border);background:var(--dart-bg-chip);color:var(--dart-text-sec)">🇬🇧 English</button>
       </div>
     </div>
 
@@ -630,9 +639,9 @@
 <!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
 <div id="x01" class="screen" style="flex-direction:column;background:var(--dart-bg-card)">
   <div class="game-header">
-    <button class="btn-nav" id="x01-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Zurück</button>
+    <button class="btn-nav" id="x01-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="zurueck">Zurück</span></button>
     <div class="game-title" id="x01-title">501 · Runde 1</div>
-    <button class="btn-nav" id="x01-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Undo</button>
+    <button class="btn-nav" id="x01-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="undo">Undo</span></button>
   </div>
   <div id="target-feedback-toast" style="display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:var(--dart-text);padding:8px 16px;border-radius:8px;font-size:14px;z-index:500;pointer-events:none;white-space:nowrap"></div>
 
@@ -691,9 +700,9 @@
 <!-- ═══════════════════════ CRICKET SCREEN ═══════════════════════ -->
 <div id="cricket" class="screen">
   <div class="game-header">
-    <button class="btn-nav" id="cr-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Zurück</button>
+    <button class="btn-nav" id="cr-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="zurueck">Zurück</span></button>
     <div class="game-title" id="cr-title">Cricket · Runde 1</div>
-    <button class="btn-nav" id="cr-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Undo</button>
+    <button class="btn-nav" id="cr-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="undo">Undo</span></button>
   </div>
 
   <div class="cricket-board">
@@ -725,9 +734,9 @@
 <!-- ═══════════════════════ PARTY GAME SCREEN ═══════════════════════ -->
 <div id="party" class="screen">
   <div class="game-header">
-    <button class="btn-nav" id="party-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Zurück</button>
+    <button class="btn-nav" id="party-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="zurueck">Zurück</span></button>
     <div class="game-title" id="party-title">Around the Clock</div>
-    <button class="btn-nav" id="party-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Undo</button>
+    <button class="btn-nav" id="party-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="undo">Undo</span></button>
   </div>
 
   <div class="player-tabs" id="party-tabs"></div>
@@ -774,7 +783,7 @@
 
 <div class="winner-overlay" id="winner-overlay">
   <div style="max-width:440px;width:90vw;max-height:90vh;overflow-y:auto;padding:32px 24px;text-align:center">
-    <div class="winner-label">GEWINNER</div>
+    <div class="winner-label" data-i18n="gewinner">GEWINNER</div>
     <div class="winner-name" id="winner-name"></div>
     <div class="winner-round" id="winner-round"></div>
     <div id="winner-summary" style="display:none;margin:16px 0 0"></div>
@@ -826,7 +835,7 @@
       </button>
       <div id="coach-output-video"></div>
     </div>
-    <button class="btn-new-game" id="btn-new-game" style="margin-top:16px">NEUES SPIEL</button>
+    <button class="btn-new-game" id="btn-new-game" style="margin-top:16px" data-i18n="neues_spiel">NEUES SPIEL</button>
   </div>
 </div>
 
@@ -837,7 +846,7 @@
     <div class="winner-name" id="set-winner-name" style="font-size:48px"></div>
     <div id="set-score-display" style="color:var(--dart-gold);font-family:'Bebas Neue',sans-serif;font-size:24px;margin-top:8px"></div>
     <div style="color:var(--dart-text-muted);font-size:13px;margin-top:6px" id="set-to-win"></div>
-    <button class="btn-new-game" id="btn-next-set" style="margin-top:24px">NÄCHSTES SET ▶</button>
+    <button class="btn-new-game" id="btn-next-set" style="margin-top:24px" data-i18n="naechstes_set">NÄCHSTES SET ▶</button>
   </div>
 </div>
 
@@ -849,9 +858,9 @@
     <div id="leg-score-display" style="color:var(--dart-gold);font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-top:8px"></div>
     <div style="color:var(--dart-text-muted);font-size:13px;margin-top:6px" id="leg-to-win"></div>
     <div id="leg-stats-summary" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
-    <button class="coach-btn" id="btn-coach-leg" style="margin-top:12px"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> LEG ANALYSIEREN</button>
+    <button class="coach-btn" id="btn-coach-leg" style="margin-top:12px"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="leg_analysieren">LEG ANALYSIEREN</span></button>
     <div id="coach-output-leg" style="margin-top:12px;text-align:left;max-height:220px;overflow-y:auto"></div>
-    <button class="btn-new-game" id="btn-next-leg" style="margin-top:12px">NÄCHSTES LEG ▶</button>
+    <button class="btn-new-game" id="btn-next-leg" style="margin-top:12px" data-i18n="naechstes_leg">NÄCHSTES LEG ▶</button>
   </div>
 </div>
 
