@@ -1,11 +1,12 @@
 // Deploy ins neue Projekt:
 // firebase use darttrainer-app
-// firebase deploy --only functions:dartTTS
-// firebase deploy --only functions:dartCoach
+// firebase deploy --only functions:dartTTS,dartCoach,budgetCheck
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { initializeApp } = require("firebase-admin/app");
 const { getStorage } = require("firebase-admin/storage");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getAuth } = require("firebase-admin/auth");
 const { randomUUID } = require("crypto");
 
 initializeApp();
@@ -54,6 +55,8 @@ function voiceSettingsForKey(baseKey) {
   return VOICE_SETTINGS_NEUTRAL;
 }
 
+const TTS_DAILY_LIMIT = 200;
+
 exports.dartTTS = onRequest(
   {
     secrets: [ELEVENLABS_API_KEY],
@@ -67,6 +70,21 @@ exports.dartTTS = onRequest(
       return;
     }
 
+    // ── Kill-switch ──────────────────────────────────────────────
+    try {
+      const config = (await getFirestore().collection("dart_config").doc("limits").get()).data();
+      if (!config || config.emergencyStop) {
+        res.status(503).json({ error: "service_temporarily_unavailable", message: "TTS ist momentan nicht verfügbar." });
+        return;
+      }
+      if (!config.ttsEnabled) {
+        res.status(503).json({ error: "feature_disabled", message: "TTS ist momentan deaktiviert." });
+        return;
+      }
+    } catch (e) {
+      console.warn("Config fetch failed, proceeding:", e.message);
+    }
+
     const { key, text: fallbackText, voiceId: reqVoiceId } = req.body;
     if (!key || !fallbackText) {
       res.status(400).json({ error: "key and text required" });
@@ -78,7 +96,7 @@ exports.dartTTS = onRequest(
     const filePath = `dart_voice_el/${voiceId}/${key}.mp3`;
     const file = bucket.file(filePath);
 
-    // Return cached URL if the file already exists
+    // Return cached URL if the file already exists (no rate limit consumed)
     const [exists] = await file.exists();
     if (exists) {
       const [meta] = await file.getMetadata();
@@ -87,6 +105,35 @@ exports.dartTTS = onRequest(
         res.json({ url: buildDownloadURL(bucket.name, filePath, token) });
         return;
       }
+    }
+
+    // ── Per-user rate limiting (uncached calls only) ──────────────
+    const today = new Date().toISOString().split("T")[0];
+    let uid = "anonymous";
+    const authHeader = req.headers["authorization"];
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const decoded = await getAuth().verifyIdToken(authHeader.split(" ")[1]);
+        uid = decoded.uid;
+      } catch (e) {}
+    }
+    const usageRef = getFirestore().collection("dart_usage").doc(`${uid}_${today}`);
+    try {
+      const snap = await usageRef.get();
+      const currentCount = snap.exists ? (snap.data().tts || 0) : 0;
+      if (currentCount >= TTS_DAILY_LIMIT) {
+        res.status(429).json({
+          error: "daily_limit_reached",
+          message: `Maximale Anzahl von ${TTS_DAILY_LIMIT} TTS-Calls pro Tag erreicht.`,
+          limit: TTS_DAILY_LIMIT,
+          used: currentCount,
+          resetsAt: new Date(new Date().setHours(24, 0, 0, 0)).toISOString()
+        });
+        return;
+      }
+      await usageRef.set({ tts: currentCount + 1, date: today, lastUpdated: FieldValue.serverTimestamp() }, { merge: true });
+    } catch (e) {
+      console.warn("TTS usage tracking failed, proceeding:", e.message);
     }
 
     // Strip el_ prefix to look up special text / voice category
@@ -138,3 +185,7 @@ exports.dartTTS = onRequest(
 function buildDownloadURL(bucket, path, token) {
   return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(path)}?alt=media&token=${token}`;
 }
+
+// Re-export additional functions
+Object.assign(exports, require("./dartCoach"));
+Object.assign(exports, require("./budgetCheck"));

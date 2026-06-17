@@ -302,6 +302,18 @@ export async function callClaudeViaProxy(messages){
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
     body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:1000,messages})
   });
+  if(response.status===429){
+    const data=await response.json().catch(()=>({}));
+    const err=new Error("daily_limit_reached");
+    err.status=429; err.data=data;
+    throw err;
+  }
+  if(response.status===503){
+    const data=await response.json().catch(()=>({}));
+    const err=new Error("service_unavailable");
+    err.status=503; err.data=data;
+    throw err;
+  }
   if(!response.ok){ const err=await response.text(); throw new Error(`API Fehler ${response.status}: ${err}`); }
   return response.json();
 }
@@ -333,6 +345,18 @@ export async function callCoach(prompt, outputEl, limitEl, btnEl){
     btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> NEUE ANALYSE`; window.refreshIcons?.();
     btnEl.disabled = newLeft<=0;
   }catch(e){
+    if(e.status===429){
+      const d=e.data||{};
+      outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-warning)"><div class="coach-header" style="color:var(--dart-warning)"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> TAGESLIMIT ERREICHT</div>Du hast heute bereits ${d.used??'?'} von ${d.limit??10} Coach-Analysen genutzt.<br><small style="color:var(--dart-text-muted)">Reset um Mitternacht.</small></div>`; window.refreshIcons?.();
+      btnEl.disabled=true;
+      return;
+    }
+    if(e.status===503){
+      outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div><span style="color:var(--dart-text-muted)">Coach ist momentan nicht verfügbar. Bitte später nochmal versuchen.</span></div>`; window.refreshIcons?.();
+      btnEl.disabled=false;
+      btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE`; window.refreshIcons?.();
+      return;
+    }
     outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-danger)">Fehler: ${e.message}</div>`;
     btnEl.disabled=false;
     btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE`; window.refreshIcons?.();

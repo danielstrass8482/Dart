@@ -251,6 +251,43 @@ Für App-Store: **Capacitor** verwenden um die Web-App in eine native iOS/Androi
 
 ---
 
+## API Kosten-Schutz
+
+### Ebene 1: Firebase Budget Alert (manuell einrichten)
+Firebase Console → Billing → Budget & Alerts:
+- Alert bei €15/Monat (Warning)
+- Alert bei €30/Monat (Critical)
+
+### Ebene 2: Per-User Rate Limiting (Cloud Functions)
+- **Coach-Analysen:** max. 10/User/Tag
+- **Video-Analysen:** max. 3/User/Tag
+- **TTS-Calls:** max. 200/User/Tag (nur uncached)
+- Tracking in Firestore: `dart_usage/{uid}_{YYYY-MM-DD}`
+
+### Ebene 3: Kill-Switch
+Firestore `dart_config/limits`:
+```json
+{ "coachEnabled": true, "ttsEnabled": true, "emergencyStop": false }
+```
+Deaktivieren: Firebase Console → Firestore → `dart_config/limits` → `emergencyStop: true`
+
+### Ebene 4: Budget-Check Function
+`budgetCheck` Cloud Function schätzt Tageskosten (~€0.02/Coach, ~€0.001/TTS, ~€0.05/Video).
+Bei Überschreitung von €30/Tag wird `emergencyStop: true` automatisch gesetzt.
+→ Via Cloud Scheduler täglich oder manuell aufrufen
+
+### Ebene 5: Frontend-Feedback
+- **429:** Tageslimit-Anzeige mit verbleibenden/genutzten Calls
+- **503:** "Coach momentan nicht verfügbar" Meldung
+- **TTS 429/503:** Automatisch auf Browser-TTS-Fallback
+
+### Config initialisieren nach Deploy
+```bash
+node scripts/init-config.js
+```
+
+---
+
 ## Entwickler-Kontext
 - **Entwickelt mit:** Claude Sonnet (claude.ai Chat)
 - **Owner:** Daniel Straß, VP Customer Service DACH @ Dogado
