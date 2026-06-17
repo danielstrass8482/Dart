@@ -285,6 +285,8 @@ export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+authToken},
     body:JSON.stringify({key:storageKey, text, voiceId})
   });
+  if(resp.status===429){ console.info("TTS limit reached, falling back to browser TTS"); return null; }
+  if(resp.status===503){ console.info("TTS unavailable, falling back to browser TTS"); return null; }
   if(!resp.ok) return null;
   const {url}=await resp.json();
   if(url) elTTSCache[cacheKey]=url;
