@@ -424,7 +424,7 @@ export async function loadAndRenderStats(){
     if(chartGames.length>=2){
       html+=`<div class="stats-section-title">${t('verlauf')}</div>
         <div class="chart-kpi-bar" id="chart-kpi-bar">
-          <button class="chart-kpi-btn active" data-kpi="avg" style="background:#1e88e5;border-color:#1e88e5;color:var(--dart-text)">⌀ Aufnahme</button>
+          <button class="chart-kpi-btn active" data-kpi="avg" style="background:var(--dart-gold);border-color:var(--dart-gold);color:#000;border-radius:99px">⌀ Aufnahme</button>
           <button class="chart-kpi-btn" data-kpi="f9">First 9 Ø</button>
           <button class="chart-kpi-btn" data-kpi="best">Highscore</button>
           <button class="chart-kpi-btn" data-kpi="co">Checkout %</button>
@@ -551,35 +551,63 @@ export async function loadAndRenderStats(){
             const minV=Math.min(...validVals), maxV=Math.max(...validVals), range=maxV-minV||1;
             const toX=i=>pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1);
             const toY=v=>pad.t+(h-pad.t-pad.b)*(1-(v-minV)/range);
-            ctx.strokeStyle=kpi.color; ctx.lineWidth=2.5; ctx.beginPath();
-            let first=true;
-            vals.forEach((v,i)=>{ if(v===null) return; first?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v)); first=false; });
+            const points=[];
+            vals.forEach((v,i)=>{ if(v!==null) points.push({x:toX(i),y:toY(v)}); });
+            if(!points.length) return;
+            // Gradient fill under line
+            const gradient=ctx.createLinearGradient(0,0,0,h);
+            gradient.addColorStop(0,'rgba(212,175,55,0.35)');
+            gradient.addColorStop(0.6,'rgba(212,175,55,0.08)');
+            gradient.addColorStop(1,'rgba(212,175,55,0)');
+            ctx.beginPath();
+            points.forEach((p,i)=>{ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
+            ctx.lineTo(points[points.length-1].x,h-pad.b);
+            ctx.lineTo(points[0].x,h-pad.b);
+            ctx.closePath();
+            ctx.fillStyle=gradient;
+            ctx.fill();
+            // Line on top
+            ctx.beginPath();
+            points.forEach((p,i)=>{ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
+            ctx.strokeStyle='#D4AF37'; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.lineCap='round';
             ctx.stroke();
-            ctx.fillStyle=kpi.color;
-            vals.forEach((v,i)=>{ if(v===null) return; ctx.beginPath(); ctx.arc(toX(i),toY(v),3,0,Math.PI*2); ctx.fill(); });
+            // Last point gold dot
+            const last=points[points.length-1];
+            ctx.beginPath(); ctx.arc(last.x,last.y,4,0,Math.PI*2); ctx.fillStyle='#D4AF37'; ctx.fill();
+            // Label
             const lastV=validVals[validVals.length-1];
             const lastIdx=vals.lastIndexOf(lastV);
-            ctx.fillStyle=kpi.color; ctx.font=`bold 10px 'DM Sans',sans-serif`; ctx.textAlign="left";
+            ctx.fillStyle='#D4AF37'; ctx.font=`bold 10px 'DM Sans',sans-serif`; ctx.textAlign="left";
             ctx.fillText(lastV, toX(lastIdx)+5, toY(lastV)+4+(ki*12));
           });
         }
 
         drawChart();
 
+        function styleKpiBtn(btn, active){
+          if(active){
+            btn.style.background='var(--dart-gold)'; btn.style.color='#000';
+            btn.style.borderColor='var(--dart-gold)'; btn.style.borderRadius='99px';
+          } else {
+            btn.style.background='var(--dart-bg-chip)'; btn.style.color='var(--dart-text-muted)';
+            btn.style.borderColor='transparent'; btn.style.borderRadius='99px';
+          }
+        }
+        // Apply initial button styles
         document.querySelectorAll(".chart-kpi-btn").forEach(btn=>{
+          styleKpiBtn(btn, activeKPIs.includes(btn.dataset.kpi));
           btn.addEventListener("click",()=>{
             const kpi=btn.dataset.kpi;
             if(activeKPIs.includes(kpi)){
               if(activeKPIs.length===1) return;
               activeKPIs=activeKPIs.filter(k=>k!==kpi);
               btn.classList.remove("active");
-              btn.style.background=""; btn.style.color="var(--dart-text-muted)"; btn.style.borderColor="var(--dart-border)";
+              styleKpiBtn(btn, false);
             } else {
               if(activeKPIs.length>=3) return;
               activeKPIs.push(kpi);
               btn.classList.add("active");
-              const col=COLORS[kpiKeys.indexOf(kpi)];
-              btn.style.background=col; btn.style.color="var(--dart-text)"; btn.style.borderColor=col;
+              styleKpiBtn(btn, true);
             }
             drawChart();
           });
