@@ -2,6 +2,13 @@
  * i18n.js — Internationalization: translation keys + language switcher.
  */
 
+export const SUPPORTED_LANGS = [
+  { code: 'de', label: '🇩🇪 Deutsch' },
+  { code: 'en', label: '🇬🇧 English' },
+  // { code: 'nl', label: '🇳🇱 Nederlands' },
+  // { code: 'es', label: '🇪🇸 Español' },
+];
+
 export const translations = {
   de: {
     // Navigation
@@ -119,6 +126,44 @@ export const translations = {
     beta_nutzer: "BETA-NUTZER",
     lade: "Lade…",
     keine_spiele: "Keine Spiele im gewählten Zeitraum.",
+
+    // Spieler
+    noch_keine_spieler: "Noch keine Spieler angelegt",
+    spieler_existiert: "Spieler existiert bereits!",
+    min_1_spieler: "Bitte mindestens 1 Spieler auswählen!",
+    killer_min_2: "Killer braucht mindestens 2 Spieler!",
+    spieler_gewaehlt: "Spieler gewählt",
+    spieler_hint_simple: "Tippe Spieler an — Reihenfolge = Startreihenfolge",
+    mit_google_anmelden: "Mit Google anmelden",
+
+    // Online
+    warte_mitspieler: "Warte auf Mitspieler…",
+    spieler_verbunden: "Spieler verbunden",
+    raum_erstellen: "RAUM ERSTELLEN",
+    raum_beitreten: "RAUM BEITRETEN",
+    beitreten_btn: "BEITRETEN",
+    online_raum_code: "RAUM-CODE",
+    raum_code_hint: "Teile diesen Code mit deinem Gegner",
+
+    // Turniere
+    turnier_erstellen: "TURNIER ERSTELLEN",
+    noch_keine_turniere: "Noch keine Turniere",
+    lade_turnier: "Lade Turnier…",
+    format: "FORMAT",
+    jeder_gegen_jeden: "Jeder gegen Jeden",
+    ko_system: "K.O.-System",
+
+    // Spiel UI
+    wuerfe: "WÜRFE",
+    legende: "LEGENDE",
+    sub_stats: "STATISTIKEN",
+    sub_analyse: "ANALYSE",
+    lade_statistiken: "Lade Statistiken…",
+    geraet_drehen: "GERÄT DREHEN",
+    geraet_drehen_sub: "Querformat für das Spiel erforderlich",
+    neue_stimme: "+ NEUE STIMME HINZUFÜGEN",
+    health_connect: "HEALTH CONNECT",
+    rechtliches: "RECHTLICHES",
   },
 
   en: {
@@ -237,6 +282,44 @@ export const translations = {
     beta_nutzer: "BETA USER",
     lade: "Loading…",
     keine_spiele: "No games in selected time range.",
+
+    // Spieler
+    noch_keine_spieler: "No players created yet",
+    spieler_existiert: "Player already exists!",
+    min_1_spieler: "Please select at least 1 player!",
+    killer_min_2: "Killer needs at least 2 players!",
+    spieler_gewaehlt: "players selected",
+    spieler_hint_simple: "Tap players — order = start order",
+    mit_google_anmelden: "Sign in with Google",
+
+    // Online
+    warte_mitspieler: "Waiting for opponent…",
+    spieler_verbunden: "players connected",
+    raum_erstellen: "CREATE ROOM",
+    raum_beitreten: "JOIN ROOM",
+    beitreten_btn: "JOIN",
+    online_raum_code: "ROOM CODE",
+    raum_code_hint: "Share this code with your opponent",
+
+    // Turniere
+    turnier_erstellen: "CREATE TOURNAMENT",
+    noch_keine_turniere: "No tournaments yet",
+    lade_turnier: "Loading tournament…",
+    format: "FORMAT",
+    jeder_gegen_jeden: "Round Robin",
+    ko_system: "Knockout",
+
+    // Spiel UI
+    wuerfe: "THROWS",
+    legende: "LEGEND",
+    sub_stats: "STATISTICS",
+    sub_analyse: "ANALYSIS",
+    lade_statistiken: "Loading statistics…",
+    geraet_drehen: "ROTATE DEVICE",
+    geraet_drehen_sub: "Landscape mode required for gameplay",
+    neue_stimme: "+ ADD NEW VOICE",
+    health_connect: "HEALTH CONNECT",
+    rechtliches: "LEGAL",
   }
 };
 
@@ -246,9 +329,21 @@ export function t(key){
     translations['de'][key] || key;
 }
 
+export function applyTranslations(){
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+}
+
 export function setLang(lang){
   localStorage.setItem('dart_lang', lang);
-  window.location.reload();
+  applyTranslations();
+  const activeTab = document.querySelector('.home-tab.active');
+  if(activeTab) activeTab.click();
 }
 
 export function getLang(){

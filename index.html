@@ -74,9 +74,9 @@
   color:var(--dart-text);text-align:center;font-family:'Bebas Neue',sans-serif">
   <div style="margin-bottom:12px;display:inline-block;
     animation:rotate-hint 1.5s ease-in-out infinite"><i data-lucide="smartphone" style="width:72px;height:72px;stroke-width:1;vertical-align:middle"></i></div>
-  <div style="font-size:32px;letter-spacing:3px">GERÄT DREHEN</div>
+  <div style="font-size:32px;letter-spacing:3px" data-i18n="geraet_drehen">GERÄT DREHEN</div>
   <div style="font-size:15px;font-family:'DM Sans',sans-serif;margin-top:8px;
-    opacity:.65;letter-spacing:0">Querformat für das Spiel erforderlich</div>
+    opacity:.65;letter-spacing:0" data-i18n="geraet_drehen_sub">Querformat für das Spiel erforderlich</div>
 </div>
 
 <!-- ═══════════════════════ AUTH SCREEN ═══════════════════════ -->
@@ -209,7 +209,7 @@
       <div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:12px">Lade Spieler…</div>
     </div>
     <div class="add-player-row">
-      <input class="add-player-input" id="new-player-input" placeholder="Neuer Spieler…" />
+      <input class="add-player-input" id="new-player-input" data-i18n-placeholder="neuer_spieler" placeholder="Neuer Spieler…" />
       <button class="btn-add-player" id="btn-add-player">+ ADD</button>
     </div>
 
@@ -279,7 +279,7 @@
 
       <!-- Create room -->
       <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:20px;margin-bottom:16px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px">RAUM ERSTELLEN</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px" data-i18n="raum_erstellen">RAUM ERSTELLEN</div>
         <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">Wähle Modus und Einstellungen, dann teile den Code mit deinem Gegner</div>
         <div class="btn-group" id="online-mode-group" style="margin-bottom:12px">
           <button class="btn-toggle active" data-value="501">501</button>
@@ -305,17 +305,17 @@
           </div>
         </div>
         <input class="add-player-input" id="online-myname" placeholder="Dein Name im Spiel" style="width:100%;margin-bottom:10px">
-        <button class="btn-start" id="btn-create-room" style="font-size:18px;padding:12px">RAUM ERSTELLEN</button>
+        <button class="btn-start" id="btn-create-room" style="font-size:18px;padding:12px" data-i18n="raum_erstellen">RAUM ERSTELLEN</button>
       </div>
 
       <!-- Join room -->
       <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:20px;margin-bottom:16px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px">RAUM BEITRETEN</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px" data-i18n="raum_beitreten">RAUM BEITRETEN</div>
         <input class="add-player-input" id="online-join-name" placeholder="Dein Name im Spiel" style="width:100%;margin-bottom:8px">
         <div style="display:flex;gap:8px">
           <input class="add-player-input" id="online-room-code" placeholder="6-stelliger Code (z.B. ABC123)"
             style="flex:1;text-transform:uppercase;letter-spacing:3px;font-family:'Bebas Neue',sans-serif;font-size:20px">
-          <button class="btn-add-player" id="btn-join-room" style="padding:10px 20px;font-size:16px">BEITRETEN</button>
+          <button class="btn-add-player" id="btn-join-room" style="padding:10px 20px;font-size:16px" data-i18n="beitreten_btn">BEITRETEN</button>
         </div>
       </div>
 
@@ -329,8 +329,8 @@
   <!-- TAB: STATISTIKEN (sub-tabs: Statistiken + Analyse) -->
   <div class="home-tab-content" id="tab-statistiken">
     <div class="sub-tabs-bar">
-      <button class="sub-tab active" data-sub="stats">STATISTIKEN</button>
-      <button class="sub-tab" data-sub="analyse">ANALYSE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span></button>
+      <button class="sub-tab active" data-sub="stats"><span data-i18n="sub_stats">STATISTIKEN</span></button>
+      <button class="sub-tab" data-sub="analyse"><span data-i18n="sub_analyse">ANALYSE</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span></button>
     </div>
     <!-- Sub: STATISTIKEN -->
     <div class="sub-tab-content active" id="sub-tab-stats">
@@ -357,7 +357,7 @@
         <button class="time-btn" data-ctx="casual"><i data-lucide="gamepad-2" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Casual</button>
         <button class="time-btn" data-ctx="tournament"><i data-lucide="trophy" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Turnier</button>
       </div>
-      <div id="stats-content"><div class="stats-loading">Lade Statistiken…</div></div>
+      <div id="stats-content"><div class="stats-loading" data-i18n="lade_statistiken">Lade Statistiken…</div></div>
     </div>
     </div>
     <!-- Sub: ANALYSE -->
@@ -398,7 +398,7 @@
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;display:flex;align-items:center;gap:6px"><i data-lucide="trophy" style="width:20px;height:20px;stroke-width:2;vertical-align:middle"></i> TURNIERE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span><button class="help-btn" onclick="showHelp('Turnier-Modus','Spiele ein Turnier mit bis zu 8 Spielern. Jeder gegen Jeden oder K.O.-System. Auch online mit Freunden möglich.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
       <button onclick="openTournamentSetup()" style="padding:9px 16px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer"><i data-lucide="plus" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ERSTELLEN</button>
     </div>
-    <div id="tournament-list"><div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:20px">Noch keine Turniere</div></div>
+    <div id="tournament-list"><div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:20px" data-i18n="noch_keine_turniere">Noch keine Turniere</div></div>
   </div>
   </div>
 
@@ -413,7 +413,7 @@
         <div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:10px">Lade Spieler…</div>
       </div>
       <div class="add-player-row" style="margin-top:12px">
-        <input class="add-player-input" id="profil-new-player-input" placeholder="Neuer Spieler anlegen…">
+        <input class="add-player-input" id="profil-new-player-input" data-i18n-placeholder="neuer_spieler" placeholder="Neuer Spieler anlegen…">
         <button class="btn-add-player" id="profil-btn-add-player">+ ADD</button>
       </div>
     </div>
@@ -451,7 +451,7 @@
       <div id="voice-selector-list"></div>
       <div id="voice-selector-confirm" style="display:none;color:var(--dart-success);font-size:13px;padding:6px 0;text-align:center"></div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--dart-border)">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:var(--dart-text-muted);margin-bottom:8px">+ NEUE STIMME HINZUFÜGEN</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:var(--dart-text-muted);margin-bottom:8px" data-i18n="neue_stimme">+ NEUE STIMME HINZUFÜGEN</div>
         <input id="voice-new-name" placeholder="Name (z.B. Meine Stimme)" style="width:100%;padding:9px;border:1px solid var(--dart-border);border-radius:8px;font-size:14px;margin-bottom:6px;box-sizing:border-box">
         <input id="voice-new-id" placeholder="ElevenLabs Voice ID" style="width:100%;padding:9px;border:1px solid var(--dart-border);border-radius:8px;font-family:monospace;font-size:13px;margin-bottom:8px;box-sizing:border-box">
         <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -512,7 +512,7 @@
 
     <!-- Health Connect -->
     <div class="profil-section">
-      <div class="profil-section-title"><i data-lucide="link" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> HEALTH CONNECT</div>
+      <div class="profil-section-title"><i data-lucide="link" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="health_connect">HEALTH CONNECT</span></div>
       <div style="font-size:13px;color:var(--dart-text-muted);margin-bottom:10px;line-height:1.6">
         Verbinde Garmin, Oura, Fitbit und mehr für automatische Gesundheitsdaten.
       </div>
@@ -527,7 +527,7 @@
 
     <!-- Rechtliches -->
     <div class="profil-section">
-      <div class="profil-section-title"><i data-lucide="file-text" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> RECHTLICHES</div>
+      <div class="profil-section-title"><i data-lucide="file-text" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="rechtliches">RECHTLICHES</span></div>
       <div style="font-size:13px;color:var(--dart-text-muted);line-height:1.7">
         <div style="margin-bottom:6px"><strong>DartTrainer</strong> — Persönliches Dart-Score-Tracking</div>
         <div style="margin-bottom:6px">Version: 2.0 · Firebase Hosting via GitHub Pages</div>
@@ -570,9 +570,9 @@
 <!-- ═══════════════════════ ONLINE WAITING SCREEN ═══════════════════════ -->
 <div id="online-wait" class="screen" style="background:var(--dart-bg-card)">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dart-gold);letter-spacing:3px;margin-bottom:8px">RAUM-CODE</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dart-gold);letter-spacing:3px;margin-bottom:8px" data-i18n="online_raum_code">RAUM-CODE</div>
     <div id="online-room-display" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--dart-text);letter-spacing:8px;margin-bottom:8px"></div>
-    <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px">Teile diesen Code mit deinem Gegner</div>
+    <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px" data-i18n="raum_code_hint">Teile diesen Code mit deinem Gegner</div>
     <div id="online-players-list" style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:16px;width:100%;max-width:320px;margin-bottom:20px"></div>
     <div id="online-wait-status" style="font-size:13px;color:var(--dart-text-sec);margin-bottom:16px">Warte auf Mitspieler…</div>
     <button id="btn-start-online" class="btn-start" style="display:none;width:320px">SPIEL STARTEN</button>
@@ -584,7 +584,7 @@
 <div id="tournament-setup" class="screen" style="background:var(--dart-bg-card);flex-direction:column">
   <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
     <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← ZURÜCK</button>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)">TURNIER ERSTELLEN</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)" data-i18n="turnier_erstellen">TURNIER ERSTELLEN</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
     <div style="max-width:480px;margin:0 auto">
@@ -592,10 +592,10 @@
         <label class="field-label">TURNIER NAME</label>
         <input id="tn-name" class="add-player-input" style="width:100%;font-size:15px" placeholder="z.B. Darts-Abend">
       </div>
-      <label class="field-label">FORMAT</label>
+      <label class="field-label" data-i18n="format">FORMAT</label>
       <div class="btn-group" id="tn-format-group" style="margin-bottom:16px">
-        <button class="btn-toggle active" data-value="round_robin">Jeder gegen Jeden</button>
-        <button class="btn-toggle" data-value="knockout">K.O.-System</button>
+        <button class="btn-toggle active" data-value="round_robin" data-i18n="jeder_gegen_jeden">Jeder gegen Jeden</button>
+        <button class="btn-toggle" data-value="knockout" data-i18n="ko_system">K.O.-System</button>
       </div>
       <label class="field-label">SPIELMODUS</label>
       <div class="btn-group" id="tn-mode-group" style="margin-bottom:8px">
@@ -619,7 +619,7 @@
       <div id="tn-online-hint" style="display:none;background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:8px;padding:12px;font-size:13px;color:var(--dart-text-muted);margin-bottom:12px">
         Online-Turnier: Nach dem Start erhalten andere Spieler einen Code zum Beitreten.
       </div>
-      <button class="btn-start" id="btn-create-tournament"><i data-lucide="trophy" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> TURNIER STARTEN</button>
+      <button class="btn-start" id="btn-create-tournament"><i data-lucide="trophy" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="turnier_erstellen">TURNIER ERSTELLEN</span></button>
     </div>
   </div>
 </div>
@@ -632,7 +632,7 @@
     <div id="tv-status-badge" style="margin-left:auto"></div>
   </div>
   <div id="tv-content" style="flex:1;overflow-y:auto;padding:16px">
-    <div style="color:var(--dart-text-sec);text-align:center;padding:20px">Lade Turnier…</div>
+    <div style="color:var(--dart-text-sec);text-align:center;padding:20px" data-i18n="lade_turnier">Lade Turnier…</div>
   </div>
 </div>
 
@@ -659,7 +659,7 @@
       <div id="lp-players"></div>
       <div class="lp-controls">
         <div style="text-align:center">
-          <div style="font-size:10px;color:var(--dart-text-muted);letter-spacing:1px;margin-bottom:2px">VERBLEIBEND</div>
+          <div style="font-size:10px;color:var(--dart-text-muted);letter-spacing:1px;margin-bottom:2px" data-i18n="verbleibend">VERBLEIBEND</div>
           <div class="lp-remaining" id="lp-remaining">501</div>
           <div class="lp-checkout" id="lp-checkout"></div>
         </div>
@@ -668,7 +668,7 @@
           <div class="lp-slot" id="lp-slot-1">—</div>
           <div class="lp-slot" id="lp-slot-2">—</div>
         </div>
-        <button class="lp-btn ok" id="lp-next" style="display:none">NÄCHSTER SPIELER</button>
+        <button class="lp-btn ok" id="lp-next" style="display:none" data-i18n="naechster_spieler">NÄCHSTER SPIELER</button>
         <button class="lp-mic" id="lp-mic"><i data-lucide="mic" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
         <button class="lp-mic" id="lp-bouncer" style="background:var(--dart-bg-chip);color:var(--dart-warning)"><i data-lucide="corner-down-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Bouncer</button>
         <div style="display:flex;align-items:center;justify-content:center;gap:4px">
@@ -691,7 +691,7 @@
       <div class="bottom-slot" id="bs-1">—</div>
       <div class="bottom-slot" id="bs-2">—</div>
     </div>
-    <button class="bottom-btn ok" id="bottom-next" style="display:none;white-space:nowrap">WEITER</button>
+    <button class="bottom-btn ok" id="bottom-next" style="display:none;white-space:nowrap" data-i18n="weiter">WEITER</button>
     <button class="bottom-btn mic" id="bottom-mic"><i data-lucide="mic" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
     <button class="bottom-btn mic" id="bottom-bouncer" style="background:var(--dart-bg-chip);color:var(--dart-warning);flex-shrink:0"><i data-lucide="corner-down-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
   </div>
@@ -715,16 +715,16 @@
     </div>
     <div class="side-panel">
       <div class="panel-box">
-        <div class="panel-label">WÜRFE</div>
+        <div class="panel-label" data-i18n="wuerfe">WÜRFE</div>
         <div class="throw-slots" id="cr-slots">
           <div class="throw-slot" id="cr-slot-0">—</div>
           <div class="throw-slot" id="cr-slot-1">—</div>
           <div class="throw-slot" id="cr-slot-2">—</div>
         </div>
       </div>
-      <button class="btn-next ok" id="cr-next" style="display:none">NÄCHSTER SPIELER</button>
+      <button class="btn-next ok" id="cr-next" style="display:none" data-i18n="naechster_spieler">NÄCHSTER SPIELER</button>
       <div class="panel-box">
-        <div class="panel-label">LEGENDE</div>
+        <div class="panel-label" data-i18n="legende">LEGENDE</div>
         <div class="cricket-legend">/ &nbsp;= 1 Mark<br>X &nbsp;= 2 Marks<br>● &nbsp;= Closed</div>
       </div>
     </div>
@@ -750,7 +750,7 @@
     </div>
     <div class="side-panel">
       <div class="panel-box">
-        <div class="panel-label">WÜRFE</div>
+        <div class="panel-label" data-i18n="wuerfe">WÜRFE</div>
         <div class="throw-slots" id="party-slots">
           <div class="throw-slot" id="pslot-0">—</div>
           <div class="throw-slot" id="pslot-1">—</div>
@@ -760,7 +760,7 @@
       </div>
       <!-- Scoreboard for party games -->
       <div class="panel-box" id="party-scoreboard" style="flex:1;overflow-y:auto"></div>
-      <button class="btn-next ok" id="party-next" style="display:none">NÄCHSTER SPIELER</button>
+      <button class="btn-next ok" id="party-next" style="display:none" data-i18n="naechster_spieler">NÄCHSTER SPIELER</button>
     </div>
   </div>
 </div>

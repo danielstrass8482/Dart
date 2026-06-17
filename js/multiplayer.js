@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { startX01, processX01Hit, advanceX01 } from './x01.js?v=2';
 import { soundHit } from './audio.js';
+import { t } from './i18n.js';
 
 export let onlineMode="501", onlineLegs=1, onlineSets=1;
 export let currentRoomCode=null, roomUnsubscribe=null;
@@ -71,7 +72,7 @@ export function showWaitingScreen(code){
       startBtn.style.display=""; waitStatus.textContent=`${room.players.length} Spieler bereit — du kannst starten`;
     } else {
       startBtn.style.display="none";
-      waitStatus.textContent=(room.players||[]).length===1?"Warte auf Mitspieler…":`${(room.players||[]).length} Spieler verbunden`;
+      waitStatus.textContent=(room.players||[]).length===1?t('warte_mitspieler'):`${(room.players||[]).length} ${t('spieler_verbunden')}`;
     }
     if(!isRoomHost&&room.status==="started"&&room.config){
       const idx=(room.config.players||[]).indexOf(myOnlineName);
