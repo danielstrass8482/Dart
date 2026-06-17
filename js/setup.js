@@ -92,8 +92,8 @@ export function renderPlayerList(){
   window.refreshIcons?.();
   document.getElementById("sel-hint").textContent=
     state.selectedPlayers.length
-      ? `${state.selectedPlayers.length} Spieler gewählt: ${state.selectedPlayers.map(p=>p.name).join(", ")}`
-      : "Tippe Spieler an — Reihenfolge = Startreihenfolge";
+      ? `${state.selectedPlayers.length} ${t('spieler_gewaehlt')}: ${state.selectedPlayers.map(p=>p.name).join(", ")}`
+      : t('spieler_hint_simple');
 }
 
 /**
@@ -122,7 +122,7 @@ export function renderProfilPlayerList(){
   const el=document.getElementById("profil-player-list");
   if(!el) return;
   if(!state.allPlayers.length){
-    el.innerHTML=`<div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:12px 0">Noch keine Spieler angelegt</div>`;
+    el.innerHTML=`<div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:12px 0">${t('noch_keine_spieler')}</div>`;
     return;
   }
   el.innerHTML=state.allPlayers.map(p=>{
@@ -145,7 +145,7 @@ export function renderProfilPlayerList(){
         <div style="font-size:11px;color:#bbb;margin-top:2px">Ø ${avg} · CO ${co}%</div>
       </div>
       <button data-profil-edit="${p.id}" style="padding:8px 14px;border:1px solid var(--dart-border);border-radius:8px;
-        background:var(--dart-bg-card);color:var(--dart-text-sec);font-size:13px;cursor:pointer;flex-shrink:0"><i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Bearbeiten</button>
+        background:var(--dart-bg-card);color:var(--dart-text-sec);font-size:13px;cursor:pointer;flex-shrink:0"><i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> ${t('bearbeiten')}</button>
     </div>`;
   }).join("");
   el.querySelectorAll("[data-profil-edit]").forEach(btn=>{
@@ -303,10 +303,10 @@ export function updateAuthUI(user){
   if(bar){
     if(user && !user.isAnonymous){
       bar.innerHTML=`<span style="font-size:12px;color:var(--dart-text-sec)">${user.displayName||user.email}</span>
-        <button onclick="signOutUser()" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">Abmelden</button>`;
+        <button onclick="signOutUser()" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">${t('abmelden')}</button>`;
     } else {
       bar.innerHTML=`<button onclick="signInWithGoogle()" style="background:var(--dart-bg-card);border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px"> Mit Google anmelden</button>`;
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px"> ${t('mit_google_anmelden')}</button>`;
     }
   }
 }

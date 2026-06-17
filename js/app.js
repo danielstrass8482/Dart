@@ -6,7 +6,7 @@
 import './firebase.js';
 
 // ── i18n ─────────────────────────────────────────────────────────
-import { t, setLang, getLang } from './i18n.js';
+import { t, setLang, getLang, applyTranslations, SUPPORTED_LANGS } from './i18n.js';
 
 // ── Browser language detection (first visit only) ─────────────────
 if(!localStorage.getItem('dart_lang')){
@@ -15,15 +15,7 @@ if(!localStorage.getItem('dart_lang')){
 }
 
 // ── Apply data-i18n translations ──────────────────────────────────
-document.querySelectorAll('[data-i18n]').forEach(el => {
-  el.textContent = t(el.dataset.i18n);
-});
-
-// ── Input placeholders ────────────────────────────────────────────
-const newPlayerInput = document.getElementById('new-player-input');
-if(newPlayerInput) newPlayerInput.placeholder = t('neuer_spieler');
-const profilNewInput = document.getElementById('profil-new-player-input');
-if(profilNewInput) profilNewInput.placeholder = t('neuer_spieler');
+applyTranslations();
 
 
 // ── Premium ──────────────────────────────────────────────────────
@@ -352,7 +344,7 @@ document.getElementById("btn-extra-modes").addEventListener("click",()=>{
   const btn=document.getElementById("btn-extra-modes");
   const open=panel.style.display==="none";
   panel.style.display=open?"block":"none";
-  btn.textContent=open?"▲ WEITERE MODI":"▼ WEITERE MODI";
+  btn.textContent=open?`▲ ${t('weitere_modi').replace(/^▼\s*/,"")}`:t('weitere_modi');
 });
 
 document.getElementById("extra-mode-group").addEventListener("click",e=>{
@@ -405,7 +397,7 @@ document.getElementById("btn-add-player").addEventListener("click", async ()=>{
   const input=document.getElementById("new-player-input");
   const name=input.value.trim();
   if(!name) return;
-  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert("Spieler existiert bereits!"); return; }
+  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert(t('spieler_existiert')); return; }
   if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
   try{ await window.dartDB.savePlayer(name); input.value=""; await loadPlayers(); }
   catch(e){ alert("Fehler: "+e.message); }
@@ -417,7 +409,7 @@ document.getElementById("profil-btn-add-player")?.addEventListener("click", asyn
   const input=document.getElementById("profil-new-player-input");
   const name=input.value.trim();
   if(!name) return;
-  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert("Spieler existiert bereits!"); return; }
+  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert(t('spieler_existiert')); return; }
   if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
   try{ await window.dartDB.savePlayer(name); input.value=""; await loadPlayers(); }
   catch(e){ alert("Fehler: "+e.message); }
@@ -425,8 +417,8 @@ document.getElementById("profil-btn-add-player")?.addEventListener("click", asyn
 document.getElementById("profil-new-player-input")?.addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("profil-btn-add-player")?.click(); });
 
 document.getElementById("btn-start").addEventListener("click",async()=>{
-  if(state.selectedPlayers.length<1){ alert("Bitte mindestens 1 Spieler auswählen!"); return; }
-  if(selectedMode==="Killer"&&state.selectedPlayers.length<2&&selectedBot==="none"){ alert("Killer braucht mindestens 2 Spieler!"); return; }
+  if(state.selectedPlayers.length<1){ alert(t('min_1_spieler')); return; }
+  if(selectedMode==="Killer"&&state.selectedPlayers.length<2&&selectedBot==="none"){ alert(t('killer_min_2')); return; }
 
   const healthData = localStorage.getItem("dart_health_enabled") !== "false" ? await collectHealthData() : null;
 
@@ -469,6 +461,7 @@ document.querySelectorAll(".home-tab").forEach(btn=>{
     btn.classList.add("active");
     const tabEl=document.getElementById("tab-"+btn.dataset.tab);
     if(tabEl) tabEl.classList.add("active");
+    applyTranslations();
     if(btn.dataset.tab==="statistiken") loadAndRenderStats();
     if(btn.dataset.tab==="turniere") loadTournaments();
     if(btn.dataset.tab==="profil") initProfilTab();
@@ -631,20 +624,25 @@ document.getElementById("btn-email-register").addEventListener("click",async()=>
 document.getElementById("btn-google-register").addEventListener("click",async()=>{ authError("reg-error",""); try{ await window.signInWithGoogle(); }catch(e){ authError("reg-error",e.message); } });
 
 // ── Language Switcher ─────────────────────────────────────────────
-function initLangSwitcher(){
+function buildLangSwitcher(){
+  const wrap = document.getElementById('lang-switcher');
+  if(!wrap) return;
   const lang = getLang();
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    const isActive = btn.dataset.lang === lang;
-    btn.style.border = `2px solid ${isActive ? 'var(--dart-gold)' : 'var(--dart-border)'}`;
-    btn.style.background = isActive ? 'var(--dart-accent-bg, rgba(212,175,55,.1))' : 'var(--dart-bg-chip)';
-    btn.style.color = isActive ? 'var(--dart-gold)' : 'var(--dart-text-sec)';
+  wrap.innerHTML = SUPPORTED_LANGS.map(l => {
+    const isActive = l.code === lang;
+    return `<button class="lang-btn" data-lang="${l.code}" style="flex:1;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;
+      border:2px solid ${isActive?'var(--dart-gold)':'var(--dart-border)'};
+      background:${isActive?'var(--dart-accent-bg,rgba(212,175,55,.1))':'var(--dart-bg-chip)'};
+      color:${isActive?'var(--dart-gold)':'var(--dart-text-sec)'}">${l.label}</button>`;
+  }).join('');
+  wrap.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => { setLang(btn.dataset.lang); buildLangSwitcher(); });
   });
 }
 
-document.querySelectorAll('.lang-btn').forEach(btn => {
-  btn.addEventListener('click', () => setLang(btn.dataset.lang));
-});
-initLangSwitcher();
+function initLangSwitcher(){ buildLangSwitcher(); }
+
+buildLangSwitcher();
 
 // ── Profil-Tab ────────────────────────────────────────────────────
 function initProfilTab(){
