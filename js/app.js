@@ -784,7 +784,7 @@ document.getElementById("btn-toggle-history")?.addEventListener("click",()=>{
   const btn=document.getElementById("btn-toggle-history");
   const open=list.style.display==="none";
   list.style.display=open?"":"none";
-  btn.textContent=`📋 GESPEICHERTE ANALYSEN ${open?"▲":"▼"}`;
+  btn.innerHTML=`<i data-lucide="list" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> GESPEICHERTE ANALYSEN ${open?"▲":"▼"}`; window.refreshIcons?.();
 });
 
 // ── Video Coach (winner) ──────────────────────────────────────────
@@ -851,8 +851,8 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
     const text=data.content?.[0]?.text||"Keine Antwort erhalten.";
     recordVideoCoachUsage();
     const newLeft=videoCoachCallsLeft();
-    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header">🎥 WURF-ANALYSE</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div></div>`;
-    btn.textContent="🎥 ERNEUT ANALYSIEREN"; btn.disabled=newLeft<=0;
+    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header"><i data-lucide="video" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> WURF-ANALYSE</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div></div>`; window.refreshIcons?.();
+    btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ERNEUT ANALYSIEREN`; window.refreshIcons?.(); btn.disabled=newLeft<=0;
     if(window.dartDB){ const pi=coachSelectedPlayerIdx; const pid=state.cfg.playerIds?.[pi]||null; const pName=state.cfg.players?.[pi]||"Unbekannt"; await window.dartDB.saveCoachAnalysis({playerId:pid,playerName:pName,type:"video",text,frameCount:frames.length}); }
   }catch(err){
     outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">Fehler: ${err.message}</div>`;
@@ -999,10 +999,10 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
     const data=await callClaudeViaProxy([{role:"user",content}]);
     const text=data.content?.[0]?.text||"Keine Antwort erhalten.";
     recordVideoCoachUsage(); const newLeft=videoCoachCallsLeft();
-    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header">🎥 WURF-ANALYSE</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div></div>`;
-    btn.textContent="🎥 ERNEUT ANALYSIEREN"; btn.disabled=newLeft<=0;
+    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header"><i data-lucide="video" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> WURF-ANALYSE</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div></div>`; window.refreshIcons?.();
+    btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ERNEUT ANALYSIEREN`; window.refreshIcons?.(); btn.disabled=newLeft<=0;
     if(window.dartDB&&analyseSelectedPlayer){ const p=state.allPlayers.find(x=>x.id===analyseSelectedPlayer); await window.dartDB.saveCoachAnalysis({playerId:analyseSelectedPlayer,playerName:playerName||p?.name||"Unbekannt",type:"video",text,frameCount:frames.length}); loadCoachHistoryAnalyseTab(analyseSelectedPlayer); }
-  }catch(err){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">Fehler: ${err.message}</div>`; btn.disabled=false; btn.textContent="🎥 WURF ANALYSIEREN"; }
+  }catch(err){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">Fehler: ${err.message}</div>`; btn.disabled=false; btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF ANALYSIEREN`; window.refreshIcons?.(); }
 });
 
 // ── Voice Settings ────────────────────────────────────────────────
@@ -1039,19 +1039,20 @@ function renderVoiceSelector(){
     const isActive=v.id===activeId; const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
     const premiumBadge=!v.builtin?` <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
     return `<div style="border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;${isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border-top:1px solid var(--dart-divider);"}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)">🎙️ ${v.name}${premiumBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${premiumBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
       <div style="font-size:11px;color:var(--dart-text-muted);font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">Test: 180</button>
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Test: Game On</button>
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Test: Bust</button>
-        ${isActive?`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled>✓ Aktiv</button>`:`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}">✓ Aktivieren</button>`}
-        ${!v.builtin?`<button style="padding:7px 11px;border:1px solid var(--dart-danger);border-radius:7px;background:rgba(200,54,43,.12);color:var(--dart-danger);font-size:12px;cursor:pointer;" data-delete-idx="${i}">🗑</button>`:""}
+        ${isActive?`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> Aktiv</button>`:`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> Aktivieren</button>`}
+        ${!v.builtin?`<button style="padding:7px 11px;border:1px solid var(--dart-danger);border-radius:7px;background:rgba(200,54,43,.12);color:var(--dart-danger);font-size:12px;cursor:pointer;" data-delete-idx="${i}"><i data-lucide="trash-2" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>`:""}
       </div>
     </div>`;
   }).join("");
   list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",()=>testVoice(btn.dataset.tvId,btn.dataset.tvKey,btn.dataset.tvText)));
   list.querySelectorAll("[data-activate-id]").forEach(btn=>btn.addEventListener("click",()=>activateVoice(btn.dataset.activateId,btn.dataset.activateName)));
+  window.refreshIcons?.();
   list.querySelectorAll("[data-delete-idx]").forEach(btn=>btn.addEventListener("click",()=>{
     const vs=loadVoices(); const removed=vs.splice(parseInt(btn.dataset.deleteIdx),1)[0];
     if(removed.id===getVoiceId()){ const fallback=vs.find(v=>v.builtin)||vs[0]; if(fallback){ localStorage.setItem("dart_active_voice_id",fallback.id); Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]); } }
@@ -1088,6 +1089,9 @@ window.addEventListener("dbReady", ()=>{
   const user = window.currentUser;
   if(user && !user.isAnonymous) registerBetaUser();
 });
+
+// ── Lucide icon refresh helper ────────────────────────────────────
+window.refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
 
 // ── Expose globals for inline HTML onclick handlers ───────────────
 window.showSpielenSection = showSpielenSection;

@@ -316,26 +316,26 @@ export async function callClaudeViaProxy(messages){
 export async function callCoach(prompt, outputEl, limitEl, btnEl){
   const left = coachCallsLeft();
   if(left<=0){
-    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header">🧠 COACH</div>Du hast heute dein Limit (${COACH_DAILY_LIMIT} Analysen) erreicht. Morgen wieder!</div>`;
+    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div>Du hast heute dein Limit (${COACH_DAILY_LIMIT} Analysen) erreicht. Morgen wieder!</div>`; window.refreshIcons?.();
     btnEl.disabled=true;
     return;
   }
   btnEl.disabled=true;
-  btnEl.textContent="⏳ Analysiere…";
-  outputEl.innerHTML=`<div class="coach-box"><div class="coach-header">🧠 COACH</div><span style="color:var(--dart-text-sec)">Coach denkt nach…</span></div>`;
+  btnEl.textContent="Analysiere…";
+  outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div><span style="color:var(--dart-text-sec)">Coach denkt nach…</span></div>`; window.refreshIcons?.();
   try{
     const data = await callClaudeViaProxy([{role:"user",content:prompt}]);
     const text = data.content?.[0]?.text || "Keine Antwort erhalten.";
     const count = recordCoachUsage();
     const newLeft = COACH_DAILY_LIMIT - count;
-    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header">🧠 COACH-ANALYSE</div>${formatCoachText(text)}</div>`;
+    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE</div>${formatCoachText(text)}</div>`; window.refreshIcons?.();
     if(limitEl) limitEl.textContent=`${newLeft} von ${COACH_DAILY_LIMIT} Analysen heute verbleibend`;
-    btnEl.textContent="🧠 NEUE ANALYSE";
+    btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> NEUE ANALYSE`; window.refreshIcons?.();
     btnEl.disabled = newLeft<=0;
   }catch(e){
     outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-danger)">Fehler: ${e.message}</div>`;
     btnEl.disabled=false;
-    btnEl.textContent="🧠 COACH-ANALYSE";
+    btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE`; window.refreshIcons?.();
   }
 }
 
@@ -425,7 +425,7 @@ export async function loadCoachHistoryStats(pid){
   container.innerHTML=`
     <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-muted);margin-bottom:8px;cursor:pointer"
       onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?this.textContent.replace('▼','▲'):this.textContent.replace('▲','▼')">
-      📋 GESPEICHERTE ANALYSEN (${analyses.length}) ▼
+      <i data-lucide="list" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> GESPEICHERTE ANALYSEN (${analyses.length}) ▼
     </div>
     <div style="display:none">
       ${analyses.map(a=>{
@@ -453,7 +453,7 @@ export async function loadCoachHistoryAnalyseTab(pid){
   container.innerHTML=`
     <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-muted);margin-bottom:8px;cursor:pointer"
       onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?this.textContent.replace('▼','▲'):this.textContent.replace('▲','▼')">
-      📋 GESPEICHERTE ANALYSEN (${analyses.length}) ▼
+      <i data-lucide="list" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> GESPEICHERTE ANALYSEN (${analyses.length}) ▼
     </div>
     <div style="display:none">
       ${analyses.map(a=>{

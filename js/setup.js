@@ -74,7 +74,7 @@ export function renderPlayerList(){
         <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}${p.dartWeight?` · ${p.dartWeight}g`:""}</div>
       </div>
       <div class="pi-order">${selected?selIdx+1:""}</div>
-      <button class="pi-delete" data-id="${p.id}" data-name="${p.name}" title="Spieler löschen">✕</button>`;
+      <button class="pi-delete" data-id="${p.id}" data-name="${p.name}" title="Spieler löschen"><i data-lucide="x" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i></button>`;
     div.addEventListener("click",()=>togglePlayer(p));
     const delBtn=div.querySelector(".pi-delete");
     delBtn.addEventListener("click", async (e)=>{
@@ -88,6 +88,7 @@ export function renderPlayerList(){
     });
     list.appendChild(div);
   });
+  window.refreshIcons?.();
   document.getElementById("sel-hint").textContent=
     state.selectedPlayers.length
       ? `${state.selectedPlayers.length} Spieler gewählt: ${state.selectedPlayers.map(p=>p.name).join(", ")}`
@@ -143,7 +144,7 @@ export function renderProfilPlayerList(){
         <div style="font-size:11px;color:#bbb;margin-top:2px">Ø ${avg} · CO ${co}%</div>
       </div>
       <button data-profil-edit="${p.id}" style="padding:8px 14px;border:1px solid var(--dart-border);border-radius:8px;
-        background:var(--dart-bg-card);color:var(--dart-text-sec);font-size:13px;cursor:pointer;flex-shrink:0">✏ Bearbeiten</button>
+        background:var(--dart-bg-card);color:var(--dart-text-sec);font-size:13px;cursor:pointer;flex-shrink:0"><i data-lucide="pencil" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Bearbeiten</button>
     </div>`;
   }).join("");
   el.querySelectorAll("[data-profil-edit]").forEach(btn=>{
@@ -152,6 +153,7 @@ export function renderProfilPlayerList(){
       if(player) openPlayerEditDialog(player);
     });
   });
+  window.refreshIcons?.();
 }
 
 // ── Screen switching ──────────────────────────────────────────────

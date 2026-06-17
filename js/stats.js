@@ -142,8 +142,8 @@ function buildAdvancedColumn(side){
     <div style="font-size:10px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px;text-align:center;font-weight:600">BOARD ${side.toUpperCase()}</div>
     <div style="margin-bottom:10px">
       <div style="display:flex;gap:4px;margin-bottom:6px">
-        <button class="col-type-btn active" data-side="${side}" data-type="timerange" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-gold);background:var(--dart-bg-chip);color:var(--dart-gold);cursor:pointer;font-weight:700">📅 Zeit</button>
-        <button class="col-type-btn" data-side="${side}" data-type="session" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-border);background:var(--dart-bg-card);color:var(--dart-text-muted);cursor:pointer">🎮 Spiel</button>
+        <button class="col-type-btn active" data-side="${side}" data-type="timerange" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-gold);background:var(--dart-bg-chip);color:var(--dart-gold);cursor:pointer;font-weight:700"><i data-lucide="calendar" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> Zeit</button>
+        <button class="col-type-btn" data-side="${side}" data-type="session" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-border);background:var(--dart-bg-card);color:var(--dart-text-muted);cursor:pointer"><i data-lucide="gamepad-2" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> Spiel</button>
       </div>
       <div id="timerange-${side}" style="display:flex;gap:4px;flex-wrap:wrap">${trBtns}</div>
       <div id="session-${side}" style="display:none">
@@ -172,7 +172,7 @@ function updateColumn(side, pid){
     avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
     const labels={"7d":"7 Tage","30d":"1 Monat","90d":"3 Monate","all":"Alle Spiele"};
     const lbl=document.getElementById(`filter-label-${side}`);
-    if(lbl) lbl.textContent=`📅 ${labels[st.range]||st.range}`;
+    if(lbl) lbl.innerHTML=`<i data-lucide="calendar" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> ${labels[st.range]||st.range}`; window.refreshIcons?.();
   } else if(st.type==="session"&&st.sessionId){
     const allSess=groupGamesIntoSessions(allGamesCache.filter(g=>g.mode!=="Cricket"&&(pid?(g.playerIds||[]).includes(pid):true)));
     const sess=allSess.find(s=>s.id===st.sessionId);
@@ -183,7 +183,7 @@ function updateColumn(side, pid){
       avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
       const legText=st.legNum==="all"?"Alle Legs":"Leg "+st.legNum;
       const lbl=document.getElementById(`filter-label-${side}`);
-      if(lbl) lbl.textContent=`🎮 ${(sess.label.split("·")[0]||"").trim()} · ${legText}`;
+      if(lbl) lbl.innerHTML=`<i data-lucide="gamepad-2" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> ${(sess.label.split("·")[0]||"").trim()} · ${legText}`; window.refreshIcons?.();
     }
   }
   const svg=document.getElementById(`scatter-board-${side}`);
@@ -461,7 +461,7 @@ export async function loadAndRenderStats(){
     const mostTriedDouble=doubleEntries[0];
 
     if(doubleEntries.length>0){
-      html+=`<div class="stats-section-title" style="display:flex;align-items:center">🎯 DOPPELFELD-STATISTIK <button class="help-btn" onclick="window.showHelp('Doppelfeld-Statistik','Die App erkennt automatisch wann du auf ein Doppelfeld zielst und trackt deine Trefferquote. So siehst du welche Doppelfelder deine Stärken und Schwächen sind.')">?</button></div>`;
+      html+=`<div class="stats-section-title" style="display:flex;align-items:center"><i data-lucide="target" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> DOPPELFELD-STATISTIK <button class="help-btn" onclick="window.showHelp('Doppelfeld-Statistik','Die App erkennt automatisch wann du auf ein Doppelfeld zielst und trackt deine Trefferquote. So siehst du welche Doppelfelder deine Stärken und Schwächen sind.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>`;
       html+=`<div class="stats-grid" style="margin-bottom:10px">
         ${bestDouble?`<div class="stat-card"><div class="s-label">BESTES DOPPEL</div><div class="s-value">${bestDouble.field}</div><div class="s-sub">${bestDouble.pct}% (${bestDouble.hit}/${bestDouble.att})</div></div>`:""}
         ${worstDouble&&worstDouble.field!==bestDouble?.field?`<div class="stat-card"><div class="s-label">SCHWÄCHSTES DOPPEL</div><div class="s-value">${worstDouble.field}</div><div class="s-sub">${worstDouble.pct}% (${worstDouble.hit}/${worstDouble.att})</div></div>`:""}
@@ -492,7 +492,7 @@ export async function loadAndRenderStats(){
     if(allScatter.length){
       html+=`<div style="border-top:2px solid var(--dart-gold);margin-top:24px;padding-top:16px"></div>
       <div class="stats-section-title" style="display:flex;align-items:center;gap:8px;margin-top:0">
-        🔬 ERWEITERTE STATISTIKEN
+        <i data-lucide="microscope" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ERWEITERTE STATISTIKEN
         <span style="font-size:9px;background:var(--dart-gold);color:#000;padding:2px 6px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700">PREMIUM</span>
       </div>
       <div class="adv-grid">
@@ -502,6 +502,7 @@ export async function loadAndRenderStats(){
     }
 
     box.innerHTML=html;
+    window.refreshIcons?.();
     loadCoachHistoryStats(statsSelectedPlayer);
 
     if(allScatter.length){

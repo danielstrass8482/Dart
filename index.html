@@ -11,18 +11,19 @@
 <link rel="stylesheet" href="css/game.css" />
 <link rel="stylesheet" href="css/stats.css" />
 <link rel="stylesheet" href="css/overlays.css" />
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
 <!-- Video Session Host Modal -->
 <div class="vidsession-backdrop" id="vidsession-backdrop">
   <div class="vidsession-modal">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--dart-gold);margin-bottom:4px">📱 MIT HANDY AUFNEHMEN</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--dart-gold);margin-bottom:4px"><i data-lucide="smartphone" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> MIT HANDY AUFNEHMEN</div>
     <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:12px">QR-Code scannen oder Code eingeben</div>
     <img id="vidsession-qr-img" class="vidsession-qr" src="" alt="QR Code">
     <div class="vidsession-code" id="vidsession-code-display"></div>
     <div style="font-size:11px;color:var(--dart-text-muted);word-break:break-all;margin-bottom:8px" id="vidsession-url-display"></div>
-    <div class="vidsession-status" id="vidsession-status">⏳ Warte auf Handy…</div>
+    <div class="vidsession-status" id="vidsession-status"><i data-lucide="loader" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Warte auf Handy…</div>
     <button onclick="cancelVideoSession()" style="margin-top:12px;padding:8px 24px;border-radius:8px;border:1px solid var(--dart-border-alt);background:var(--dart-bg-card);color:var(--dart-text-sec);cursor:pointer;font-size:13px">Abbrechen</button>
   </div>
 </div>
@@ -32,7 +33,7 @@
   <div class="health-modal">
     <h3>Wie geht's dir heute? (optional)</h3>
     <div class="health-row">
-      <label>😴 GESCHLAFEN</label>
+      <label><i data-lucide="moon" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> GESCHLAFEN</label>
       <div class="health-chips" id="hc-sleep">
         <span class="health-chip" data-val="4">4h</span>
         <span class="health-chip" data-val="5">5h</span>
@@ -43,7 +44,7 @@
       </div>
     </div>
     <div class="health-row">
-      <label>💪 KÖRPERLICHE BELASTUNG</label>
+      <label><i data-lucide="dumbbell" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> KÖRPERLICHE BELASTUNG</label>
       <div class="health-chips" id="hc-exertion">
         <span class="health-chip" data-val="kaum">Kaum</span>
         <span class="health-chip" data-val="leicht">Leicht</span>
@@ -52,7 +53,7 @@
       </div>
     </div>
     <div class="health-row">
-      <label>🫀 WIE FÜHLST DU DICH</label>
+      <label><i data-lucide="heart" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> WIE FÜHLST DU DICH</label>
       <div class="health-chips" id="hc-feeling">
         <span class="health-chip" data-val="1">😴 Müde</span>
         <span class="health-chip" data-val="2">😐 Ok</span>
@@ -71,8 +72,8 @@
 <div id="rotate-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);
   z-index:9999;flex-direction:column;align-items:center;justify-content:center;
   color:var(--dart-text);text-align:center;font-family:'Bebas Neue',sans-serif">
-  <div style="font-size:72px;margin-bottom:12px;display:inline-block;
-    animation:rotate-hint 1.5s ease-in-out infinite">📱</div>
+  <div style="margin-bottom:12px;display:inline-block;
+    animation:rotate-hint 1.5s ease-in-out infinite"><i data-lucide="smartphone" style="width:72px;height:72px;stroke-width:1;vertical-align:middle"></i></div>
   <div style="font-size:32px;letter-spacing:3px">GERÄT DREHEN</div>
   <div style="font-size:15px;font-family:'DM Sans',sans-serif;margin-top:8px;
     opacity:.65;letter-spacing:0">Querformat für das Spiel erforderlich</div>
@@ -127,10 +128,10 @@
 <div id="setup" class="screen" style="position:relative">
   <!-- Tab bar -->
   <div class="home-tabs">
-    <button class="home-tab active" data-tab="spielen">🎯 SPIELEN</button>
-    <button class="home-tab" data-tab="statistiken">📊 STATS</button>
-    <button class="home-tab" data-tab="turniere">🏆 TURNIERE</button>
-    <button class="home-tab" data-tab="profil">⚙️ PROFIL</button>
+    <button class="home-tab active" data-tab="spielen"><i data-lucide="target" style="width:22px;height:22px;stroke-width:2"></i> SPIELEN</button>
+    <button class="home-tab" data-tab="statistiken"><i data-lucide="bar-chart-2" style="width:22px;height:22px;stroke-width:2"></i> STATS</button>
+    <button class="home-tab" data-tab="turniere"><i data-lucide="trophy" style="width:22px;height:22px;stroke-width:2"></i> TURNIERE</button>
+    <button class="home-tab" data-tab="profil"><i data-lucide="user-circle" style="width:22px;height:22px;stroke-width:2"></i> PROFIL</button>
   </div>
 
   <!-- TAB: SPIELEN -->
@@ -140,34 +141,34 @@
     <div id="spielen-cards" class="spielen-cards-wrap">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;font-weight:800;letter-spacing:.1em;color:var(--dart-text);margin-bottom:16px;padding-top:4px">DARTTRAINER</div>
       <div class="spielen-card" onclick="showSpielenSection('lokal')">
-        <div class="spielen-card-icon">👤</div>
+        <div class="spielen-card-icon"><i data-lucide="users" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
         <div>
           <div class="spielen-card-title">LOKAL SPIELEN</div>
           <div class="spielen-card-sub">Gegen Freunde oder Bot</div>
         </div>
-        <div class="spielen-card-arrow">→</div>
+        <div class="spielen-card-arrow"><i data-lucide="chevron-right" style="width:20px;height:20px;stroke-width:2;color:var(--dart-text-muted)"></i></div>
       </div>
       <div class="spielen-card" onclick="showSpielenSection('online')">
-        <div class="spielen-card-icon">🌐</div>
+        <div class="spielen-card-icon"><i data-lucide="globe" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
         <div>
           <div class="spielen-card-title">ONLINE SPIELEN</div>
           <div class="spielen-card-sub">Gegen Freunde weltweit</div>
         </div>
-        <div class="spielen-card-arrow">→</div>
+        <div class="spielen-card-arrow"><i data-lucide="chevron-right" style="width:20px;height:20px;stroke-width:2;color:var(--dart-text-muted)"></i></div>
       </div>
       <div class="spielen-card" onclick="openTournamentSetup()">
-        <div class="spielen-card-icon">🏆</div>
+        <div class="spielen-card-icon"><i data-lucide="trophy" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
         <div>
           <div class="spielen-card-title">TURNIER</div>
           <div class="spielen-card-sub">Lokal oder Online</div>
         </div>
-        <div class="spielen-card-arrow">→</div>
+        <div class="spielen-card-arrow"><i data-lucide="chevron-right" style="width:20px;height:20px;stroke-width:2;color:var(--dart-text-muted)"></i></div>
       </div>
     </div>
 
     <!-- LOKAL: Setup-Formular -->
     <div id="spielen-lokal" class="spielen-section">
-      <button class="spielen-back" onclick="showSpielenCards()">← ZURÜCK</button>
+      <button class="spielen-back" onclick="showSpielenCards()"><i data-lucide="chevron-left" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ZURÜCK</button>
       <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:16px">
       <div class="setup-card">
     <label class="field-label">SPIELMODUS</label>
@@ -187,8 +188,8 @@
           <button class="btn-toggle" data-value="Highscore">Highscore</button>
           <button class="btn-toggle" data-value="Killer">Killer</button>
           <button class="btn-toggle" data-value="Elimination">Elimination</button>
-          <button class="btn-toggle" data-value="Bob27">🎯 Bob's 27</button>
-          <button class="btn-toggle" data-value="CheckoutTraining">✓ Checkout</button>
+          <button class="btn-toggle" data-value="Bob27"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Bob's 27</button>
+          <button class="btn-toggle" data-value="CheckoutTraining"><i data-lucide="check" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Checkout</button>
         </div>
       </div>
     </div>
@@ -231,20 +232,20 @@
     <label class="field-label" style="margin-top:4px">BOT-GEGNER</label>
     <div class="btn-group" id="bot-group">
       <button class="btn-toggle active" data-value="none">Kein Bot</button>
-      <button class="btn-toggle" data-value="easy">🤖 Anfänger</button>
-      <button class="btn-toggle" data-value="medium">🤖 Mittel</button>
-      <button class="btn-toggle" data-value="pro">🤖 Profi</button>
+      <button class="btn-toggle" data-value="easy"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Anfänger</button>
+      <button class="btn-toggle" data-value="medium"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Mittel</button>
+      <button class="btn-toggle" data-value="pro"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Profi</button>
     </div>
 
     <div id="bot-personality-section" style="display:none">
       <label class="field-label" style="margin-top:8px">PERSÖNLICHKEIT</label>
       <div class="btn-group" id="bot-personality-group" style="flex-wrap:wrap">
-        <button class="btn-toggle active" data-value="methodisch">🎯 Methodisch</button>
-        <button class="btn-toggle" data-value="uebermuetig">💪 Übermütig 🔒</button>
-        <button class="btn-toggle" data-value="nervoese">😰 Nervös 🔒</button>
-        <button class="btn-toggle" data-value="gluecksspieler">🎰 Glücksspieler 🔒</button>
-        <button class="btn-toggle" data-value="kaltbluetig">🧊 Kaltblütig 🔒</button>
-        <button class="btn-toggle" data-value="aufholer">📉 Aufholer 🔒</button>
+        <button class="btn-toggle active" data-value="methodisch"><i data-lucide="target" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> Methodisch</button>
+        <button class="btn-toggle" data-value="uebermuetig">Übermütig <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle" data-value="nervoese">Nervös <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle" data-value="gluecksspieler">Glücksspieler <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle" data-value="kaltbluetig">Kaltblütig <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle" data-value="aufholer">Aufholer <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
       </div>
       <div id="bot-personality-desc" style="color:var(--dart-text-sec);font-size:11px;text-align:center;margin-top:4px;min-height:14px">
         Spielt immer optimal und konstant
@@ -253,10 +254,10 @@
 
     <label class="field-label" style="margin-top:4px">SPIELKONTEXT</label>
     <div class="btn-group" id="context-group">
-      <button class="btn-toggle active" data-value="auto">🤖 Auto</button>
-      <button class="btn-toggle" data-value="training">🎯 Training</button>
-      <button class="btn-toggle" data-value="casual">🎮 Casual</button>
-      <button class="btn-toggle" data-value="tournament">🏆 Turnier</button>
+      <button class="btn-toggle active" data-value="auto"><i data-lucide="cpu" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Auto</button>
+      <button class="btn-toggle" data-value="training"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Training</button>
+      <button class="btn-toggle" data-value="casual"><i data-lucide="gamepad-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Casual</button>
+      <button class="btn-toggle" data-value="tournament"><i data-lucide="trophy" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Turnier</button>
     </div>
 
     <button class="btn-start" id="btn-start">SPIEL STARTEN</button>
@@ -266,14 +267,14 @@
 
     <!-- ONLINE: Raum erstellen/beitreten -->
     <div id="spielen-online" class="spielen-section">
-      <button class="spielen-back" onclick="showSpielenCards()">← ZURÜCK</button>
+      <button class="spielen-back" onclick="showSpielenCards()"><i data-lucide="chevron-left" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ZURÜCK</button>
       <div style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;align-items:center">
 
     <!-- Auth bar -->
     <div id="auth-bar" style="width:100%;max-width:480px;margin-bottom:20px;display:flex;justify-content:flex-end;align-items:center;gap:10px"></div>
 
     <div style="width:100%;max-width:480px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--dart-text);margin-bottom:4px">🌐 ONLINE SPIELEN</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--dart-text);margin-bottom:4px"><i data-lucide="globe" style="width:22px;height:22px;stroke-width:1.5;vertical-align:middle"></i> ONLINE SPIELEN</div>
       <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px">Spiele gegen Freunde auf anderen Geräten in Echtzeit</div>
 
       <!-- Create room -->
@@ -342,7 +343,7 @@
         <button class="time-btn" data-range="90d">3 Monate</button>
         <button class="time-btn" data-range="180d">6 Monate</button>
         <button class="time-btn" data-range="all">Alles</button>
-        <button class="time-btn" data-range="custom">📅</button>
+        <button class="time-btn" data-range="custom"><i data-lucide="calendar" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i></button>
       </div>
       <div class="custom-date-row" id="custom-date-row" style="display:none">
         <input type="date" id="date-from" class="date-input" />
@@ -352,9 +353,9 @@
       </div>
       <div class="stats-time-bar" id="context-filter-bar" style="margin-top:4px">
         <button class="time-btn active" data-ctx="all">Alle</button>
-        <button class="time-btn" data-ctx="training">🎯 Training</button>
-        <button class="time-btn" data-ctx="casual">🎮 Casual</button>
-        <button class="time-btn" data-ctx="tournament">🏆 Turnier</button>
+        <button class="time-btn" data-ctx="training"><i data-lucide="target" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Training</button>
+        <button class="time-btn" data-ctx="casual"><i data-lucide="gamepad-2" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Casual</button>
+        <button class="time-btn" data-ctx="tournament"><i data-lucide="trophy" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Turnier</button>
       </div>
       <div id="stats-content"><div class="stats-loading">Lade Statistiken…</div></div>
     </div>
@@ -363,27 +364,27 @@
     <div class="sub-tab-content" id="sub-tab-analyse">
     <div style="flex:1;padding:16px;overflow-y:auto;background:var(--dart-bg-card)">
       <div id="analyse-player-bar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
-      <div class="stats-section-title">📊 ERWEITERTE STATISTIKEN <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
-      <div class="stats-section-title" style="display:flex;align-items:center">🧠 COACH-ANALYSE <button class="help-btn" onclick="showHelp('KI-Coach Analyse','Der KI-Coach analysiert deine Spielstatistiken und gibt konkrete Verbesserungstipps basierend auf deinen Doppelfeld-Quoten, First-9-Schnitt und Trends.')">?</button></div>
-      <button class="coach-btn" id="btn-coach-analyse-tab" disabled>🧠 COACH-ANALYSE STARTEN <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
+      <div class="stats-section-title"><i data-lucide="trending-up" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ERWEITERTE STATISTIKEN <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
+      <div class="stats-section-title" style="display:flex;align-items:center"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE <button class="help-btn" onclick="showHelp('KI-Coach Analyse','Der KI-Coach analysiert deine Spielstatistiken und gibt konkrete Verbesserungstipps basierend auf deinen Doppelfeld-Quoten, First-9-Schnitt und Trends.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
+      <button class="coach-btn" id="btn-coach-analyse-tab" disabled><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE STARTEN <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
       <div id="coach-output-analyse-tab"></div>
       <div class="coach-limit" id="coach-limit-analyse-tab"></div>
       <div id="coach-history-analyse-tab" style="margin-top:12px"></div>
-      <div class="stats-section-title" style="margin-top:16px;display:flex;align-items:center">🎥 WURF-ANALYSE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;margin-left:6px">PREMIUM</span> <button class="help-btn" onclick="showHelp('Wurf-Analyse (Video)','Lade ein 3–5 Sekunden Video deines Wurfs hoch. Claude analysiert Haltung, Arm und Followthrough und gibt konkrete Verbesserungshinweise.')">?</button></div>
+      <div class="stats-section-title" style="margin-top:16px;display:flex;align-items:center"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF-ANALYSE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;margin-left:6px">PREMIUM</span> <button class="help-btn" onclick="showHelp('Wurf-Analyse (Video)','Lade ein 3–5 Sekunden Video deines Wurfs hoch. Claude analysiert Haltung, Arm und Followthrough und gibt konkrete Verbesserungshinweise.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
       <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:14px">
         <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
         <input type="file" id="video-upload-analyse-tab" accept="video/*" style="display:none">
-        <button id="btn-video-phone-analyse" style="width:100%;padding:11px;border:2px solid var(--dart-gold);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-gold);font-weight:700;margin-bottom:8px">📱 MIT HANDY AUFNEHMEN</button>
+        <button id="btn-video-phone-analyse" style="width:100%;padding:11px;border:2px solid var(--dart-gold);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-gold);font-weight:700;margin-bottom:8px"><i data-lucide="smartphone" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> MIT HANDY AUFNEHMEN</button>
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid var(--dart-danger);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-danger)">📹 TABLET-KAMERA</button>
-          <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed var(--dart-border);border-radius:8px;background:var(--dart-bg-card);cursor:pointer;font-size:13px;color:var(--dart-text-muted)">📁 HOCHLADEN</button>
+          <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid var(--dart-danger);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-danger)"><i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> TABLET-KAMERA</button>
+          <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed var(--dart-border);border-radius:8px;background:var(--dart-bg-card);cursor:pointer;font-size:13px;color:var(--dart-text-muted)"><i data-lucide="upload" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> HOCHLADEN</button>
         </div>
-        <button id="btn-video-stop-analyse" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:var(--dart-danger);color:var(--dart-text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">⏹ STOP</button>
+        <button id="btn-video-stop-analyse" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:var(--dart-danger);color:var(--dart-text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px"><i data-lucide="square" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> STOP</button>
         <div id="video-preview-wrap-analyse-tab" style="display:none;margin-bottom:8px">
           <video id="video-preview-analyse-tab" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
           <div id="video-frames-info-analyse-tab" style="font-size:11px;color:var(--dart-text-sec);margin-top:4px;text-align:center"></div>
         </div>
-        <button id="btn-video-analyze-analyse-tab" class="coach-btn" style="display:none;font-size:16px;padding:10px">🎥 WURF ANALYSIEREN</button>
+        <button id="btn-video-analyze-analyse-tab" class="coach-btn" style="display:none;font-size:16px;padding:10px"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF ANALYSIEREN</button>
         <div id="coach-output-video-analyse-tab"></div>
       </div>
     </div>
@@ -394,8 +395,8 @@
   <div class="home-tab-content" id="tab-turniere">
   <div style="flex:1;padding:16px;overflow-y:auto;background:var(--dart-bg-card)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;display:flex;align-items:center;gap:6px">🏆 TURNIERE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span><button class="help-btn" onclick="showHelp('Turnier-Modus','Spiele ein Turnier mit bis zu 8 Spielern. Jeder gegen Jeden oder K.O.-System. Auch online mit Freunden möglich.')">?</button></div>
-      <button onclick="openTournamentSetup()" style="padding:9px 16px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">+ ERSTELLEN</button>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;display:flex;align-items:center;gap:6px"><i data-lucide="trophy" style="width:20px;height:20px;stroke-width:2;vertical-align:middle"></i> TURNIERE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span><button class="help-btn" onclick="showHelp('Turnier-Modus','Spiele ein Turnier mit bis zu 8 Spielern. Jeder gegen Jeden oder K.O.-System. Auch online mit Freunden möglich.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
+      <button onclick="openTournamentSetup()" style="padding:9px 16px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer"><i data-lucide="plus" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ERSTELLEN</button>
     </div>
     <div id="tournament-list"><div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:20px">Noch keine Turniere</div></div>
   </div>
@@ -407,7 +408,7 @@
 
     <!-- Spielerprofile -->
     <div class="profil-section">
-      <div class="profil-section-title">🎯 SPIELERPROFILE</div>
+      <div class="profil-section-title"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> SPIELERPROFILE</div>
       <div id="profil-player-list">
         <div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:10px">Lade Spieler…</div>
       </div>
@@ -419,7 +420,7 @@
 
     <!-- Account -->
     <div class="profil-section account-card">
-      <div class="profil-section-title">👤 ACCOUNT</div>
+      <div class="profil-section-title"><i data-lucide="user" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ACCOUNT</div>
       <div id="profil-account-info" style="margin-bottom:12px"></div>
       <div id="profil-upgrade-inline" style="display:none">
         <div style="font-size:12px;color:var(--dart-text-muted);margin-bottom:10px">Spieldaten gehen verloren wenn du dich abmeldest. Jetzt Account erstellen:</div>
@@ -433,8 +434,8 @@
           MIT GOOGLE UPGRADEN
         </button>
       </div>
-      <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-text-muted);font-size:14px;cursor:pointer;margin-bottom:8px">🎓 Tutorial wiederholen</button>
-      <button id="btn-profil-signout" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-danger);font-size:14px;cursor:pointer">Abmelden</button>
+      <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-text-muted);font-size:14px;cursor:pointer;margin-bottom:8px"><i data-lucide="book-open" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Tutorial wiederholen</button>
+      <button id="btn-profil-signout" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-danger);font-size:14px;cursor:pointer"><i data-lucide="log-out" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Abmelden</button>
     </div>
 
     <!-- Premium Status -->
@@ -442,10 +443,10 @@
 
     <!-- Stimme & Sound -->
     <div class="profil-section">
-      <div class="profil-section-title" style="display:flex;align-items:center">🎙️ STIMME & SOUND <button class="help-btn" onclick="showHelp('Stimme & Sound','Wähle zwischen verschiedenen Ansage-Stimmen oder füge eigene ElevenLabs Voice IDs hinzu. Die Stimme wird für alle Score-Ansagen verwendet.')">?</button></div>
+      <div class="profil-section-title" style="display:flex;align-items:center"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> STIMME & SOUND <button class="help-btn" onclick="showHelp('Stimme & Sound','Wähle zwischen verschiedenen Ansage-Stimmen oder füge eigene ElevenLabs Voice IDs hinzu. Die Stimme wird für alle Score-Ansagen verwendet.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div id="voice-sync-status" style="font-size:12px;color:var(--dart-text-sec)"></div>
-        <button id="btn-voice-sync" style="padding:5px 12px;border:1px solid var(--dart-border);border-radius:6px;background:var(--dart-bg-card);font-size:12px;cursor:pointer">🔄 Sync</button>
+        <button id="btn-voice-sync" style="padding:5px 12px;border:1px solid var(--dart-border);border-radius:6px;background:var(--dart-bg-card);font-size:12px;cursor:pointer"><i data-lucide="refresh-cw" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> Sync</button>
       </div>
       <div id="voice-selector-list"></div>
       <div id="voice-selector-confirm" style="display:none;color:var(--dart-success);font-size:13px;padding:6px 0;text-align:center"></div>
@@ -465,23 +466,23 @@
 
     <!-- App-Einstellungen -->
     <div class="profil-section">
-      <div class="profil-section-title">⚙️ APP-EINSTELLUNGEN</div>
+      <div class="profil-section-title"><i data-lucide="settings" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> APP-EINSTELLUNGEN</div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
-        <span style="font-size:14px;color:var(--dart-text-sec)">🔊 Sprachausgabe</span>
+        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="volume-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Sprachausgabe</span>
         <label style="position:relative;display:inline-block;width:46px;height:27px">
           <input type="checkbox" id="setting-tts" checked style="opacity:0;width:0;height:0">
           <span id="setting-tts-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
-        <span style="font-size:14px;color:var(--dart-text-sec)">🎤 Sprachsteuerung</span>
+        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="mic" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Sprachsteuerung</span>
         <label style="position:relative;display:inline-block;width:46px;height:27px">
           <input type="checkbox" id="setting-mic" style="opacity:0;width:0;height:0">
           <span id="setting-mic-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
-        <span style="font-size:14px;color:var(--dart-text-sec)">🎯 Checkout-Highlight</span>
+        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Checkout-Highlight</span>
         <label style="position:relative;display:inline-block;width:46px;height:27px">
           <input type="checkbox" id="setting-checkout" checked style="opacity:0;width:0;height:0">
           <span id="setting-checkout-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
@@ -489,8 +490,8 @@
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
         <div>
-          <span style="font-size:14px;color:var(--dart-text-sec)">❤️ Gesundheitsdaten abfragen</span>
-          <button class="help-btn" onclick="showHelp('Gesundheitsdaten','Vor jedem Spiel wirst du nach Schlaf und Befinden gefragt. Verknüpfe Fitness mit deiner Spielleistung und sieh ob du an ausgeruhten Tagen besser spielst.')">?</button>
+          <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="heart-pulse" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Gesundheitsdaten abfragen</span>
+          <button class="help-btn" onclick="showHelp('Gesundheitsdaten','Vor jedem Spiel wirst du nach Schlaf und Befinden gefragt. Verknüpfe Fitness mit deiner Spielleistung und sieh ob du an ausgeruhten Tagen besser spielst.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
           <div style="font-size:11px;color:var(--dart-text-sec);margin-top:2px">Vor jedem Spiel nach Schlaf und Befinden fragen</div>
         </div>
         <label style="position:relative;display:inline-block;width:46px;height:27px;flex-shrink:0">
@@ -502,7 +503,7 @@
 
     <!-- Health Connect -->
     <div class="profil-section">
-      <div class="profil-section-title">🔗 HEALTH CONNECT</div>
+      <div class="profil-section-title"><i data-lucide="link" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> HEALTH CONNECT</div>
       <div style="font-size:13px;color:var(--dart-text-muted);margin-bottom:10px;line-height:1.6">
         Verbinde Garmin, Oura, Fitbit und mehr für automatische Gesundheitsdaten.
       </div>
@@ -517,7 +518,7 @@
 
     <!-- Rechtliches -->
     <div class="profil-section">
-      <div class="profil-section-title">📋 RECHTLICHES</div>
+      <div class="profil-section-title"><i data-lucide="file-text" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> RECHTLICHES</div>
       <div style="font-size:13px;color:var(--dart-text-muted);line-height:1.7">
         <div style="margin-bottom:6px"><strong>DartTrainer</strong> — Persönliches Dart-Score-Tracking</div>
         <div style="margin-bottom:6px">Version: 2.0 · Firebase Hosting via GitHub Pages</div>
@@ -532,7 +533,7 @@
   <!-- Studio tab (hidden) -->
   <div class="home-tab-content" id="tab-studio" style="display:none!important">
   <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--dart-text);margin-bottom:4px">🎙️ STIMM-STUDIO</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--dart-text);margin-bottom:4px"><i data-lucide="mic-2" style="width:20px;height:20px;stroke-width:2;vertical-align:middle"></i> STIMM-STUDIO</div>
     <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:16px">Nimm deine eigene Stimme für die Ansagen auf. Alle aufgenommenen Zahlen ersetzen die synthetische Stimme.</div>
     <div style="background:var(--dart-bg-card);border-radius:6px;height:8px;margin-bottom:6px">
       <div id="studio-progress-bar" style="background:var(--dart-gold);height:8px;border-radius:6px;width:0%;transition:width .3s"></div>
@@ -543,11 +544,11 @@
       <div id="studio-current-label" style="font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--dart-text);line-height:1">—</div>
       <div id="studio-current-hint" style="font-size:12px;color:var(--dart-text-sec);margin-bottom:16px"></div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button id="studio-rec-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-danger);border-radius:10px" disabled>⏺ Aufnehmen</button>
-        <button id="studio-play-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-bg-chip);border-radius:10px;display:none">▶ Anhören</button>
-        <button id="studio-save-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-success);border-radius:10px;display:none">✓ Speichern</button>
-        <button id="studio-skip-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:var(--dart-bg-chip);border-radius:10px">→ Überspringen</button>
-        <button id="studio-delete-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:var(--dart-danger);border-radius:10px;display:none">🗑 Löschen</button>
+        <button id="studio-rec-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-danger);border-radius:10px" disabled><i data-lucide="mic" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Aufnehmen</button>
+        <button id="studio-play-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-bg-chip);border-radius:10px;display:none"><i data-lucide="play" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Anhören</button>
+        <button id="studio-save-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-success);border-radius:10px;display:none"><i data-lucide="check" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Speichern</button>
+        <button id="studio-skip-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:var(--dart-bg-chip);border-radius:10px"><i data-lucide="chevron-right" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Überspringen</button>
+        <button id="studio-delete-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:var(--dart-danger);border-radius:10px;display:none"><i data-lucide="trash-2" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Löschen</button>
       </div>
       <div id="studio-status" style="font-size:12px;color:var(--dart-text-sec);margin-top:12px;min-height:16px"></div>
     </div>
@@ -601,15 +602,15 @@
       </div>
       <label class="field-label">TYP</label>
       <div class="btn-group" id="tn-type-group" style="margin-bottom:16px">
-        <button class="btn-toggle active" data-value="local">👤 Lokal</button>
-        <button class="btn-toggle" data-value="online">🌐 Online</button>
+        <button class="btn-toggle active" data-value="local"><i data-lucide="users" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Lokal</button>
+        <button class="btn-toggle" data-value="online"><i data-lucide="globe" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Online</button>
       </div>
       <label class="field-label">SPIELER</label>
       <div id="tn-player-list" style="margin-bottom:12px"></div>
       <div id="tn-online-hint" style="display:none;background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:8px;padding:12px;font-size:13px;color:var(--dart-text-muted);margin-bottom:12px">
         Online-Turnier: Nach dem Start erhalten andere Spieler einen Code zum Beitreten.
       </div>
-      <button class="btn-start" id="btn-create-tournament">🏆 TURNIER STARTEN</button>
+      <button class="btn-start" id="btn-create-tournament"><i data-lucide="trophy" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> TURNIER STARTEN</button>
     </div>
   </div>
 </div>
@@ -629,9 +630,9 @@
 <!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
 <div id="x01" class="screen" style="flex-direction:column;background:var(--dart-bg-card)">
   <div class="game-header">
-    <button class="btn-nav" id="x01-back">← Zurück</button>
+    <button class="btn-nav" id="x01-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Zurück</button>
     <div class="game-title" id="x01-title">501 · Runde 1</div>
-    <button class="btn-nav" id="x01-undo">↩ Undo</button>
+    <button class="btn-nav" id="x01-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Undo</button>
   </div>
   <div id="target-feedback-toast" style="display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:var(--dart-text);padding:8px 16px;border-radius:8px;font-size:14px;z-index:500;pointer-events:none;white-space:nowrap"></div>
 
@@ -659,11 +660,11 @@
           <div class="lp-slot" id="lp-slot-2">—</div>
         </div>
         <button class="lp-btn ok" id="lp-next" style="display:none">NÄCHSTER SPIELER</button>
-        <button class="lp-mic" id="lp-mic">🎤</button>
-        <button class="lp-mic" id="lp-bouncer" style="background:var(--dart-bg-chip);color:var(--dart-warning)">↩ Bouncer</button>
+        <button class="lp-mic" id="lp-mic"><i data-lucide="mic" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="lp-mic" id="lp-bouncer" style="background:var(--dart-bg-chip);color:var(--dart-warning)"><i data-lucide="corner-down-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Bouncer</button>
         <div style="display:flex;align-items:center;justify-content:center;gap:4px">
           <div id="voice-feedback" style="color:var(--dart-text-muted);font-size:11px;min-height:14px;padding:2px 0"></div>
-          <button class="help-btn" onclick="showHelp('Sprachsteuerung','Sage deine Würfe an: &quot;Triple Zwanzig&quot;, &quot;Doppel Sechzehn&quot;, &quot;Daneben&quot;. Funktioniert auf Deutsch und Englisch.')">?</button>
+          <button class="help-btn" onclick="showHelp('Sprachsteuerung','Sage deine Würfe an: &quot;Triple Zwanzig&quot;, &quot;Doppel Sechzehn&quot;, &quot;Daneben&quot;. Funktioniert auf Deutsch und Englisch.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
         </div>
       </div>
       <div class="lp-history" id="lp-history"></div>
@@ -682,17 +683,17 @@
       <div class="bottom-slot" id="bs-2">—</div>
     </div>
     <button class="bottom-btn ok" id="bottom-next" style="display:none;white-space:nowrap">WEITER</button>
-    <button class="bottom-btn mic" id="bottom-mic">🎤</button>
-    <button class="bottom-btn mic" id="bottom-bouncer" style="background:var(--dart-bg-chip);color:var(--dart-warning);flex-shrink:0">↩</button>
+    <button class="bottom-btn mic" id="bottom-mic"><i data-lucide="mic" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
+    <button class="bottom-btn mic" id="bottom-bouncer" style="background:var(--dart-bg-chip);color:var(--dart-warning);flex-shrink:0"><i data-lucide="corner-down-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
   </div>
 </div>
 
 <!-- ═══════════════════════ CRICKET SCREEN ═══════════════════════ -->
 <div id="cricket" class="screen">
   <div class="game-header">
-    <button class="btn-nav" id="cr-back">← Zurück</button>
+    <button class="btn-nav" id="cr-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Zurück</button>
     <div class="game-title" id="cr-title">Cricket · Runde 1</div>
-    <button class="btn-nav" id="cr-undo">↩ Undo</button>
+    <button class="btn-nav" id="cr-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Undo</button>
   </div>
 
   <div class="cricket-board">
@@ -724,9 +725,9 @@
 <!-- ═══════════════════════ PARTY GAME SCREEN ═══════════════════════ -->
 <div id="party" class="screen">
   <div class="game-header">
-    <button class="btn-nav" id="party-back">← Zurück</button>
+    <button class="btn-nav" id="party-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Zurück</button>
     <div class="game-title" id="party-title">Around the Clock</div>
-    <button class="btn-nav" id="party-undo">↩ Undo</button>
+    <button class="btn-nav" id="party-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Undo</button>
   </div>
 
   <div class="player-tabs" id="party-tabs"></div>
@@ -758,14 +759,14 @@
 <!-- ═══════════════════════ VIDEO REMOTE SCREEN (Phone) ═══════════════════════ -->
 <div id="video-remote" class="screen" style="flex-direction:column">
   <div class="vr-card">
-    <div class="vr-title">📹 WURFVIDEO AUFNEHMEN</div>
+    <div class="vr-title"><i data-lucide="video" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> WURFVIDEO AUFNEHMEN</div>
     <div id="vr-game-info" style="font-size:12px;color:var(--dart-text-sec);margin-bottom:12px"></div>
     <div id="vr-camera-section">
       <video id="vr-preview" class="vr-preview" muted playsinline style="display:none"></video>
       <div id="vr-frames-info" style="font-size:11px;color:var(--dart-text-sec);margin-bottom:6px"></div>
-      <button class="vr-btn vr-btn-record" id="btn-vr-record">⏺ AUFNEHMEN (max. 10s)</button>
-      <button class="vr-btn vr-btn-stop" id="btn-vr-stop" style="display:none">⏹ STOP</button>
-      <button class="vr-btn vr-btn-send" id="btn-vr-send" style="display:none">📤 AN TABLET SENDEN</button>
+      <button class="vr-btn vr-btn-record" id="btn-vr-record"><i data-lucide="circle" style="width:16px;height:16px;stroke-width:2;vertical-align:middle;color:var(--dart-danger)"></i> AUFNEHMEN (max. 10s)</button>
+      <button class="vr-btn vr-btn-stop" id="btn-vr-stop" style="display:none"><i data-lucide="square" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> STOP</button>
+      <button class="vr-btn vr-btn-send" id="btn-vr-send" style="display:none"><i data-lucide="send" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> AN TABLET SENDEN</button>
       <div class="vr-status" id="vr-status">Bereit — Handy seitlich, Hüfthöhe</div>
     </div>
   </div>
@@ -784,7 +785,7 @@
         <div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:6px">ANALYSE FÜR</div>
         <div id="coach-player-btns" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
       </div>
-      <button class="coach-btn" id="btn-coach-winner">🧠 STATISTIK-ANALYSE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
+      <button class="coach-btn" id="btn-coach-winner"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> STATISTIK-ANALYSE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
       <div id="coach-output-winner"></div>
       <div class="coach-limit" id="coach-limit-winner"></div>
     </div>
@@ -792,36 +793,36 @@
     <!-- Saved analyses -->
     <div id="coach-history-wrap" style="display:none;margin-top:12px;text-align:left">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-sec);margin-bottom:6px;cursor:pointer" id="btn-toggle-history">
-        📋 GESPEICHERTE ANALYSEN ▼
+        <i data-lucide="list" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> GESPEICHERTE ANALYSEN ▼
       </div>
       <div id="coach-history-list" style="display:none"></div>
     </div>
 
     <!-- Video Coach -->
     <div style="margin-top:12px;background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:14px;text-align:left">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px">🎥 WURF-ANALYSE (VIDEO) <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF-ANALYSE (VIDEO) <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
       <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
       <input type="file" id="video-upload" accept="video/*" style="display:none">
       <button id="btn-video-phone-winner" style="width:100%;padding:11px;border:2px solid var(--dart-gold);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-gold);font-weight:700;margin-bottom:8px">
-        📱 MIT HANDY AUFNEHMEN
+        <i data-lucide="smartphone" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> MIT HANDY AUFNEHMEN
       </button>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button id="btn-video-record-winner" style="flex:1;padding:10px;border:2px solid var(--dart-danger);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-danger)">
-          📹 TABLET-KAMERA
+          <i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> TABLET-KAMERA
         </button>
         <button id="btn-video-select" style="flex:1;padding:10px;border:2px dashed var(--dart-border);border-radius:8px;background:var(--dart-bg-card);cursor:pointer;font-size:13px;color:var(--dart-text-muted)">
-          📁 HOCHLADEN
+          <i data-lucide="upload" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> HOCHLADEN
         </button>
       </div>
       <button id="btn-video-stop-winner" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:var(--dart-danger);color:var(--dart-text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">
-        ⏹ STOP
+        <i data-lucide="square" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> STOP
       </button>
       <div id="video-preview-wrap" style="display:none;margin-bottom:8px">
         <video id="video-preview" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
         <div id="video-frames-info" style="font-size:11px;color:var(--dart-text-sec);margin-top:4px;text-align:center"></div>
       </div>
       <button id="btn-video-analyze" class="coach-btn" style="display:none;font-size:16px;padding:10px">
-        🎥 WURF ANALYSIEREN
+        <i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF ANALYSIEREN
       </button>
       <div id="coach-output-video"></div>
     </div>
@@ -848,7 +849,7 @@
     <div id="leg-score-display" style="color:var(--dart-gold);font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-top:8px"></div>
     <div style="color:var(--dart-text-muted);font-size:13px;margin-top:6px" id="leg-to-win"></div>
     <div id="leg-stats-summary" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
-    <button class="coach-btn" id="btn-coach-leg" style="margin-top:12px">🧠 LEG ANALYSIEREN</button>
+    <button class="coach-btn" id="btn-coach-leg" style="margin-top:12px"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> LEG ANALYSIEREN</button>
     <div id="coach-output-leg" style="margin-top:12px;text-align:left;max-height:220px;overflow-y:auto"></div>
     <button class="btn-new-game" id="btn-next-leg" style="margin-top:12px">NÄCHSTES LEG ▶</button>
   </div>
@@ -859,7 +860,7 @@
   <div class="player-edit-modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)">SPIELER BEARBEITEN</div>
-      <button id="btn-player-edit-close" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--dart-text-muted);padding:4px">✕</button>
+      <button id="btn-player-edit-close" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--dart-text-muted);padding:4px"><i data-lucide="x" style="width:20px;height:20px;stroke-width:2;vertical-align:middle"></i></button>
     </div>
 
     <!-- Photo upload -->
@@ -869,7 +870,7 @@
         font-size:28px;font-weight:600;margin-bottom:10px;border:3px solid var(--dart-gold);cursor:pointer"></div>
       <input type="file" id="player-edit-photo-input" accept="image/*" style="display:none">
       <button id="btn-player-photo" style="padding:7px 16px;border:1px dashed var(--dart-border-alt);border-radius:8px;
-        background:none;color:var(--dart-text-muted);font-size:13px;cursor:pointer">📷 Foto ändern</button>
+        background:none;color:var(--dart-text-muted);font-size:13px;cursor:pointer"><i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Foto ändern</button>
     </div>
 
     <div style="margin-bottom:12px">
@@ -895,5 +896,6 @@
 </div>
 
 <script type="module" src="js/app.js?v=2"></script>
+<script>if(window.lucide) lucide.createIcons();</script>
 </body>
 </html>

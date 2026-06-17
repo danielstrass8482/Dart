@@ -88,6 +88,17 @@ h2, .screen-title {
   50%      { transform: rotate(90deg); }
 }
 
+/* ── Lucide Icons ── */
+i[data-lucide] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.tab-icon i[data-lucide] { width: 22px; height: 22px; stroke-width: 2; }
+.section-icon i[data-lucide] { width: 16px; height: 16px; stroke-width: 2; color: var(--dart-text-muted); }
+
 @keyframes glowPulse {
   0%,100% { box-shadow: 0 0 0 1.5px rgba(212,175,55,.55), 0 0 24px rgba(212,175,55,.16); }
   50%      { box-shadow: 0 0 0 1.5px rgba(212,175,55,.95), 0 0 40px rgba(212,175,55,.32); }
