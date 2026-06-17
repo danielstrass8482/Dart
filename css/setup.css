@@ -38,7 +38,7 @@
   font-weight: 700;
   font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .06em;
   cursor: pointer;
   transition: color .2s;
   white-space: nowrap;
@@ -57,12 +57,12 @@
 /* ── Spielen cards ── */
 .spielen-cards-wrap { padding:20px 16px;flex:1;overflow-y:auto; }
 .spielen-card { display:flex;align-items:center;gap:14px;background:var(--dart-bg-card);border:1px solid var(--dart-border);
-  border-radius:14px;padding:18px 20px;margin-bottom:14px;cursor:pointer;
+  border-radius:14px;padding:16px 20px;margin-bottom:14px;cursor:pointer;
   transition:box-shadow .15s; }
 .spielen-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.10); }
 .spielen-card-icon { font-size:28px;flex-shrink:0; }
-.spielen-card-title { font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--dart-text); }
-.spielen-card-sub { font-size:12px;color:var(--dart-text-sec);margin-top:2px; }
+.spielen-card-title { font-family:'Bebas Neue',sans-serif;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dart-text); }
+.spielen-card-sub { font-size:12px;color:var(--dart-text-muted);font-weight:500;margin-top:2px; }
 .spielen-card-arrow { margin-left:auto;color:var(--dart-text-sec);font-size:20px; }
 .spielen-section { display:none;flex:1;flex-direction:column;min-height:0; }
 .spielen-section.active { display:flex; }
