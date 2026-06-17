@@ -4,6 +4,7 @@
 
 import { state } from './state.js';
 import { CRICKET_TARGETS, buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, disableBoard } from './board.js?v=2';
+import { t } from './i18n.js';
 
 // The cricket board SVG is initialized in app.js
 export let boardSVGcr;
@@ -77,7 +78,7 @@ export function renderCricketTable(){
 /** Renders full cricket UI. */
 export function renderCricket(){
   renderCricketTable();
-  document.getElementById("cr-title").textContent=`Cricket · Runde ${state.cr.round}`;
+  document.getElementById("cr-title").textContent=`Cricket · ${t('runde')} ${state.cr.round}`;
   for(let i=0;i<3;i++){
     const slot=document.getElementById(`cr-slot-${i}`);
     const t=state.cr.throws[i];
@@ -86,7 +87,7 @@ export function renderCricket(){
   }
   const btn=document.getElementById("cr-next");
   btn.style.display=(state.cr.throws.length>0&&!state.cr.winner)?"":"none";
-  btn.textContent=state.cr.throws.length<3?"ZÄHLEN & WEITER":"NÄCHSTER SPIELER";
+  btn.textContent=state.cr.throws.length<3?t('zaehlen_weiter'):t('naechster_spieler');
   disableBoard(boardSVGcr,!!state.cr.winner);
 }
 

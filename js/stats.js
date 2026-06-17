@@ -120,12 +120,12 @@ function extractScatterFromGames(games, pid){
 }
 
 function renderSegmentTable(entries, totalThrows){
-  if(!entries.length) return `<div style="color:var(--dart-text-sec);font-size:12px;padding:8px;text-align:center">Keine Treffer-Koordinaten vorhanden.</div>`;
+  if(!entries.length) return `<div style="color:var(--dart-text-sec);font-size:12px;padding:8px;text-align:center">${t('keine_treffer_koord')}</div>`;
   const fav=entries[0];
   const bestTriple=[...entries].sort((a,b)=>b.triple-a.triple)[0];
-  let h=`<div style="margin-bottom:6px;font-size:11px;color:var(--dart-text-sec)">Lieblings: <strong style="color:var(--dart-text-sec)">${fav.num}</strong> (${fav.total}×)${bestTriple?.triple>0?` · Triple: <strong style="color:var(--dart-text-sec)">T${bestTriple.num}</strong>`:""}
+  let h=`<div style="margin-bottom:6px;font-size:11px;color:var(--dart-text-sec)">${t('lieblings')} <strong style="color:var(--dart-text-sec)">${fav.num}</strong> (${fav.total}×)${bestTriple?.triple>0?` · Triple: <strong style="color:var(--dart-text-sec)">T${bestTriple.num}</strong>`:""}
   </div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">
-  <tr style="color:var(--dart-text-sec);font-size:10px"><th style="text-align:left;padding:2px 4px">FELD</th><th style="padding:2px 4px">GES</th><th style="padding:2px 4px">S</th><th style="padding:2px 4px">D</th><th style="padding:2px 4px">T</th><th style="padding:2px 4px">%</th></tr>`;
+  <tr style="color:var(--dart-text-sec);font-size:10px"><th style="text-align:left;padding:2px 4px">${t('feld_col')}</th><th style="padding:2px 4px">${t('ges_col')}</th><th style="padding:2px 4px">S</th><th style="padding:2px 4px">D</th><th style="padding:2px 4px">T</th><th style="padding:2px 4px">%</th></tr>`;
   entries.slice(0,15).forEach((e,idx)=>{
     const pct=Math.round(e.total/(totalThrows||1)*100);
     const top3=idx<3?`color:var(--dart-gold);`:"";
@@ -173,7 +173,7 @@ function updateColumn(side, pid){
     scatter=extractScatterFromGames(games,pid);
     const avgs=games.flatMap(g=>(g.players||[]).filter(p=>pid?p.id===pid:true).map(p=>p.avg3||0)).filter(v=>v>0);
     avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
-    const labels={"7d":"7 Tage","30d":"1 Monat","90d":"3 Monate","all":"Alle Spiele"};
+    const labels={"7d":t('sieben_tage'),"30d":t('ein_monat'),"90d":t('drei_monate'),"all":t('alle_spiele')};
     const lbl=document.getElementById(`filter-label-${side}`);
     if(lbl) lbl.innerHTML=`<i data-lucide="calendar" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> ${labels[st.range]||st.range}`; window.refreshIcons?.();
   } else if(st.type==="session"&&st.sessionId){
@@ -184,7 +184,7 @@ function updateColumn(side, pid){
       scatter=extractScatterFromGames(games,pid);
       const avgs=games.flatMap(g=>(g.players||[]).filter(p=>pid?p.id===pid:true).map(p=>p.avg3||0)).filter(v=>v>0);
       avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
-      const legText=st.legNum==="all"?"Alle Legs":"Leg "+st.legNum;
+      const legText=st.legNum==="all"?t('alle_legs'):"Leg "+st.legNum;
       const lbl=document.getElementById(`filter-label-${side}`);
       if(lbl) lbl.innerHTML=`<i data-lucide="gamepad-2" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> ${(sess.label.split("·")[0]||"").trim()} · ${legText}`; window.refreshIcons?.();
     }
@@ -192,10 +192,10 @@ function updateColumn(side, pid){
   const svg=document.getElementById(`scatter-board-${side}`);
   if(svg){
     if(scatter.length) drawMiniBoard(svg,scatter);
-    else svg.innerHTML=`<text x="265" y="265" text-anchor="middle" fill="#444" font-size="18" font-family="sans-serif">Keine Daten</text>`;
+    else svg.innerHTML=`<text x="265" y="265" text-anchor="middle" fill="#444" font-size="18" font-family="sans-serif">${t('keine_daten')}</text>`;
   }
   const statsEl=document.getElementById(`board-stats-${side}`);
-  if(statsEl) statsEl.textContent=scatter.length?`Ø ${avg} · ${scatter.length} Würfe`:"— Keine Daten —";
+  if(statsEl) statsEl.textContent=scatter.length?`Ø ${avg} · ${scatter.length} ${t('wuerfe_label')}`:"— "+t('keine_daten')+" —";
   const tableEl=document.getElementById(`segment-table-${side}`);
   if(tableEl){
     const entries=analyzeSegments(scatter);
@@ -426,7 +426,7 @@ export async function loadAndRenderStats(){
     if(chartGames.length>=2){
       html+=`<div class="stats-section-title" id="chart-title">3-Dart Average · ${t('verlauf')}</div>
         <div class="chart-kpi-bar" id="chart-kpi-bar">
-          <button class="chart-kpi-btn active" data-kpi="avg">⌀ Aufnahme</button>
+          <button class="chart-kpi-btn active" data-kpi="avg">${t('aufnahme_chip')}</button>
           <button class="chart-kpi-btn" data-kpi="f9">First 9 Ø</button>
           <button class="chart-kpi-btn" data-kpi="best">Highscore</button>
           <button class="chart-kpi-btn" data-kpi="co">Checkout %</button>
@@ -464,14 +464,14 @@ export async function loadAndRenderStats(){
     const mostTriedDouble=doubleEntries[0];
 
     if(doubleEntries.length>0){
-      html+=`<div class="stats-section-title" style="display:flex;align-items:center"><i data-lucide="target" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> DOPPELFELD-STATISTIK <button class="help-btn" onclick="window.showHelp('Doppelfeld-Statistik','Die App erkennt automatisch wann du auf ein Doppelfeld zielst und trackt deine Trefferquote. So siehst du welche Doppelfelder deine Stärken und Schwächen sind.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>`;
+      html+=`<div class="stats-section-title" style="display:flex;align-items:center"><i data-lucide="target" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('doppelfeld_stat')} <button class="help-btn" onclick="window.showHelp('${t('doppelfeld_stat')}','${t('doppelfeld_hilfe')}')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>`;
       html+=`<div class="stats-grid" style="margin-bottom:10px">
-        ${bestDouble?`<div class="stat-card"><div class="s-label">BESTES DOPPEL</div><div class="s-value">${bestDouble.field}</div><div class="s-sub">${bestDouble.pct}% (${bestDouble.hit}/${bestDouble.att})</div></div>`:""}
-        ${worstDouble&&worstDouble.field!==bestDouble?.field?`<div class="stat-card"><div class="s-label">SCHWÄCHSTES DOPPEL</div><div class="s-value">${worstDouble.field}</div><div class="s-sub">${worstDouble.pct}% (${worstDouble.hit}/${worstDouble.att})</div></div>`:""}
-        ${mostTriedDouble?`<div class="stat-card"><div class="s-label">MEIST GESPIELT</div><div class="s-value">${mostTriedDouble.field}</div><div class="s-sub">${mostTriedDouble.att} Versuche</div></div>`:""}
+        ${bestDouble?`<div class="stat-card"><div class="s-label">${t('bestes_doppel')}</div><div class="s-value">${bestDouble.field}</div><div class="s-sub">${bestDouble.pct}% (${bestDouble.hit}/${bestDouble.att})</div></div>`:""}
+        ${worstDouble&&worstDouble.field!==bestDouble?.field?`<div class="stat-card"><div class="s-label">${t('schwaechstes_doppel')}</div><div class="s-value">${worstDouble.field}</div><div class="s-sub">${worstDouble.pct}% (${worstDouble.hit}/${worstDouble.att})</div></div>`:""}
+        ${mostTriedDouble?`<div class="stat-card"><div class="s-label">${t('meist_gespielt')}</div><div class="s-value">${mostTriedDouble.field}</div><div class="s-sub">${mostTriedDouble.att} ${t('versuche_label')}</div></div>`:""}
       </div>
       <div class="history-list" style="margin-bottom:14px">
-        <div class="history-header" style="grid-template-columns:1fr 70px 70px 70px"><span>FELD</span><span>VERSUCHE</span><span>TREFFER</span><span>QUOTE</span></div>`;
+        <div class="history-header" style="grid-template-columns:1fr 70px 70px 70px"><span>${t('feld_col')}</span><span>${t('versuche_col')}</span><span>${t('treffer_col')}</span><span>${t('quote_col')}</span></div>`;
       doubleEntries.forEach(e=>{
         const color=e.pct>=50?"var(--dart-success)":e.pct>=25?"var(--dart-warning)":"var(--dart-danger)";
         const barW=Math.round(e.pct);

@@ -3,6 +3,7 @@
  */
 
 import { voiceURLCache } from './audio.js';
+import { t } from './i18n.js';
 
 let studioKeys=[];
 let studioIdx=0;
@@ -19,14 +20,14 @@ let studioStream=null;
  */
 export function getAllStudioKeys(){
   const keys=[];
-  for(let i=0;i<=180;i++) keys.push({key:`score_${i}`,label:`${i}`,hint:i===180?"Maximum!":i===0?"Daneben / Bust":""});
-  keys.push({key:"bust",label:"BUST",hint:"Wenn zu viele Punkte"});
+  for(let i=0;i<=180;i++) keys.push({key:`score_${i}`,label:`${i}`,hint:i===180?"Maximum!":i===0?t('studio_hint_miss'):""});
+  keys.push({key:"bust",label:"BUST",hint:t('studio_hint_bust')});
   return keys;
 }
 
 /** Initializes the studio UI. */
 export async function initStudio(){
-  if(!window.dartDB){ document.getElementById("studio-status").textContent="Datenbank nicht bereit"; return; }
+  if(!window.dartDB){ document.getElementById("studio-status").textContent=t('db_nicht_bereit'); return; }
   studioKeys=getAllStudioKeys();
   const existing=await window.dartDB.listVoiceSamples();
   studioRecorded=new Set(existing);
@@ -42,7 +43,7 @@ export function renderStudioGrid(){
   const recorded=studioRecorded.size;
   const total=studioKeys.length;
   document.getElementById("studio-progress-bar").style.width=`${Math.round(recorded/total*100)}%`;
-  document.getElementById("studio-progress-text").textContent=`${recorded} von ${total} aufgenommen`;
+  document.getElementById("studio-progress-text").textContent=`${recorded} ${t('studio_von')} ${total} ${t('studio_aufgenommen')}`;
 
   grid.innerHTML=studioKeys.map((k,i)=>{
     const done=studioRecorded.has(k.key);
@@ -76,7 +77,7 @@ export function selectStudioItem(idx){
   document.getElementById("studio-play-btn").style.display="none";
   document.getElementById("studio-save-btn").style.display="none";
   document.getElementById("studio-rec-btn").disabled=false;
-  document.getElementById("studio-rec-btn").textContent="⏺ Aufnehmen";
+  document.getElementById("studio-rec-btn").textContent=t('studio_aufnehmen');
   document.getElementById("studio-rec-btn").style.background="var(--dart-danger)";
 
   const hasSample=studioRecorded.has(item.key);
@@ -109,18 +110,18 @@ export function wireStudioButtons(){
         studioBlob=new Blob(studioChunks,{type:"audio/webm"});
         const url=URL.createObjectURL(studioBlob);
         studioAudioEl=new Audio(url);
-        btn.textContent="⏺ Nochmal"; btn.style.background="var(--dart-danger)";
+        btn.textContent=t('studio_nochmal'); btn.style.background="var(--dart-danger)";
         document.getElementById("studio-play-btn").style.display="";
         document.getElementById("studio-save-btn").style.display="";
-        document.getElementById("studio-status").textContent="Aufnahme bereit — anhören oder speichern";
+        document.getElementById("studio-status").textContent=t('studio_bereit');
       };
       studioMediaRecorder.start();
-      btn.textContent="⏹ Stop"; btn.style.background="var(--dart-bg-chip)";
-      document.getElementById("studio-status").textContent="🔴 Aufnahme läuft…";
+      btn.textContent=t('studio_stop'); btn.style.background="var(--dart-bg-chip)";
+      document.getElementById("studio-status").textContent=t('studio_laeuft');
       document.getElementById("studio-play-btn").style.display="none";
       document.getElementById("studio-save-btn").style.display="none";
     }catch(e){
-      document.getElementById("studio-status").textContent="Mikrofon-Fehler: "+e.message;
+      document.getElementById("studio-status").textContent=t('studio_mic_fehler')+e.message;
     }
   });
 
@@ -131,13 +132,13 @@ export function wireStudioButtons(){
   document.getElementById("studio-save-btn").addEventListener("click",async()=>{
     if(!studioBlob) return;
     const item=studioKeys[studioIdx];
-    document.getElementById("studio-status").textContent="Speichere…";
+    document.getElementById("studio-status").textContent=t('studio_speichere');
     document.getElementById("studio-save-btn").disabled=true;
     try{
       await window.dartDB.uploadVoiceSample(item.key, studioBlob);
       studioRecorded.add(item.key);
       delete voiceURLCache[item.key];
-      document.getElementById("studio-status").textContent="✓ Gespeichert!";
+      document.getElementById("studio-status").textContent=t('studio_gespeichert');
       document.getElementById("studio-delete-btn").style.display="";
       document.getElementById("studio-save-btn").disabled=false;
       setTimeout(()=>{
@@ -145,7 +146,7 @@ export function wireStudioButtons(){
         selectStudioItem(next>=0?next:studioIdx);
       },600);
     }catch(e){
-      document.getElementById("studio-status").textContent="Fehler: "+e.message;
+      document.getElementById("studio-status").textContent=t('fehler_prefix')+e.message;
       document.getElementById("studio-save-btn").disabled=false;
     }
   });
@@ -158,12 +159,12 @@ export function wireStudioButtons(){
 
   document.getElementById("studio-delete-btn").addEventListener("click",async()=>{
     const item=studioKeys[studioIdx];
-    if(!confirm(`Aufnahme für "${item.label}" löschen?`)) return;
+    if(!confirm(t('studio_loeschen_confirm').replace('{label}',item.label))) return;
     await window.dartDB.deleteVoiceSample(item.key);
     studioRecorded.delete(item.key);
     delete voiceURLCache[item.key];
     document.getElementById("studio-delete-btn").style.display="none";
-    document.getElementById("studio-status").textContent="Gelöscht";
+    document.getElementById("studio-status").textContent=t('studio_geloescht');
     renderStudioGrid();
   });
 }

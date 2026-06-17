@@ -23,12 +23,12 @@ export function getDisplayName(player, fallback=""){
 }
 
 export const BOT_PERSONALITY_DESCS = {
-  methodisch:"Spielt immer optimal und konstant",
-  uebermuetig:"Zielt immer auf T20, ignoriert bessere Optionen",
-  nervoese:"Verliert Konzentration wenn es drauf ankommt",
-  gluecksspieler:"Zielt immer auf Maximum, riskiert Bust",
-  kaltbluetig:"Wird besser unter Druck",
-  aufholer:"Kämpft sich von hinten vor"
+  methodisch:"bot_desc_methodisch",
+  uebermuetig:"bot_desc_uebermuetig",
+  nervoese:"bot_desc_nervoese",
+  gluecksspieler:"bot_desc_gluecksspieler",
+  kaltbluetig:"bot_desc_kaltbluetig",
+  aufholer:"bot_desc_aufholer"
 };
 
 /**
@@ -75,17 +75,17 @@ export function renderPlayerList(){
         <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}${p.dartWeight?` · ${p.dartWeight}g`:""}</div>
       </div>
       <div class="pi-order">${selected?selIdx+1:""}</div>
-      <button class="pi-delete" data-id="${p.id}" data-name="${p.name}" title="Spieler löschen"><i data-lucide="x" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i></button>`;
+      <button class="pi-delete" data-id="${p.id}" data-name="${p.name}" title="${t('spieler_loeschen_tooltip')}"><i data-lucide="x" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i></button>`;
     div.addEventListener("click",()=>togglePlayer(p));
     const delBtn=div.querySelector(".pi-delete");
     delBtn.addEventListener("click", async (e)=>{
       e.stopPropagation();
-      if(!confirm(`Spieler "${p.name}" wirklich löschen?\n\nDie Spielhistorie bleibt erhalten, der Spieler kann aber nicht mehr ausgewählt werden.`)) return;
+      if(!confirm(t('spieler_loeschen_confirm').replace('{name}',p.name))) return;
       try{
         await window.dartDB.deletePlayer(p.id);
         state.selectedPlayers=state.selectedPlayers.filter(s=>s.id!==p.id);
         await loadPlayers();
-      }catch(err){ alert("Fehler beim Löschen: "+err.message); }
+      }catch(err){ alert(t('fehler_loeschen')+err.message); }
     });
     list.appendChild(div);
   });
@@ -421,7 +421,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
         _closeEditDialog();
         await loadPlayers();
       }catch(e){
-        errEl.textContent = "Fehler: " + e.message;
+        errEl.textContent = t('fehler_prefix') + e.message;
       }finally{
         saveBtn.disabled = false;
         saveBtn.textContent = "SPEICHERN";

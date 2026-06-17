@@ -20,35 +20,35 @@ export function setOnlineSets(s){ onlineSets=s; }
  * Creates an online room and shows the waiting screen.
  */
 export async function createRoom(){
-  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  if(!window.dartDB){ alert(t('db_nicht_bereit')); return; }
   myOnlineName=document.getElementById("online-myname").value.trim()||"Host";
   try{
-    document.getElementById("online-status").textContent="Erstelle Raum…";
+    document.getElementById("online-status").textContent=t('erstelle_raum');
     currentRoomCode=await window.dartDB.createRoom({
       mode:onlineMode, legs:onlineLegs, sets:onlineSets,
       host:myOnlineName, players:[myOnlineName], status:"waiting", state:null
     });
     isRoomHost=true;
     showWaitingScreen(currentRoomCode);
-  }catch(e){ document.getElementById("online-status").textContent="Fehler: "+e.message; }
+  }catch(e){ document.getElementById("online-status").textContent=t('fehler_prefix')+e.message; }
 }
 
 /**
  * Joins an existing room and shows the waiting screen.
  */
 export async function joinRoom(){
-  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  if(!window.dartDB){ alert(t('db_nicht_bereit')); return; }
   const code=document.getElementById("online-room-code").value.trim().toUpperCase();
-  myOnlineName=document.getElementById("online-join-name").value.trim()||"Gast";
-  if(code.length!==6){ alert("Bitte einen 6-stelligen Code eingeben"); return; }
+  myOnlineName=document.getElementById("online-join-name").value.trim()||t('gast_name');
+  if(code.length!==6){ alert(t('code_6_stellig')); return; }
   try{
-    document.getElementById("online-status").textContent="Verbinde…";
+    document.getElementById("online-status").textContent=t('verbinde');
     const room=await window.dartDB.joinRoom(code);
-    if(room.status!=="waiting"){ alert("Dieser Raum ist bereits gestartet"); return; }
+    if(room.status!=="waiting"){ alert(t('raum_bereits_gestartet')); return; }
     currentRoomCode=code; isRoomHost=false;
     await window.dartDB.updateRoom(code,{players:[...room.players,myOnlineName]});
     showWaitingScreen(code);
-  }catch(e){ document.getElementById("online-status").textContent="Fehler: "+e.message; }
+  }catch(e){ document.getElementById("online-status").textContent=t('fehler_prefix')+e.message; }
 }
 
 /**
@@ -69,7 +69,7 @@ export function showWaitingScreen(code){
     const startBtn=document.getElementById("btn-start-online");
     const waitStatus=document.getElementById("online-wait-status");
     if(isRoomHost&&(room.players||[]).length>=2){
-      startBtn.style.display=""; waitStatus.textContent=`${room.players.length} Spieler bereit — du kannst starten`;
+      startBtn.style.display=""; waitStatus.textContent=t('spieler_bereit').replace('{n}',room.players.length);
     } else {
       startBtn.style.display="none";
       waitStatus.textContent=(room.players||[]).length===1?t('warte_mitspieler'):`${(room.players||[]).length} ${t('spieler_verbunden')}`;
