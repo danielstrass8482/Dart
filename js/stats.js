@@ -422,9 +422,9 @@ export async function loadAndRenderStats(){
 
     const chartGames=[...games].reverse();
     if(chartGames.length>=2){
-      html+=`<div class="stats-section-title">${t('verlauf')}</div>
+      html+=`<div class="stats-section-title" id="chart-title">3-Dart Average · ${t('verlauf')}</div>
         <div class="chart-kpi-bar" id="chart-kpi-bar">
-          <button class="chart-kpi-btn active" data-kpi="avg" style="background:var(--dart-gold);border-color:var(--dart-gold);color:#000;border-radius:99px">⌀ Aufnahme</button>
+          <button class="chart-kpi-btn active" data-kpi="avg">⌀ Aufnahme</button>
           <button class="chart-kpi-btn" data-kpi="f9">First 9 Ø</button>
           <button class="chart-kpi-btn" data-kpi="best">Highscore</button>
           <button class="chart-kpi-btn" data-kpi="co">Checkout %</button>
@@ -512,20 +512,23 @@ export async function loadAndRenderStats(){
 
     if(chartGames.length>=2){
       const KPI_DEFS={
-        avg:  {label:"⌀ Aufnahme", color:"#1e88e5", extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.avg3||null; }},
-        f9:   {label:"First 9 Ø", color:"#e53935", extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.first9||null; }},
-        best: {label:"Highscore", color:"#43a047", extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.best3||null; }},
-        co:   {label:"Checkout %", color:"#fb8c00", extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); if(!p||!p.checkoutAtt) return null; return Math.round(p.checkoutHit/p.checkoutAtt*100); }},
-        rounds:{label:"Darts", color:"#8e24aa", extract:(g)=>g.rounds?g.rounds*3:null},
-        crmarks:{label:"Cricket ⌀M", color:"#00897b", extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.cricketAvgMarks||null; }}
+        avg:    {label:"3-Dart Average", extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.avg3||null; }},
+        f9:     {label:"First 9 Ø",     extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.first9||null; }},
+        best:   {label:"Highscore",     extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.best3||null; }},
+        co:     {label:"Checkout %",    extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); if(!p||!p.checkoutAtt) return null; return Math.round(p.checkoutHit/p.checkoutAtt*100); }},
+        rounds: {label:"Darts",         extract:(g)=>g.rounds?g.rounds*3:null},
+        crmarks:{label:"Cricket ⌀M",   extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.cricketAvgMarks||null; }}
       };
-      const kpiKeys=["avg","f9","best","co","rounds","crmarks"];
-      const COLORS=["#1e88e5","#e53935","#43a047","#fb8c00","#8e24aa","#00897b"];
-      let activeKPIs=["avg"];
+      let activeKPI="avg";
 
       setTimeout(()=>{
         const canvas=document.getElementById("trend-canvas");
         if(!canvas) return;
+
+        function updateChartTitle(){
+          const titleEl=document.getElementById("chart-title");
+          if(titleEl) titleEl.textContent=`${KPI_DEFS[activeKPI].label} · ${t('verlauf')}`;
+        }
 
         function drawChart(){
           const W=canvas.parentElement.clientWidth-24||500;
@@ -534,84 +537,69 @@ export async function loadAndRenderStats(){
           const ctx=canvas.getContext("2d");
           ctx.scale(2,2);
           const w=W, h=180, pad={t:24,r:48,b:28,l:38};
-          const divider='#1a1a1f';
-          const textMuted='#6E6E78';
-          ctx.clearRect(0,0,w,h);
+          ctx.clearRect(0,0,w*2,h*2);
           ctx.fillStyle='#121216'; ctx.fillRect(0,0,w,h);
-          ctx.strokeStyle=divider; ctx.lineWidth=1;
+          ctx.strokeStyle='#1a1a1f'; ctx.lineWidth=1;
           for(let i=0;i<=4;i++){ const y=pad.t+(h-pad.t-pad.b)*i/4; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke(); }
           const step=Math.max(1,Math.floor(chartGames.length/6));
-          ctx.fillStyle=textMuted; ctx.font="9px 'DM Sans',sans-serif"; ctx.textAlign="center";
+          ctx.fillStyle='#6E6E78'; ctx.font="9px 'DM Sans',sans-serif"; ctx.textAlign="center";
           chartGames.forEach((g,i)=>{ if(i%step!==0&&i!==chartGames.length-1) return; const x=pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1); const d=new Date(g.ts); ctx.fillText(`${d.getDate()}.${d.getMonth()+1}`,x,h-6); });
-          activeKPIs.forEach((kpiKey,ki)=>{
-            const kpi=KPI_DEFS[kpiKey];
-            const vals=chartGames.map(g=>kpi.extract(g,pid));
-            const validVals=vals.filter(v=>v!==null);
-            if(!validVals.length) return;
-            const minV=Math.min(...validVals), maxV=Math.max(...validVals), range=maxV-minV||1;
-            const toX=i=>pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1);
-            const toY=v=>pad.t+(h-pad.t-pad.b)*(1-(v-minV)/range);
-            const points=[];
-            vals.forEach((v,i)=>{ if(v!==null) points.push({x:toX(i),y:toY(v)}); });
-            if(!points.length) return;
-            // Gradient fill under line
-            const gradient=ctx.createLinearGradient(0,0,0,h);
-            gradient.addColorStop(0,'rgba(212,175,55,0.35)');
-            gradient.addColorStop(0.6,'rgba(212,175,55,0.08)');
-            gradient.addColorStop(1,'rgba(212,175,55,0)');
-            ctx.beginPath();
-            points.forEach((p,i)=>{ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
-            ctx.lineTo(points[points.length-1].x,h-pad.b);
-            ctx.lineTo(points[0].x,h-pad.b);
-            ctx.closePath();
-            ctx.fillStyle=gradient;
-            ctx.fill();
-            // Line on top
-            ctx.beginPath();
-            points.forEach((p,i)=>{ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
-            ctx.strokeStyle='#D4AF37'; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.lineCap='round';
-            ctx.stroke();
-            // Last point gold dot
-            const last=points[points.length-1];
-            ctx.beginPath(); ctx.arc(last.x,last.y,4,0,Math.PI*2); ctx.fillStyle='#D4AF37'; ctx.fill();
-            // Label
-            const lastV=validVals[validVals.length-1];
-            const lastIdx=vals.lastIndexOf(lastV);
-            ctx.fillStyle='#D4AF37'; ctx.font=`bold 10px 'DM Sans',sans-serif`; ctx.textAlign="left";
-            ctx.fillText(lastV, toX(lastIdx)+5, toY(lastV)+4+(ki*12));
-          });
+          const kpi=KPI_DEFS[activeKPI];
+          const vals=chartGames.map(g=>kpi.extract(g,pid));
+          const validVals=vals.filter(v=>v!==null);
+          if(!validVals.length) return;
+          const minV=Math.min(...validVals), maxV=Math.max(...validVals), range=maxV-minV||1;
+          const toX=i=>pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1);
+          const toY=v=>pad.t+(h-pad.t-pad.b)*(1-(v-minV)/range);
+          const points=[];
+          vals.forEach((v,i)=>{ if(v!==null) points.push({x:toX(i),y:toY(v)}); });
+          if(!points.length) return;
+          // Gradient fill
+          const gradient=ctx.createLinearGradient(0,0,0,h);
+          gradient.addColorStop(0,'rgba(212,175,55,0.35)');
+          gradient.addColorStop(0.6,'rgba(212,175,55,0.08)');
+          gradient.addColorStop(1,'rgba(212,175,55,0)');
+          ctx.beginPath();
+          points.forEach((p,i)=>{ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
+          ctx.lineTo(points[points.length-1].x,h-pad.b);
+          ctx.lineTo(points[0].x,h-pad.b);
+          ctx.closePath(); ctx.fillStyle=gradient; ctx.fill();
+          // Gold line
+          ctx.beginPath();
+          points.forEach((p,i)=>{ i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y); });
+          ctx.strokeStyle='#D4AF37'; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+          // Last point dot
+          const last=points[points.length-1];
+          ctx.beginPath(); ctx.arc(last.x,last.y,4,0,Math.PI*2); ctx.fillStyle='#D4AF37'; ctx.fill();
+          // Value label
+          const lastV=validVals[validVals.length-1];
+          const lastIdx=vals.lastIndexOf(lastV);
+          ctx.fillStyle='#D4AF37'; ctx.font=`bold 10px 'DM Sans',sans-serif`; ctx.textAlign="left";
+          ctx.fillText(lastV, toX(lastIdx)+5, toY(lastV)+4);
         }
-
-        drawChart();
 
         function styleKpiBtn(btn, active){
           if(active){
             btn.style.background='var(--dart-gold)'; btn.style.color='#000';
-            btn.style.borderColor='var(--dart-gold)'; btn.style.borderRadius='99px';
+            btn.style.fontWeight='700'; btn.style.borderColor='var(--dart-gold)'; btn.style.borderRadius='99px';
           } else {
             btn.style.background='var(--dart-bg-chip)'; btn.style.color='var(--dart-text-muted)';
-            btn.style.borderColor='transparent'; btn.style.borderRadius='99px';
+            btn.style.fontWeight=''; btn.style.borderColor='transparent'; btn.style.borderRadius='99px';
           }
         }
-        // Apply initial button styles
+
         document.querySelectorAll(".chart-kpi-btn").forEach(btn=>{
-          styleKpiBtn(btn, activeKPIs.includes(btn.dataset.kpi));
+          styleKpiBtn(btn, btn.dataset.kpi===activeKPI);
           btn.addEventListener("click",()=>{
-            const kpi=btn.dataset.kpi;
-            if(activeKPIs.includes(kpi)){
-              if(activeKPIs.length===1) return;
-              activeKPIs=activeKPIs.filter(k=>k!==kpi);
-              btn.classList.remove("active");
-              styleKpiBtn(btn, false);
-            } else {
-              if(activeKPIs.length>=3) return;
-              activeKPIs.push(kpi);
-              btn.classList.add("active");
-              styleKpiBtn(btn, true);
-            }
+            activeKPI=btn.dataset.kpi;
+            document.querySelectorAll(".chart-kpi-btn").forEach(b=>styleKpiBtn(b, b.dataset.kpi===activeKPI));
+            updateChartTitle();
             drawChart();
           });
         });
+
+        drawChart();
+        updateChartTitle();
         window.addEventListener("resize",drawChart,{passive:true});
       },100);
     }
