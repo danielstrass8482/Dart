@@ -519,7 +519,7 @@ export function handleLegWin(winnerIdx){
           ${isWinner?"🏆 ":""}${p}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr${f9?` 1fr`:""};gap:4px 12px;font-size:12px;color:var(--dart-text-sec)">
-          <span>Ø Aufnahme</span><span>Best</span><span>CO%</span>${f9?"<span>First 9</span>":""}
+          <span>${t('aufnahme_avg')}</span><span>Best</span><span>CO%</span>${f9?"<span>First 9</span>":""}
           <span style="color:var(--dart-text);font-weight:600;font-size:15px">${avg}</span>
           <span style="color:var(--dart-text);font-weight:600;font-size:15px">${best}</span>
           <span style="color:var(--dart-text);font-weight:600;font-size:15px">${coPct}%</span>
@@ -582,11 +582,11 @@ export function showWinner(name,round){
             }
             <div style="min-width:0">
               <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dart-text)">${s.displayName}</div>
-              ${s.isWinner?"<div style=\"font-size:10px;color:var(--dart-gold);letter-spacing:1px\">SIEGER</div>":""}
+              ${s.isWinner?`<div style="font-size:10px;color:var(--dart-gold);letter-spacing:1px">${t('sieger')}</div>`:""}
             </div>
           </div>
           <table style="width:100%;font-size:12px;border-collapse:collapse">
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Ø Aufnahme</td><td style="text-align:right;font-weight:600;color:var(--dart-text)">${s.avg}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">${t('aufnahme_avg')}</td><td style="text-align:right;font-weight:600;color:var(--dart-text)">${s.avg}</td></tr>
             <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;color:var(--dart-text)">${s.f9!==null&&s.f9!==undefined?s.f9:"—"}</td></tr>
             <tr><td style="color:var(--dart-text-sec);padding:2px 0">Highscore</td><td style="text-align:right;color:var(--dart-text)">${s.best}</td></tr>
             <tr><td style="color:var(--dart-text-sec);padding:2px 0">Checkout</td><td style="text-align:right;color:var(--dart-text)">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
@@ -610,22 +610,22 @@ export function showWinner(name,round){
         const delta=Math.abs(Math.round((avgAfter-avgBefore)*10)/10);
         const improved=avgAfter>avgBefore;
         const declined=avgAfter<avgBefore;
-        const statusText=improved?"↑ Verbesserung":declined?"↓ Leichter Rückgang":"→ Unverändert";
+        const statusText=improved?t('verbesserung'):declined?t('rueckgang'):t('unveraendert');
         const statusColor=improved?"#43a047":declined?"#e53935":"#888";
         const afterColor=improved?"#43a047":declined?"#e53935":"#fff";
         html+=`<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px;text-align:left">
-          <div style="font-size:11px;color:var(--dart-text-muted);letter-spacing:1px;margin-bottom:10px">${humanStats.length>1?s.displayName+" — ":""}GESAMTSTATISTIK</div>
+          <div style="font-size:11px;color:var(--dart-text-muted);letter-spacing:1px;margin-bottom:10px">${humanStats.length>1?s.displayName+" — ":""}${t('gesamtstatistik')}</div>
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div style="text-align:center">
-              <div style="font-size:10px;color:var(--dart-text-muted)">VORHER</div>
+              <div style="font-size:10px;color:var(--dart-text-muted)">${t('vorher')}</div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:var(--dart-text-muted)">${avgBefore}</div>
-              <div style="font-size:10px;color:var(--dart-text-muted)">${gamesBefore} Spiele</div>
+              <div style="font-size:10px;color:var(--dart-text-muted)">${gamesBefore} ${t('spiele_label')}</div>
             </div>
             <div style="font-size:22px;color:var(--dart-gold)">→</div>
             <div style="text-align:center">
-              <div style="font-size:10px;color:var(--dart-text-muted)">JETZT</div>
+              <div style="font-size:10px;color:var(--dart-text-muted)">${t('jetzt')}</div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:${afterColor}">${avgAfter}</div>
-              <div style="font-size:10px;color:var(--dart-text-muted)">${gamesBefore+1} Spiele</div>
+              <div style="font-size:10px;color:var(--dart-text-muted)">${gamesBefore+1} ${t('spiele_label')}</div>
             </div>
           </div>
           <div style="text-align:center;margin-top:8px;font-size:12px;color:${statusColor}">${statusText} (${delta})</div>
@@ -754,13 +754,13 @@ function setTargetAndHide(targetLabel){
 export function showTargetFeedback(targetLabel, hit){
   if(!targetLabel) return;
   const dist=calcTargetDistance(targetLabel, hit);
-  const msg=dist===0?"🎯 PERFEKT!":
-    dist<=10?"✅ Richtiges Segment, falscher Ring":
-    dist<=30?"👍 Benachbartes Segment":
-    "❌ Weit daneben";
+  const msg=dist===0?t('target_perfekt'):
+    dist<=10?t('target_richtiges_segment'):
+    dist<=30?t('target_benachbart'):
+    t('target_weit_daneben');
   const el=document.getElementById("target-feedback-toast");
   if(el){
-    el.textContent=`${msg} (Ziel: ${targetLabel} → ${hit.label})`;
+    el.textContent=`${msg} (${t('ziel')} ${targetLabel} → ${hit.label})`;
     el.style.display="";
     clearTimeout(el._t);
     el._t=setTimeout(()=>{ el.style.display="none"; }, 2000);

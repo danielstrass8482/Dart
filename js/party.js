@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js?v=2';
 import { soundHit, soundApplause, soundBust, speak, speakScoreWithCustom } from './audio.js';
+import { t } from './i18n.js';
 
 export let boardSVGparty;
 
@@ -153,20 +154,20 @@ export function renderPartyTabs(){
 export function renderPartyScoreboard(){
   const box=document.getElementById("party-scoreboard");
   if(state.pg.mode==="AtC"){
-    box.innerHTML=`<div class="panel-label">FORTSCHRITT</div>`+
+    box.innerHTML=`<div class="panel-label">${t('fortschritt')}</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:6px">
         <div style="font-size:11px;color:var(--dart-text-sec)">${p}</div>
         <div style="font-size:20px;font-family:'Bebas Neue',sans-serif;color:${i===state.pg.current?"#e8c44a":"#555"}">
-          ${state.pg.atcTarget[i]===21?"FERTIG ✓":`Ziel: ${state.pg.atcTarget[i]}`}</div>
+          ${state.pg.atcTarget[i]===21?t('fertig_check'):`${t('ziel')} ${state.pg.atcTarget[i]}`}</div>
       </div>`).join("");
   } else if(state.pg.mode==="Shanghai"){
-    box.innerHTML=`<div class="panel-label">RUNDE ${state.pg.shanghaiRound} · ZIEL: ${state.pg.shanghaiRound}</div>`+
+    box.innerHTML=`<div class="panel-label">${t('runde').toUpperCase()} ${state.pg.shanghaiRound} · ${t('ziel').toUpperCase()} ${state.pg.shanghaiRound}</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
         <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.shanghaiScores[i]}</span>
       </div>`).join("");
   } else if(state.pg.mode==="Highscore"){
-    box.innerHTML=`<div class="panel-label">RUNDE ${state.pg.hsRound}/${state.pg.hsMaxRounds}</div>`+
+    box.innerHTML=`<div class="panel-label">${t('runde').toUpperCase()} ${state.pg.hsRound}/${state.pg.hsMaxRounds}</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
         <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.hsScores[i]}</span>
@@ -177,7 +178,7 @@ export function renderPartyScoreboard(){
         if(state.pg.killerEliminated[i]) return `<div style="margin-bottom:4px;color:var(--dart-text-sec);text-decoration:line-through;font-size:13px">${p} — OUT</div>`;
         const isK=state.pg.killerIsKiller[i];
         return `<div style="margin-bottom:6px">
-          <div style="font-size:12px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p} · Zahl: <strong>${state.pg.killerNumbers[i]}</strong>${isK?" ☠️":""}</div>
+          <div style="font-size:12px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p} · ${t('zahl')}: <strong>${state.pg.killerNumbers[i]}</strong>${isK?" ☠️":""}</div>
           <div style="font-size:18px">❤️</div>
         </div>`;
       }).join("");
@@ -190,7 +191,7 @@ export function renderPartyScoreboard(){
   } else if(state.pg.mode==="Bob27"){
     const field=BOB27_SEQ[state.pg.bob27Round];
     const fieldLabel=field===25?"Bull":`D${field}`;
-    box.innerHTML=`<div class="panel-label">BOB'S 27 · ZIEL: ${fieldLabel} (${state.pg.bob27Round+1}/21)</div>`+
+    box.innerHTML=`<div class="panel-label">BOB'S 27 · ${t('ziel').toUpperCase()} ${fieldLabel} (${state.pg.bob27Round+1}/21)</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
         <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.bob27Score[i]}</span>
@@ -202,7 +203,7 @@ export function renderPartyScoreboard(){
       <div style="font-size:28px;font-family:'Bebas Neue',sans-serif;color:var(--dart-gold);margin:4px 0">${target}</div>
       <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:6px">${path}</div>
       <div style="font-size:14px;color:var(--dart-text-muted)">Remaining: <strong>${state.pg.coScore}</strong></div>
-      <div style="font-size:14px;color:var(--dart-text-muted);margin-top:4px">Treffer: <strong style="color:var(--dart-success)">${state.pg.coHits}/${state.pg.coAttempts}</strong></div>`;
+      <div style="font-size:14px;color:var(--dart-text-muted);margin-top:4px">${t('treffer_label')}: <strong style="color:var(--dart-success)">${state.pg.coHits}/${state.pg.coAttempts}</strong></div>`;
   }
 }
 
@@ -219,20 +220,20 @@ export function renderParty(){
   partyTargetHighlight();
 
   const info=document.getElementById("party-info-bar");
-  if(state.pg.mode==="AtC") info.textContent=`Treffe alle Felder 1–20 der Reihe nach`;
-  else if(state.pg.mode==="Shanghai") info.textContent=`Runde ${state.pg.shanghaiRound}: Treffe die ${state.pg.shanghaiRound} · Shanghai = sofortiger Sieg`;
-  else if(state.pg.mode==="Highscore") info.textContent=`${state.pg.hsMaxRounds} Runden · Höchste Gesamtpunktzahl gewinnt`;
-  else if(state.pg.mode==="Killer") info.textContent=`Erst eigene Zahl per Double treffen, dann andere eliminieren`;
-  else if(state.pg.mode==="Elimination") info.textContent=`501 · Triffst du exakt den Score eines Gegners → er startet neu`;
-  else if(state.pg.mode==="Bob27"){ const f=BOB27_SEQ[state.pg.bob27Round]; info.textContent=`Treffe ${f===25?"Bull":`D${f}`} · Treffer: +${f===25?50:f*2} · Daneben: -${f===25?25:f}`; }
-  else if(state.pg.mode==="CheckoutTraining") info.textContent=`Cheke aus in max. 3 Darts`;
+  if(state.pg.mode==="AtC") info.textContent=t('atc_info');
+  else if(state.pg.mode==="Shanghai") info.textContent=t('shanghai_info').replace(/\{r\}/g,state.pg.shanghaiRound);
+  else if(state.pg.mode==="Highscore") info.textContent=t('highscore_info').replace('{n}',state.pg.hsMaxRounds);
+  else if(state.pg.mode==="Killer") info.textContent=t('killer_info');
+  else if(state.pg.mode==="Elimination") info.textContent=t('elimination_info');
+  else if(state.pg.mode==="Bob27"){ const f=BOB27_SEQ[state.pg.bob27Round]; const fL=f===25?"Bull":`D${f}`; info.textContent=t('bob27_info').replace('{f}',fL).replace('{plus}',f===25?50:f*2).replace('{minus}',f===25?25:f); }
+  else if(state.pg.mode==="CheckoutTraining") info.textContent=t('checkout_training_info');
 
   const modeNames={AtC:"Around the Clock",Shanghai:"Shanghai",Highscore:"Highscore",Killer:"Killer",Elimination:"Elimination",Bob27:"Bob's 27",CheckoutTraining:"Checkout-Training"};
   document.getElementById("party-title").textContent=modeNames[state.pg.mode]||state.pg.mode;
 
   const btn=document.getElementById("party-next");
   btn.style.display=(state.pg.throws.length>0&&!state.pg.winner)?"":"none";
-  btn.textContent=state.pg.throws.length<3?"ZÄHLEN & WEITER":"NÄCHSTER SPIELER";
+  btn.textContent=state.pg.throws.length<3?t('zaehlen_weiter'):t('naechster_spieler');
 
   disableBoard(boardSVGparty,!!state.pg.winner);
 }

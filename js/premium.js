@@ -4,53 +4,55 @@
  * Zum Aktivieren der Paywall: BETA_MODE = false setzen.
  */
 
+import { t } from './i18n.js';
+
 export const PREMIUM_FEATURES = {
   coachAnalysis: {
     id: "coachAnalysis",
-    name: "KI-Coach Analyse",
-    description: "Detaillierte KI-Analyse deines Spiels",
+    nameKey: "feat_coach_name",
+    descKey: "feat_coach_desc",
     freeLimit: 3,
     icon: "🧠"
   },
   videoAnalysis: {
     id: "videoAnalysis",
-    name: "Video-Wurfanalyse",
-    description: "KI analysiert deine Wurftechnik",
+    nameKey: "feat_video_name",
+    descKey: "feat_video_desc",
     freeLimit: 1,
     icon: "🎥"
   },
   advancedStats: {
     id: "advancedStats",
-    name: "Erweiterte Statistiken",
-    description: "Doppelfeld-Matrix, Health-Korrelation, Trends",
+    nameKey: "feat_stats_name",
+    descKey: "feat_stats_desc",
     freeLimit: 0,
     icon: "📊"
   },
   voiceCustom: {
     id: "voiceCustom",
-    name: "Stimme anpassen",
-    description: "Eigene Stimme oder Premium-Voices",
+    nameKey: "feat_voice_name",
+    descKey: "feat_voice_desc",
     freeLimit: 0,
     icon: "🎙️"
   },
   botPersonalities: {
     id: "botPersonalities",
-    name: "Bot-Persönlichkeiten",
-    description: "Nervöser, Kaltblütiger, Glücksspieler Bot",
+    nameKey: "feat_bot_name",
+    descKey: "feat_bot_desc",
     freeLimit: 1,
     icon: "🤖"
   },
   tournaments: {
     id: "tournaments",
-    name: "Turnier-Modus",
-    description: "Lokale und Online-Turniere",
+    nameKey: "feat_tn_name",
+    descKey: "feat_tn_desc",
     freeLimit: 0,
     icon: "🏆"
   },
   healthIntegration: {
     id: "healthIntegration",
-    name: "Health-Integration",
-    description: "Schlaf und Fitness mit Spielleistung verknüpfen",
+    nameKey: "feat_health_name",
+    descKey: "feat_health_desc",
     freeLimit: 0,
     icon: "❤️"
   }
@@ -146,18 +148,17 @@ export function showPremiumOverlay(featureId){
       </div>
       <div style="font-size:16px;color:var(--dart-text);font-weight:600;
         margin-bottom:8px">
-        ${feature.name}
+        ${t(feature.nameKey)}
       </div>
       <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px">
-        ${feature.description}
+        ${t(feature.descKey)}
       </div>
       <div style="background:rgba(232,196,74,0.1);
         border:1px solid var(--gold);border-radius:8px;
         padding:12px;margin-bottom:20px;font-size:12px;color:var(--dart-gold)">
-        🎉 Während der Beta kostenlos für alle!<br>
+        ${t('beta_kostenlos_alle')}<br>
         <span style="color:var(--dart-text-sec)">
-          Registriere dich jetzt um deine Features
-          dauerhaft zu sichern.
+          ${t('beta_sichern_features')}
         </span>
       </div>
       <button onclick="this.closest('[style*=fixed]').remove()"
@@ -165,13 +166,13 @@ export function showPremiumOverlay(featureId){
         border:none;border-radius:10px;font-family:'Bebas Neue',
         sans-serif;font-size:20px;letter-spacing:2px;
         color:#000;cursor:pointer;margin-bottom:10px">
-        WEITER (BETA)
+        ${t('weiter_beta')}
       </button>
       <button onclick="this.closest('[style*=fixed]').remove()"
         style="width:100%;padding:10px;background:none;
         border:1px solid var(--dart-border);border-radius:10px;color:var(--dart-text-muted);
         font-size:13px;cursor:pointer">
-        Schließen
+        ${t('schliessen')}
       </button>
     </div>
   `;

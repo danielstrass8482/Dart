@@ -315,7 +315,7 @@ document.getElementById("btn-coach-leg")?.addEventListener("click",async(e)=>{
   await callCoach(prompt, outputEl, null, btn);
   if(outputEl.querySelector(".coach-box")&&window.dartDB&&pid){
     const text=outputEl.querySelector(".coach-box").innerText;
-    if(text&&!text.includes("Fehler")){
+    if(text&&!text.includes("Fehler")&&!text.includes("Error")){
       await window.dartDB.saveCoachAnalysis({ playerId:pid, playerName, type:"leg", text, mode:state.cfg.mode, avgPerTurn:avg, legNumber:state.cfg.currentLeg||1 });
     }
   }
@@ -384,7 +384,7 @@ document.getElementById("bot-personality-group").addEventListener("click",e=>{
   if(!e.target.dataset.value) return;
   selectedPersonality=e.target.dataset.value;
   document.querySelectorAll("#bot-personality-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedPersonality));
-  document.getElementById("bot-personality-desc").textContent=BOT_PERSONALITY_DESCS[selectedPersonality]||"";
+  document.getElementById("bot-personality-desc").textContent=t(BOT_PERSONALITY_DESCS[selectedPersonality])||"";
 });
 
 document.getElementById("context-group")?.addEventListener("click",e=>{
@@ -398,9 +398,9 @@ document.getElementById("btn-add-player").addEventListener("click", async ()=>{
   const name=input.value.trim();
   if(!name) return;
   if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert(t('spieler_existiert')); return; }
-  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  if(!window.dartDB){ alert(t('db_nicht_bereit')); return; }
   try{ await window.dartDB.savePlayer(name); input.value=""; await loadPlayers(); }
-  catch(e){ alert("Fehler: "+e.message); }
+  catch(e){ alert(t('fehler_prefix')+e.message); }
 });
 document.getElementById("new-player-input").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("btn-add-player").click(); });
 
@@ -410,9 +410,9 @@ document.getElementById("profil-btn-add-player")?.addEventListener("click", asyn
   const name=input.value.trim();
   if(!name) return;
   if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert(t('spieler_existiert')); return; }
-  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  if(!window.dartDB){ alert(t('db_nicht_bereit')); return; }
   try{ await window.dartDB.savePlayer(name); input.value=""; await loadPlayers(); }
-  catch(e){ alert("Fehler: "+e.message); }
+  catch(e){ alert(t('fehler_prefix')+e.message); }
 });
 document.getElementById("profil-new-player-input")?.addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("profil-btn-add-player")?.click(); });
 
@@ -428,7 +428,7 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
   isBot.length=players.length; isBot.fill(false);
 
   if(selectedBot!=="none"){
-    const levelName=selectedBot==="easy"?"Anfänger":selectedBot==="medium"?"Mittel":"Profi";
+    const levelName=selectedBot==="easy"?t('bot_anfaenger'):selectedBot==="medium"?t('bot_mittel'):t('bot_profi');
     const pName=(BOT_PERSONALITIES[selectedPersonality]?.name||"🎯 Methodisch").split(" ").slice(0,2).join(" ");
     players.push(`${pName} Bot (${levelName})`); playerIds.push(null); isBot.push(true);
   }
@@ -562,9 +562,9 @@ document.getElementById("tn-type-group")?.addEventListener("click",e=>{
   document.getElementById("tn-online-hint").style.display=tnType==="online"?"":"none";
 });
 document.getElementById("btn-create-tournament")?.addEventListener("click",async()=>{
-  const name=document.getElementById("tn-name").value.trim()||"Turnier";
+  const name=document.getElementById("tn-name").value.trim()||t('tn_default');
   const checked=[...document.querySelectorAll("#tn-player-list input:checked")];
-  if(checked.length<2){alert("Mindestens 2 Spieler auswählen!");return;}
+  if(checked.length<2){alert(t('tn_min_2_spieler'));return;}
   const players=checked.map(c=>{ const p=state.allPlayers.find(x=>x.id===c.value); return p?.name||"?"; });
   const playerIds=checked.map(c=>c.value);
   const matches=tnFormat==="round_robin" ? generateRoundRobin(players) : generateKnockout(players);
@@ -596,15 +596,15 @@ document.getElementById("btn-email-login").addEventListener("click",async()=>{
   const email=document.getElementById("login-email").value.trim();
   const pw=document.getElementById("login-password").value;
   authError("login-error","");
-  if(!email||!pw){ authError("login-error","Bitte Email und Passwort eingeben."); return; }
+  if(!email||!pw){ authError("login-error",t('auth_email_pw')); return; }
   try{ await window.emailSignIn(email, pw); }
-  catch(e){ authError("login-error", e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"?"Ungültige Email oder Passwort.":e.code==="auth/user-not-found"?"Kein Account mit dieser Email.":e.message); }
+  catch(e){ authError("login-error", e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"?t('auth_invalid_cred'):e.code==="auth/user-not-found"?t('auth_no_account'):e.message); }
 });
 document.getElementById("btn-google-login").addEventListener("click",async()=>{ authError("login-error",""); try{ await window.signInWithGoogle(); }catch(e){ authError("login-error",e.message); } });
 document.getElementById("btn-forgot-password").addEventListener("click",async()=>{
   const email=document.getElementById("login-email").value.trim();
-  if(!email){ authError("login-error","Bitte Email eingeben."); return; }
-  try{ await window.resetPassword(email); authError("login-error",""); document.getElementById("login-error").style.color="var(--dart-success)"; document.getElementById("login-error").textContent="Reset-Email gesendet!"; }
+  if(!email){ authError("login-error",t('auth_email_only')); return; }
+  try{ await window.resetPassword(email); authError("login-error",""); document.getElementById("login-error").style.color="var(--dart-success)"; document.getElementById("login-error").textContent=t('auth_reset_sent'); }
   catch(e){ authError("login-error",e.message); }
 });
 document.getElementById("btn-guest").addEventListener("click",async()=>{ try{ await window.signInAsGuest(); }catch(e){ authError("login-error",e.message); } });
@@ -614,12 +614,12 @@ document.getElementById("btn-email-register").addEventListener("click",async()=>
   const pw=document.getElementById("reg-password").value;
   const pw2=document.getElementById("reg-password2").value;
   authError("reg-error","");
-  if(!name){ authError("reg-error","Bitte Name eingeben."); return; }
-  if(!email){ authError("reg-error","Bitte Email eingeben."); return; }
-  if(pw.length<6){ authError("reg-error","Passwort min. 6 Zeichen."); return; }
-  if(pw!==pw2){ authError("reg-error","Passwörter stimmen nicht überein."); return; }
+  if(!name){ authError("reg-error",t('auth_name_only')); return; }
+  if(!email){ authError("reg-error",t('auth_email_only')); return; }
+  if(pw.length<6){ authError("reg-error",t('auth_pw_short')); return; }
+  if(pw!==pw2){ authError("reg-error",t('auth_pw_mismatch')); return; }
   try{ await window.emailRegister(email, pw, name); }
-  catch(e){ authError("reg-error", e.code==="auth/email-already-in-use"?"Diese Email ist bereits registriert.":e.message); }
+  catch(e){ authError("reg-error", e.code==="auth/email-already-in-use"?t('auth_email_taken'):e.message); }
 });
 document.getElementById("btn-google-register").addEventListener("click",async()=>{ authError("reg-error",""); try{ await window.signInWithGoogle(); }catch(e){ authError("reg-error",e.message); } });
 
@@ -650,8 +650,8 @@ function initProfilTab(){
   const infoEl=document.getElementById("profil-account-info");
   const upgradeEl=document.getElementById("profil-upgrade-inline");
   if(!infoEl) return;
-  if(!user){ infoEl.innerHTML=`<div style="font-size:14px;color:var(--dart-text-sec)">Nicht angemeldet</div>`; if(upgradeEl) upgradeEl.style.display=""; return; }
-  const displayName=user.displayName||"Gast";
+  if(!user){ infoEl.innerHTML=`<div style="font-size:14px;color:var(--dart-text-sec)">${t('nicht_angemeldet')}</div>`; if(upgradeEl) upgradeEl.style.display=""; return; }
+  const displayName=user.displayName||t('gast_name');
   const email=user.email||"—";
   const isAnon=user.isAnonymous;
   infoEl.innerHTML=`
@@ -675,30 +675,29 @@ function initProfilTab(){
 function renderPremiumStatus(isAnon, displayName, email){
   const el = document.getElementById("profil-premium-status");
   if(!el) return;
-  if(isAnon || !displayName || displayName === "Gast"){
+  if(isAnon || !displayName || displayName === t('gast_name')){
     el.innerHTML = `
       <div style="background:var(--dart-bg-card);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);
-          letter-spacing:2px;margin-bottom:6px">🎉 BETA-NUTZER</div>
+          letter-spacing:2px;margin-bottom:6px">🎉 ${t('beta_nutzer')}</div>
         <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:10px;line-height:1.5">
-          Du hast Zugriff auf alle Features während der Beta.
-          Registriere dich jetzt um deine Beta-Vorteile dauerhaft zu sichern wenn Premium startet.
+          ${t('beta_zugr')}
         </div>
         <button onclick="document.getElementById('profil-upgrade-inline').style.display=''"
           style="width:100%;padding:11px;background:var(--dart-gold);border:none;border-radius:8px;
           font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;
           color:#000;cursor:pointer">
-          ACCOUNT ERSTELLEN →
+          ${t('account_erstellen_btn')}
         </button>
       </div>`;
   } else {
     el.innerHTML = `
       <div style="background:var(--dart-bg-card);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);
-          letter-spacing:2px;margin-bottom:4px">✅ BETA-NUTZER (Grandfathered)</div>
+          letter-spacing:2px;margin-bottom:4px">${t('beta_grandfathered_title')}</div>
         <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:6px">${email}</div>
         <div style="font-size:13px;color:var(--dart-text-sec);line-height:1.5">
-          Deine Beta-Vorteile sind gesichert. Du bekommst Premium dauerhaft kostenlos.
+          ${t('beta_gesichert')}
         </div>
       </div>`;
   }
@@ -710,9 +709,9 @@ document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=
   const pw=document.getElementById("profil-upgrade-password").value;
   const errEl=document.getElementById("profil-upgrade-error");
   errEl.textContent="";
-  if(!name||!email||pw.length<6){errEl.textContent="Alle Felder ausfüllen (PW min. 6 Zeichen).";return;}
-  try{ await window.upgradeAnonymousAccount(email,pw,name); alert("Account erstellt! Deine Spieldaten wurden übernommen."); initProfilTab(); }
-  catch(e){ errEl.textContent=e.code==="auth/email-already-in-use"?"Diese Email ist bereits vergeben.":e.message; }
+  if(!name||!email||pw.length<6){errEl.textContent=t('auth_fill_all');return;}
+  try{ await window.upgradeAnonymousAccount(email,pw,name); alert(t('account_erstellt')); initProfilTab(); }
+  catch(e){ errEl.textContent=e.code==="auth/email-already-in-use"?t('auth_email_taken2'):e.message; }
 });
 document.getElementById("btn-profil-google")?.addEventListener("click",async()=>{ try{ await window.signInWithGoogle(); initProfilTab(); }catch(e){} });
 
@@ -808,7 +807,7 @@ document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
   await callCoach(prompt, outputEl, limitEl, btn);
   if(outputEl.querySelector(".coach-box")&&window.dartDB){
     const text=outputEl.querySelector(".coach-box").innerText;
-    if(text&&!text.includes("Fehler")&&!text.includes("Limit")){
+    if(text&&!text.includes("Fehler")&&!text.includes("Error")&&!text.includes("Limit")){
       await window.dartDB.saveCoachAnalysis({ playerId:pid, playerName, type:"text", text, mode:state.cfg.mode, avgPerTurn:avg });
       loadCoachHistory(pid);
     }
@@ -901,7 +900,7 @@ const APP_URL="https://danielstrass8482.github.io/Dart/dart.html";
 let _videoSessionUnsubscribe=null, _videoSessionCode=null, _videoSessionAnalyzeCb=null;
 
 async function startVideoHostSession(analyzeCb){
-  if(!window.dartDB){ alert("Datenbank nicht bereit"); return; }
+  if(!window.dartDB){ alert(t('db_nicht_bereit')); return; }
   const code=Math.random().toString(36).substring(2,6).toUpperCase();
   _videoSessionCode=code; _videoSessionAnalyzeCb=analyzeCb;
   await window.dartDB.createVideoSession(code, {});
@@ -949,11 +948,11 @@ async function startVrRecording(){
     recordBtn.style.display="none"; stopBtn.style.display=""; sendBtn.style.display="none"; vrVideoBlob=null;
     vrRecordedChunks=[]; vrMediaRecorder=new MediaRecorder(vrMediaStream,{mimeType:"video/webm"});
     vrMediaRecorder.ondataavailable=e=>{ if(e.data.size>0) vrRecordedChunks.push(e.data); };
-    vrMediaRecorder.onstop=()=>{ vrVideoBlob=new Blob(vrRecordedChunks,{type:"video/webm"}); const url=URL.createObjectURL(vrVideoBlob); preview.srcObject=null; preview.src=url; vrMediaStream.getTracks().forEach(t=>t.stop()); stopBtn.style.display="none"; recordBtn.style.display=""; recordBtn.textContent="📹 NEU AUFNEHMEN"; sendBtn.style.display=""; status.textContent="Vorschau — Senden wenn ok"; };
-    vrMediaRecorder.start(); let countdown=10; status.textContent=`⏺ Aufnahme läuft… (${countdown}s)`;
-    const timer=setInterval(()=>{ countdown--; status.textContent=`⏺ Aufnahme läuft… (${countdown}s)`; stopBtn.textContent=`⏹ STOP (${countdown}s)`; if(countdown<=0){ clearInterval(timer); if(vrMediaRecorder?.state==="recording") vrMediaRecorder.stop(); } },1000);
+    vrMediaRecorder.onstop=()=>{ vrVideoBlob=new Blob(vrRecordedChunks,{type:"video/webm"}); const url=URL.createObjectURL(vrVideoBlob); preview.srcObject=null; preview.src=url; vrMediaStream.getTracks().forEach(tk=>tk.stop()); stopBtn.style.display="none"; recordBtn.style.display=""; recordBtn.textContent=t('aufnahme_neu'); sendBtn.style.display=""; status.textContent=t('aufnahme_vorschau'); };
+    vrMediaRecorder.start(); let countdown=10; status.textContent=`${t('aufnahme_laeuft')} (${countdown}s)`;
+    const timer=setInterval(()=>{ countdown--; status.textContent=`${t('aufnahme_laeuft')} (${countdown}s)`; stopBtn.textContent=`⏹ STOP (${countdown}s)`; if(countdown<=0){ clearInterval(timer); if(vrMediaRecorder?.state==="recording") vrMediaRecorder.stop(); } },1000);
     stopBtn.onclick=()=>{ clearInterval(timer); if(vrMediaRecorder?.state==="recording") vrMediaRecorder.stop(); };
-  }catch(err){ status.textContent="Kamera nicht verfügbar: "+err.message; }
+  }catch(err){ status.textContent=t('kamera_fehler')+err.message; }
 }
 
 async function sendVrVideo(){
@@ -999,7 +998,7 @@ async function initAnalyseTab(){
 
 document.getElementById("btn-coach-analyse-tab").addEventListener("click",async()=>{
   const btn=document.getElementById("btn-coach-analyse-tab"), outputEl=document.getElementById("coach-output-analyse-tab"), limitEl=document.getElementById("coach-limit-analyse-tab");
-  if(!analyseSelectedPlayer){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">Bitte zuerst einen Spieler auswählen.</div>`; return; }
+  if(!analyseSelectedPlayer){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">${t('bitte_spieler_auswaehlen')}</div>`; return; }
   const p=state.allPlayers.find(x=>x.id===analyseSelectedPlayer);
   const prompt=buildCoachPrompt(p?.stats||null, null, allGamesCache, analyseSelectedPlayer);
   await callCoach(prompt, outputEl, limitEl, btn);
@@ -1075,13 +1074,13 @@ function renderVoiceSelector(){
     const isActive=v.id===activeId; const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
     const premiumBadge=!v.builtin?` <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
     return `<div style="border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;${isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border-top:1px solid var(--dart-divider);"}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${premiumBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● AKTIV</span>`:""}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${premiumBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}</div>
       <div style="font-size:11px;color:var(--dart-text-muted);font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">Test: 180</button>
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Test: Game On</button>
         <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Test: Bust</button>
-        ${isActive?`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> Aktiv</button>`:`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> Aktivieren</button>`}
+        ${isActive?`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktiv')}</button>`:`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktivieren')}</button>`}
         ${!v.builtin?`<button style="padding:7px 11px;border:1px solid var(--dart-danger);border-radius:7px;background:rgba(200,54,43,.12);color:var(--dart-danger);font-size:12px;cursor:pointer;" data-delete-idx="${i}"><i data-lucide="trash-2" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>`:""}
       </div>
     </div>`;

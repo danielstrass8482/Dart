@@ -6,6 +6,7 @@ import { state } from './state.js';
 import { numToWords, soundBust, soundApplause, soundHit, soundLow, speakKeyWithCustom, speakScoreWithCustom, speak } from './audio.js';
 import { flashSegment } from './board.js?v=2';
 import { requiresDelay } from './x01.js?v=2';
+import { t } from './i18n.js';
 
 // ── Voice parser vocabulary ───────────────────────────────────────
 const NUM_WORDS={
@@ -95,7 +96,7 @@ export let micEnabled=false;
 export function initMic(){
   if(!SpeechRec){
     const btn=document.getElementById("btn-mic");
-    if(btn){ btn.classList.add("disabled-mic"); btn.title="Spracherkennung nicht verfügbar"; }
+    if(btn){ btn.classList.add("disabled-mic"); btn.title=t('spracherkennung_nicht_verfuegbar'); }
     return;
   }
   recognition=new SpeechRec();
@@ -107,7 +108,7 @@ export function initMic(){
   recognition.onstart=()=>{
     micActive=true;
     document.querySelectorAll("#lp-mic,#bottom-mic").forEach(b=>b?.classList.add("listening"));
-    setVoiceFeedback("🎤 Spreche…");
+    setVoiceFeedback(t('spreche'));
   };
 
   recognition.onend=()=>{
@@ -123,7 +124,7 @@ export function initMic(){
   recognition.onerror=(e)=>{
     if(e.error==="aborted"||e.error==="no-speech") return;
     micActive=false;
-    setVoiceFeedback("Fehler: "+e.error);
+    setVoiceFeedback(t('fehler_prefix')+e.error);
     setTimeout(()=>setVoiceFeedback(""),2000);
   };
 

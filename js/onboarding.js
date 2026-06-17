@@ -2,40 +2,44 @@
  * onboarding.js — 5-Screen Tutorial beim ersten App-Start + Kontexthilfe-Tooltips.
  */
 
-const SCREENS = [
-  {
-    icon: "🎯",
-    title: "WILLKOMMEN BEI DARTTRAINER",
-    text: "Dein intelligenter Dart-Trainer.\nKI-Coach, Statistiken und mehr —\nalles in einer App.",
-    btn: "LOS GEHT'S →"
-  },
-  {
-    icon: "🎯",
-    title: "TREFFER EINTRAGEN",
-    text: "Tippe einfach auf die Stelle der Scheibe\nwo dein Dart gelandet ist.\nDie App erkennt das Segment automatisch.",
-    tip: "💡 Tipp: Du kannst auch per Sprache\nansagen — z.B. 'Triple Zwanzig'",
-    btn: "WEITER →"
-  },
-  {
-    icon: "👥",
-    title: "SPIELER & MODI",
-    text: "Lege Spieler an und wähle deinen\nSpielmodus — 501, Cricket, Turniere\noder Party-Modi für gesellige Abende.",
-    btn: "WEITER →"
-  },
-  {
-    icon: "🧠",
-    title: "DEIN KI-COACH",
-    text: "Nach jedem Spiel analysiert dein\npersönlicher KI-Coach deine Statistiken.\nLade ein kurzes Video hoch für eine\nAnalyse deiner Wurftechnik.",
-    badge: "🎉 Während der Beta kostenlos!",
-    btn: "WEITER →"
-  },
-  {
-    icon: "🏆",
-    title: "BEREIT ZU SPIELEN",
-    text: "Leg einen Spieler an und starte\ndein erstes Spiel. Viel Erfolg!",
-    btn: "SPIELEN →"
-  }
-];
+import { t } from './i18n.js';
+
+function getScreens(){
+  return [
+    {
+      icon: "🎯",
+      title: t('ob_title_1'),
+      text: t('ob_text_1'),
+      btn: t('ob_btn_start')
+    },
+    {
+      icon: "🎯",
+      title: t('ob_title_2'),
+      text: t('ob_text_2'),
+      tip: t('ob_tip_2'),
+      btn: t('ob_btn_weiter')
+    },
+    {
+      icon: "👥",
+      title: t('ob_title_3'),
+      text: t('ob_text_3'),
+      btn: t('ob_btn_weiter')
+    },
+    {
+      icon: "🧠",
+      title: t('ob_title_4'),
+      text: t('ob_text_4'),
+      badge: t('ob_badge_4'),
+      btn: t('ob_btn_weiter')
+    },
+    {
+      icon: "🏆",
+      title: t('ob_title_5'),
+      text: t('ob_text_5'),
+      btn: t('ob_btn_play')
+    }
+  ];
+}
 
 let _overlay = null;
 let _currentScreen = 0;
@@ -74,7 +78,7 @@ export function showOnboarding(){
         position:absolute;top:14px;right:16px;
         background:none;border:none;color:var(--dart-text-muted);font-size:12px;
         cursor:pointer;padding:4px 8px;border-radius:4px
-      ">Überspringen</button>
+      ">${t('ob_skip')}</button>
       <div id="onboarding-body" style="text-align:center;margin-top:8px"></div>
       <div id="onboarding-dots" style="
         display:flex;justify-content:center;gap:6px;margin-top:20px
@@ -87,12 +91,12 @@ export function showOnboarding(){
 }
 
 function renderScreen(idx){
-  const s = SCREENS[idx];
+  const s = getScreens()[idx];
   const body = document.getElementById("onboarding-body");
   const prog = document.getElementById("onboarding-progress");
   const dots = document.getElementById("onboarding-dots");
 
-  prog.style.width = `${Math.round((idx + 1) / SCREENS.length * 100)}%`;
+  prog.style.width = `${Math.round((idx + 1) / getScreens().length * 100)}%`;
 
   body.style.opacity = "0";
   body.style.transform = "translateX(20px)";
@@ -120,7 +124,7 @@ function renderScreen(idx){
     ">${s.btn}</button>
   `;
 
-  dots.innerHTML = SCREENS.map((_, i) => `
+  dots.innerHTML = getScreens().map((_, i) => `
     <div style="width:${i===idx?18:7}px;height:7px;border-radius:4px;
       background:${i===idx?"var(--gold)":"#333"};transition:all .25s"></div>
   `).join("");
@@ -133,7 +137,7 @@ function renderScreen(idx){
 
   document.getElementById("onboarding-next").addEventListener("click", ()=>{
     _currentScreen++;
-    if(_currentScreen >= SCREENS.length){
+    if(_currentScreen >= getScreens().length){
       finishOnboarding();
     } else {
       renderScreen(_currentScreen);
@@ -176,7 +180,7 @@ export function showHelp(title, text){
         style="margin-top:14px;width:100%;padding:9px;background:none;
         border:1px solid var(--dart-border);border-radius:8px;color:var(--dart-text-sec);
         font-size:13px;cursor:pointer">
-        Schließen
+        ${t('schliessen')}
       </button>
     </div>
   `;
