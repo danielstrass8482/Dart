@@ -120,6 +120,7 @@ export function renderTournamentView(t){
   el.querySelectorAll(".btn-start-match").forEach(btn=>{
     btn.addEventListener("click",()=>startTournamentMatch(t, btn.dataset.matchId));
   });
+  window.refreshIcons?.();
 }
 
 export function renderRoundRobinView(t){
@@ -128,7 +129,7 @@ export function renderRoundRobinView(t){
     <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:8px">TABELLE</div>
     <table style="width:100%;border-collapse:collapse;font-size:13px">
       <tr style="border-bottom:2px solid var(--dart-border)"><th style="text-align:left;padding:4px 2px">Spieler</th><th style="padding:4px 6px">S</th><th style="padding:4px 6px">N</th><th style="padding:4px 6px">Legs+</th><th style="padding:4px 6px">Legs-</th></tr>
-      ${sorted.map((s,i)=>`<tr style="border-bottom:1px solid #f5f5f5${i===0?" font-weight:700":""}"><td style="padding:5px 2px">${i===0?"🥇 ":i===1?"🥈 ":i===2?"🥉 ":""}${t.players[s.playerIdx]}</td><td style="text-align:center;padding:5px 6px;color:var(--dart-success)">${s.wins}</td><td style="text-align:center;padding:5px 6px;color:var(--dart-danger)">${s.losses}</td><td style="text-align:center;padding:5px 6px">${s.legsFor}</td><td style="text-align:center;padding:5px 6px">${s.legsAgainst}</td></tr>`).join("")}
+      ${sorted.map((s,i)=>`<tr style="border-bottom:1px solid #f5f5f5${i===0?" font-weight:700":""}"><td style="padding:5px 2px">${i===0?'<i data-lucide="medal" style="width:14px;height:14px;stroke-width:2;vertical-align:middle;color:#FFD700"></i> ':i===1?'<i data-lucide="medal" style="width:14px;height:14px;stroke-width:2;vertical-align:middle;color:#C0C0C0"></i> ':i===2?'<i data-lucide="medal" style="width:14px;height:14px;stroke-width:2;vertical-align:middle;color:#CD7F32"></i> ':""}${t.players[s.playerIdx]}</td><td style="text-align:center;padding:5px 6px;color:var(--dart-success)">${s.wins}</td><td style="text-align:center;padding:5px 6px;color:var(--dart-danger)">${s.losses}</td><td style="text-align:center;padding:5px 6px">${s.legsFor}</td><td style="text-align:center;padding:5px 6px">${s.legsAgainst}</td></tr>`).join("")}
     </table>
   </div>`;
   html+=`<div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:14px;margin-bottom:16px">
@@ -136,13 +137,13 @@ export function renderRoundRobinView(t){
   t.matches.forEach(m=>{
     const p1=t.players[m.player1], p2=t.players[m.player2];
     if(m.status==="finished"){
-      html+=`<div class="bracket-match"><span class="${m.winner===m.player1?"winner":""}">${p1}</span><span style="color:var(--dart-text-sec);font-size:11px;padding:0 4px">${m.score}</span><span class="${m.winner===m.player2?"winner":""}">${p2}</span><span style="margin-left:auto;font-size:11px;color:var(--dart-success)">✓</span></div>`;
+      html+=`<div class="bracket-match"><span class="${m.winner===m.player1?"winner":""}">${p1}</span><span style="color:var(--dart-text-sec);font-size:11px;padding:0 4px">${m.score}</span><span class="${m.winner===m.player2?"winner":""}">${p2}</span><span style="margin-left:auto;font-size:11px;color:var(--dart-success)"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></span></div>`;
     } else {
       html+=`<div class="bracket-match">${p1} <span style="color:var(--dart-text-sec);font-size:11px;padding:0 6px">vs</span> ${p2} <button class="btn-start-match" data-match-id="${m.id}" style="margin-left:auto;padding:4px 12px;border:none;border-radius:6px;background:var(--dart-gold);font-size:12px;font-weight:700;cursor:pointer">SPIELEN</button></div>`;
     }
   });
   html+="</div>";
-  if(t.winner){ html+=`<div style="background:var(--dart-bg-chip);border:2px solid var(--dart-gold);border-radius:12px;padding:20px;text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px">🏆 SIEGER</div><div style="font-size:24px;font-weight:700;margin-top:4px">${t.winner}</div></div>`; }
+  if(t.winner){ html+=`<div style="background:var(--dart-bg-chip);border:2px solid var(--dart-gold);border-radius:12px;padding:20px;text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px"><i data-lucide="trophy" style="width:24px;height:24px;stroke-width:2;vertical-align:middle;color:var(--dart-gold)"></i> SIEGER</div><div style="font-size:24px;font-weight:700;margin-top:4px">${t.winner}</div></div>`; }
   return html;
 }
 
@@ -159,14 +160,14 @@ export function renderKnockoutView(t){
         html+=`<div class="bracket-match" style="opacity:.5">Warte auf vorherige Runde…</div>`;
       } else if(m.status==="finished"){
         const p1=t.players[m.player1], p2=t.players[m.player2];
-        html+=`<div class="bracket-match"><span class="${m.winner===m.player1?"winner":""}">${p1}</span><span style="color:var(--dart-text-sec);font-size:11px;padding:0 4px">${m.score}</span><span class="${m.winner===m.player2?"winner":""}">${p2}</span><span style="margin-left:auto;font-size:11px;color:var(--dart-success)">✓</span></div>`;
+        html+=`<div class="bracket-match"><span class="${m.winner===m.player1?"winner":""}">${p1}</span><span style="color:var(--dart-text-sec);font-size:11px;padding:0 4px">${m.score}</span><span class="${m.winner===m.player2?"winner":""}">${p2}</span><span style="margin-left:auto;font-size:11px;color:var(--dart-success)"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></span></div>`;
       } else {
         const p1=t.players[m.player1], p2=t.players[m.player2];
         html+=`<div class="bracket-match">${p1} <span style="color:var(--dart-text-sec);font-size:11px;padding:0 6px">vs</span> ${p2} <button class="btn-start-match" data-match-id="${m.id}" style="margin-left:auto;padding:4px 12px;border:none;border-radius:6px;background:var(--dart-gold);font-size:12px;font-weight:700;cursor:pointer">SPIELEN</button></div>`;
       }
     });
   });
-  if(t.winner){ html+=`<div style="background:var(--dart-bg-chip);border:2px solid var(--dart-gold);border-radius:12px;padding:20px;text-align:center;margin-top:16px"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px">🏆 SIEGER</div><div style="font-size:24px;font-weight:700;margin-top:4px">${t.winner}</div></div>`; }
+  if(t.winner){ html+=`<div style="background:var(--dart-bg-chip);border:2px solid var(--dart-gold);border-radius:12px;padding:20px;text-align:center;margin-top:16px"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px"><i data-lucide="trophy" style="width:24px;height:24px;stroke-width:2;vertical-align:middle;color:var(--dart-gold)"></i> SIEGER</div><div style="font-size:24px;font-weight:700;margin-top:4px">${t.winner}</div></div>`; }
   return html;
 }
 
@@ -278,6 +279,7 @@ export async function loadTournaments(){
         <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px">${t.name}</div>
         <span class="tournament-status-badge ${t.status}">${t.status==="running"?"LÄUFT":t.status==="finished"?"FERTIG":"SETUP"}</span>
       </div>
-      <div style="font-size:12px;color:var(--dart-text-sec)">${t.format==="round_robin"?"Jeder gegen Jeden":"K.O."} · ${t.mode} · ${t.players?.length||0} Spieler${t.winner?" · 🏆 "+t.winner:""}</div>
+      <div style="font-size:12px;color:var(--dart-text-sec)">${t.format==="round_robin"?"Jeder gegen Jeden":"K.O."} · ${t.mode} · ${t.players?.length||0} Spieler${t.winner?` · <i data-lucide="trophy" style="width:11px;height:11px;stroke-width:2;vertical-align:middle;color:var(--dart-gold)"></i> `+t.winner:""}</div>
     </div>`).join("");
+  window.refreshIcons?.();
 }
