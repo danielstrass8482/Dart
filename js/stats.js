@@ -84,6 +84,8 @@ let columnState={
   a:{type:"timerange",range:"30d",sessionId:null,legNum:"all"},
   b:{type:"timerange",range:"90d",sessionId:null,legNum:"all"}
 };
+let _chartTimeout = null;
+let _chartResizeHandler = null;
 
 function groupGamesIntoSessions(games){
   const sessions=[];
@@ -521,7 +523,9 @@ export async function loadAndRenderStats(){
       };
       let activeKPI="avg";
 
-      setTimeout(()=>{
+      if(_chartTimeout) clearTimeout(_chartTimeout);
+      _chartTimeout = setTimeout(()=>{
+        _chartTimeout = null;
         const canvas=document.getElementById("trend-canvas");
         if(!canvas) return;
 
@@ -535,9 +539,9 @@ export async function loadAndRenderStats(){
           canvas.width=W*2; canvas.height=360;
           canvas.style.width="100%"; canvas.style.height="180px";
           const ctx=canvas.getContext("2d");
-          ctx.scale(2,2);
+          ctx.setTransform(2,0,0,2,0,0);
           const w=W, h=180, pad={t:24,r:48,b:28,l:38};
-          ctx.clearRect(0,0,w*2,h*2);
+          ctx.clearRect(0,0,w,h);
           ctx.fillStyle='#121216'; ctx.fillRect(0,0,w,h);
           ctx.strokeStyle='#1a1a1f'; ctx.lineWidth=1;
           for(let i=0;i<=4;i++){ const y=pad.t+(h-pad.t-pad.b)*i/4; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke(); }
@@ -600,7 +604,9 @@ export async function loadAndRenderStats(){
 
         drawChart();
         updateChartTitle();
-        window.addEventListener("resize",drawChart,{passive:true});
+        if(_chartResizeHandler) window.removeEventListener("resize",_chartResizeHandler);
+        _chartResizeHandler=drawChart;
+        window.addEventListener("resize",_chartResizeHandler,{passive:true});
       },100);
     }
   }catch(e){
