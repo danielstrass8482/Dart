@@ -2,7 +2,7 @@
  * onboarding.js — 5-Screen Tutorial beim ersten App-Start + Kontexthilfe-Tooltips.
  */
 
-import { t } from './i18n.js';
+import { t, SUPPORTED_LANGS, setLang } from './i18n.js';
 
 function getScreens(){
   return [
@@ -46,7 +46,56 @@ let _currentScreen = 0;
 
 export function checkOnboarding(){
   if(localStorage.getItem("dart_onboarding_done")) return;
-  showOnboarding();
+  if(!localStorage.getItem('dart_lang')){
+    showLangSelect();
+  } else {
+    showOnboarding();
+  }
+}
+
+function showLangSelect(){
+  const browserLang = navigator.language.startsWith('de') ? 'de' : 'en';
+  const overlay = document.createElement("div");
+  overlay.id = "lang-select-overlay";
+  overlay.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.95);
+    display:flex;align-items:center;justify-content:center;
+    z-index:2000;padding:20px;
+  `;
+  overlay.innerHTML = `
+    <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:18px;
+      padding:40px 24px;max-width:320px;width:100%;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">🎯</div>
+      <div style="font-size:24px;font-weight:800;color:var(--dart-text);margin-bottom:8px;
+        font-family:'Bebas Neue',sans-serif;letter-spacing:2px">DartTrainer</div>
+      <div style="font-size:14px;color:var(--dart-text-muted);margin-bottom:32px">
+        Choose your language
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:280px;margin:0 auto">
+        ${SUPPORTED_LANGS.map(l=>`
+          <button class="lang-select-btn" data-lang="${l.code}"
+            style="padding:14px;border-radius:12px;
+            border:2px solid ${l.code===browserLang?'var(--dart-gold)':'var(--dart-border)'};
+            background:${l.code===browserLang?'rgba(232,196,74,0.1)':'var(--dart-bg-chip)'};
+            color:${l.code===browserLang?'var(--dart-gold)':'var(--dart-text)'};font-size:15px;
+            font-weight:600;cursor:pointer;
+            display:flex;align-items:center;gap:12px">
+            ${l.label}
+          </button>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--dart-text-muted);margin-top:20px">
+        You can change this later in Profile
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll('.lang-select-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      setLang(btn.dataset.lang);
+      overlay.remove();
+      showOnboarding();
+    });
+  });
 }
 
 export function showOnboarding(){

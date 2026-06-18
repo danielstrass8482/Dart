@@ -3,10 +3,11 @@
  */
 
 export const SUPPORTED_LANGS = [
-  { code: 'de', label: '🇩🇪 Deutsch' },
-  { code: 'en', label: '🇬🇧 English' },
-  // { code: 'nl', label: '🇳🇱 Nederlands' },
-  // { code: 'es', label: '🇪🇸 Español' },
+  { code: 'de', label: '🇩🇪 Deutsch', ttsLang: 'de-DE' },
+  { code: 'en', label: '🇬🇧 English', ttsLang: 'en-GB' },
+  // { code: 'nl', label: '🇳🇱 Nederlands', ttsLang: 'nl-NL' },
+  // { code: 'es', label: '🇪🇸 Español', ttsLang: 'es-ES' },
+  // { code: 'fr', label: '🇫🇷 Français', ttsLang: 'fr-FR' },
 ];
 
 export const translations = {
@@ -299,6 +300,8 @@ export const translations = {
     feat_tn_desc: "Lokale und Online-Turniere",
     feat_health_name: "Health-Integration",
     feat_health_desc: "Schlaf und Fitness mit Spielleistung verknüpfen",
+    feat_voicelang_name: "Ansagen in Landessprache",
+    feat_voicelang_desc: "Scores werden in deiner gewählten Sprache angesagt",
     beta_kostenlos_alle: "🎉 Während der Beta kostenlos für alle!",
     beta_sichern_features: "Registriere dich jetzt um deine Features dauerhaft zu sichern.",
     weiter_beta: "WEITER (BETA)",
@@ -364,6 +367,53 @@ export const translations = {
     treffer_col: "TREFFER",
     quote_col: "QUOTE",
     versuche_label: "Versuche",
+
+    // Bot-Persönlichkeiten Labels
+    bot_persoenlichkeit: "PERSÖNLICHKEIT",
+    bot_methodisch: "Methodisch",
+    bot_uebermuetig: "Übermütig",
+    bot_nervoese: "Nervös",
+    bot_gluecksspieler: "Glücksspieler",
+    bot_kaltbluetig: "Kaltblütig",
+    bot_aufholer: "Aufholer",
+    bot_spielt_optimal: "Spielt immer optimal und konstant",
+
+    // Spielkontext Buttons
+    kontext_auto: "Auto",
+    kontext_training: "Training",
+    kontext_casual: "Casual",
+    kontext_turnier: "Turnier",
+
+    // Allgemeine Buttons
+    hinzufuegen: "+ Hinzufügen",
+    alle_kontext: "Alle",
+    spiele_count: "Spiele",
+    turnier_filter: "Turnier",
+    gespeicherte_analysen: "GESPEICHERTE ANALYSEN",
+
+    // Erweiterte Statistiken
+    erweiterte_stats: "ERWEITERTE STATISTIKEN",
+    zeit_filter: "Zeit",
+    spiel_filter: "Spiel",
+    segment_analyse: "SEGMENT-ANALYSE",
+    board_a: "BOARD A",
+    board_b: "BOARD B",
+
+    // Profil Legal
+    legal_title: "LEGAL",
+    datenschutz: "Datenschutzerklärung",
+    impressum: "Impressum",
+    app_version: "DartTrainer · Persönliches Dart Scoring & Tracking",
+
+    // Health Connect
+    health_verbinden: "HEALTH CONNECT VERBINDEN",
+    health_sub: "Verbinde Garmin, Oura, Fitbit und mehr für automatische Gesundheitsdaten.",
+    mehr_erfahren: "Mehr erfahren →",
+    health_browser_hinweis: "Automatische Verbindung nur in der Android App verfügbar. Im Browser: manuelle Eingabe vor dem Spiel.",
+
+    // ElevenLabs Voice Placeholders
+    el_name_placeholder: "Name (z.B. Meine Stimme)",
+    el_id_placeholder: "ElevenLabs Voice ID",
   },
 
   en: {
@@ -655,6 +705,8 @@ export const translations = {
     feat_tn_desc: "Local and online tournaments",
     feat_health_name: "Health Integration",
     feat_health_desc: "Link sleep and fitness with game performance",
+    feat_voicelang_name: "Announcements in your language",
+    feat_voicelang_desc: "Scores announced in your chosen language",
     beta_kostenlos_alle: "🎉 Free for everyone during Beta!",
     beta_sichern_features: "Register now to permanently secure your features.",
     weiter_beta: "CONTINUE (BETA)",
@@ -720,6 +772,53 @@ export const translations = {
     treffer_col: "HITS",
     quote_col: "RATE",
     versuche_label: "attempts",
+
+    // Bot personality labels
+    bot_persoenlichkeit: "PERSONALITY",
+    bot_methodisch: "Methodical",
+    bot_uebermuetig: "Overconfident",
+    bot_nervoese: "Nervous",
+    bot_gluecksspieler: "Gambler",
+    bot_kaltbluetig: "Cold-blooded",
+    bot_aufholer: "Comeback",
+    bot_spielt_optimal: "Always plays optimally and consistently",
+
+    // Game context buttons
+    kontext_auto: "Auto",
+    kontext_training: "Training",
+    kontext_casual: "Casual",
+    kontext_turnier: "Tournament",
+
+    // General buttons
+    hinzufuegen: "+ Add",
+    alle_kontext: "All",
+    spiele_count: "Games",
+    turnier_filter: "Tournament",
+    gespeicherte_analysen: "SAVED ANALYSES",
+
+    // Advanced statistics
+    erweiterte_stats: "ADVANCED STATISTICS",
+    zeit_filter: "Time",
+    spiel_filter: "Game",
+    segment_analyse: "SEGMENT ANALYSIS",
+    board_a: "BOARD A",
+    board_b: "BOARD B",
+
+    // Profile legal
+    legal_title: "LEGAL",
+    datenschutz: "Privacy Policy",
+    impressum: "Imprint",
+    app_version: "DartTrainer · Personal Dart Scoring & Tracking",
+
+    // Health Connect
+    health_verbinden: "CONNECT HEALTH",
+    health_sub: "Connect Garmin, Oura, Fitbit and more for automatic health data.",
+    mehr_erfahren: "Learn more →",
+    health_browser_hinweis: "Automatic connection only available in Android App. In browser: manual input before game.",
+
+    // ElevenLabs Voice placeholders
+    el_name_placeholder: "Name (e.g. My Voice)",
+    el_id_placeholder: "ElevenLabs Voice ID",
   }
 };
 

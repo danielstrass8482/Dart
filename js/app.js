@@ -819,7 +819,7 @@ document.getElementById("btn-toggle-history")?.addEventListener("click",()=>{
   const btn=document.getElementById("btn-toggle-history");
   const open=list.style.display==="none";
   list.style.display=open?"":"none";
-  btn.innerHTML=`<i data-lucide="list" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> GESPEICHERTE ANALYSEN ${open?"▲":"▼"}`; window.refreshIcons?.();
+  btn.innerHTML=`<i data-lucide="list" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${t('gespeicherte_analysen')} ${open?"▲":"▼"}`; window.refreshIcons?.();
 });
 
 // ── Video Coach (winner) ──────────────────────────────────────────

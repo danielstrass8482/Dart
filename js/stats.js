@@ -142,25 +142,25 @@ function buildAdvancedColumn(side){
     return `<button class="tr-btn${on?" active":""}" data-side="${side}" data-range="${r}" style="padding:3px 8px;border-radius:99px;border:1px solid transparent;background:${on?"var(--dart-gold)":"var(--dart-bg-chip)"};color:${on?"#000":"var(--dart-text-muted)"};font-size:11px;cursor:pointer;font-weight:${on?"700":"600"}">${rl[r]}</button>`;
   }).join("");
   return `
-    <div style="font-size:10px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px;text-align:center;font-weight:600">BOARD ${side.toUpperCase()}</div>
+    <div style="font-size:10px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px;text-align:center;font-weight:600">${t(side==="a"?"board_a":"board_b")}</div>
     <div style="margin-bottom:10px">
       <div style="display:flex;gap:4px;margin-bottom:6px">
-        <button class="col-type-btn active" data-side="${side}" data-type="timerange" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-gold);background:var(--dart-bg-chip);color:var(--dart-gold);cursor:pointer;font-weight:700"><i data-lucide="calendar" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> Zeit</button>
-        <button class="col-type-btn" data-side="${side}" data-type="session" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-border);background:var(--dart-bg-card);color:var(--dart-text-muted);cursor:pointer"><i data-lucide="gamepad-2" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> Spiel</button>
+        <button class="col-type-btn active" data-side="${side}" data-type="timerange" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-gold);background:var(--dart-bg-chip);color:var(--dart-gold);cursor:pointer;font-weight:700"><i data-lucide="calendar" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> ${t('zeit_filter')}</button>
+        <button class="col-type-btn" data-side="${side}" data-type="session" style="flex:1;padding:5px 2px;font-size:11px;border-radius:6px;border:1px solid var(--dart-border);background:var(--dart-bg-card);color:var(--dart-text-muted);cursor:pointer"><i data-lucide="gamepad-2" style="width:11px;height:11px;stroke-width:2;vertical-align:middle"></i> ${t('spiel_filter')}</button>
       </div>
       <div id="timerange-${side}" style="display:flex;gap:4px;flex-wrap:wrap">${trBtns}</div>
       <div id="session-${side}" style="display:none">
         <select class="session-select" data-side="${side}" style="width:100%;padding:6px;border:1px solid var(--dart-border);border-radius:6px;font-size:11px;margin-bottom:6px;background:var(--dart-bg-card);color:var(--dart-text-sec)">
-          <option value="">Spiel wählen…</option>
+          <option value="">${t('spiel_filter')} wählen…</option>
         </select>
         <div id="legs-${side}" style="display:none;gap:4px;flex-wrap:wrap"></div>
       </div>
       <div id="filter-label-${side}" style="font-size:10px;color:var(--dart-gold);margin-top:4px;min-height:14px;text-align:center"></div>
     </div>
     <svg id="scatter-board-${side}" viewBox="36 36 458 458" style="display:block;width:100%;aspect-ratio:1;border-radius:8px;background:var(--dart-bg-app);margin-bottom:6px"></svg>
-    <div id="board-stats-${side}" style="text-align:center;font-size:11px;color:var(--dart-text-sec);margin-bottom:10px">— Keine Daten —</div>
-    <div style="font-size:10px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:4px;font-weight:600;border-top:1px solid var(--dart-border);padding-top:8px">SEGMENT-ANALYSE</div>
-    <div id="segment-table-${side}"><div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:8px">Filter wählen</div></div>`;
+    <div id="board-stats-${side}" style="text-align:center;font-size:11px;color:var(--dart-text-sec);margin-bottom:10px">— ${t('keine_daten')} —</div>
+    <div style="font-size:10px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:4px;font-weight:600;border-top:1px solid var(--dart-border);padding-top:8px">${t('segment_analyse')}</div>
+    <div id="segment-table-${side}"><div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:8px">${t('spiel_filter')} wählen</div></div>`;
 }
 
 function updateColumn(side, pid){
@@ -363,8 +363,8 @@ export async function loadAndRenderStats(){
     const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
     const wins=x01Games.filter(g=>pid?g.winnerId===pid:true).length;
 
-    const playerName=pid?(state.allPlayers.find(p=>p.id===pid)?.name||"?"):"Alle";
-    let html=`<div class="stats-section-title">${playerName} · ${games.length} Spiel${games.length!==1?"e":""}</div>`;
+    const playerName=pid?(state.allPlayers.find(p=>p.id===pid)?.name||"?"):t('alle_kontext');
+    let html=`<div class="stats-section-title">${playerName} · ${games.length} ${t('spiele_count')}</div>`;
 
     if(x01Games.length>0){
       html+=`<div class="stats-section-title" style="font-size:13px;color:var(--dart-text-sec)">501 / 301</div>`;
@@ -495,7 +495,7 @@ export async function loadAndRenderStats(){
     if(allScatter.length){
       html+=`<div style="border-top:2px solid var(--dart-gold);margin-top:24px;padding-top:16px"></div>
       <div class="stats-section-title" style="display:flex;align-items:center;gap:8px;margin-top:0">
-        <i data-lucide="microscope" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ERWEITERTE STATISTIKEN
+        <i data-lucide="microscope" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('erweiterte_stats')}
         <span style="font-size:9px;background:var(--dart-gold);color:#000;padding:2px 6px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700">PREMIUM</span>
       </div>
       <div class="adv-grid">

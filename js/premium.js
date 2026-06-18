@@ -55,6 +55,13 @@ export const PREMIUM_FEATURES = {
     descKey: "feat_health_desc",
     freeLimit: 0,
     icon: "❤️"
+  },
+  voiceLang: {
+    id: "voiceLang",
+    nameKey: "feat_voicelang_name",
+    descKey: "feat_voicelang_desc",
+    freeLimit: 0,
+    icon: "🌍"
   }
 };
 

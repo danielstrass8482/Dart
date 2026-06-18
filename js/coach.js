@@ -117,7 +117,17 @@ export function recordVideoCoachUsage(){
  * @returns {string}
  */
 export function buildCoachPrompt(stats, sessionStats, allGames, playerId, healthData){
+  const lang = localStorage.getItem('dart_lang') || 'de';
+  const langInstructions = {
+    de: "Antworte ausschließlich auf Deutsch. Nutze deutsche Dart-Fachbegriffe.",
+    en: "Respond exclusively in English. Use English darts terminology.",
+    nl: "Antwoord uitsluitend in het Nederlands.",
+    es: "Responde exclusivamente en español.",
+    fr: "Réponds exclusivement en français."
+  };
   const lines=[
+    langInstructions[lang] || langInstructions.de,
+    "",
     "Du bist ein professioneller, datenbasierter Dart-Elite-Trainer und Datenanalyst. Analysiere kritisch aber balanciert.",
     "Kein blindes Loben, kein Niedermachen. Der Spieler entscheidet selbst über sein Training.",
     "",
@@ -401,7 +411,18 @@ export async function extractVideoFrames(videoEl, numFrames=5){
  * @returns {string}
  */
 export function buildVideoCoachPrompt(numFrames, sessionStats){
-  return `Du bist ein erfahrener Dart-Coach und analysierst die Wurftechnik eines Spielers.
+  const lang = localStorage.getItem('dart_lang') || 'de';
+  const langInstructions = {
+    de: "Antworte ausschließlich auf Deutsch. Nutze deutsche Dart-Fachbegriffe.",
+    en: "Respond exclusively in English. Use English darts terminology.",
+    nl: "Antwoord uitsluitend in het Nederlands.",
+    es: "Responde exclusivamente en español.",
+    fr: "Réponds exclusivement en français."
+  };
+  const langInstruction = langInstructions[lang] || langInstructions.de;
+  return `${langInstruction}
+
+Du bist ein erfahrener Dart-Coach und analysierst die Wurftechnik eines Spielers.
 
 Du siehst ${numFrames} Frames aus einem kurzen Video (chronologische Reihenfolge): Ausholbewegung → Abwurf → Followthrough.
 

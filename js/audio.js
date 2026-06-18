@@ -103,6 +103,25 @@ const ONES=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine",
   "Seventeen","Eighteen","Nineteen"];
 const TENS=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
 
+const ONES_DE=["","Eins","Zwei","Drei","Vier","Fünf","Sechs","Sieben","Acht","Neun","Zehn",
+  "Elf","Zwölf","Dreizehn","Vierzehn","Fünfzehn","Sechzehn","Siebzehn","Achtzehn","Neunzehn"];
+const TENS_DE=["","","Zwanzig","Dreißig","Vierzig","Fünfzig","Sechzig","Siebzig","Achtzig","Neunzig"];
+
+function numToWordsDe(n){
+  if(n===0) return "Null";
+  if(n===180) return "Einhundertachtzig";
+  if(n===100) return "Einhundert";
+  if(n===50)  return "Fünfzig";
+  if(n===25)  return "Fünfundzwanzig";
+  if(n<20)    return ONES_DE[n];
+  if(n<100){
+    const t=Math.floor(n/10), o=n%10;
+    return o?ONES_DE[o]+"und"+TENS_DE[t]:TENS_DE[t];
+  }
+  const h=Math.floor(n/100), rest=n%100;
+  return (h===1?"Einhundert":ONES_DE[h]+"hundert")+(rest?numToWordsDe(rest):"");
+}
+
 /**
  * Converts a number to English words.
  * @param {number} n
@@ -369,11 +388,28 @@ export function prewarmElevenLabs(){
  */
 export async function speakScoreWithCustom(score, hitBull=false){
   if(localStorage.getItem("dart_tts_enabled")==="false") return;
-  const text=score===180?"One Hundred and Eighty!":
-             score===100?"One Hundred!":
-             score===50&&hitBull?"Bull's Eye!":
-             numToWords(score)+"!";
-  const key=score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
+  const lang = localStorage.getItem('dart_lang') || 'en';
+  let useDeLang = false;
+  if(lang === 'de'){
+    try{
+      const { isPremium } = await import('./premium.js');
+      useDeLang = await isPremium();
+    }catch(e){}
+  }
+  let text, key;
+  if(useDeLang){
+    text = score===180?"Einhundertachtzig!":
+           score===100?"Einhundert!":
+           score===50&&hitBull?"Bull's Eye!":
+           numToWordsDe(score)+"!";
+    key = score===50?`el_score_de_50_${hitBull?"bull":"norm"}`:`el_score_de_${score}`;
+  } else {
+    text = score===180?"One Hundred and Eighty!":
+           score===100?"One Hundred!":
+           score===50&&hitBull?"Bull's Eye!":
+           numToWords(score)+"!";
+    key = score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
+  }
   await queueAudio(text,key);
 }
 
