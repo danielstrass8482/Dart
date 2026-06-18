@@ -204,7 +204,10 @@ function finishOnboarding(){
 }
 
 // ── Kontexthilfe ─────────────────────────────────────────────────
-export function showHelp(title, text){
+export function showHelp(titleKey, textKey){
+  // Accepts either raw strings or i18n keys — t() returns key unchanged if not found
+  const title = t(titleKey);
+  const text = t(textKey);
   const existing = document.getElementById("help-modal-overlay");
   if(existing) existing.remove();
 

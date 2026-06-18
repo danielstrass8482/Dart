@@ -414,6 +414,18 @@ export const translations = {
     // ElevenLabs Voice Placeholders
     el_name_placeholder: "Name (z.B. Meine Stimme)",
     el_id_placeholder: "ElevenLabs Voice ID",
+
+    // Help-Modal Inhalte (showHelp)
+    help_coach_analyse_title: "KI-Coach Analyse",
+    help_coach_analyse_text: "Der KI-Coach analysiert deine Spielstatistiken und gibt konkrete Verbesserungstipps basierend auf deinen Doppelfeld-Quoten, First-9-Schnitt und Trends.",
+    help_video_analyse_title: "Wurf-Analyse (Video)",
+    help_video_analyse_text: "Lade ein 3–5 Sekunden Video deines Wurfs hoch. Claude analysiert Haltung, Arm und Followthrough und gibt konkrete Verbesserungshinweise.",
+    help_turnier_title: "Turnier-Modus",
+    help_turnier_text: "Spiele ein Turnier mit bis zu 8 Spielern. Jeder gegen Jeden oder K.O.-System. Auch online mit Freunden möglich.",
+
+    // App-Status-Meldungen
+    video_limit_msg: "Du hast heute dein Video-Analyse-Limit ({n}x) erreicht.",
+    stimme_aktiviert_msg: "✓ Stimme aktiviert — {name} ist jetzt aktiv",
   },
 
   en: {
@@ -819,6 +831,18 @@ export const translations = {
     // ElevenLabs Voice placeholders
     el_name_placeholder: "Name (e.g. My Voice)",
     el_id_placeholder: "ElevenLabs Voice ID",
+
+    // Help modal content (showHelp)
+    help_coach_analyse_title: "AI Coach Analysis",
+    help_coach_analyse_text: "The AI Coach analyses your game statistics and gives concrete improvement tips based on your double field rates, First 9 average and trends.",
+    help_video_analyse_title: "Throw Analysis (Video)",
+    help_video_analyse_text: "Upload a 3–5 second video of your throw. Claude analyses posture, arm and followthrough and gives concrete improvement tips.",
+    help_turnier_title: "Tournament Mode",
+    help_turnier_text: "Play a tournament with up to 8 players. Round robin or knockout system. Also available online with friends.",
+
+    // App status messages
+    video_limit_msg: "You've reached your video analysis limit ({n}x) for today.",
+    stimme_aktiviert_msg: "✓ Voice activated — {name} is now active",
   }
 };
 
