@@ -171,7 +171,7 @@
       <button class="spielen-back" onclick="showSpielenCards()"><i data-lucide="chevron-left" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ZURÜCK</button>
       <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:16px">
       <div class="setup-card">
-    <label class="field-label">SPIELMODUS</label>
+    <label class="field-label" data-i18n="spielmodus">SPIELMODUS</label>
     <div class="btn-group" id="mode-group">
       <button class="btn-toggle active" data-value="501">501</button>
       <button class="btn-toggle" data-value="301">301</button>
@@ -232,32 +232,32 @@
     <label class="field-label" style="margin-top:4px" data-i18n="bot_gegner">BOT-GEGNER</label>
     <div class="btn-group" id="bot-group">
       <button class="btn-toggle active" data-value="none" data-i18n="kein_bot">Kein Bot</button>
-      <button class="btn-toggle" data-value="easy"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Anfänger</button>
-      <button class="btn-toggle" data-value="medium"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Mittel</button>
-      <button class="btn-toggle" data-value="pro"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Profi</button>
+      <button class="btn-toggle" data-value="easy"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="bot_anfaenger">Anfänger</span></button>
+      <button class="btn-toggle" data-value="medium"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="bot_mittel">Mittel</span></button>
+      <button class="btn-toggle" data-value="pro"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="bot_profi">Profi</span></button>
     </div>
 
     <div id="bot-personality-section" style="display:none">
-      <label class="field-label" style="margin-top:8px">PERSÖNLICHKEIT</label>
+      <label class="field-label" style="margin-top:8px" data-i18n="bot_persoenlichkeit">PERSÖNLICHKEIT</label>
       <div class="btn-group" id="bot-personality-group" style="flex-wrap:wrap">
-        <button class="btn-toggle active" data-value="methodisch"><i data-lucide="target" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> Methodisch</button>
-        <button class="btn-toggle" data-value="uebermuetig">Übermütig <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
-        <button class="btn-toggle" data-value="nervoese">Nervös <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
-        <button class="btn-toggle" data-value="gluecksspieler">Glücksspieler <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
-        <button class="btn-toggle" data-value="kaltbluetig">Kaltblütig <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
-        <button class="btn-toggle" data-value="aufholer">Aufholer <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle active" data-value="methodisch"><i data-lucide="target" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="bot_methodisch">Methodisch</span></button>
+        <button class="btn-toggle" data-value="uebermuetig"><span data-i18n="bot_uebermuetig">Übermütig</span> <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle" data-value="nervoese"><span data-i18n="bot_nervoese">Nervös</span> <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle" data-value="gluecksspieler"><span data-i18n="bot_gluecksspieler">Glücksspieler</span> <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle" data-value="kaltbluetig"><span data-i18n="bot_kaltbluetig">Kaltblütig</span> <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        <button class="btn-toggle" data-value="aufholer"><span data-i18n="bot_aufholer">Aufholer</span> <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
       </div>
-      <div id="bot-personality-desc" style="color:var(--dart-text-sec);font-size:11px;text-align:center;margin-top:4px;min-height:14px">
+      <div id="bot-personality-desc" data-i18n="bot_desc_methodisch" style="color:var(--dart-text-sec);font-size:11px;text-align:center;margin-top:4px;min-height:14px">
         Spielt immer optimal und konstant
       </div>
     </div>
 
     <label class="field-label" style="margin-top:4px" data-i18n="spielkontext">SPIELKONTEXT</label>
     <div class="btn-group" id="context-group">
-      <button class="btn-toggle active" data-value="auto"><i data-lucide="cpu" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Auto</button>
-      <button class="btn-toggle" data-value="training"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Training</button>
-      <button class="btn-toggle" data-value="casual"><i data-lucide="gamepad-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Casual</button>
-      <button class="btn-toggle" data-value="tournament"><i data-lucide="trophy" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Turnier</button>
+      <button class="btn-toggle active" data-value="auto"><i data-lucide="cpu" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="kontext_auto">Auto</span></button>
+      <button class="btn-toggle" data-value="training"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="kontext_training">Training</span></button>
+      <button class="btn-toggle" data-value="casual"><i data-lucide="gamepad-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="kontext_casual">Casual</span></button>
+      <button class="btn-toggle" data-value="tournament"><i data-lucide="trophy" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="kontext_turnier">Turnier</span></button>
     </div>
 
     <button class="btn-start" id="btn-start" data-i18n="spiel_starten">SPIEL STARTEN</button>
@@ -352,10 +352,10 @@
         <button class="btn-add-player" id="btn-apply-dates" style="padding:6px 12px;font-size:13px">OK</button>
       </div>
       <div class="stats-time-bar" id="context-filter-bar" style="margin-top:4px">
-        <button class="time-btn active" data-ctx="all">Alle</button>
-        <button class="time-btn" data-ctx="training"><i data-lucide="target" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Training</button>
-        <button class="time-btn" data-ctx="casual"><i data-lucide="gamepad-2" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Casual</button>
-        <button class="time-btn" data-ctx="tournament"><i data-lucide="trophy" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> Turnier</button>
+        <button class="time-btn active" data-ctx="all" data-i18n="alle_kontext">Alle</button>
+        <button class="time-btn" data-ctx="training"><i data-lucide="target" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="kontext_training">Training</span></button>
+        <button class="time-btn" data-ctx="casual"><i data-lucide="gamepad-2" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="kontext_casual">Casual</span></button>
+        <button class="time-btn" data-ctx="tournament"><i data-lucide="trophy" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="turnier_filter">Turnier</span></button>
       </div>
       <div id="stats-content"><div class="stats-loading" data-i18n="lade_statistiken">Lade Statistiken…</div></div>
     </div>
@@ -364,7 +364,7 @@
     <div class="sub-tab-content" id="sub-tab-analyse">
     <div style="flex:1;padding:16px;overflow-y:auto;background:var(--dart-bg-card)">
       <div id="analyse-player-bar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
-      <div class="stats-section-title"><i data-lucide="trending-up" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ERWEITERTE STATISTIKEN <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
+      <div class="stats-section-title"><i data-lucide="trending-up" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="erweiterte_stats">ERWEITERTE STATISTIKEN</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
       <div class="stats-section-title" style="display:flex;align-items:center"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE <button class="help-btn" onclick="showHelp('KI-Coach Analyse','Der KI-Coach analysiert deine Spielstatistiken und gibt konkrete Verbesserungstipps basierend auf deinen Doppelfeld-Quoten, First-9-Schnitt und Trends.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
       <button class="coach-btn" id="btn-coach-analyse-tab" disabled><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE STARTEN <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
       <div id="coach-output-analyse-tab"></div>
@@ -452,13 +452,13 @@
       <div id="voice-selector-confirm" style="display:none;color:var(--dart-success);font-size:13px;padding:6px 0;text-align:center"></div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--dart-border)">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:var(--dart-text-muted);margin-bottom:8px" data-i18n="neue_stimme">+ NEUE STIMME HINZUFÜGEN</div>
-        <input id="voice-new-name" placeholder="Name (z.B. Meine Stimme)" style="width:100%;padding:9px;border:1px solid var(--dart-border);border-radius:8px;font-size:14px;margin-bottom:6px;box-sizing:border-box">
-        <input id="voice-new-id" placeholder="ElevenLabs Voice ID" style="width:100%;padding:9px;border:1px solid var(--dart-border);border-radius:8px;font-family:monospace;font-size:13px;margin-bottom:8px;box-sizing:border-box">
+        <input id="voice-new-name" data-i18n-placeholder="el_name_placeholder" placeholder="Name (z.B. Meine Stimme)" style="width:100%;padding:9px;border:1px solid var(--dart-border);border-radius:8px;font-size:14px;margin-bottom:6px;box-sizing:border-box">
+        <input id="voice-new-id" data-i18n-placeholder="el_id_placeholder" placeholder="ElevenLabs Voice ID" style="width:100%;padding:9px;border:1px solid var(--dart-border);border-radius:8px;font-family:monospace;font-size:13px;margin-bottom:8px;box-sizing:border-box">
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button id="btn-voice-new-test-180" style="padding:8px 11px;border:1px solid var(--dart-border);border-radius:7px;background:var(--dart-bg-card);font-size:12px;cursor:pointer">Test: 180</button>
           <button id="btn-voice-new-test-gameon" style="padding:8px 11px;border:1px solid var(--dart-border);border-radius:7px;background:var(--dart-bg-card);font-size:12px;cursor:pointer">Test: Game On</button>
           <button id="btn-voice-new-test-bust" style="padding:8px 11px;border:1px solid var(--dart-border);border-radius:7px;background:var(--dart-bg-card);font-size:12px;cursor:pointer">Test: Bust</button>
-          <button id="btn-voice-new-add" style="padding:8px 14px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;margin-left:auto">+ Hinzufügen</button>
+          <button id="btn-voice-new-add" data-i18n="hinzufuegen" style="padding:8px 14px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;margin-left:auto">+ Hinzufügen</button>
         </div>
         <div id="voice-new-error" style="color:var(--dart-danger);font-size:12px;margin-top:6px;min-height:16px"></div>
       </div>
@@ -513,13 +513,14 @@
     <!-- Health Connect -->
     <div class="profil-section">
       <div class="profil-section-title"><i data-lucide="link" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="health_connect">HEALTH CONNECT</span></div>
-      <div style="font-size:13px;color:var(--dart-text-muted);margin-bottom:10px;line-height:1.6">
+      <div data-i18n="health_sub" style="font-size:13px;color:var(--dart-text-muted);margin-bottom:10px;line-height:1.6">
         Verbinde Garmin, Oura, Fitbit und mehr für automatische Gesundheitsdaten.
       </div>
-      <div style="background:var(--dart-bg-card);border-radius:8px;padding:10px;font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">
+      <div data-i18n="health_browser_hinweis" style="background:var(--dart-bg-card);border-radius:8px;padding:10px;font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">
         ℹ️ Automatische Verbindung nur in der Android App verfügbar. Im Browser: manuelle Eingabe vor dem Spiel.
       </div>
       <a href="https://health.google/health-connect-android-api/" target="_blank"
+        data-i18n="mehr_erfahren"
         style="color:var(--dart-gold);font-size:13px;text-decoration:none;font-weight:600">
         Mehr erfahren →
       </a>
@@ -529,9 +530,9 @@
     <div class="profil-section">
       <div class="profil-section-title"><i data-lucide="file-text" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="rechtliches">RECHTLICHES</span></div>
       <div style="font-size:13px;color:var(--dart-text-muted);line-height:1.7">
-        <div style="margin-bottom:6px"><strong>DartTrainer</strong> — Persönliches Dart-Score-Tracking</div>
+        <div data-i18n="app_version" style="margin-bottom:6px">DartTrainer · Persönliches Dart Scoring & Tracking</div>
         <div style="margin-bottom:6px">Version: 2.0 · Firebase Hosting via GitHub Pages</div>
-        <div style="margin-bottom:6px">Datenschutz: Daten werden in Firebase (Google) gespeichert. Keine Weitergabe an Dritte.</div>
+        <div style="margin-bottom:6px"><span data-i18n="datenschutz">Datenschutzerklärung</span>: Daten werden in Firebase (Google) gespeichert. Keine Weitergabe an Dritte.</div>
         <div>Entwickelt von Daniel Straß · 2025</div>
       </div>
     </div>
@@ -597,7 +598,7 @@
         <button class="btn-toggle active" data-value="round_robin" data-i18n="jeder_gegen_jeden">Jeder gegen Jeden</button>
         <button class="btn-toggle" data-value="knockout" data-i18n="ko_system">K.O.-System</button>
       </div>
-      <label class="field-label">SPIELMODUS</label>
+      <label class="field-label" data-i18n="spielmodus">SPIELMODUS</label>
       <div class="btn-group" id="tn-mode-group" style="margin-bottom:8px">
         <button class="btn-toggle active" data-value="501">501</button>
         <button class="btn-toggle" data-value="301">301</button>
@@ -802,7 +803,7 @@
     <!-- Saved analyses -->
     <div id="coach-history-wrap" style="display:none;margin-top:12px;text-align:left">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-sec);margin-bottom:6px;cursor:pointer" id="btn-toggle-history">
-        <i data-lucide="list" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> GESPEICHERTE ANALYSEN ▼
+        <i data-lucide="list" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="gespeicherte_analysen">GESPEICHERTE ANALYSEN</span> ▼
       </div>
       <div id="coach-history-list" style="display:none"></div>
     </div>
