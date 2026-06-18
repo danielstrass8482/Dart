@@ -872,3 +872,8 @@ export function setLang(lang){
 export function getLang(){
   return localStorage.getItem('dart_lang') || 'de';
 }
+
+// Global verfügbar machen (für inline onclick-Handler in HTML)
+window.t = t;
+window.setLang = setLang;
+window.applyTranslations = applyTranslations;

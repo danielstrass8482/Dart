@@ -8,6 +8,9 @@ import './firebase.js';
 // ── i18n ─────────────────────────────────────────────────────────
 import { t, setLang, getLang, applyTranslations, SUPPORTED_LANGS } from './i18n.js';
 
+// Sicherstellen dass window.t gesetzt ist (für inline onclick-Handler in HTML)
+window.t = t;
+
 // ── Browser language detection (first visit only) ─────────────────
 if(!localStorage.getItem('dart_lang')){
   const browserLang = navigator.language.startsWith('de') ? 'de' : 'en';
@@ -16,6 +19,10 @@ if(!localStorage.getItem('dart_lang')){
 
 // ── Apply data-i18n translations ──────────────────────────────────
 applyTranslations();
+// Nochmal nach DOM-Ready, falls Elemente noch nicht existierten
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => applyTranslations(), 100);
+});
 
 
 // ── Premium ──────────────────────────────────────────────────────
@@ -472,6 +479,8 @@ document.querySelectorAll(".home-tab").forEach(btn=>{
     if(btn.dataset.tab==="turniere") loadTournaments();
     if(btn.dataset.tab==="profil") initProfilTab();
     if(btn.dataset.tab==="spielen") updateAuthUI(window.currentUser);
+    // Nochmal nach dynamischem Render
+    setTimeout(() => applyTranslations(), 100);
   });
 });
 
