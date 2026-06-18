@@ -453,6 +453,12 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
   else startX01();
 });
 
+// ── Central render helper — always re-applies i18n after render ───
+function renderAndTranslate(renderFn){
+  renderFn();
+  setTimeout(()=>applyTranslations(), 10);
+}
+
 // ── Tab switching ─────────────────────────────────────────────────
 document.querySelectorAll(".home-tab").forEach(btn=>{
   btn.addEventListener("click",()=>{
@@ -874,7 +880,7 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
   const left=videoCoachCallsLeft();
   const outputEl=document.getElementById("coach-output-video");
   const btn=document.getElementById("btn-video-analyze");
-  if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">Du hast heute dein Video-Analyse-Limit (${VIDEO_COACH_LIMIT}x) erreicht.</div>`; return; }
+  if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">${t('video_limit_msg').replace('{n}',VIDEO_COACH_LIMIT)}</div>`; return; }
   const videoEl=document.getElementById("video-preview");
   if(!videoEl.src){ alert("Bitte zuerst ein Video auswählen"); return; }
   btn.disabled=true; btn.textContent="⏳ Extrahiere Frames…";
@@ -1022,7 +1028,7 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
   const access = await canUseFeature("videoAnalysis");
   if(!access.allowed){ showPremiumOverlay("videoAnalysis"); return; }
   const left=videoCoachCallsLeft(), outputEl=document.getElementById("coach-output-video-analyse-tab"), btn=document.getElementById("btn-video-analyze-analyse-tab");
-  if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">Du hast heute dein Video-Analyse-Limit (${VIDEO_COACH_LIMIT}x) erreicht.</div>`; return; }
+  if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">${t('video_limit_msg').replace('{n}',VIDEO_COACH_LIMIT)}</div>`; return; }
   const videoEl=document.getElementById("video-preview-analyse-tab");
   if(!videoEl.src){ alert("Bitte zuerst ein Video auswählen"); return; }
   btn.disabled=true; btn.textContent="⏳ Extrahiere Frames…";
@@ -1064,7 +1070,7 @@ window.addEventListener("dbReady",async()=>{
 });
 
 function showVoiceConfirm(msg){ const el=document.getElementById("voice-selector-confirm"); if(!el) return; el.textContent=msg; el.style.display=""; clearTimeout(el._t); el._t=setTimeout(()=>el.style.display="none",3000); }
-function activateVoice(voiceId, voiceName){ localStorage.setItem("dart_active_voice_id",voiceId); Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]); if(window.dartDB) window.dartDB.saveUserVoice(voiceId).catch(e=>console.warn("saveUserVoice:",e)); renderVoiceSelector(); showVoiceConfirm("✓ Stimme aktiviert — "+voiceName+" ist jetzt aktiv"); }
+function activateVoice(voiceId, voiceName){ localStorage.setItem("dart_active_voice_id",voiceId); Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]); if(window.dartDB) window.dartDB.saveUserVoice(voiceId).catch(e=>console.warn("saveUserVoice:",e)); renderVoiceSelector(); showVoiceConfirm(t('stimme_aktiviert_msg').replace('{name}',voiceName)); }
 
 function renderVoiceSelector(){
   const list=document.getElementById("voice-selector-list"); if(!list) return;
