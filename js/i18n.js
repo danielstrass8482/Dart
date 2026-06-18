@@ -855,7 +855,21 @@ export function t(key){
 export function applyTranslations(){
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
-    el.textContent = t(key);
+    const translation = t(key);
+    if(!translation || translation === key) return;
+
+    if(el.children.length > 0){
+      // Element hat Kind-Elemente (Icons, Spans etc.) —
+      // nur den ersten Text-Node ändern, nie innerHTML/textContent
+      for(const node of el.childNodes){
+        if(node.nodeType === Node.TEXT_NODE){
+          node.textContent = translation;
+          break;
+        }
+      }
+    } else {
+      el.textContent = translation;
+    }
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
