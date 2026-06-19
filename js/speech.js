@@ -176,26 +176,21 @@ export function setVoiceFeedback(text){
 }
 
 /**
- * Announces what the next player needs to finish.
+ * Announces what the current player requires.
+ * Called after advanceX01 so state.x01.current is already the next player.
+ * Only announces in multi-player games and when remaining ≤170.
  */
 export function announceRequires(){
   if(!state.x01||!state.cfg||!state.cfg.players) return;
-  const currentIdx = state.x01.current;
-  let targetScore = Infinity;
-  let targetName = "";
-  for(let i=0; i<state.cfg.players.length; i++){
-    if(i === currentIdx) continue;
-    if(state.cfg.isBot?.[i]) continue;
-    const score = state.x01.scores[i];
-    if(score >= 2 && score <= 170 && score < targetScore){
-      targetScore = score;
-      targetName = state.cfg.players[i];
-    }
-  }
-  if(!targetName) return;
-  const text = targetName + " requires " + numToWords(targetScore) + ".";
-  speakKeyWithCustom("req_" + targetName + "_" + targetScore, text);
+  if(state.cfg.players.length < 2) return;
+  const idx = state.x01.current;
+  if(state.cfg.isBot?.[idx]) return;
+  const score = state.x01.scores[idx];
+  if(score < 2 || score > 170) return;
+  const name = state.cfg.players[idx];
+  speakKeyWithCustom("req_"+name+"_"+score, name+" requires "+numToWords(score)+".");
 }
+
 
 /** Restarts mic after player advance if user has mic enabled. */
 export function maybeRestartMic(){
@@ -241,10 +236,10 @@ export function handleVoiceHit(hit){
     if(window._renderX01) window._renderX01();
     if(state.x01.throws.length===3){
       const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
+      const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
       if(turnScore===0){ soundLow(); speakKeyWithCustom("no_score","No Score!"); }
-      else if(turnScore<=9){ soundLow(); speakScoreWithCustom(turnScore); }
-      else { soundHit(); speakScoreWithCustom(turnScore); }
-      setTimeout(announceRequires, requiresDelay(turnScore));
+      else if(turnScore<=9){ soundLow(); speakScoreWithCustom(turnScore, hitBull); }
+      else { soundHit(); speakScoreWithCustom(turnScore, hitBull); }
       setTimeout(()=>window._advanceX01&&window._advanceX01(),350);
     }
     return;
@@ -284,7 +279,6 @@ export function handleVoiceHit(hit){
     else { soundHit(); }
     const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
-    setTimeout(announceRequires, requiresDelay(turnScore));
   } else { soundHit(); }
 
   if(window._renderX01) window._renderX01();

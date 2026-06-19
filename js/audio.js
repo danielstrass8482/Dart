@@ -381,6 +381,22 @@ export function prewarmElevenLabs(){
   prewarmTTS("Game On!", "el_game_on");
 }
 
+// ── Dart Slang ────────────────────────────────────────────────────
+const DART_SLANG = {
+  3:"Hat Trick",
+  26:"Bed and Breakfast",
+  41:"Shanghai",
+  45:"Halfway House",
+  60:"Three in a Bed",
+  100:"Ton",
+  111:"Nelson",
+  120:"Ton Twenty",
+  121:"Top of the Shop",
+  140:"Ton Forty",
+  160:"Ton Sixty",
+  180:"Maximum"
+};
+
 /**
  * Speaks a score via the audio queue (prevents overlapping announcements).
  * @param {number} score
@@ -388,13 +404,38 @@ export function prewarmElevenLabs(){
  */
 export async function speakScoreWithCustom(score, hitBull=false){
   if(localStorage.getItem("dart_tts_enabled")==="false") return;
-  // Announcements are always English, regardless of UI language
-  const text = score===180?"One Hundred and Eighty!":
+  const slangOn = localStorage.getItem("dart_slang_enabled")==="true";
+  const slang = slangOn ? DART_SLANG[score] : null;
+  const text = slang ? slang + "!" :
+               score===180?"One Hundred and Eighty!":
                score===100?"One Hundred!":
                score===50&&hitBull?"Bull's Eye!":
                numToWords(score)+"!";
-  const key = score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
+  const key = slang ? `el_slang_${score}` :
+              score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
   await queueAudio(text,key);
+}
+
+function partToReadable(part){
+  if(part==="Bull") return "Bullseye";
+  if(part==="D25") return "Double Bull";
+  const isT=part.startsWith("T"), isD=part.startsWith("D");
+  const n=parseInt(part.replace(/[TDS]/,""));
+  return (isT?"Triple ":isD?"Double ":"") + numToWords(n);
+}
+
+/**
+ * Announces the checkout path for the given remaining score.
+ * Only fires when dart_checkout_announce setting is enabled.
+ * @param {number} remaining
+ */
+export async function announceCheckoutPath(remaining){
+  if(localStorage.getItem("dart_tts_enabled")==="false") return;
+  if(localStorage.getItem("dart_checkout_announce")!=="true") return;
+  const co=window._CHECKOUTS?.[remaining];
+  if(!co) return;
+  const readable=co.split(" ").map(partToReadable).join(", ");
+  await queueAudio("Checkout: "+readable, `el_co_${remaining}`);
 }
 
 /**
