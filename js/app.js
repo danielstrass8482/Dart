@@ -301,7 +301,7 @@ function _accumulateLegStats(){
     state.cfg.accumulated.turnScores[i].push(...(state.x01.turnScores[i]||[]));
     const legThrows=[
       ...state.x01.historicThrows[i].filter(t=>t.svgX!=null),
-      ...state.x01.throws.filter(t=>t.svgX!=null)
+      ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null):[])
     ];
     state.cfg.accumulated.historicThrows[i].push(...legThrows);
     state.cfg.accumulated.checkoutAttempts[i]+=(state.x01.checkoutAttempts?.[i]||0);
