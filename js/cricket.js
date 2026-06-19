@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { CRICKET_TARGETS, buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, disableBoard } from './board.js?v=2';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 // The cricket board SVG is initialized in app.js
 export let boardSVGcr;

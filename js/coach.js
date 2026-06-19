@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { numToWords } from './audio.js';
 import { getDoubleStatsForCoach } from './x01.js?v=2';
-import { t, SUPPORTED_LANGS } from './i18n.js';
+import { t, SUPPORTED_LANGS } from './i18n.js?v=3';
 
 export const COACH_DAILY_LIMIT = 999;
 export const COACH_STORAGE_KEY = "dart_coach_usage";

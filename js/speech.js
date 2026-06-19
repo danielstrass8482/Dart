@@ -6,7 +6,7 @@ import { state } from './state.js';
 import { numToWords, soundBust, soundApplause, soundHit, soundLow, speakKeyWithCustom, speakScoreWithCustom, speak } from './audio.js';
 import { flashSegment } from './board.js?v=2';
 import { requiresDelay } from './x01.js?v=2';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 // ── Voice parser vocabulary ───────────────────────────────────────
 const NUM_WORDS={

@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { startX01, processX01Hit, advanceX01 } from './x01.js?v=2';
 import { soundHit } from './audio.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 export let onlineMode="501", onlineLegs=1, onlineSets=1;
 export let currentRoomCode=null, roomUnsubscribe=null;
