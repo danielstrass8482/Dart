@@ -481,6 +481,46 @@ export const translations = {
     online_spieler_header: "SPIELER",
     du_suffix: "(du)",
     raum_nicht_gefunden: "Raum nicht gefunden",
+
+    // Auth
+    anmelden: "ANMELDEN",
+    registrieren: "REGISTRIEREN",
+    mit_google_registrieren: "MIT GOOGLE REGISTRIEREN",
+    mit_google_upgraden: "MIT GOOGLE UPGRADEN",
+    passwort_vergessen: "Passwort vergessen?",
+    als_gast: "Als Gast spielen",
+    account_erstellen: "ACCOUNT ERSTELLEN",
+    spieldaten_warnung: "Spieldaten gehen verloren wenn du dich abmeldest. Jetzt Account erstellen:",
+    // Auth placeholders
+    passwort_placeholder: "Passwort",
+    passwort_min_placeholder: "Passwort (min. 6 Zeichen)",
+    passwort_wdh_placeholder: "Passwort wiederholen",
+    dein_name_placeholder: "Dein Name",
+
+    // Health
+    koerperliche_belastung: "KÖRPERLICHE BELASTUNG",
+    wie_fuehlst_du_dich: "WIE FÜHLST DU DICH",
+    health_kaum: "Kaum",
+    health_leicht: "Leicht",
+    health_viel: "Viel",
+    health_muede: "😴 Müde",
+
+    // Video-Modal / Analyse
+    qr_hint: "QR-Code scannen oder Code eingeben",
+    coach_analyse_titel: "COACH-ANALYSE",
+    coach_analyse_starten: "COACH-ANALYSE STARTEN",
+    video_hint: "Kurzes Video (3–5 Sek.) — von der Seite, Hüfthöhe.",
+    mit_handy_aufnehmen: "MIT HANDY AUFNEHMEN",
+    tablet_kamera: "TABLET-KAMERA",
+    hochladen: "HOCHLADEN",
+    wurf_analysieren_btn: "WURF ANALYSIEREN",
+    analyse_fuer: "ANALYSE FÜR",
+    statistik_analyse: "STATISTIK-ANALYSE",
+    wurf_analyse_video: "WURF-ANALYSE (VIDEO)",
+
+    // Misc
+    anzahl_runden: "ANZAHL RUNDEN",
+    erstellen_btn: "ERSTELLEN",
   },
 
   en: {
@@ -948,6 +988,46 @@ export const translations = {
     online_spieler_header: "PLAYERS",
     du_suffix: "(you)",
     raum_nicht_gefunden: "Room not found",
+
+    // Auth
+    anmelden: "SIGN IN",
+    registrieren: "SIGN UP",
+    mit_google_registrieren: "SIGN UP WITH GOOGLE",
+    mit_google_upgraden: "UPGRADE WITH GOOGLE",
+    passwort_vergessen: "Forgot password?",
+    als_gast: "Play as guest",
+    account_erstellen: "CREATE ACCOUNT",
+    spieldaten_warnung: "Game data is lost when you sign out. Create an account now:",
+    // Auth placeholders
+    passwort_placeholder: "Password",
+    passwort_min_placeholder: "Password (min. 6 chars)",
+    passwort_wdh_placeholder: "Confirm password",
+    dein_name_placeholder: "Your name",
+
+    // Health
+    koerperliche_belastung: "PHYSICAL STRAIN",
+    wie_fuehlst_du_dich: "HOW DO YOU FEEL",
+    health_kaum: "Barely",
+    health_leicht: "Light",
+    health_viel: "High",
+    health_muede: "😴 Tired",
+
+    // Video modal / analysis
+    qr_hint: "Scan QR code or enter code",
+    coach_analyse_titel: "COACH ANALYSIS",
+    coach_analyse_starten: "START COACH ANALYSIS",
+    video_hint: "Short video (3–5 sec) — from the side, hip height.",
+    mit_handy_aufnehmen: "RECORD WITH PHONE",
+    tablet_kamera: "TABLET CAMERA",
+    hochladen: "UPLOAD",
+    wurf_analysieren_btn: "ANALYZE THROW",
+    analyse_fuer: "ANALYSIS FOR",
+    statistik_analyse: "STATS ANALYSIS",
+    wurf_analyse_video: "THROW ANALYSIS (VIDEO)",
+
+    // Misc
+    anzahl_runden: "NUMBER OF ROUNDS",
+    erstellen_btn: "CREATE",
   }
 };
 
