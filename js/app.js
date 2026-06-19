@@ -347,9 +347,12 @@ let selectedContext="auto";
 const modeGroup=document.getElementById("mode-group");
 const legsGroup=document.getElementById("legs-group");
 
+/** Resolves data-value from a click even when a child icon/span is the event target. */
+function togVal(e){ return e.target.closest('[data-value]')?.dataset.value??null; }
+
 modeGroup.addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  selectedMode=e.target.dataset.value;
+  const v=togVal(e); if(!v) return;
+  selectedMode=v;
   document.querySelectorAll("#extra-mode-group .btn-toggle").forEach(b=>b.classList.remove("active"));
   modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
   document.getElementById("rounds-selector").style.display="none";
@@ -364,48 +367,48 @@ document.getElementById("btn-extra-modes").addEventListener("click",()=>{
 });
 
 document.getElementById("extra-mode-group").addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  selectedMode=e.target.dataset.value;
+  const v=togVal(e); if(!v) return;
+  selectedMode=v;
   modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.remove("active"));
   document.querySelectorAll("#extra-mode-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
   document.getElementById("rounds-selector").style.display=selectedMode==="Highscore"?"block":"none";
 });
 
 document.getElementById("sets-group").addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  selectedSets=+e.target.dataset.value;
+  const v=togVal(e); if(!v) return;
+  selectedSets=+v;
   document.querySelectorAll("#sets-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedSets));
 });
 
 legsGroup.addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  selectedLegs=+e.target.dataset.value;
+  const v=togVal(e); if(!v) return;
+  selectedLegs=+v;
   legsGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedLegs));
 });
 
 document.getElementById("rounds-group")?.addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  selectedRounds=+e.target.dataset.value;
+  const v=togVal(e); if(!v) return;
+  selectedRounds=+v;
   document.querySelectorAll("#rounds-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedRounds));
 });
 
 document.getElementById("bot-group").addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  selectedBot=e.target.dataset.value;
+  const v=togVal(e); if(!v) return;
+  selectedBot=v;
   document.querySelectorAll("#bot-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedBot));
   document.getElementById("bot-personality-section").style.display=selectedBot==="none"?"none":"";
 });
 
 document.getElementById("bot-personality-group").addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  selectedPersonality=e.target.dataset.value;
+  const v=togVal(e); if(!v) return;
+  selectedPersonality=v;
   document.querySelectorAll("#bot-personality-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedPersonality));
   document.getElementById("bot-personality-desc").textContent=t(BOT_PERSONALITY_DESCS[selectedPersonality])||"";
 });
 
 document.getElementById("context-group")?.addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  selectedContext=e.target.dataset.value;
+  const v=togVal(e); if(!v) return;
+  selectedContext=v;
   document.querySelectorAll("#context-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedContext));
 });
 
@@ -541,18 +544,18 @@ document.getElementById("btn-apply-dates").addEventListener("click",()=>{
 
 // ── Online multiplayer ────────────────────────────────────────────
 document.getElementById("online-mode-group").addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  setOnlineMode(e.target.dataset.value);
+  const v=togVal(e); if(!v) return;
+  setOnlineMode(v);
   document.querySelectorAll("#online-mode-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===onlineMode));
 });
 document.getElementById("online-legs-group").addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  setOnlineLegs(+e.target.dataset.value);
+  const v=togVal(e); if(!v) return;
+  setOnlineLegs(+v);
   document.querySelectorAll("#online-legs-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==onlineLegs));
 });
 document.getElementById("online-sets-group").addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  setOnlineSets(+e.target.dataset.value);
+  const v=togVal(e); if(!v) return;
+  setOnlineSets(+v);
   document.querySelectorAll("#online-sets-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==onlineSets));
 });
 document.getElementById("btn-create-room").addEventListener("click", createRoom);
@@ -569,23 +572,23 @@ document.getElementById("btn-cancel-room").addEventListener("click",()=>{
 
 // ── Tournament form ───────────────────────────────────────────────
 document.getElementById("tn-format-group")?.addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  setTnFormat(e.target.dataset.value);
+  const v=togVal(e); if(!v) return;
+  setTnFormat(v);
   document.querySelectorAll("#tn-format-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===tnFormat));
 });
 document.getElementById("tn-mode-group")?.addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  setTnMode(e.target.dataset.value);
+  const v=togVal(e); if(!v) return;
+  setTnMode(v);
   document.querySelectorAll("#tn-mode-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===tnMode));
 });
 document.getElementById("tn-legs-group")?.addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  setTnLegs(+e.target.dataset.value);
+  const v=togVal(e); if(!v) return;
+  setTnLegs(+v);
   document.querySelectorAll("#tn-legs-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==tnLegs));
 });
 document.getElementById("tn-type-group")?.addEventListener("click",e=>{
-  if(!e.target.dataset.value) return;
-  setTnType(e.target.dataset.value);
+  const v=togVal(e); if(!v) return;
+  setTnType(v);
   document.querySelectorAll("#tn-type-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===tnType));
   document.getElementById("tn-online-hint").style.display=tnType==="online"?"":"none";
 });
