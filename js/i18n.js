@@ -3,11 +3,16 @@
  */
 
 export const SUPPORTED_LANGS = [
-  { code: 'de', label: '🇩🇪 Deutsch', ttsLang: 'de-DE' },
-  { code: 'en', label: '🇬🇧 English', ttsLang: 'en-GB' },
-  // { code: 'nl', label: '🇳🇱 Nederlands', ttsLang: 'nl-NL' },
-  // { code: 'es', label: '🇪🇸 Español', ttsLang: 'es-ES' },
-  // { code: 'fr', label: '🇫🇷 Français', ttsLang: 'fr-FR' },
+  { code: 'de', label: '🇩🇪 Deutsch',    ttsLang: 'de-DE', coachInstruction: 'Antworte ausschließlich auf Deutsch. Nutze deutsche Dart-Fachbegriffe.' },
+  { code: 'en', label: '🇬🇧 English',    ttsLang: 'en-GB', coachInstruction: 'Respond exclusively in English. Use English darts terminology.' },
+  // { code: 'nl', label: '🇳🇱 Nederlands', ttsLang: 'nl-NL', coachInstruction: 'Antwoord uitsluitend in het Nederlands. Gebruik Nederlandse dart-terminologie.' },
+  // { code: 'es', label: '🇪🇸 Español',   ttsLang: 'es-ES', coachInstruction: 'Responde exclusivamente en español. Usa terminología de dardos en español.' },
+  // { code: 'fr', label: '🇫🇷 Français',  ttsLang: 'fr-FR', coachInstruction: 'Réponds exclusivement en français. Utilise la terminologie fléchettes en français.' },
+  // { code: 'it', label: '🇮🇹 Italiano',  ttsLang: 'it-IT', coachInstruction: 'Rispondi esclusivamente in italiano. Usa la terminologia delle freccette in italiano.' },
+  // { code: 'pt', label: '🇧🇷 Português', ttsLang: 'pt-BR', coachInstruction: 'Responde exclusivamente em português. Usa terminologia de dardos em português.' },
+  // { code: 'pl', label: '🇵🇱 Polski',    ttsLang: 'pl-PL', coachInstruction: 'Odpowiadaj wyłącznie po polsku. Używaj polskiej terminologii darts.' },
+  // { code: 'sv', label: '🇸🇪 Svenska',   ttsLang: 'sv-SE', coachInstruction: 'Svara uteslutande på svenska. Använd svensk dartsterminologi.' },
+  // { code: 'da', label: '🇩🇰 Dansk',     ttsLang: 'da-DK', coachInstruction: 'Svar udelukkende på dansk. Brug dansk dartsterminologi.' },
 ];
 
 export const translations = {
@@ -949,6 +954,7 @@ export const translations = {
 export function t(key){
   const lang = localStorage.getItem('dart_lang') || 'de';
   return (translations[lang] && translations[lang][key]) ||
+    translations['en'][key] ||
     translations['de'][key] || key;
 }
 

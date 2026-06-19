@@ -13,8 +13,9 @@ window.t = t;
 
 // ── Browser language detection (first visit only) ─────────────────
 if(!localStorage.getItem('dart_lang')){
-  const browserLang = navigator.language.startsWith('de') ? 'de' : 'en';
-  localStorage.setItem('dart_lang', browserLang);
+  const browserCode = navigator.language.split('-')[0];
+  const matched = SUPPORTED_LANGS.find(l => l.code === browserCode);
+  localStorage.setItem('dart_lang', matched ? matched.code : 'en');
 }
 
 // ── Apply data-i18n translations ──────────────────────────────────
