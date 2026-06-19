@@ -322,9 +322,13 @@ export async function speakElevenLabs(text, cacheKey){
   try{
     const url=await fetchTTSUrl(cacheKey, text);
     if(!url) return false;
-    if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; }
+    if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; }
     currentAudio=new Audio(url);
-    await currentAudio.play();
+    await new Promise((res,rej)=>{
+      currentAudio.onended=res;
+      currentAudio.onerror=rej;
+      currentAudio.play().catch(rej);
+    });
     return true;
   }catch(e){
     console.warn("Google TTS:",e.message);
