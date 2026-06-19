@@ -3,7 +3,7 @@
  */
 
 import { voiceURLCache } from './audio.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 let studioKeys=[];
 let studioIdx=0;

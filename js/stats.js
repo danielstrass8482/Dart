@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { drawMiniBoard } from './board.js?v=2';
 import { loadCoachHistoryStats } from './coach.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 export let statsSelectedPlayer = null;
 export let statsRange = 'all';

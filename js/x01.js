@@ -7,7 +7,7 @@ import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearChecko
 import { soundBust, soundHit, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue } from './audio.js';
 import { startMic, stopMic, maybeRestartMic, setVoiceFeedback, announceRequires, micEnabled, micActive } from './speech.js';
 import { runBotTurn } from './bot.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 /**
  * Returns appropriate delay (ms) before announcing "requires" based on turn score.

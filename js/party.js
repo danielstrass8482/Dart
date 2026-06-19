@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js?v=2';
 import { soundHit, soundApplause, soundBust, speak, speakScoreWithCustom } from './audio.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 export let boardSVGparty;
 

@@ -4,7 +4,7 @@
  * Zum Aktivieren der Paywall: BETA_MODE = false setzen.
  */
 
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 export const PREMIUM_FEATURES = {
   coachAnalysis: {

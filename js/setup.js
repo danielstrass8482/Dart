@@ -8,7 +8,7 @@ import { startCricket } from './cricket.js';
 import { startParty } from './party.js';
 import { collectHealthData } from './coach.js';
 import { BOT_PERSONALITIES } from './bot.js';
-import { t } from './i18n.js';
+import { t } from './i18n.js?v=3';
 
 export const AVATAR_COLORS=["#e53935","#1e88e5","#43a047","#fb8c00","#8e24aa","#00897b","#e91e63","#546e7a"];
 

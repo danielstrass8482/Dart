@@ -2,7 +2,7 @@
  * onboarding.js — 5-Screen Tutorial beim ersten App-Start + Kontexthilfe-Tooltips.
  */
 
-import { t, SUPPORTED_LANGS, setLang } from './i18n.js';
+import { t, SUPPORTED_LANGS, setLang } from './i18n.js?v=3';
 
 function getScreens(){
   return [

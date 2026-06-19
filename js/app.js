@@ -6,7 +6,7 @@
 import './firebase.js';
 
 // ── i18n ─────────────────────────────────────────────────────────
-import { t, setLang, getLang, applyTranslations, SUPPORTED_LANGS } from './i18n.js';
+import { t, setLang, getLang, applyTranslations, SUPPORTED_LANGS } from './i18n.js?v=3';
 
 // Sicherstellen dass window.t gesetzt ist (für inline onclick-Handler in HTML)
 window.t = t;
