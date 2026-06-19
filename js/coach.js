@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { numToWords } from './audio.js';
 import { getDoubleStatsForCoach } from './x01.js?v=2';
-import { t } from './i18n.js';
+import { t, SUPPORTED_LANGS } from './i18n.js';
 
 export const COACH_DAILY_LIMIT = 999;
 export const COACH_STORAGE_KEY = "dart_coach_usage";
@@ -118,15 +118,10 @@ export function recordVideoCoachUsage(){
  */
 export function buildCoachPrompt(stats, sessionStats, allGames, playerId, healthData){
   const lang = localStorage.getItem('dart_lang') || 'de';
-  const langInstructions = {
-    de: "Antworte ausschließlich auf Deutsch. Nutze deutsche Dart-Fachbegriffe.",
-    en: "Respond exclusively in English. Use English darts terminology.",
-    nl: "Antwoord uitsluitend in het Nederlands.",
-    es: "Responde exclusivamente en español.",
-    fr: "Réponds exclusivement en français."
-  };
+  const langEntry = SUPPORTED_LANGS.find(l => l.code === lang);
+  const langInstruction = langEntry?.coachInstruction || SUPPORTED_LANGS.find(l => l.code === 'en').coachInstruction;
   const lines=[
-    langInstructions[lang] || langInstructions.de,
+    langInstruction,
     "",
     "Du bist ein professioneller, datenbasierter Dart-Elite-Trainer und Datenanalyst. Analysiere kritisch aber balanciert.",
     "Kein blindes Loben, kein Niedermachen. Der Spieler entscheidet selbst über sein Training.",
@@ -412,21 +407,15 @@ export async function extractVideoFrames(videoEl, numFrames=5){
  */
 export function buildVideoCoachPrompt(numFrames, sessionStats){
   const lang = localStorage.getItem('dart_lang') || 'de';
-  const langInstructions = {
-    de: "Antworte ausschließlich auf Deutsch. Nutze deutsche Dart-Fachbegriffe.",
-    en: "Respond exclusively in English. Use English darts terminology.",
-    nl: "Antwoord uitsluitend in het Nederlands.",
-    es: "Responde exclusivamente en español.",
-    fr: "Réponds exclusivement en français."
-  };
-  const langInstruction = langInstructions[lang] || langInstructions.de;
+  const langEntry = SUPPORTED_LANGS.find(l => l.code === lang);
+  const langInstruction = langEntry?.coachInstruction || SUPPORTED_LANGS.find(l => l.code === 'en').coachInstruction;
   return `${langInstruction}
 
 Du bist ein erfahrener Dart-Coach und analysierst die Wurftechnik eines Spielers.
 
 Du siehst ${numFrames} Frames aus einem kurzen Video (chronologische Reihenfolge): Ausholbewegung → Abwurf → Followthrough.
 
-Analysiere auf Deutsch in 5-6 Sätzen:
+Analysiere in 5-6 Sätzen:
 1. Stand und Körperhaltung (Gleichgewicht, Gewichtsverteilung)
 2. Wurfarm (Ellbogen-Position, Winkel, Stabilität)
 3. Abwurf-Moment (Timing, Fingerführung soweit sichtbar)
