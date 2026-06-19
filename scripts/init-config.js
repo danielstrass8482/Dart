@@ -1,24 +1,20 @@
-const admin = require('firebase-admin');
-admin.initializeApp();
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 
-async function initConfig() {
-  await admin.firestore()
-    .collection('dart_config')
-    .doc('limits')
-    .set({
-      coachEnabled: true,
-      ttsEnabled: true,
-      videoEnabled: true,
-      emergencyStop: false,
-      emergencyReason: null,
-      dailyBudgetEur: 30,
-      perUserDailyLimitCoach: 10,
-      perUserDailyLimitTts: 200,
-      perUserDailyLimitVideo: 3,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  console.log('dart_config/limits initialisiert.');
+initializeApp();
+const db = getFirestore();
+
+async function initConfig(){
+  await db.collection('dart_config').doc('limits').set({
+    coachEnabled: true,
+    videoEnabled: true,
+    emergencyStop: false,
+    emergencyReason: null,
+    dailyBudgetEur: 30,
+    perUserDailyLimitCoach: 10,
+    perUserDailyLimitVideo: 3,
+  }, { merge: true });
+  console.log('Config initialisiert.');
   process.exit(0);
 }
-
-initConfig().catch(err => { console.error(err); process.exit(1); });
+initConfig().catch(console.error);

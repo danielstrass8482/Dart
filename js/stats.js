@@ -200,7 +200,7 @@ function updateColumn(side, pid){
   if(tableEl){
     const entries=analyzeSegments(scatter);
     const total=scatter.filter(s=>s.l&&s.l!=="Miss").length;
-    tableEl.innerHTML=scatter.length?renderSegmentTable(entries,total):`<div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:8px">Keine Daten</div>`;
+    tableEl.innerHTML=scatter.length?renderSegmentTable(entries,total):`<div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:8px">${t('keine_daten')}</div>`;
   }
 }
 
@@ -324,7 +324,7 @@ export async function loadAndRenderStats(){
   const box=document.getElementById("stats-content");
   if(!box) return;
   box.innerHTML=`<div class="stats-loading">${t('lade')}</div>`;
-  if(!window.dartDB){ box.innerHTML='<div class="stats-loading">Datenbank nicht bereit.</div>'; return; }
+  if(!window.dartDB){ box.innerHTML=`<div class="stats-loading">${t('db_nicht_bereit')}</div>`; return; }
 
   renderStatsPlayerBar();
 
@@ -610,7 +610,7 @@ export async function loadAndRenderStats(){
       },100);
     }
   }catch(e){
-    box.innerHTML=`<div class="stats-loading">Fehler: ${e.message}</div>`;
+    box.innerHTML=`<div class="stats-loading">${t('fehler_prefix')}${e.message}</div>`;
     console.error(e);
   }
 }

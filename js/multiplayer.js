@@ -62,9 +62,9 @@ export function showWaitingScreen(code){
   if(roomUnsubscribe){ roomUnsubscribe(); }
   roomUnsubscribe=window.dartDB.watchRoom(code,room=>{
     const list=document.getElementById("online-players-list");
-    list.innerHTML=`<div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px">SPIELER</div>`+
+    list.innerHTML=`<div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px">${t('online_spieler_header')}</div>`+
       (room.players||[]).map((p,i)=>`<div style="padding:5px 0;font-size:15px;font-weight:${p===myOnlineName?700:400};color:${p===myOnlineName?"#e8c44a":"#333"}">
-        ${i===0?"👑":"👤"} ${p}${p===myOnlineName?" (du)":""}
+        ${i===0?"👑":"👤"} ${p}${p===myOnlineName?" "+t('du_suffix'):""}
       </div>`).join("");
     const startBtn=document.getElementById("btn-start-online");
     const waitStatus=document.getElementById("online-wait-status");

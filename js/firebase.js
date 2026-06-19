@@ -145,7 +145,7 @@ function initDartDB(){
     },
     async joinRoom(code){
       const snap=await getDoc(doc(db,"dart_rooms",code));
-      if(!snap.exists()) throw new Error("Raum nicht gefunden");
+      if(!snap.exists()) throw new Error(window.t?.('raum_nicht_gefunden')||"Raum nicht gefunden");
       return snap.data();
     },
     async updateRoom(code, data){
