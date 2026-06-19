@@ -77,7 +77,7 @@ exports.dartTTS = onRequest(
         res.status(503).json({ error: "service_temporarily_unavailable", message: "TTS ist momentan nicht verfügbar." });
         return;
       }
-      if (!config.ttsEnabled) {
+      if (config.ttsEnabled === false) {
         res.status(503).json({ error: "feature_disabled", message: "TTS ist momentan deaktiviert." });
         return;
       }
