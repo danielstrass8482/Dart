@@ -460,7 +460,7 @@ export async function loadCoachHistoryStats(pid){
   container.innerHTML=`
     <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-muted);margin-bottom:8px;cursor:pointer"
       onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?this.textContent.replace('▼','▲'):this.textContent.replace('▲','▼')">
-      <i data-lucide="list" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> GESPEICHERTE ANALYSEN (${analyses.length}) ▼
+      <i data-lucide="list" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> ${t('gespeicherte_analysen')} (${analyses.length}) ▼
     </div>
     <div style="display:none">
       ${analyses.map(a=>{
@@ -488,7 +488,7 @@ export async function loadCoachHistoryAnalyseTab(pid){
   container.innerHTML=`
     <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-muted);margin-bottom:8px;cursor:pointer"
       onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none';this.textContent=this.textContent.includes('▼')?this.textContent.replace('▼','▲'):this.textContent.replace('▲','▼')">
-      <i data-lucide="list" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> GESPEICHERTE ANALYSEN (${analyses.length}) ▼
+      <i data-lucide="list" style="width:13px;height:13px;stroke-width:2;vertical-align:middle"></i> ${t('gespeicherte_analysen')} (${analyses.length}) ▼
     </div>
     <div style="display:none">
       ${analyses.map(a=>{
