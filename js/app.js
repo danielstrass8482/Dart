@@ -47,7 +47,7 @@ import {
   unlockAudio, soundBust, soundHit, soundApplause, soundLow,
   speakScoreWithCustom, speakKeyWithCustom, speakScore, speak, doSpeak,
   numToWords, prewarmElevenLabs, voiceURLCache, elTTSCache, getVoiceId,
-  fetchTTSUrl, testVoice, speakElevenLabs
+  fetchTTSUrl, testVoice, speakElevenLabs, queueAudio
 } from './audio.js';
 
 // ── Speech ───────────────────────────────────────────────────────
@@ -188,6 +188,14 @@ setCricketBoard(boardSVGcr);
 const boardSVGparty = document.getElementById("board-svg-party");
 buildBoard(boardSVGparty);
 setPartyBoard(boardSVGparty);
+
+// Prevent pinch-to-zoom and double-tap-zoom (iOS Safari ignores user-scalable=no)
+document.addEventListener('gesturestart', e=>e.preventDefault(), {passive:false});
+document.addEventListener('gesturechange', e=>e.preventDefault(), {passive:false});
+document.addEventListener('gestureend', e=>e.preventDefault(), {passive:false});
+document.addEventListener('touchmove', e=>{ if(e.touches.length>1) e.preventDefault(); }, {passive:false});
+let _lastTap=0;
+document.addEventListener('touchend', e=>{ const now=Date.now(); if(now-_lastTap<300) e.preventDefault(); _lastTap=now; }, {passive:false});
 
 // Board click listeners — x01 board intercepts for target practice
 boardSVG.addEventListener("pointerup", (e)=>{
@@ -1115,9 +1123,9 @@ function renderVoiceSelector(){
   }));
 }
 
-document.getElementById("btn-voice-new-test-180").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_score_180","One Hundred, and Eighty!"); });
-document.getElementById("btn-voice-new-test-gameon").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_game_on","Game on!"); });
-document.getElementById("btn-voice-new-test-bust").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_bust","Bust."); });
+document.getElementById("btn-voice-new-test-180").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_score_180","One Hundred, and Eighty!"); else speakElevenLabs("One Hundred and Eighty!","el_score_180"); });
+document.getElementById("btn-voice-new-test-gameon").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_game_on","Game on!"); else speakElevenLabs("Game on!","el_game_on"); });
+document.getElementById("btn-voice-new-test-bust").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_bust","Bust."); else speakElevenLabs("Bust!","el_bust"); });
 document.getElementById("btn-voice-new-add").addEventListener("click",()=>{
   const name=document.getElementById("voice-new-name").value.trim(), id=document.getElementById("voice-new-id").value.trim(), errEl=document.getElementById("voice-new-error");
   if(!name||!id){ errEl.textContent=t('voice_pflichtfelder'); return; }

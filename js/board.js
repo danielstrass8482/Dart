@@ -366,7 +366,8 @@ export function svgCoords(svgEl,e){
 export function drawMiniBoard(svgEl, dots){
   const ns="http://www.w3.org/2000/svg";
   svgEl.innerHTML="";
-  svgEl.setAttribute("viewBox","0 0 420 420");
+  // Use same coordinate space as game board (buildBoard) so stored SVG coords align
+  svgEl.setAttribute("viewBox","-5 -5 440 440");
   function mkEl(tag,attrs){ const e=document.createElementNS(ns,tag); for(const[k,v] of Object.entries(attrs)) e.setAttribute(k,v); return e; }
   const cx=CX, cy=CY;
   svgEl.appendChild(mkEl("circle",{cx,cy,r:R.board,fill:"#0c0b09"}));
@@ -394,11 +395,23 @@ export function drawMiniBoard(svgEl, dots){
   });
   svgEl.appendChild(mkEl("circle",{cx,cy,r:R.bull25,fill:"#1E9B55"}));
   svgEl.appendChild(mkEl("circle",{cx,cy,r:R.bull,  fill:"#C8362B"}));
+
+  // Detect old coordinate system (CX=265 from dart.html) and translate to current CX=210
+  const OLD_CX=265, OLD_CY=265;
+  const valid=dots.filter(s=>s.x!=null&&s.y!=null&&!isNaN(s.x)&&!isNaN(s.y));
+  const meanX=valid.length?valid.reduce((a,d)=>a+d.x,0)/valid.length:cx;
+  const needsTranslate=meanX>235;
+  const adjX=needsTranslate?(x)=>cx+(x-OLD_CX):(x)=>x;
+  const adjY=needsTranslate?(y)=>cy+(y-OLD_CY):(y)=>y;
+
   dots.slice(-600).forEach(s=>{
     if(s.x==null||s.y==null||isNaN(s.x)||isNaN(s.y)) return;
-    const isMiss=s.l==="Miss";
+    const px=adjX(s.x), py=adjY(s.y);
+    // Points outside the board circle are red; everything inside is gold
+    const dist=Math.sqrt((px-cx)*(px-cx)+(py-cy)*(py-cy));
+    const isMiss=dist>R.board;
     svgEl.appendChild(mkEl("circle",{
-      cx:s.x, cy:s.y, r:"5",
+      cx:px, cy:py, r:"5",
       fill: isMiss?"rgba(220,50,50,0.4)":"rgba(244,215,126,0.4)",
       stroke: isMiss?"rgba(200,30,30,0.8)":"rgba(200,160,40,0.8)",
       "stroke-width":"0.8"

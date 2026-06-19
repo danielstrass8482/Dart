@@ -195,12 +195,6 @@ export function renderX01(){
     if(co){ const dc=co.split(" ").length; lpCoEl.innerHTML=`${co}<br><span style="font-size:10px">${dc}-${t('dart_finish')}</span>`; }
     else lpCoEl.textContent="";
   }
-  const btrEl=document.getElementById("bottom-remaining");
-  if(btrEl){
-    btrEl.textContent=remaining;
-    btrEl.style.cssText+=`;transition:background .3s,color .3s;background:${inCheckoutZone?"#e8c44a":"transparent"};color:${inCheckoutZone?"#000":"#fff"};border-radius:${inCheckoutZone?"8px":"0"};padding:${inCheckoutZone?"2px 8px":"0"};`;
-  }
-  setEl("bottom-checkout", co||"");
 
   // ── Throw slots ───────────────────────────────────────────────
   for(let i=0;i<3;i++){
