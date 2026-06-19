@@ -388,28 +388,12 @@ export function prewarmElevenLabs(){
  */
 export async function speakScoreWithCustom(score, hitBull=false){
   if(localStorage.getItem("dart_tts_enabled")==="false") return;
-  const lang = localStorage.getItem('dart_lang') || 'en';
-  let useDeLang = false;
-  if(lang === 'de'){
-    try{
-      const { isPremium } = await import('./premium.js');
-      useDeLang = await isPremium();
-    }catch(e){}
-  }
-  let text, key;
-  if(useDeLang){
-    text = score===180?"Einhundertachtzig!":
-           score===100?"Einhundert!":
-           score===50&&hitBull?"Bull's Eye!":
-           numToWordsDe(score)+"!";
-    key = score===50?`el_score_de_50_${hitBull?"bull":"norm"}`:`el_score_de_${score}`;
-  } else {
-    text = score===180?"One Hundred and Eighty!":
-           score===100?"One Hundred!":
-           score===50&&hitBull?"Bull's Eye!":
-           numToWords(score)+"!";
-    key = score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
-  }
+  // Announcements are always English, regardless of UI language
+  const text = score===180?"One Hundred and Eighty!":
+               score===100?"One Hundred!":
+               score===50&&hitBull?"Bull's Eye!":
+               numToWords(score)+"!";
+  const key = score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
   await queueAudio(text,key);
 }
 
