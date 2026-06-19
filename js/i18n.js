@@ -476,6 +476,16 @@ export const translations = {
     voice_id_exists: "Diese Voice ID ist bereits in der Liste.",
     voice_hinzugefuegt: "✓ \"{name}\" wurde hinzugefügt",
     // Spieler bearbeiten
+    spieler_bearbeiten: "SPIELER BEARBEITEN",
+    foto_aendern: "Foto ändern",
+    spitzname_label: "SPITZNAME (für Spielanzeige)",
+    spitzname_placeholder: "z.B. DanTheDart",
+    dart_marke: "DART-MARKE",
+    dart_marke_placeholder: "z.B. Target, Winmau, Unicorn",
+    dart_gewicht: "DART-GEWICHT (Gramm)",
+    dart_gewicht_placeholder: "z.B. 23",
+    bevorzugte_doppelfelder: "BEVORZUGTE DOPPELFELDER",
+    bevorzugte_doppelfelder_sub: "Checkout priorisiert diese Felder",
     name_erforderlich: "Name ist erforderlich.",
     speichere: "Speichere…",
     // X01-Overlays
@@ -987,6 +997,16 @@ export const translations = {
     voice_id_exists: "This Voice ID is already in the list.",
     voice_hinzugefuegt: "✓ \"{name}\" was added",
     // Player edit
+    spieler_bearbeiten: "EDIT PLAYER",
+    foto_aendern: "Change Photo",
+    spitzname_label: "NICKNAME (displayed in game)",
+    spitzname_placeholder: "e.g. DanTheDart",
+    dart_marke: "DART BRAND",
+    dart_marke_placeholder: "e.g. Target, Winmau, Unicorn",
+    dart_gewicht: "DART WEIGHT (grams)",
+    dart_gewicht_placeholder: "e.g. 23",
+    bevorzugte_doppelfelder: "PREFERRED DOUBLES",
+    bevorzugte_doppelfelder_sub: "Checkout prioritises these fields",
     name_erforderlich: "Name is required.",
     speichere: "Saving…",
     // X01 overlays
