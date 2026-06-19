@@ -386,20 +386,47 @@ export function prewarmElevenLabs(){
 }
 
 // ── Dart Slang ────────────────────────────────────────────────────
-const DART_SLANG = {
-  3:"Hat Trick",
-  26:"Bed and Breakfast",
-  41:"Shanghai",
-  45:"Halfway House",
-  60:"Three in a Bed",
-  100:"Ton",
-  111:"Nelson",
-  120:"Ton Twenty",
-  121:"Top of the Shop",
-  140:"Ton Forty",
-  160:"Ton Sixty",
-  180:"Maximum"
-};
+
+/**
+ * Detects dart slang text for a 3-dart turn based on throw combinations and score.
+ * Returns the slang string (with trailing !) or null if no slang matches.
+ * @param {number} score
+ * @param {Array} throws current turn throws from state.x01.throws
+ * @returns {string|null}
+ */
+function detectDartSlang(score, throws){
+  if(!throws||!throws.length) return null;
+  const active=throws.filter(t=>!t.miss&&!t.bouncer);
+  const labels=active.map(t=>t.label||"");
+  if(active.length===3){
+    const matchLabels=(...req)=>{
+      const rem=[...labels];
+      for(const r of req){ const i=rem.indexOf(r); if(i===-1) return false; rem.splice(i,1); }
+      return rem.length===0;
+    };
+    // Specific throw combinations
+    if(score===26&&matchLabels("20","5","1")) return "Bed and Breakfast!";
+    if(score===11&&matchLabels("5","5","1")) return "Fish and Chips!";
+    if(score===45&&matchLabels("15","15","15")) return "Richmond!";
+    if(matchLabels("T20","T5","T1")) return "Slightly more than breakfast!";
+    // Three in a bed: 3x same single
+    if(labels.every(l=>/^\d+$/.test(l))&&labels[0]===labels[1]&&labels[1]===labels[2])
+      return "Three in a Bed!";
+    // Shanghai: S+D+T of the same number
+    const extractNum=l=>{ const m=l.match(/^[TD]?(\d+)$/); return m?parseInt(m[1]):null; };
+    const nums=labels.map(extractNum);
+    if(nums.every(n=>n!==null)&&new Set(nums).size===1){
+      const n=nums[0];
+      if(labels.some(l=>l===String(n))&&labels.some(l=>l===`D${n}`)&&labels.some(l=>l===`T${n}`))
+        return "Shanghai!";
+    }
+  }
+  // Score-based slang (any combination)
+  if(score===100) return "Ton!";
+  if(score===140) return "Ton Forty!";
+  if(score>=100) return "Good Darts!";
+  return null;
+}
 
 /**
  * Speaks a score via the audio queue (prevents overlapping announcements).
@@ -408,15 +435,16 @@ const DART_SLANG = {
  */
 export async function speakScoreWithCustom(score, hitBull=false){
   if(localStorage.getItem("dart_tts_enabled")==="false") return;
-  const slangOn = localStorage.getItem("dart_slang_enabled")==="true";
-  const slang = slangOn ? DART_SLANG[score] : null;
-  const text = slang ? slang + "!" :
-               score===180?"One Hundred and Eighty!":
-               score===100?"One Hundred!":
-               score===50&&hitBull?"Bull's Eye!":
-               numToWords(score)+"!";
-  const key = slang ? `el_slang_${score}` :
-              score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`;
+  const slangOn=localStorage.getItem("dart_slang_enabled")==="true";
+  const slangText=slangOn?detectDartSlang(score,state.x01?.throws):null;
+  const text=slangText??(
+    score===180?"One Hundred and Eighty!":
+    score===100?"One Hundred!":
+    score===50&&hitBull?"Bull's Eye!":
+    numToWords(score)+"!"
+  );
+  const slangKey=slangText?`el_slang_${slangText.replace(/[\s!]/g,"_").toLowerCase()}`:null;
+  const key=slangKey??(score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`);
   await queueAudio(text,key);
 }
 
