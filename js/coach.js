@@ -118,45 +118,68 @@ export function recordVideoCoachUsage(){
  */
 export function buildCoachPrompt(stats, sessionStats, allGames, playerId, healthData){
   const lang = localStorage.getItem('dart_lang') || 'de';
+  const de = lang === 'de';
   const langEntry = SUPPORTED_LANGS.find(l => l.code === lang);
   const langInstruction = langEntry?.coachInstruction || SUPPORTED_LANGS.find(l => l.code === 'en').coachInstruction;
   const lines=[
     langInstruction,
     "",
-    "Du bist ein professioneller, datenbasierter Dart-Elite-Trainer und Datenanalyst. Analysiere kritisch aber balanciert.",
-    "Kein blindes Loben, kein Niedermachen. Der Spieler entscheidet selbst über sein Training.",
+    de
+      ? "Du bist ein professioneller, datenbasierter Dart-Elite-Trainer und Datenanalyst. Analysiere kritisch aber balanciert."
+      : "You are a professional, data-driven elite darts coach and analyst. Be critical but balanced.",
+    de
+      ? "Kein blindes Loben, kein Niedermachen. Der Spieler entscheidet selbst über sein Training."
+      : "No empty praise, no harsh criticism. The player decides their own training focus.",
     "",
-    "Analysiere strikt nach diesem Schema:",
+    de ? "Analysiere strikt nach diesem Schema:" : "Analyze strictly following this schema:",
     "",
-    "### 1. Status Quo & Muster-Erkennung",
-    "- First-9 vs. Gesamt-Average: Analysiere das Verhältnis. Beachte dass lange Checkout-Phasen den Average drücken.",
-    "- Trend: Letzte 5 vs. vorherige 5 Spiele explizit vergleichen.",
-    "- Präzision & Streuung: Werte X/Y-Koordinaten aus wenn vorhanden. Unterscheide systematischen Drift (links/rechts/oben/unten) von wilder Streuung.",
-    "- Match-Dynamik: High Scores, Checkout-Effizienz, Muster bei bestimmten Doppelfeldern.",
+    de ? "### 1. Status Quo & Muster-Erkennung" : "### 1. Current Form & Pattern Analysis",
+    de
+      ? "- First-9 vs. Gesamt-Average: Analysiere das Verhältnis. Beachte dass lange Checkout-Phasen den Average drücken."
+      : "- First-9 vs. overall average: Analyze the ratio. Note that long checkout phases drag the average down.",
+    de
+      ? "- Trend: Letzte 5 vs. vorherige 5 Spiele explizit vergleichen."
+      : "- Trend: Explicitly compare last 5 vs. previous 5 games.",
+    de
+      ? "- Präzision & Streuung: Werte X/Y-Koordinaten aus wenn vorhanden. Unterscheide systematischen Drift (links/rechts/oben/unten) von wilder Streuung."
+      : "- Precision & scatter: Evaluate X/Y coordinates if available. Distinguish systematic drift (left/right/up/down) from random scatter.",
+    de
+      ? "- Match-Dynamik: High Scores, Checkout-Effizienz, Muster bei bestimmten Doppelfeldern."
+      : "- Match dynamics: High scores, checkout efficiency, patterns on specific doubles.",
     "",
-    "### 2. Differenzierte Betrachtung",
-    "- Stärken (Pro): Welche Segmente laufen stabil?",
-    "- Herausforderungen (Contra): Primärer Engpass laut Daten?",
+    de ? "### 2. Differenzierte Betrachtung" : "### 2. Strengths & Weaknesses",
+    de ? "- Stärken (Pro): Welche Segmente laufen stabil?" : "- Strengths (Pro): Which segments are consistently solid?",
+    de ? "- Herausforderungen (Contra): Primärer Engpass laut Daten?" : "- Challenges (Con): Primary bottleneck according to the data?",
     "",
-    "### 3. Evidenzbasierte Trainingsempfehlungen",
-    "- Option A (Scoring & Konstanz): Übungen basierend auf Streuungsradius und Rhythmus.",
-    "- Option B (Checkout & Druck): Spielformen wie Bob's 27, Around the Clock Doubles.",
+    de ? "### 3. Evidenzbasierte Trainingsempfehlungen" : "### 3. Evidence-Based Training Recommendations",
+    de
+      ? "- Option A (Scoring & Konstanz): Übungen basierend auf Streuungsradius und Rhythmus."
+      : "- Option A (Scoring & Consistency): Drills based on scatter radius and rhythm.",
+    de
+      ? "- Option B (Checkout & Druck): Spielformen wie Bob's 27, Around the Clock Doubles."
+      : "- Option B (Checkout & Pressure): Practice formats like Bob's 27, Around the Clock Doubles.",
     "",
-    "Wenn Gesundheitsdaten vorhanden: Beziehe sie explizit in die Analyse ein. Erkläre konkret wie Schlaf und Belastung die heutige Leistung beeinflusst haben könnten.",
+    de
+      ? "Wenn Gesundheitsdaten vorhanden: Beziehe sie explizit in die Analyse ein. Erkläre konkret wie Schlaf und Belastung die heutige Leistung beeinflusst haben könnten."
+      : "If health data is present: Include it explicitly in the analysis. Explain concretely how sleep and exertion may have affected today's performance.",
     "",
-    "Nur Analyse, kein Intro, kein Outro.",
+    de ? "Nur Analyse, kein Intro, kein Outro." : "Analysis only, no intro, no outro.",
     ""
   ];
 
   if(stats){
-    lines.push("=== GESAMTSTATISTIKEN ===");
-    lines.push(`Spiele gesamt: ${stats.games||0}`);
-    lines.push(`Siege: ${stats.wins||0} (${stats.games?Math.round((stats.wins||0)/stats.games*100):0}%)`);
-    lines.push(`Ø Aufnahme (gesamt): ${stats.avgPerTurn||0}`);
+    lines.push(de ? "=== GESAMTSTATISTIKEN ===" : "=== OVERALL STATISTICS ===");
+    lines.push(de ? `Spiele gesamt: ${stats.games||0}` : `Total games: ${stats.games||0}`);
+    lines.push(de
+      ? `Siege: ${stats.wins||0} (${stats.games?Math.round((stats.wins||0)/stats.games*100):0}%)`
+      : `Wins: ${stats.wins||0} (${stats.games?Math.round((stats.wins||0)/stats.games*100):0}%)`);
+    lines.push(de ? `Ø Aufnahme (gesamt): ${stats.avgPerTurn||0}` : `Avg per turn (overall): ${stats.avgPerTurn||0}`);
     lines.push(`First-9 Ø: ${stats.first9avg||"—"}`);
-    lines.push(`Checkout-Quote: ${stats.checkoutPct||0}%`);
+    lines.push(de ? `Checkout-Quote: ${stats.checkoutPct||0}%` : `Checkout rate: ${stats.checkoutPct||0}%`);
     lines.push(`Highscore: ${stats.highscore||0}`);
-    if(stats.cricketGames>0) lines.push(`Cricket: ${stats.cricketGames} Spiele, Ø ${stats.cricketAvgMarks||0} Marks/Aufnahme`);
+    if(stats.cricketGames>0) lines.push(de
+      ? `Cricket: ${stats.cricketGames} Spiele, Ø ${stats.cricketAvgMarks||0} Marks/Aufnahme`
+      : `Cricket: ${stats.cricketGames} games, avg ${stats.cricketAvgMarks||0} marks/turn`);
   }
 
   if(allGames&&playerId){
@@ -166,11 +189,15 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
       const getCo=games=>{ const att=games.flatMap(g=>(g.players||[]).filter(p=>p.id===playerId)).reduce((s,p)=>s+(p.checkoutAtt||0),0); const hit=games.flatMap(g=>(g.players||[]).filter(p=>p.id===playerId)).reduce((s,p)=>s+(p.checkoutHit||0),0); return att>0?Math.round(hit/att*100):0; };
       const last5=pGames.slice(0,5), prev5=pGames.slice(5,10);
       const avgLast=getAvg(last5), avgPrev=getAvg(prev5), coLast=getCo(last5), coPrev=getCo(prev5);
-      lines.push("","=== TREND (letzte 5 vs. vorherige 5 Spiele) ===");
-      lines.push(`Ø Aufnahme: ${avgLast} (${avgLast>=avgPrev?"+":""}${Math.round((avgLast-avgPrev)*10)/10} vs. vorher)`);
-      lines.push(`Checkout-Quote: ${coLast}% (${coLast>=coPrev?"+":""}${coLast-coPrev}% vs. vorher)`);
-      if(avgLast>avgPrev&&coLast>coPrev) lines.push("→ Klare Verbesserung in beiden Bereichen");
-      else if(avgLast<avgPrev||coLast<coPrev) lines.push("→ Leichter Rückgang — mögliche Ermüdung oder Technikfehler");
+      lines.push("", de ? "=== TREND (letzte 5 vs. vorherige 5 Spiele) ===" : "=== TREND (last 5 vs. previous 5 games) ===");
+      lines.push(de
+        ? `Ø Aufnahme: ${avgLast} (${avgLast>=avgPrev?"+":""}${Math.round((avgLast-avgPrev)*10)/10} vs. vorher)`
+        : `Avg per turn: ${avgLast} (${avgLast>=avgPrev?"+":""}${Math.round((avgLast-avgPrev)*10)/10} vs. previous)`);
+      lines.push(de
+        ? `Checkout-Quote: ${coLast}% (${coLast>=coPrev?"+":""}${coLast-coPrev}% vs. vorher)`
+        : `Checkout rate: ${coLast}% (${coLast>=coPrev?"+":""}${coLast-coPrev}% vs. previous)`);
+      if(avgLast>avgPrev&&coLast>coPrev) lines.push(de ? "→ Klare Verbesserung in beiden Bereichen" : "→ Clear improvement in both areas");
+      else if(avgLast<avgPrev||coLast<coPrev) lines.push(de ? "→ Leichter Rückgang — mögliche Ermüdung oder Technikfehler" : "→ Slight decline — possible fatigue or technique issue");
     }
   }
 
@@ -185,22 +212,26 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
       const cy=Math.round(scatter.reduce((s,p)=>s+p.y,0)/scatter.length);
       const driftX=cx-265;
       const driftY=cy-265;
-      const hDrift=Math.abs(driftX)<15?"mittig":
-        driftX<0?`${Math.abs(driftX)}px links`:`${driftX}px rechts`;
-      const vDrift=Math.abs(driftY)<15?"mittig":
-        driftY<0?`${Math.abs(driftY)}px oben`:`${driftY}px unten`;
+      const hDrift=de
+        ? (Math.abs(driftX)<15?"mittig":driftX<0?`${Math.abs(driftX)}px links`:`${driftX}px rechts`)
+        : (Math.abs(driftX)<15?"centered":driftX<0?`${Math.abs(driftX)}px left`:`${driftX}px right`);
+      const vDrift=de
+        ? (Math.abs(driftY)<15?"mittig":driftY<0?`${Math.abs(driftY)}px oben`:`${driftY}px unten`)
+        : (Math.abs(driftY)<15?"centered":driftY<0?`${Math.abs(driftY)}px up`:`${driftY}px down`);
       const radius=Math.round(scatter.reduce((s,p)=>s+Math.sqrt((p.x-cx)**2+(p.y-cy)**2),0)/scatter.length);
-      const precision=radius<20?"sehr präzise":radius<40?"gut":radius<70?"mittlere Streuung":"große Streuung";
+      const precision=de
+        ? (radius<20?"sehr präzise":radius<40?"gut":radius<70?"mittlere Streuung":"große Streuung")
+        : (radius<20?"very precise":radius<40?"good":radius<70?"moderate scatter":"wide scatter");
       const missRate=Math.round(scatter.filter(p=>p.l==="Miss").length/scatter.length*100);
-      lines.push("","=== TREFFERBILD-ANALYSE (letzte 5 Spiele) ===");
-      lines.push(`Würfe analysiert: ${scatter.length}`);
-      lines.push(`Cluster-Zentrum X:${cx} Y:${cy} (Scheibenmitte: 265/265)`);
-      lines.push(`Horizontaler Drift: ${hDrift}`);
-      lines.push(`Vertikaler Drift: ${vDrift}`);
-      lines.push(`Streuungsradius: ${radius}px — ${precision}`);
-      lines.push(`Miss-Rate: ${missRate}%`);
+      lines.push("", de ? "=== TREFFERBILD-ANALYSE (letzte 5 Spiele) ===" : "=== SCATTER ANALYSIS (last 5 games) ===");
+      lines.push(de ? `Würfe analysiert: ${scatter.length}` : `Throws analyzed: ${scatter.length}`);
+      lines.push(`Cluster center X:${cx} Y:${cy} (board center: 265/265)`);
+      lines.push(de ? `Horizontaler Drift: ${hDrift}` : `Horizontal drift: ${hDrift}`);
+      lines.push(de ? `Vertikaler Drift: ${vDrift}` : `Vertical drift: ${vDrift}`);
+      lines.push(de ? `Streuungsradius: ${radius}px — ${precision}` : `Scatter radius: ${radius}px — ${precision}`);
+      lines.push(`Miss rate: ${missRate}%`);
       if(Math.abs(driftX)>=20||Math.abs(driftY)>=20)
-        lines.push(`→ Systematischer Drift erkannt: ${hDrift} / ${vDrift}`);
+        lines.push(de ? `→ Systematischer Drift erkannt: ${hDrift} / ${vDrift}` : `→ Systematic drift detected: ${hDrift} / ${vDrift}`);
     }
   }
 
@@ -212,10 +243,13 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
       const d2=throws.filter((_,j)=>j%3===1).map(t=>t.score);
       const d3=throws.filter((_,j)=>j%3===2).map(t=>t.score);
       const avgD=arr=>arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length*10)/10:0;
-      lines.push("","=== WURFSEQUENZ (Ø pro Dart) ===");
-      lines.push(`Erster Dart Ø: ${avgD(d1)}, Zweiter: ${avgD(d2)}, Dritter: ${avgD(d3)}`);
-      const worst=["Erster","Zweiter","Dritter"][[avgD(d1),avgD(d2),avgD(d3)].indexOf(Math.min(avgD(d1),avgD(d2),avgD(d3)))];
-      lines.push(`→ Schwächster Dart: ${worst}`);
+      lines.push("", de ? "=== WURFSEQUENZ (Ø pro Dart) ===" : "=== THROW SEQUENCE (avg per dart) ===");
+      lines.push(de
+        ? `Erster Dart Ø: ${avgD(d1)}, Zweiter: ${avgD(d2)}, Dritter: ${avgD(d3)}`
+        : `1st dart avg: ${avgD(d1)}, 2nd: ${avgD(d2)}, 3rd: ${avgD(d3)}`);
+      const worstIdx=[avgD(d1),avgD(d2),avgD(d3)].indexOf(Math.min(avgD(d1),avgD(d2),avgD(d3)));
+      const worstLabel=de?["Erster","Zweiter","Dritter"][worstIdx]:["1st","2nd","3rd"][worstIdx];
+      lines.push(de ? `→ Schwächster Dart: ${worstLabel}` : `→ Weakest dart: ${worstLabel}`);
     }
   }
 
@@ -225,10 +259,14 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
     pGames.forEach(g=>{ const p=(g.players||[]).find(x=>x.id===playerId); if(p?.doubleStats) Object.entries(p.doubleStats).forEach(([field,v])=>{ if(!doubleAgg[field]) doubleAgg[field]={att:0,hit:0}; doubleAgg[field].att+=v.att||0; doubleAgg[field].hit+=v.hit||0; }); });
     const topDoubles=Object.entries(doubleAgg).filter(([_,v])=>v.att>=3).map(([f,v])=>({field:f,att:v.att,hit:v.hit,pct:Math.round(v.hit/v.att*100)})).sort((a,b)=>b.att-a.att).slice(0,3);
     if(topDoubles.length>0){
-      lines.push("","=== HÄUFIGSTE DOPPELFELDER (alle Spiele) ===");
-      topDoubles.forEach(e=>lines.push(`${e.field}: ${e.pct}% (${e.hit}/${e.att} Versuche)`));
+      lines.push("", de ? "=== HÄUFIGSTE DOPPELFELDER (alle Spiele) ===" : "=== MOST USED DOUBLES (all games) ===");
+      topDoubles.forEach(e=>lines.push(de
+        ? `${e.field}: ${e.pct}% (${e.hit}/${e.att} Versuche)`
+        : `${e.field}: ${e.pct}% (${e.hit}/${e.att} attempts)`));
       const worst=[...topDoubles].sort((a,b)=>a.pct-b.pct)[0];
-      lines.push(`→ Schwächstes Doppel (häufig gespielt): ${worst.field} (${worst.pct}%)`);
+      lines.push(de
+        ? `→ Schwächstes Doppel (häufig gespielt): ${worst.field} (${worst.pct}%)`
+        : `→ Weakest double (frequently played): ${worst.field} (${worst.pct}%)`);
     }
   }
 
@@ -236,27 +274,29 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
     const pi=state.cfg.players.indexOf(sessionStats.players?.[0]?.name);
     const ds=pi>=0?getDoubleStatsForCoach(pi):null;
     if(ds&&ds.length>0){
-      lines.push("","=== DOPPELFELD-STATISTIK (aktuelle Session) ===");
+      lines.push("", de ? "=== DOPPELFELD-STATISTIK (aktuelle Session) ===" : "=== DOUBLE STATS (current session) ===");
       ds.forEach(e=>{ lines.push(`${e.field}: ${e.hit}/${e.att} (${e.pct}%)`); });
       const worst=ds.filter(e=>e.att>=3).sort((a,b)=>a.pct-b.pct)[0];
       const best=ds.filter(e=>e.att>=3).sort((a,b)=>b.pct-a.pct)[0];
-      if(worst) lines.push(`→ Schwächstes Doppel: ${worst.field} (${worst.pct}%)`);
-      if(best) lines.push(`→ Stärkstes Doppel: ${best.field} (${best.pct}%)`);
+      if(worst) lines.push(de ? `→ Schwächstes Doppel: ${worst.field} (${worst.pct}%)` : `→ Weakest double: ${worst.field} (${worst.pct}%)`);
+      if(best) lines.push(de ? `→ Stärkstes Doppel: ${best.field} (${best.pct}%)` : `→ Strongest double: ${best.field} (${best.pct}%)`);
     }
   }
 
   if(sessionStats){
-    lines.push("","=== LETZTE PARTIE ===");
-    lines.push(`Modus: ${sessionStats.mode}, Runden: ${sessionStats.rounds}`);
-    sessionStats.players.forEach(p=>{ if(p.id===null) return; lines.push(`${p.name}: Ø ${p.avg3||0}, Best ${p.best3||0}, Checkout ${p.checkoutHit||0}/${p.checkoutAtt||0}${p.first9?`, First-9: ${p.first9}`:""}${p.winner?" → GEWONNEN":""}`); });
+    lines.push("", de ? "=== LETZTE PARTIE ===" : "=== LAST GAME ===");
+    lines.push(de
+      ? `Modus: ${sessionStats.mode}, Runden: ${sessionStats.rounds}`
+      : `Mode: ${sessionStats.mode}, Rounds: ${sessionStats.rounds}`);
+    sessionStats.players.forEach(p=>{ if(p.id===null) return; lines.push(`${p.name}: Ø ${p.avg3||0}, Best ${p.best3||0}, Checkout ${p.checkoutHit||0}/${p.checkoutAtt||0}${p.first9?`, First-9: ${p.first9}`:""}${p.winner?de?" → GEWONNEN":" → WON":""}`); });
   }
 
   if(healthData){
-    lines.push("","=== KÖRPERLICHE VERFASSUNG ===");
-    if(healthData.sleep!=null) lines.push(`Schlaf: ${healthData.sleep}h`);
-    if(healthData.exertion) lines.push(`Belastung: ${healthData.exertion}`);
-    if(healthData.feeling!=null) lines.push(`Befinden: ${healthData.feeling}/4`);
-    lines.push(`Datenquelle: ${healthData.source||"manual"}`);
+    lines.push("", de ? "=== KÖRPERLICHE VERFASSUNG ===" : "=== PHYSICAL CONDITION ===");
+    if(healthData.sleep!=null) lines.push(de ? `Schlaf: ${healthData.sleep}h` : `Sleep: ${healthData.sleep}h`);
+    if(healthData.exertion) lines.push(de ? `Belastung: ${healthData.exertion}` : `Exertion: ${healthData.exertion}`);
+    if(healthData.feeling!=null) lines.push(de ? `Befinden: ${healthData.feeling}/4` : `Feeling: ${healthData.feeling}/4`);
+    lines.push(de ? `Datenquelle: ${healthData.source||"manual"}` : `Data source: ${healthData.source||"manual"}`);
   }
 
   if(allGames&&playerId){
@@ -270,14 +310,18 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
         const avgLow=Math.round(lowSleep.map(getPlayerAvg).reduce((a,b)=>a+b,0)/lowSleep.length*10)/10;
         const avgGood=Math.round(goodSleep.map(getPlayerAvg).reduce((a,b)=>a+b,0)/goodSleep.length*10)/10;
         const coLow=coOf(lowSleep), coGood=coOf(goodSleep);
-        lines.push("","=== KORRELATION SCHLAF / LEISTUNG ===");
-        lines.push(`Bei <6h Schlaf (${lowSleep.length} Spiele): Ø Average ${avgLow}${coLow!=null?" | Checkout "+coLow+"%":""}`);
-        lines.push(`Bei ≥7h Schlaf (${goodSleep.length} Spiele): Ø Average ${avgGood}${coGood!=null?" | Checkout "+coGood+"%":""}`);
+        lines.push("", de ? "=== KORRELATION SCHLAF / LEISTUNG ===" : "=== SLEEP / PERFORMANCE CORRELATION ===");
+        lines.push(de
+          ? `Bei <6h Schlaf (${lowSleep.length} Spiele): Ø Average ${avgLow}${coLow!=null?" | Checkout "+coLow+"%":""}`
+          : `With <6h sleep (${lowSleep.length} games): avg ${avgLow}${coLow!=null?" | checkout "+coLow+"%":""}`);
+        lines.push(de
+          ? `Bei ≥7h Schlaf (${goodSleep.length} Spiele): Ø Average ${avgGood}${coGood!=null?" | Checkout "+coGood+"%":""}`
+          : `With ≥7h sleep (${goodSleep.length} games): avg ${avgGood}${coGood!=null?" | checkout "+coGood+"%":""}`);
       }
     }
   }
 
-  lines.push("","Antworte NUR mit dem Coach-Feedback, keine Einleitung, keine Überschriften.");
+  lines.push("", de ? "Antworte NUR mit dem Coach-Feedback, keine Einleitung, keine Überschriften." : "Reply ONLY with the coach feedback, no introduction, no section headings.");
   return lines.join("\n");
 }
 
