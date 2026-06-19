@@ -499,6 +499,8 @@ document.querySelectorAll(".sub-tab").forEach(btn=>{
     if(target) target.classList.add("active");
     if(btn.dataset.sub==="stats") loadAndRenderStats();
     if(btn.dataset.sub==="analyse") initAnalyseTab();
+    applyTranslations();
+    setTimeout(() => applyTranslations(), 150);
   });
 });
 
@@ -1034,7 +1036,7 @@ document.getElementById("video-upload-analyse-tab").addEventListener("change",e=
   preview.src=url; preview.load();
   document.getElementById("video-preview-wrap-analyse-tab").style.display="";
   document.getElementById("btn-video-select-analyse-tab").textContent="📁 "+file.name.substring(0,30);
-  preview.addEventListener("loadedmetadata",()=>{ const dur=Math.round(preview.duration); document.getElementById("video-frames-info-analyse-tab").textContent=`${dur}s · ${Math.round(preview.videoWidth)}×${Math.round(preview.videoHeight)}px · 5 Frames werden analysiert`; document.getElementById("btn-video-analyze-analyse-tab").style.display=""; document.getElementById("coach-output-video-analyse-tab").innerHTML=""; },{once:true});
+  preview.addEventListener("loadedmetadata",()=>{ const dur=Math.round(preview.duration); document.getElementById("video-frames-info-analyse-tab").textContent=`${dur}s · ${Math.round(preview.videoWidth)}×${Math.round(preview.videoHeight)}px · ${t('frames_werden_analysiert').replace('{n}',5)}`; document.getElementById("btn-video-analyze-analyse-tab").style.display=""; document.getElementById("coach-output-video-analyse-tab").innerHTML=""; },{once:true});
 });
 document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click",async()=>{
   const access = await canUseFeature("videoAnalysis");

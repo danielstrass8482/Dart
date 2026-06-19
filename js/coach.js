@@ -334,7 +334,7 @@ export async function callClaudeViaProxy(messages){
 export async function callCoach(prompt, outputEl, limitEl, btnEl){
   const left = coachCallsLeft();
   if(left<=0){
-    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div>Du hast heute dein Limit (${COACH_DAILY_LIMIT} Analysen) erreicht. Morgen wieder!</div>`; window.refreshIcons?.();
+    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div>${t('coach_limit_tag_msg').replace('{n}',COACH_DAILY_LIMIT)}</div>`; window.refreshIcons?.();
     btnEl.disabled=true;
     return;
   }
@@ -343,17 +343,17 @@ export async function callCoach(prompt, outputEl, limitEl, btnEl){
   outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH</div><span style="color:var(--dart-text-sec)">${t('coach_denkt')}</span></div>`; window.refreshIcons?.();
   try{
     const data = await callClaudeViaProxy([{role:"user",content:prompt}]);
-    const text = data.content?.[0]?.text || "Keine Antwort erhalten.";
+    const text = data.content?.[0]?.text || t('keine_antwort');
     const count = recordCoachUsage();
     const newLeft = COACH_DAILY_LIMIT - count;
-    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE</div>${formatCoachText(text)}</div>`; window.refreshIcons?.();
+    outputEl.innerHTML=`<div class="coach-box"><div class="coach-header"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${t('coach_header_text')}</div>${formatCoachText(text)}</div>`; window.refreshIcons?.();
     if(limitEl) limitEl.textContent=`${newLeft} / ${COACH_DAILY_LIMIT} ${t('coach_limit')} ${t('coach_verbleibend')}`;
     btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('coach_neue_analyse')}`; window.refreshIcons?.();
     btnEl.disabled = newLeft<=0;
   }catch(e){
     if(e.status===429){
       const d=e.data||{};
-      outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-warning)"><div class="coach-header" style="color:var(--dart-warning)"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${t('coach_limit_erreicht')}</div>Du hast heute bereits ${d.used??'?'} von ${d.limit??10} Coach-Analysen genutzt.<br><small style="color:var(--dart-text-muted)">Reset um Mitternacht.</small></div>`; window.refreshIcons?.();
+      outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-warning)"><div class="coach-header" style="color:var(--dart-warning)"><i data-lucide="brain" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${t('coach_limit_erreicht')}</div>${t('coach_bereits_genutzt').replace('{used}',d.used??'?').replace('{limit}',d.limit??10)}<br><small style="color:var(--dart-text-muted)">${t('reset_mitternacht')}</small></div>`; window.refreshIcons?.();
       btnEl.disabled=true;
       return;
     }
@@ -363,7 +363,7 @@ export async function callCoach(prompt, outputEl, limitEl, btnEl){
       btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('coach_analyse')}`; window.refreshIcons?.();
       return;
     }
-    outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-danger)">Fehler: ${e.message}</div>`;
+    outputEl.innerHTML=`<div class="coach-box" style="border-color:var(--dart-danger)">${t('fehler_prefix')}${e.message}</div>`;
     btnEl.disabled=false;
     btnEl.innerHTML=`<i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('coach_analyse')}`; window.refreshIcons?.();
   }

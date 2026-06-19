@@ -115,6 +115,10 @@ export const translations = {
     coach_verbleibend: "verbleibend",
     coach_nicht_verfuegbar: "Coach ist momentan nicht verfügbar. Bitte später nochmal versuchen.",
     coach_limit_erreicht: "TAGESLIMIT ERREICHT",
+    coach_limit_tag_msg: "Du hast heute dein Limit ({n} Analysen) erreicht. Morgen wieder!",
+    coach_bereits_genutzt: "Du hast heute bereits {used} von {limit} Coach-Analysen genutzt.",
+    reset_mitternacht: "Reset um Mitternacht.",
+    coach_header_text: "COACH-ANALYSE",
 
     // Winner overlay
     gewinner: "GEWINNER",
@@ -622,6 +626,10 @@ export const translations = {
     coach_verbleibend: "remaining",
     coach_nicht_verfuegbar: "Coach is currently unavailable. Please try again later.",
     coach_limit_erreicht: "DAILY LIMIT REACHED",
+    coach_limit_tag_msg: "You've reached your daily limit ({n} analyses). Try again tomorrow!",
+    coach_bereits_genutzt: "You've already used {used} of {limit} coach analyses today.",
+    reset_mitternacht: "Resets at midnight.",
+    coach_header_text: "COACH ANALYSIS",
 
     // Winner overlay
     gewinner: "WINNER",
