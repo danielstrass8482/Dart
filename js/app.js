@@ -294,7 +294,24 @@ document.getElementById("party-back").addEventListener("click", showSetup);
 
 // ── Winner overlay buttons ────────────────────────────────────────
 document.getElementById("btn-new-game").addEventListener("click", showSetup);
+function _accumulateLegStats(){
+  if(!state.cfg?.accumulated||!state.x01) return;
+  state.cfg.players.forEach((_,i)=>{
+    if(state.cfg.isBot?.[i]) return;
+    state.cfg.accumulated.turnScores[i].push(...(state.x01.turnScores[i]||[]));
+    const legThrows=[
+      ...state.x01.historicThrows[i].filter(t=>t.svgX!=null),
+      ...state.x01.throws.filter(t=>t.svgX!=null)
+    ];
+    state.cfg.accumulated.historicThrows[i].push(...legThrows);
+    state.cfg.accumulated.checkoutAttempts[i]+=(state.x01.checkoutAttempts?.[i]||0);
+    state.cfg.accumulated.checkoutHits[i]+=(state.x01.checkoutHits?.[i]||0);
+    if(state.cfg.accumulated.first9[i]===null&&state.x01.first9?.[i]!=null)
+      state.cfg.accumulated.first9[i]=state.x01.first9[i];
+  });
+}
 document.getElementById("btn-next-set").addEventListener("click",()=>{
+  _accumulateLegStats();
   document.getElementById("set-overlay").classList.remove("visible");
   state.cfg.currentSet++;
   state.cfg.currentLeg=1;
@@ -306,6 +323,7 @@ document.getElementById("btn-next-set").addEventListener("click",()=>{
   startX01(state.cfg.currentLegStarter);
 });
 document.getElementById("btn-next-leg").addEventListener("click",()=>{
+  _accumulateLegStats();
   document.getElementById("leg-overlay").classList.remove("visible");
   state.cfg.currentLeg++;
   // PDC: strictly alternate leg starters
@@ -464,7 +482,14 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
     totalLegs:selectedLegs, legsToWin:Math.ceil(selectedLegs/2), legWins:players.map(()=>0), currentLeg:1,
     rounds:selectedRounds, healthData: healthData || null,
     currentLegStarter:0, nextLegStarter:0, firstLegStarter:0,
-    context: detectedContext, tournamentId: null, tournamentName: null
+    context: detectedContext, tournamentId: null, tournamentName: null,
+    accumulated:{
+      turnScores:players.map(()=>[]),
+      historicThrows:players.map(()=>[]),
+      checkoutAttempts:players.map(()=>0),
+      checkoutHits:players.map(()=>0),
+      first9:players.map(()=>null)
+    }
   };
   const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
   if(state.cfg.mode==="Cricket") startCricket();
