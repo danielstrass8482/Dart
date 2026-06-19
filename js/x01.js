@@ -625,22 +625,30 @@ export function showWinner(name,round){
 
   const sumEl=document.getElementById("winner-summary");
   if(sumEl&&state.cfg.mode!=="Cricket"&&state.x01.turnScores){
+    const toMini=t=>({x:t.svgX,y:t.svgY,v:2,miss:t.miss,label:t.label});
     const playerStats=state.cfg.players.map((p,i)=>{
       if(state.cfg.isBot?.[i]) return null;
-      const turns=state.x01.turnScores[i];
+      // Combine accumulated game stats with current leg
+      const accTurns=state.cfg.accumulated?.turnScores?.[i]||[];
+      const turns=[...accTurns,...(state.x01.turnScores[i]||[])];
       if(!turns.length) return null;
       const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
       const best=Math.max(...turns);
-      const f9=state.x01.first9?.[i];
-      const coAtt=state.x01.checkoutAttempts?.[i]||0;
-      const coHit=state.x01.checkoutHits?.[i]||0;
+      const f9=state.cfg.accumulated?.first9?.[i]??state.x01.first9?.[i];
+      const coAtt=(state.cfg.accumulated?.checkoutAttempts?.[i]||0)+(state.x01.checkoutAttempts?.[i]||0);
+      const coHit=(state.cfg.accumulated?.checkoutHits?.[i]||0)+(state.x01.checkoutHits?.[i]||0);
       const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
       const pid=state.cfg.playerIds?.[i];
       const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
       const displayName=playerObj?.nickname||p;
       const photoUrl=playerObj?.photoUrl||null;
       const isWinner=i===state.x01.winner;
-      const dots=[...state.x01.historicThrows[i],...state.x01.throws.filter(t=>t.svgX!=null&&t.leg===state.x01.throws[0]?.leg)];
+      // Dots from all legs: map svgX/svgY → x/y with v:2 so drawMiniBoard renders them
+      const dots=[
+        ...(state.cfg.accumulated?.historicThrows?.[i]||[]).map(toMini),
+        ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
+        ...state.x01.throws.filter(t=>t.svgX!=null).map(toMini)
+      ];
       const fieldFreq={};
       dots.forEach(d=>{
         if(d.miss) return;
@@ -676,7 +684,7 @@ export function showWinner(name,round){
         const tX=segFreqs.reduce((sum,f)=>sum+(f[x]||0),0);
         const tY=segFreqs.reduce((sum,f)=>sum+(f[y]||0),0);
         return tY-tX;
-      }).slice(0,10);
+      }).slice(0,5);
 
       // Before/After data per player
       const baData=humanStats.map(s=>{
@@ -730,7 +738,7 @@ export function showWinner(name,round){
             <div style="font-weight:700;font-size:13px;color:var(--dart-text)">${s.displayName}</div>
             ${s.isWinner?`<div style="font-size:9px;font-weight:700;color:${gold};letter-spacing:2px;background:rgba(212,175,55,0.15);padding:2px 10px;border-radius:8px">WINNER</div>`:`<div style="height:17px"></div>`}
           </div>
-          <svg id="winner-scatter-${si}" style="width:100%;aspect-ratio:1;display:block"></svg>
+          <svg id="winner-scatter-${si}" style="width:90px;height:90px;display:block;margin:0 auto;flex-shrink:0"></svg>
           <table style="width:100%;font-size:11px;border-collapse:collapse">
             <tr><td style="color:var(--dart-text-sec);padding:2px 0">Avg</td><td style="text-align:right;font-weight:700;color:${avgC}">${s.avg}</td></tr>
             <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;font-weight:700;color:${f9C}">${s.f9??'—'}</td></tr>
