@@ -65,6 +65,15 @@ FILES_TO_CHECK.forEach(file => {
       if(inString && !line.includes('t(') && !line.includes('data-i18n')){
         violations.push({ file, line: idx+1, word, content: line.trim() });
       }
+
+      // HTML-Textknoten prüfen: ">WORT<" ohne data-i18n-Wrapper
+      // z.B. <button ...> ZURÜCK</button> — nicht in Quotes, aber hardcodiert
+      if(file.endsWith('.html')){
+        const htmlTextRegex = new RegExp(`>[^<]*\\b${word}\\b[^<]*<`);
+        if(htmlTextRegex.test(line) && !line.includes('data-i18n')){
+          violations.push({ file, line: idx+1, word, content: line.trim() });
+        }
+      }
     });
   });
 });

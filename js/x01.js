@@ -482,7 +482,7 @@ export function handleLegWin(winnerIdx){
       `${p}: <strong>${state.cfg.setWins[i]}</strong>`).join(" &nbsp;|&nbsp; ");
     document.getElementById("set-score-display").innerHTML=setScoreHtml;
     document.getElementById("set-to-win").textContent=
-      `Noch ${state.cfg.setsToWin-state.cfg.setWins[winnerIdx]} Set(s) zum Sieg`;
+      t('noch_sets_zum_sieg').replace('{n}',state.cfg.setsToWin-state.cfg.setWins[winnerIdx]);
     document.getElementById("set-overlay").classList.add("visible");
     return;
   }
@@ -497,7 +497,7 @@ export function handleLegWin(winnerIdx){
     `${p}: <strong>${state.cfg.legWins[i]}</strong> Leg${state.cfg.legWins[i]!==1?"s":""}`).join(" &nbsp;|&nbsp; ");
   document.getElementById("leg-score-display").innerHTML=scoreHtml;
   document.getElementById("leg-to-win").textContent=
-    `Noch ${state.cfg.legsToWin-state.cfg.legWins[winnerIdx]} Leg(s) zum Set`;
+    t('noch_legs_zum_set').replace('{n}',state.cfg.legsToWin-state.cfg.legWins[winnerIdx]);
 
   const legStats=document.getElementById("leg-stats-summary");
   if(legStats){

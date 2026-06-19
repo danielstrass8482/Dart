@@ -439,6 +439,43 @@ export const translations = {
 
     // Studio
     studio_beschreibung: "Nimm deine eigene Stimme für die Ansagen auf. Alle aufgenommenen Zahlen ersetzen die synthetische Stimme.",
+
+    // Video-Analyse
+    video_auswaehlen: "Bitte zuerst ein Video auswählen",
+    extrahiere_frames: "⏳ Extrahiere Frames…",
+    analysiere_technik: "Analysiere deine Wurftechnik…",
+    claude_analysiert: "⏳ Claude analysiert…",
+    wurf_analyse_titel: "WURF-ANALYSE",
+    video_analysen_remaining: "{n} Video-Analysen heute verbleibend",
+    erneut_analysieren: "ERNEUT ANALYSIEREN",
+    keine_antwort: "Keine Antwort erhalten.",
+    wurf_analysieren: "🎥 WURF ANALYSIEREN",
+    frames_werden_analysiert: "{n} Frames werden analysiert",
+    video_vom_handy: "Video vom Handy erhalten — analysiere…",
+    // Video-Session (Handy)
+    warte_auf_handy: "⏳ Warte auf Handy…",
+    handy_verbunden: "✅ Handy verbunden — nimmt auf…",
+    tablet_wartet: "Code: {code} — Tablet wartet",
+    wird_hochgeladen: "📤 Wird hochgeladen…",
+    upload_laeuft: "Upload läuft…",
+    upload_fertig: "✅ Fertig! Das Tablet analysiert jetzt.",
+    video_gesendet: "✅ Gesendet",
+    an_tablet_senden: "📤 AN TABLET SENDEN",
+    // Voice-Studio
+    voice_pflichtfelder: "Name und Voice ID sind Pflichtfelder.",
+    voice_max_stimmen: "Maximum 10 eigene Stimmen erreicht.",
+    voice_id_exists: "Diese Voice ID ist bereits in der Liste.",
+    voice_hinzugefuegt: "✓ \"{name}\" wurde hinzugefügt",
+    // Spieler bearbeiten
+    name_erforderlich: "Name ist erforderlich.",
+    speichere: "Speichere…",
+    // X01-Overlays
+    noch_sets_zum_sieg: "Noch {n} Set(s) zum Sieg",
+    noch_legs_zum_set: "Noch {n} Leg(s) zum Set",
+    // Multiplayer
+    online_spieler_header: "SPIELER",
+    du_suffix: "(du)",
+    raum_nicht_gefunden: "Raum nicht gefunden",
   },
 
   en: {
@@ -869,6 +906,43 @@ export const translations = {
 
     // Studio
     studio_beschreibung: "Record your own voice for announcements. All recorded numbers replace the synthetic voice.",
+
+    // Video analysis
+    video_auswaehlen: "Please select a video first",
+    extrahiere_frames: "⏳ Extracting frames…",
+    analysiere_technik: "Analyzing your throw technique…",
+    claude_analysiert: "⏳ Claude analyzing…",
+    wurf_analyse_titel: "THROW ANALYSIS",
+    video_analysen_remaining: "{n} video analyses remaining today",
+    erneut_analysieren: "ANALYZE AGAIN",
+    keine_antwort: "No response received.",
+    wurf_analysieren: "🎥 ANALYZE THROW",
+    frames_werden_analysiert: "{n} frames will be analyzed",
+    video_vom_handy: "Video received from phone — analyzing…",
+    // Video session (phone)
+    warte_auf_handy: "⏳ Waiting for phone…",
+    handy_verbunden: "✅ Phone connected — recording…",
+    tablet_wartet: "Code: {code} — Tablet waiting",
+    wird_hochgeladen: "📤 Uploading…",
+    upload_laeuft: "Upload in progress…",
+    upload_fertig: "✅ Done! The tablet is now analyzing.",
+    video_gesendet: "✅ Sent",
+    an_tablet_senden: "📤 SEND TO TABLET",
+    // Voice studio
+    voice_pflichtfelder: "Name and Voice ID are required.",
+    voice_max_stimmen: "Maximum of 10 custom voices reached.",
+    voice_id_exists: "This Voice ID is already in the list.",
+    voice_hinzugefuegt: "✓ \"{name}\" was added",
+    // Player edit
+    name_erforderlich: "Name is required.",
+    speichere: "Saving…",
+    // X01 overlays
+    noch_sets_zum_sieg: "{n} Set(s) to win",
+    noch_legs_zum_set: "{n} Leg(s) remaining",
+    // Multiplayer
+    online_spieler_header: "PLAYERS",
+    du_suffix: "(you)",
+    raum_nicht_gefunden: "Room not found",
   }
 };
 

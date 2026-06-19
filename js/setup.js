@@ -398,10 +398,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
       if(!_editingPlayer) return;
       const errEl = document.getElementById("player-edit-error");
       const name = document.getElementById("player-edit-name").value.trim();
-      if(!name){ errEl.textContent = "Name ist erforderlich."; return; }
+      if(!name){ errEl.textContent = t('name_erforderlich'); return; }
 
       saveBtn.disabled = true;
-      saveBtn.textContent = "Speichere…";
+      saveBtn.textContent = t('speichere');
       errEl.textContent = "";
 
       try{
@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
         errEl.textContent = t('fehler_prefix') + e.message;
       }finally{
         saveBtn.disabled = false;
-        saveBtn.textContent = "SPEICHERN";
+        saveBtn.textContent = t('speichern');
       }
     });
   }

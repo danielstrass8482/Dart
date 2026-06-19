@@ -863,7 +863,7 @@ async function startVideoRecording(previewEl, recordBtn, stopBtn, wrapEl, analyz
     let countdown=5;
     const timer=setInterval(()=>{ countdown--; stopBtn.textContent=`⏹ STOP (${countdown}s)`; if(countdown<=0){ clearInterval(timer); if(mediaRecorder?.state==="recording") mediaRecorder.stop(); } },1000);
     stopBtn.onclick=()=>{ clearInterval(timer); if(mediaRecorder?.state==="recording") mediaRecorder.stop(); };
-  }catch(err){ alert("Kamera nicht verfügbar: "+err.message); }
+  }catch(err){ alert(t('kamera_fehler')+err.message); }
 }
 
 document.getElementById("btn-video-record-winner").addEventListener("click",()=>startVideoRecording(document.getElementById("video-preview"),document.getElementById("btn-video-record-winner"),document.getElementById("btn-video-stop-winner"),document.getElementById("video-preview-wrap"),document.getElementById("btn-video-analyze")));
@@ -879,7 +879,7 @@ document.getElementById("video-upload").addEventListener("change",e=>{
   document.getElementById("btn-video-select").textContent="📁 "+file.name.substring(0,30);
   preview.addEventListener("loadedmetadata",()=>{
     const dur=Math.round(preview.duration);
-    document.getElementById("video-frames-info").textContent=`${dur}s · ${Math.round(preview.videoWidth)}×${Math.round(preview.videoHeight)}px · 5 Frames werden analysiert`;
+    document.getElementById("video-frames-info").textContent=`${dur}s · ${Math.round(preview.videoWidth)}×${Math.round(preview.videoHeight)}px · `+t('frames_werden_analysiert').replace('{n}',5);
     document.getElementById("btn-video-analyze").style.display="";
     document.getElementById("coach-output-video").innerHTML="";
   },{once:true});
@@ -893,22 +893,22 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
   const btn=document.getElementById("btn-video-analyze");
   if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">${t('video_limit_msg').replace('{n}',VIDEO_COACH_LIMIT)}</div>`; return; }
   const videoEl=document.getElementById("video-preview");
-  if(!videoEl.src){ alert("Bitte zuerst ein Video auswählen"); return; }
-  btn.disabled=true; btn.textContent="⏳ Extrahiere Frames…";
-  outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">Analysiere deine Wurftechnik…</span></div>`;
+  if(!videoEl.src){ alert(t('video_auswaehlen')); return; }
+  btn.disabled=true; btn.textContent=t('extrahiere_frames');
+  outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">${t('analysiere_technik')}</span></div>`;
   try{
-    const frames=await extractVideoFrames(videoEl, 5); btn.textContent="⏳ Claude analysiert…";
+    const frames=await extractVideoFrames(videoEl, 5); btn.textContent=t('claude_analysiert');
     const content=[{type:"text",text:buildVideoCoachPrompt(frames.length,null)},...frames.map((b64,i)=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}})),{type:"text",text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}];
     const data=await callClaudeViaProxy([{role:"user",content}]);
-    const text=data.content?.[0]?.text||"Keine Antwort erhalten.";
+    const text=data.content?.[0]?.text||t('keine_antwort');
     recordVideoCoachUsage();
     const newLeft=videoCoachCallsLeft();
-    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header"><i data-lucide="video" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> WURF-ANALYSE</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div></div>`; window.refreshIcons?.();
-    btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ERNEUT ANALYSIEREN`; window.refreshIcons?.(); btn.disabled=newLeft<=0;
+    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header"><i data-lucide="video" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${t('wurf_analyse_titel')}</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${t('video_analysen_remaining').replace('{n}',newLeft)}</div></div>`; window.refreshIcons?.();
+    btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('erneut_analysieren')}`; window.refreshIcons?.(); btn.disabled=newLeft<=0;
     if(window.dartDB){ const pi=coachSelectedPlayerIdx; const pid=state.cfg.playerIds?.[pi]||null; const pName=state.cfg.players?.[pi]||"Unbekannt"; await window.dartDB.saveCoachAnalysis({playerId:pid,playerName:pName,type:"video",text,frameCount:frames.length}); }
   }catch(err){
-    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">Fehler: ${err.message}</div>`;
-    btn.disabled=false; btn.textContent="🎥 WURF ANALYSIEREN";
+    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">${t('fehler_prefix')}${err.message}</div>`;
+    btn.disabled=false; btn.textContent=t('wurf_analysieren');
   }
 });
 
@@ -926,12 +926,12 @@ async function startVideoHostSession(analyzeCb){
   document.getElementById("vidsession-code-display").textContent=code;
   document.getElementById("vidsession-qr-img").src=qrUrl;
   document.getElementById("vidsession-url-display").textContent=url;
-  document.getElementById("vidsession-status").textContent="⏳ Warte auf Handy…";
+  document.getElementById("vidsession-status").textContent=t('warte_auf_handy');
   document.getElementById("vidsession-status").className="vidsession-status";
   document.getElementById("vidsession-backdrop").classList.add("visible");
   if(_videoSessionUnsubscribe) _videoSessionUnsubscribe();
   _videoSessionUnsubscribe=window.dartDB.watchVideoSession(code, async(data)=>{
-    if(data.status==="connected"){ document.getElementById("vidsession-status").textContent="✅ Handy verbunden — nimmt auf…"; document.getElementById("vidsession-status").className="vidsession-status connected"; }
+    if(data.status==="connected"){ document.getElementById("vidsession-status").textContent=t('handy_verbunden'); document.getElementById("vidsession-status").className="vidsession-status connected"; }
     if(data.status==="ready"&&data.videoPath){ cancelVideoSession(false); const videoUrl=await window.dartDB.getVideoSessionURL(code); if(videoUrl&&analyzeCb) analyzeCb(videoUrl); window.dartDB.deleteVideoSession(code).catch(()=>{}); }
   });
 }
@@ -943,15 +943,15 @@ window.cancelVideoSession=function(cleanup=true){
   _videoSessionCode=null;
 };
 
-document.getElementById("btn-video-phone-winner").addEventListener("click",()=>startVideoHostSession(async(videoUrl)=>{ const videoEl=document.getElementById("video-preview"); videoEl.src=videoUrl; videoEl.load(); document.getElementById("video-preview-wrap").style.display=""; document.getElementById("video-frames-info").textContent="Video vom Handy erhalten — analysiere…"; document.getElementById("btn-video-analyze").style.display=""; document.getElementById("btn-video-analyze").click(); }));
-document.getElementById("btn-video-phone-analyse").addEventListener("click",()=>startVideoHostSession(async(videoUrl)=>{ const videoEl=document.getElementById("video-preview-analyse-tab"); videoEl.src=videoUrl; videoEl.load(); document.getElementById("video-preview-wrap-analyse-tab").style.display=""; document.getElementById("video-frames-info-analyse-tab").textContent="Video vom Handy erhalten — analysiere…"; document.getElementById("btn-video-analyze-analyse-tab").style.display=""; document.getElementById("btn-video-analyze-analyse-tab").click(); }));
+document.getElementById("btn-video-phone-winner").addEventListener("click",()=>startVideoHostSession(async(videoUrl)=>{ const videoEl=document.getElementById("video-preview"); videoEl.src=videoUrl; videoEl.load(); document.getElementById("video-preview-wrap").style.display=""; document.getElementById("video-frames-info").textContent=t('video_vom_handy'); document.getElementById("btn-video-analyze").style.display=""; document.getElementById("btn-video-analyze").click(); }));
+document.getElementById("btn-video-phone-analyse").addEventListener("click",()=>startVideoHostSession(async(videoUrl)=>{ const videoEl=document.getElementById("video-preview-analyse-tab"); videoEl.src=videoUrl; videoEl.load(); document.getElementById("video-preview-wrap-analyse-tab").style.display=""; document.getElementById("video-frames-info-analyse-tab").textContent=t('video_vom_handy'); document.getElementById("btn-video-analyze-analyse-tab").style.display=""; document.getElementById("btn-video-analyze-analyse-tab").click(); }));
 
 // ── Video Remote (Phone) ──────────────────────────────────────────
 let vrMediaStream=null, vrMediaRecorder=null, vrRecordedChunks=[], vrVideoBlob=null, vrSessionCode=null;
 
 async function initVideoRemote(code){
   vrSessionCode=code; showScreen("video-remote");
-  const signalConnected=async()=>{ try{ await window.dartDB?.updateVideoSession(code,{status:"connected"}); }catch(e){} document.getElementById("vr-game-info").textContent=`Code: ${code} — Tablet wartet`; };
+  const signalConnected=async()=>{ try{ await window.dartDB?.updateVideoSession(code,{status:"connected"}); }catch(e){} document.getElementById("vr-game-info").textContent=t('tablet_wartet').replace('{code}',code); };
   if(window.dartDB) signalConnected(); else window.addEventListener("dbReady",()=>signalConnected(),{once:true});
   document.getElementById("btn-vr-record").addEventListener("click",startVrRecording);
   document.getElementById("btn-vr-send").addEventListener("click",sendVrVideo);
@@ -975,13 +975,13 @@ async function startVrRecording(){
 async function sendVrVideo(){
   if(!vrVideoBlob||!vrSessionCode) return;
   const sendBtn=document.getElementById("btn-vr-send"),status=document.getElementById("vr-status");
-  sendBtn.disabled=true; sendBtn.textContent="📤 Wird hochgeladen…"; status.textContent="Upload läuft…";
+  sendBtn.disabled=true; sendBtn.textContent=t('wird_hochgeladen'); status.textContent=t('upload_laeuft');
   try{
     await window.dartDB.uploadVideoBlob(vrSessionCode,vrVideoBlob);
     await window.dartDB.updateVideoSession(vrSessionCode,{status:"ready",videoPath:`dart_video_sessions/${vrSessionCode}.webm`});
-    status.textContent="✅ Fertig! Das Tablet analysiert jetzt."; sendBtn.textContent="✅ Gesendet";
+    status.textContent=t('upload_fertig'); sendBtn.textContent=t('video_gesendet');
     document.getElementById("btn-vr-record").style.display="none";
-  }catch(e){ status.textContent="Fehler: "+e.message; sendBtn.disabled=false; sendBtn.textContent="📤 AN TABLET SENDEN"; }
+  }catch(e){ status.textContent=t('fehler_prefix')+e.message; sendBtn.disabled=false; sendBtn.textContent=t('an_tablet_senden'); }
 }
 
 // ── URL param detection ───────────────────────────────────────────
@@ -1041,20 +1041,20 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
   const left=videoCoachCallsLeft(), outputEl=document.getElementById("coach-output-video-analyse-tab"), btn=document.getElementById("btn-video-analyze-analyse-tab");
   if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">${t('video_limit_msg').replace('{n}',VIDEO_COACH_LIMIT)}</div>`; return; }
   const videoEl=document.getElementById("video-preview-analyse-tab");
-  if(!videoEl.src){ alert("Bitte zuerst ein Video auswählen"); return; }
-  btn.disabled=true; btn.textContent="⏳ Extrahiere Frames…";
-  outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">Analysiere deine Wurftechnik…</span></div>`;
+  if(!videoEl.src){ alert(t('video_auswaehlen')); return; }
+  btn.disabled=true; btn.textContent=t('extrahiere_frames');
+  outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">${t('analysiere_technik')}</span></div>`;
   try{
-    const frames=await extractVideoFrames(videoEl,5); btn.textContent="⏳ Claude analysiert…";
+    const frames=await extractVideoFrames(videoEl,5); btn.textContent=t('claude_analysiert');
     const playerName=analyseSelectedPlayer?(state.allPlayers.find(x=>x.id===analyseSelectedPlayer)?.name||null):null;
     const content=[{type:"text",text:buildVideoCoachPrompt(frames.length,playerName)},...frames.map(b64=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}})),{type:"text",text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}];
     const data=await callClaudeViaProxy([{role:"user",content}]);
-    const text=data.content?.[0]?.text||"Keine Antwort erhalten.";
+    const text=data.content?.[0]?.text||t('keine_antwort');
     recordVideoCoachUsage(); const newLeft=videoCoachCallsLeft();
-    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header"><i data-lucide="video" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> WURF-ANALYSE</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${newLeft} Video-Analysen heute verbleibend</div></div>`; window.refreshIcons?.();
-    btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ERNEUT ANALYSIEREN`; window.refreshIcons?.(); btn.disabled=newLeft<=0;
+    outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><div class="coach-header"><i data-lucide="video" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${t('wurf_analyse_titel')}</div>${formatCoachText(text)}<div class="coach-limit" style="margin-top:8px">${t('video_analysen_remaining').replace('{n}',newLeft)}</div></div>`; window.refreshIcons?.();
+    btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('erneut_analysieren')}`; window.refreshIcons?.(); btn.disabled=newLeft<=0;
     if(window.dartDB&&analyseSelectedPlayer){ const p=state.allPlayers.find(x=>x.id===analyseSelectedPlayer); await window.dartDB.saveCoachAnalysis({playerId:analyseSelectedPlayer,playerName:playerName||p?.name||"Unbekannt",type:"video",text,frameCount:frames.length}); loadCoachHistoryAnalyseTab(analyseSelectedPlayer); }
-  }catch(err){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">Fehler: ${err.message}</div>`; btn.disabled=false; btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF ANALYSIEREN`; window.refreshIcons?.(); }
+  }catch(err){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px;border-color:var(--dart-danger)">${t('fehler_prefix')}${err.message}</div>`; btn.disabled=false; btn.innerHTML=`<i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('wurf_analysieren')}`; window.refreshIcons?.(); }
 });
 
 // ── Voice Settings ────────────────────────────────────────────────
@@ -1066,13 +1066,13 @@ function saveVoices(voices){ voicesCache=voices; localStorage.setItem("dart_voic
 function setVoiceSyncStatus(msg){ const el=document.getElementById("voice-sync-status"); if(el) el.textContent=msg; }
 
 async function syncVoicesFromFirestore(){
-  if(!window.dartDB){ setVoiceSyncStatus("⚠ Datenbank nicht bereit"); return; }
+  if(!window.dartDB){ setVoiceSyncStatus("⚠ "+t('db_nicht_bereit')); return; }
   setVoiceSyncStatus("⏳ Sync…");
   try{
     const remote=await window.dartDB.loadGlobalVoices();
     if(remote&&remote.length){ voicesCache=remote; localStorage.setItem("dart_voices",JSON.stringify(remote)); renderVoiceSelector(); setVoiceSyncStatus("✓ Synced · "+remote.length+" Stimmen"); }
     else { const local=loadVoices(); if(local.some(v=>!v.builtin)){ saveVoices(local); setVoiceSyncStatus("✓ "+local.length+" Stimmen hochgeladen"); } else { setVoiceSyncStatus("✓ Nur Basis-Stimmen"); } }
-  }catch(e){ console.warn("syncVoicesFromFirestore:",e); setVoiceSyncStatus("✗ Fehler: "+e.message); }
+  }catch(e){ console.warn("syncVoicesFromFirestore:",e); setVoiceSyncStatus("✗ "+t('fehler_prefix')+e.message); }
 }
 
 window.addEventListener("dbReady",async()=>{
@@ -1117,13 +1117,13 @@ document.getElementById("btn-voice-new-test-gameon").addEventListener("click",()
 document.getElementById("btn-voice-new-test-bust").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_bust","Bust."); });
 document.getElementById("btn-voice-new-add").addEventListener("click",()=>{
   const name=document.getElementById("voice-new-name").value.trim(), id=document.getElementById("voice-new-id").value.trim(), errEl=document.getElementById("voice-new-error");
-  if(!name||!id){ errEl.textContent="Name und Voice ID sind Pflichtfelder."; return; }
+  if(!name||!id){ errEl.textContent=t('voice_pflichtfelder'); return; }
   const vs=loadVoices();
-  if(vs.filter(v=>!v.builtin).length>=10){ errEl.textContent="Maximum 10 eigene Stimmen erreicht."; return; }
-  if(vs.some(v=>v.id===id)){ errEl.textContent="Diese Voice ID ist bereits in der Liste."; return; }
+  if(vs.filter(v=>!v.builtin).length>=10){ errEl.textContent=t('voice_max_stimmen'); return; }
+  if(vs.some(v=>v.id===id)){ errEl.textContent=t('voice_id_exists'); return; }
   errEl.textContent=""; vs.push({id,name,builtin:false}); saveVoices(vs);
   document.getElementById("voice-new-name").value=""; document.getElementById("voice-new-id").value="";
-  renderVoiceSelector(); showVoiceConfirm("✓ \""+name+"\" wurde hinzugefügt");
+  renderVoiceSelector(); showVoiceConfirm(t('voice_hinzugefuegt').replace('{name}',name));
 });
 document.getElementById("btn-voice-sync").addEventListener("click",()=>syncVoicesFromFirestore());
 
