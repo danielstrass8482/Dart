@@ -398,6 +398,11 @@ export function processX01Hit(hit, svgX=null, svgY=null){
     state.x01.winner=state.x01.current;
     state.x01.checkoutHits[state.x01.current]++;
     state.x01.turnScores[state.x01.current].push(state.x01.throws.reduce((s,t)=>s+t.score,0));
+    if(localStorage.getItem("dart_slang_enabled")==="true"){
+      if(hit.label==="D1") queueAudio("Madhouse!","el_slang_madhouse_");
+      else if(hit.label==="D20") queueAudio("Double Top! Game Shot!","el_slang_double_top_game_shot_");
+      else queueAudio("Game Shot!","el_slang_game_shot_");
+    }
     soundApplause();
     handleLegWin(state.x01.current);
     renderX01();
