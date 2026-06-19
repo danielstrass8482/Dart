@@ -651,98 +651,101 @@ export function showWinner(name,round){
     if(!humanStats.length){ sumEl.style.display="none"; }
     else {
       const isMulti=humanStats.length>1;
+      const gold="#D4AF37";
+      const muted="var(--dart-text-muted)";
+
+      // Segment frequencies per player
+      const segFreqs=humanStats.map(s=>{
+        const freq={};
+        s.dots.forEach(d=>{
+          if(d.miss) return;
+          const n=parseInt(d.label?.replace(/^[TD]/,""))||0;
+          if(n>0) freq[n]=(freq[n]||0)+1;
+        });
+        return freq;
+      });
+
+      // Top 10 segments sorted by combined hits across all players
+      const allSegNums=[...new Set(segFreqs.flatMap(f=>Object.keys(f).map(Number)))];
+      const allSegs=allSegNums.sort((x,y)=>{
+        const tX=segFreqs.reduce((sum,f)=>sum+(f[x]||0),0);
+        const tY=segFreqs.reduce((sum,f)=>sum+(f[y]||0),0);
+        return tY-tX;
+      }).slice(0,10);
+
+      // Before/After data per player
+      const baData=humanStats.map(s=>{
+        if(!s.pid||!s.playerObj?.stats) return null;
+        const pObj=s.playerObj;
+        const gb=pObj.stats.games||0;
+        if(gb<1) return null;
+        const ab=pObj.stats.avgPerTurn||0;
+        const turns=state.x01.turnScores[s.idx]||[];
+        if(!turns.length) return null;
+        const cur=Math.round(turns.reduce((acc,v)=>acc+v,0)/turns.length*10)/10;
+        const aa=Math.round((ab*gb+cur)/(gb+1)*10)/10;
+        const delta=Math.abs(Math.round((aa-ab)*10)/10);
+        return {ab,aa,gb,delta,improved:aa>ab,declined:aa<ab};
+      });
+
+      // Gold for the better value, muted for worse
+      const cmpHi=(myVal,otherVal)=>myVal===otherVal?"#aaa":myVal>otherVal?gold:muted;
+
       const cols=isMulti?"1fr 1fr":"1fr";
-
-      // Helper to color-highlight better stat
-      const better=(a,b,higherIsBetter=true)=>{
-        if(a===b) return ["#aaa","#aaa"];
-        const aWins=higherIsBetter?a>b:a<b;
-        return [aWins?"#43a047":"#aaa", aWins?"#aaa":"#43a047"];
-      };
-
       let html=`<div style="display:grid;grid-template-columns:${cols};gap:12px;margin-bottom:16px">`;
-      const metricColors={avg:[],best:[],coPct:[],f9:[]};
-      if(isMulti&&humanStats.length===2){
-        const [a,b]=humanStats;
-        metricColors.avg=better(a.avg,b.avg);
-        metricColors.best=better(a.best,b.best);
-        metricColors.coPct=better(a.coPct,b.coPct);
-        metricColors.f9=better(a.f9??0,b.f9??0);
-      }
 
       humanStats.forEach((s,si)=>{
-        const aC=isMulti&&humanStats.length===2?metricColors.avg[si]:"#fff";
-        const bC=isMulti&&humanStats.length===2?metricColors.best[si]:"#fff";
-        const cC=isMulti&&humanStats.length===2?metricColors.coPct[si]:"#fff";
-        const fC=isMulti&&humanStats.length===2?metricColors.f9[si]:"#fff";
-        html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;border:${s.isWinner?"2px solid #e8c44a":"1px solid rgba(255,255,255,0.12)"};text-align:left">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-            ${s.photoUrl
-              ?`<img src="${s.photoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-              :`<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--dart-text);flex-shrink:0">${s.displayName.slice(0,2).toUpperCase()}</div>`
-            }
-            <div style="min-width:0">
-              <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dart-text)">${s.displayName}</div>
-              ${s.isWinner?`<div style="font-size:9px;color:var(--dart-gold);letter-spacing:1px">WINNER</div>`:""}
-            </div>
+        const ba=baData[si]||null;
+        const other=(isMulti&&humanStats.length===2)?humanStats[1-si]:null;
+        const avgC=other?cmpHi(s.avg,other.avg):"#fff";
+        const bestC=other?cmpHi(s.best,other.best):"#fff";
+        const coC=other?cmpHi(s.coPct,other.coPct):"#fff";
+        const f9C=other?cmpHi(s.f9??0,other.f9??0):"#fff";
+
+        const segRows=allSegs.map(seg=>{
+          const mine=segFreqs[si][seg]||0;
+          const theirs=other?(segFreqs[1-si][seg]||0):-1;
+          const isBetter=theirs>=0&&mine>theirs;
+          return `<tr><td style="color:var(--dart-text-sec);padding:2px 0">${seg}</td><td style="text-align:right;font-weight:${isBetter?700:400};color:${isBetter?gold:"#aaa"}">${mine}</td></tr>`;
+        }).join("");
+
+        const baHtml=ba?`<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:9px;color:${muted};letter-spacing:1px;margin-bottom:6px">${t('gesamtstatistik').toUpperCase()}</div>
+          <div style="display:flex;align-items:center;justify-content:space-around">
+            <div style="text-align:center"><div style="font-size:9px;color:${muted}">${t('vorher')}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dart-text-muted)">${ba.ab}</div><div style="font-size:9px;color:${muted}">${ba.gb} ${t('spiele_label')}</div></div>
+            <div style="font-size:16px;color:${gold}">→</div>
+            <div style="text-align:center"><div style="font-size:9px;color:${muted}">${t('jetzt')}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${ba.improved?"#43a047":ba.declined?"#e53935":"#fff"}">${ba.aa}</div><div style="font-size:9px;color:${muted}">${ba.gb+1} ${t('spiele_label')}</div></div>
           </div>
-          <svg id="winner-scatter-${si}" style="width:100%;aspect-ratio:1;max-width:160px;display:block;margin:0 auto 8px"></svg>
+          <div style="margin-top:4px;font-size:10px;color:${ba.improved?"#43a047":ba.declined?"#e53935":"#888"}">${ba.improved?t('verbesserung'):ba.declined?t('rueckgang'):t('unveraendert')} (${ba.delta})</div>
+        </div>`:"";
+
+        html+=`<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:${s.isWinner?"2px solid "+gold:"1px solid rgba(255,255,255,0.12)"};display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center">
+            ${s.photoUrl?`<img src="${s.photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:${s.isWinner?"2px solid "+gold:"2px solid rgba(255,255,255,0.15)"}">`:`<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--dart-text);border:${s.isWinner?"2px solid "+gold:"2px solid rgba(255,255,255,0.1)"}">${s.displayName.slice(0,2).toUpperCase()}</div>`}
+            <div style="font-weight:700;font-size:13px;color:var(--dart-text)">${s.displayName}</div>
+            ${s.isWinner?`<div style="font-size:9px;font-weight:700;color:${gold};letter-spacing:2px;background:rgba(212,175,55,0.15);padding:2px 10px;border-radius:8px">WINNER</div>`:`<div style="height:17px"></div>`}
+          </div>
+          <svg id="winner-scatter-${si}" style="width:100%;aspect-ratio:1;display:block"></svg>
           <table style="width:100%;font-size:11px;border-collapse:collapse">
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Avg</td><td style="text-align:right;font-weight:600;color:${aC}">${s.avg}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;font-weight:600;color:${fC}">${s.f9??'—'}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Highscore</td><td style="text-align:right;font-weight:600;color:${bC}">${s.best}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">CO%</td><td style="text-align:right;font-weight:600;color:${cC}">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Avg</td><td style="text-align:right;font-weight:700;color:${avgC}">${s.avg}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;font-weight:700;color:${f9C}">${s.f9??'—'}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Highscore</td><td style="text-align:right;font-weight:700;color:${bestC}">${s.best}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">CO%</td><td style="text-align:right;font-weight:700;color:${coC}">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
             ${s.topFields?`<tr><td style="color:var(--dart-text-sec);padding:2px 0">Top</td><td style="text-align:right;color:#aaa;font-size:10px">${s.topFields}</td></tr>`:""}
           </table>
+          ${baHtml}
+          ${allSegs.length?`<div><div style="font-size:9px;color:${muted};letter-spacing:1px;margin-bottom:4px">SEGMENTS</div><table style="width:100%;font-size:11px;border-collapse:collapse">${segRows}</table></div>`:""}
         </div>`;
       });
+
       html+="</div>";
-
-      // Before/After overall stats
-      humanStats.forEach(s=>{
-        if(!s.pid) return;
-        const pObj=s.playerObj;
-        if(!pObj?.stats) return;
-        const gamesBefore=pObj.stats.games||0;
-        if(gamesBefore<1) return;
-        const avgBefore=pObj.stats.avgPerTurn||0;
-        const turns=state.x01.turnScores[s.idx]||[];
-        if(!turns.length) return;
-        const currentGameAvg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
-        const avgAfter=Math.round((avgBefore*gamesBefore+currentGameAvg)/(gamesBefore+1)*10)/10;
-        const delta=Math.abs(Math.round((avgAfter-avgBefore)*10)/10);
-        const improved=avgAfter>avgBefore;
-        const declined=avgAfter<avgBefore;
-        const statusText=improved?t('verbesserung'):declined?t('rueckgang'):t('unveraendert');
-        const statusColor=improved?"#43a047":declined?"#e53935":"#888";
-        const afterColor=improved?"#43a047":declined?"#e53935":"#fff";
-        html+=`<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;margin-bottom:12px;text-align:left">
-          <div style="font-size:11px;color:var(--dart-text-muted);letter-spacing:1px;margin-bottom:10px">${humanStats.length>1?s.displayName+" — ":""}${t('gesamtstatistik')}</div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
-            <div style="text-align:center">
-              <div style="font-size:10px;color:var(--dart-text-muted)">${t('vorher')}</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:var(--dart-text-muted)">${avgBefore}</div>
-              <div style="font-size:10px;color:var(--dart-text-muted)">${gamesBefore} ${t('spiele_label')}</div>
-            </div>
-            <div style="font-size:22px;color:var(--dart-gold)">→</div>
-            <div style="text-align:center">
-              <div style="font-size:10px;color:var(--dart-text-muted)">${t('jetzt')}</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:600;color:${afterColor}">${avgAfter}</div>
-              <div style="font-size:10px;color:var(--dart-text-muted)">${gamesBefore+1} ${t('spiele_label')}</div>
-            </div>
-          </div>
-          <div style="text-align:center;margin-top:8px;font-size:12px;color:${statusColor}">${statusText} (${delta})</div>
-        </div>`;
-      });
-
       sumEl.innerHTML=html;
       sumEl.style.display="block";
 
-      // Draw scatter boards after DOM update
       requestAnimationFrame(()=>{
         humanStats.forEach((s,si)=>{
           const svgEl=document.getElementById(`winner-scatter-${si}`);
-          if(svgEl&&s.dots.length) drawMiniBoard(svgEl, s.dots);
+          if(svgEl&&s.dots.length) drawMiniBoard(svgEl,s.dots);
         });
       });
     }
