@@ -686,16 +686,14 @@ export function showWinner(name,round){
         return tY-tX;
       }).slice(0,5);
 
-      // Before/After data per player
+      // Before/After data per player — use s.avg (all-legs combined) as current game avg
       const baData=humanStats.map(s=>{
         if(!s.pid||!s.playerObj?.stats) return null;
         const pObj=s.playerObj;
         const gb=pObj.stats.games||0;
         if(gb<1) return null;
         const ab=pObj.stats.avgPerTurn||0;
-        const turns=state.x01.turnScores[s.idx]||[];
-        if(!turns.length) return null;
-        const cur=Math.round(turns.reduce((acc,v)=>acc+v,0)/turns.length*10)/10;
+        const cur=s.avg;
         const aa=Math.round((ab*gb+cur)/(gb+1)*10)/10;
         const delta=Math.abs(Math.round((aa-ab)*10)/10);
         return {ab,aa,gb,delta,improved:aa>ab,declined:aa<ab};
@@ -719,7 +717,8 @@ export function showWinner(name,round){
           const mine=segFreqs[si][seg]||0;
           const theirs=other?(segFreqs[1-si][seg]||0):-1;
           const isBetter=theirs>=0&&mine>theirs;
-          return `<tr><td style="color:var(--dart-text-sec);padding:2px 0">${seg}</td><td style="text-align:right;font-weight:${isBetter?700:400};color:${isBetter?gold:"#aaa"}">${mine}</td></tr>`;
+          const isWorse=theirs>=0&&mine<theirs;
+          return `<tr><td style="color:var(--dart-text-sec);padding:2px 0;font-size:11px">${seg}</td><td style="text-align:right;font-weight:${isBetter?700:400};color:${isBetter?gold:isWorse?"var(--dart-text-muted)":"var(--dart-text-sec)"};font-size:11px">${mine}</td></tr>`;
         }).join("");
 
         const baHtml=ba?`<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
@@ -738,7 +737,7 @@ export function showWinner(name,round){
             <div style="font-weight:700;font-size:13px;color:var(--dart-text)">${s.displayName}</div>
             ${s.isWinner?`<div style="font-size:9px;font-weight:700;color:${gold};letter-spacing:2px;background:rgba(212,175,55,0.15);padding:2px 10px;border-radius:8px">WINNER</div>`:`<div style="height:17px"></div>`}
           </div>
-          <svg id="winner-scatter-${si}" style="width:90px;height:90px;display:block;margin:0 auto;flex-shrink:0"></svg>
+          <svg id="winner-scatter-${si}" style="width:140px;height:140px;display:block;margin:0 auto;flex-shrink:0"></svg>
           <table style="width:100%;font-size:11px;border-collapse:collapse">
             <tr><td style="color:var(--dart-text-sec);padding:2px 0">Avg</td><td style="text-align:right;font-weight:700;color:${avgC}">${s.avg}</td></tr>
             <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;font-weight:700;color:${f9C}">${s.f9??'—'}</td></tr>
@@ -758,7 +757,7 @@ export function showWinner(name,round){
       requestAnimationFrame(()=>{
         humanStats.forEach((s,si)=>{
           const svgEl=document.getElementById(`winner-scatter-${si}`);
-          if(svgEl&&s.dots.length) drawMiniBoard(svgEl,s.dots);
+          if(svgEl) drawMiniBoard(svgEl,s.dots,12);
         });
       });
     }

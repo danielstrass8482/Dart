@@ -345,7 +345,7 @@ export function svgCoords(svgEl,e){
  * @param {SVGElement} svgEl
  * @param {Array<{x:number,y:number,l:string}>} dots
  */
-export function drawMiniBoard(svgEl, dots){
+export function drawMiniBoard(svgEl, dots, dotR=5){
   const ns="http://www.w3.org/2000/svg";
   svgEl.innerHTML="";
   // Use same coordinate space as game board (buildBoard) so stored SVG coords align
@@ -396,9 +396,9 @@ export function drawMiniBoard(svgEl, dots){
     const dist=Math.sqrt((px-cx)*(px-cx)+(py-cy)*(py-cy));
     const isMiss=dist>R.board;
     svgEl.appendChild(mkEl("circle",{
-      cx:px, cy:py, r:"5",
-      fill: isMiss?"rgba(220,50,50,0.4)":"rgba(244,215,126,0.4)",
-      stroke: isMiss?"rgba(200,30,30,0.8)":"rgba(200,160,40,0.8)",
+      cx:px, cy:py, r:String(dotR),
+      fill: isMiss?"rgba(220,50,50,0.5)":"rgba(244,215,126,0.55)",
+      stroke: isMiss?"rgba(200,30,30,0.9)":"rgba(200,160,40,0.9)",
       "stroke-width":"0.8"
     }));
   });
