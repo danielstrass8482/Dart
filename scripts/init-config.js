@@ -7,6 +7,7 @@ const db = getFirestore();
 async function initConfig(){
   await db.collection('dart_config').doc('limits').set({
     coachEnabled: true,
+    ttsEnabled: true,
     videoEnabled: true,
     emergencyStop: false,
     emergencyReason: null,
