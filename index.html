@@ -18,8 +18,8 @@
 <!-- Video Session Host Modal -->
 <div class="vidsession-backdrop" id="vidsession-backdrop">
   <div class="vidsession-modal">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--dart-gold);margin-bottom:4px"><i data-lucide="smartphone" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> MIT HANDY AUFNEHMEN</div>
-    <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:12px">QR-Code scannen oder Code eingeben</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--dart-gold);margin-bottom:4px"><i data-lucide="smartphone" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="mit_handy_aufnehmen">MIT HANDY AUFNEHMEN</span></div>
+    <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:12px" data-i18n="qr_hint">QR-Code scannen oder Code eingeben</div>
     <img id="vidsession-qr-img" class="vidsession-qr" src="" alt="QR Code">
     <div class="vidsession-code" id="vidsession-code-display"></div>
     <div style="font-size:11px;color:var(--dart-text-muted);word-break:break-all;margin-bottom:8px" id="vidsession-url-display"></div>
@@ -44,18 +44,18 @@
       </div>
     </div>
     <div class="health-row">
-      <label><i data-lucide="dumbbell" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> KÖRPERLICHE BELASTUNG</label>
+      <label><i data-lucide="dumbbell" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="koerperliche_belastung">KÖRPERLICHE BELASTUNG</span></label>
       <div class="health-chips" id="hc-exertion">
-        <span class="health-chip" data-val="kaum">Kaum</span>
-        <span class="health-chip" data-val="leicht">Leicht</span>
+        <span class="health-chip" data-val="kaum" data-i18n="health_kaum">Kaum</span>
+        <span class="health-chip" data-val="leicht" data-i18n="health_leicht">Leicht</span>
         <span class="health-chip" data-val="mittel" data-i18n="health_mittel">Mittel</span>
-        <span class="health-chip" data-val="viel">Viel</span>
+        <span class="health-chip" data-val="viel" data-i18n="health_viel">Viel</span>
       </div>
     </div>
     <div class="health-row">
-      <label><i data-lucide="heart" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> WIE FÜHLST DU DICH</label>
+      <label><i data-lucide="heart" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wie_fuehlst_du_dich">WIE FÜHLST DU DICH</span></label>
       <div class="health-chips" id="hc-feeling">
-        <span class="health-chip" data-val="1">😴 Müde</span>
+        <span class="health-chip" data-val="1" data-i18n="health_muede">😴 Müde</span>
         <span class="health-chip" data-val="2">😐 Ok</span>
         <span class="health-chip" data-val="3">😊 Gut</span>
         <span class="health-chip" data-val="4">🌟 Top</span>
@@ -88,37 +88,37 @@
     </div>
 
     <div style="display:flex;border-bottom:1px solid var(--dart-border);margin-bottom:20px">
-      <button class="auth-tab-btn active" data-auth-tab="login">ANMELDEN</button>
-      <button class="auth-tab-btn" data-auth-tab="register">REGISTRIEREN</button>
+      <button class="auth-tab-btn active" data-auth-tab="login" data-i18n="anmelden">ANMELDEN</button>
+      <button class="auth-tab-btn" data-auth-tab="register" data-i18n="registrieren">REGISTRIEREN</button>
     </div>
 
     <!-- LOGIN -->
     <div id="auth-login">
       <input class="auth-input" id="login-email" type="email" placeholder="Email" autocomplete="email">
-      <input class="auth-input" id="login-password" type="password" placeholder="Passwort" autocomplete="current-password">
+      <input class="auth-input" id="login-password" type="password" placeholder="Passwort" data-i18n-placeholder="passwort_placeholder" autocomplete="current-password">
       <div class="auth-error" id="login-error"></div>
-      <button class="auth-btn-primary" id="btn-email-login">ANMELDEN</button>
+      <button class="auth-btn-primary" id="btn-email-login" data-i18n="anmelden">ANMELDEN</button>
       <button class="auth-btn-google" id="btn-google-login">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px">
-        MIT GOOGLE ANMELDEN
+        <span data-i18n="mit_google_anmelden">MIT GOOGLE ANMELDEN</span>
       </button>
       <div style="display:flex;justify-content:space-between;margin-top:4px">
-        <button class="auth-link" id="btn-forgot-password">Passwort vergessen?</button>
-        <button class="auth-link" id="btn-guest">Als Gast spielen</button>
+        <button class="auth-link" id="btn-forgot-password" data-i18n="passwort_vergessen">Passwort vergessen?</button>
+        <button class="auth-link" id="btn-guest" data-i18n="als_gast">Als Gast spielen</button>
       </div>
     </div>
 
     <!-- REGISTER -->
     <div id="auth-register" style="display:none">
-      <input class="auth-input" id="reg-name" type="text" placeholder="Dein Name" autocomplete="name">
+      <input class="auth-input" id="reg-name" type="text" placeholder="Dein Name" data-i18n-placeholder="dein_name_placeholder" autocomplete="name">
       <input class="auth-input" id="reg-email" type="email" placeholder="Email" autocomplete="email">
-      <input class="auth-input" id="reg-password" type="password" placeholder="Passwort (min. 6 Zeichen)" autocomplete="new-password">
-      <input class="auth-input" id="reg-password2" type="password" placeholder="Passwort wiederholen" autocomplete="new-password">
+      <input class="auth-input" id="reg-password" type="password" placeholder="Passwort (min. 6 Zeichen)" data-i18n-placeholder="passwort_min_placeholder" autocomplete="new-password">
+      <input class="auth-input" id="reg-password2" type="password" placeholder="Passwort wiederholen" data-i18n-placeholder="passwort_wdh_placeholder" autocomplete="new-password">
       <div class="auth-error" id="reg-error"></div>
-      <button class="auth-btn-primary" id="btn-email-register">REGISTRIEREN</button>
+      <button class="auth-btn-primary" id="btn-email-register" data-i18n="registrieren">REGISTRIEREN</button>
       <button class="auth-btn-google" id="btn-google-register">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px">
-        MIT GOOGLE REGISTRIEREN
+        <span data-i18n="mit_google_registrieren">MIT GOOGLE REGISTRIEREN</span>
       </button>
     </div>
   </div>
@@ -195,7 +195,7 @@
     </div>
     <!-- Highscore rounds selector -->
     <div id="rounds-selector" style="display:none">
-      <label class="field-label">ANZAHL RUNDEN</label>
+      <label class="field-label" data-i18n="anzahl_runden">ANZAHL RUNDEN</label>
       <div class="btn-group" id="rounds-group">
         <button class="btn-toggle" data-value="5">5</button>
         <button class="btn-toggle active" data-value="8">8</button>
@@ -365,26 +365,26 @@
     <div style="flex:1;padding:16px;overflow-y:auto;background:var(--dart-bg-card)">
       <div id="analyse-player-bar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
       <div class="stats-section-title"><i data-lucide="trending-up" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="erweiterte_stats">ERWEITERTE STATISTIKEN</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
-      <div class="stats-section-title" style="display:flex;align-items:center"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE <button class="help-btn" onclick="showHelp('help_coach_analyse_title','help_coach_analyse_text')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
-      <button class="coach-btn" id="btn-coach-analyse-tab" disabled><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> COACH-ANALYSE STARTEN <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
+      <div class="stats-section-title" style="display:flex;align-items:center"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="coach_analyse_titel">COACH-ANALYSE</span> <button class="help-btn" onclick="showHelp('help_coach_analyse_title','help_coach_analyse_text')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
+      <button class="coach-btn" id="btn-coach-analyse-tab" disabled><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="coach_analyse_starten">COACH-ANALYSE STARTEN</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
       <div id="coach-output-analyse-tab"></div>
       <div class="coach-limit" id="coach-limit-analyse-tab"></div>
       <div id="coach-history-analyse-tab" style="margin-top:12px"></div>
-      <div class="stats-section-title" style="margin-top:16px;display:flex;align-items:center"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF-ANALYSE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;margin-left:6px">PREMIUM</span> <button class="help-btn" onclick="showHelp('help_video_analyse_title','help_video_analyse_text')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
+      <div class="stats-section-title" style="margin-top:16px;display:flex;align-items:center"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wurf_analyse_titel">WURF-ANALYSE</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;margin-left:6px">PREMIUM</span> <button class="help-btn" onclick="showHelp('help_video_analyse_title','help_video_analyse_text')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
       <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:14px">
-        <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
+        <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px" data-i18n="video_hint">Kurzes Video (3–5 Sek.) — von der Seite, Hüfthöhe.</div>
         <input type="file" id="video-upload-analyse-tab" accept="video/*" style="display:none">
-        <button id="btn-video-phone-analyse" style="width:100%;padding:11px;border:2px solid var(--dart-gold);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-gold);font-weight:700;margin-bottom:8px"><i data-lucide="smartphone" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> MIT HANDY AUFNEHMEN</button>
+        <button id="btn-video-phone-analyse" style="width:100%;padding:11px;border:2px solid var(--dart-gold);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-gold);font-weight:700;margin-bottom:8px"><i data-lucide="smartphone" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="mit_handy_aufnehmen">MIT HANDY AUFNEHMEN</span></button>
         <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid var(--dart-danger);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-danger)"><i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> TABLET-KAMERA</button>
-          <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed var(--dart-border);border-radius:8px;background:var(--dart-bg-card);cursor:pointer;font-size:13px;color:var(--dart-text-muted)"><i data-lucide="upload" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> HOCHLADEN</button>
+          <button id="btn-video-record-analyse" style="flex:1;padding:10px;border:2px solid var(--dart-danger);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-danger)"><i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="tablet_kamera">TABLET-KAMERA</span></button>
+          <button id="btn-video-select-analyse-tab" style="flex:1;padding:10px;border:2px dashed var(--dart-border);border-radius:8px;background:var(--dart-bg-card);cursor:pointer;font-size:13px;color:var(--dart-text-muted)"><i data-lucide="upload" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="hochladen">HOCHLADEN</span></button>
         </div>
         <button id="btn-video-stop-analyse" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:var(--dart-danger);color:var(--dart-text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px"><i data-lucide="square" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> STOP</button>
         <div id="video-preview-wrap-analyse-tab" style="display:none;margin-bottom:8px">
           <video id="video-preview-analyse-tab" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
           <div id="video-frames-info-analyse-tab" style="font-size:11px;color:var(--dart-text-sec);margin-top:4px;text-align:center"></div>
         </div>
-        <button id="btn-video-analyze-analyse-tab" class="coach-btn" style="display:none;font-size:16px;padding:10px"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF ANALYSIEREN</button>
+        <button id="btn-video-analyze-analyse-tab" class="coach-btn" style="display:none;font-size:16px;padding:10px"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wurf_analysieren_btn">WURF ANALYSIEREN</span></button>
         <div id="coach-output-video-analyse-tab"></div>
       </div>
     </div>
@@ -396,7 +396,7 @@
   <div style="flex:1;padding:16px;overflow-y:auto;background:var(--dart-bg-card)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;display:flex;align-items:center;gap:6px"><i data-lucide="trophy" style="width:20px;height:20px;stroke-width:2;vertical-align:middle"></i> TURNIERE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span><button class="help-btn" onclick="showHelp('help_turnier_title','help_turnier_text')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
-      <button onclick="openTournamentSetup()" style="padding:9px 16px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer"><i data-lucide="plus" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ERSTELLEN</button>
+      <button onclick="openTournamentSetup()" style="padding:9px 16px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer"><i data-lucide="plus" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="erstellen_btn">ERSTELLEN</span></button>
     </div>
     <div id="tournament-list"><div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:20px" data-i18n="noch_keine_turniere">Noch keine Turniere</div></div>
   </div>
@@ -423,15 +423,15 @@
       <div class="profil-section-title"><i data-lucide="user" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="account">ACCOUNT</span></div>
       <div id="profil-account-info" style="margin-bottom:12px"></div>
       <div id="profil-upgrade-inline" style="display:none">
-        <div style="font-size:12px;color:var(--dart-text-muted);margin-bottom:10px">Spieldaten gehen verloren wenn du dich abmeldest. Jetzt Account erstellen:</div>
-        <input class="auth-input" id="profil-upgrade-name" type="text" placeholder="Dein Name">
+        <div style="font-size:12px;color:var(--dart-text-muted);margin-bottom:10px" data-i18n="spieldaten_warnung">Spieldaten gehen verloren wenn du dich abmeldest. Jetzt Account erstellen:</div>
+        <input class="auth-input" id="profil-upgrade-name" type="text" placeholder="Dein Name" data-i18n-placeholder="dein_name_placeholder">
         <input class="auth-input" id="profil-upgrade-email" type="email" placeholder="Email">
-        <input class="auth-input" id="profil-upgrade-password" type="password" placeholder="Passwort (min. 6 Zeichen)">
+        <input class="auth-input" id="profil-upgrade-password" type="password" placeholder="Passwort (min. 6 Zeichen)" data-i18n-placeholder="passwort_min_placeholder">
         <div class="auth-error" id="profil-upgrade-error"></div>
-        <button id="btn-profil-upgrade" class="auth-btn-primary" style="font-size:15px">ACCOUNT ERSTELLEN</button>
+        <button id="btn-profil-upgrade" class="auth-btn-primary" style="font-size:15px" data-i18n="account_erstellen">ACCOUNT ERSTELLEN</button>
         <button id="btn-profil-google" class="auth-btn-google" style="margin-top:6px">
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:16px">
-          MIT GOOGLE UPGRADEN
+          <span data-i18n="mit_google_upgraden">MIT GOOGLE UPGRADEN</span>
         </button>
       </div>
       <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-text-muted);font-size:14px;cursor:pointer;margin-bottom:8px"><i data-lucide="book-open" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="tutorial">Tutorial wiederholen</span></button>
@@ -575,8 +575,8 @@
     <div id="online-room-display" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--dart-text);letter-spacing:8px;margin-bottom:8px"></div>
     <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px" data-i18n="raum_code_hint">Teile diesen Code mit deinem Gegner</div>
     <div id="online-players-list" style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:16px;width:100%;max-width:320px;margin-bottom:20px"></div>
-    <div id="online-wait-status" style="font-size:13px;color:var(--dart-text-sec);margin-bottom:16px">Warte auf Mitspieler…</div>
-    <button id="btn-start-online" class="btn-start" style="display:none;width:320px">SPIEL STARTEN</button>
+    <div id="online-wait-status" style="font-size:13px;color:var(--dart-text-sec);margin-bottom:16px" data-i18n="warte_mitspieler">Warte auf Mitspieler…</div>
+    <button id="btn-start-online" class="btn-start" style="display:none;width:320px" data-i18n="spiel_starten">SPIEL STARTEN</button>
     <button id="btn-cancel-room" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:10px" data-i18n="abbrechen">Abbrechen</button>
   </div>
 </div>
@@ -792,10 +792,10 @@
     <!-- Text Coach with player selector -->
     <div style="margin-top:16px">
       <div id="coach-player-selector" style="display:none;margin-bottom:10px">
-        <div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:6px">ANALYSE FÜR</div>
+        <div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:6px" data-i18n="analyse_fuer">ANALYSE FÜR</div>
         <div id="coach-player-btns" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
       </div>
-      <button class="coach-btn" id="btn-coach-winner"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> STATISTIK-ANALYSE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
+      <button class="coach-btn" id="btn-coach-winner"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="statistik_analyse">STATISTIK-ANALYSE</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
       <div id="coach-output-winner"></div>
       <div class="coach-limit" id="coach-limit-winner"></div>
     </div>
@@ -810,18 +810,18 @@
 
     <!-- Video Coach -->
     <div style="margin-top:12px;background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:14px;text-align:left">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF-ANALYSE (VIDEO) <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
-      <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">Kurzes Video (3-5 Sek.) — von der Seite, Hüfthöhe.</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wurf_analyse_video">WURF-ANALYSE (VIDEO)</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
+      <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px" data-i18n="video_hint">Kurzes Video (3–5 Sek.) — von der Seite, Hüfthöhe.</div>
       <input type="file" id="video-upload" accept="video/*" style="display:none">
       <button id="btn-video-phone-winner" style="width:100%;padding:11px;border:2px solid var(--dart-gold);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-gold);font-weight:700;margin-bottom:8px">
-        <i data-lucide="smartphone" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> MIT HANDY AUFNEHMEN
+        <i data-lucide="smartphone" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="mit_handy_aufnehmen">MIT HANDY AUFNEHMEN</span>
       </button>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <button id="btn-video-record-winner" style="flex:1;padding:10px;border:2px solid var(--dart-danger);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-danger)">
-          <i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> TABLET-KAMERA
+          <i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="tablet_kamera">TABLET-KAMERA</span>
         </button>
         <button id="btn-video-select" style="flex:1;padding:10px;border:2px dashed var(--dart-border);border-radius:8px;background:var(--dart-bg-card);cursor:pointer;font-size:13px;color:var(--dart-text-muted)">
-          <i data-lucide="upload" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> HOCHLADEN
+          <i data-lucide="upload" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="hochladen">HOCHLADEN</span>
         </button>
       </div>
       <button id="btn-video-stop-winner" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:var(--dart-danger);color:var(--dart-text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">
@@ -832,7 +832,7 @@
         <div id="video-frames-info" style="font-size:11px;color:var(--dart-text-sec);margin-top:4px;text-align:center"></div>
       </div>
       <button id="btn-video-analyze" class="coach-btn" style="display:none;font-size:16px;padding:10px">
-        <i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> WURF ANALYSIEREN
+        <i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wurf_analysieren_btn">WURF ANALYSIEREN</span>
       </button>
       <div id="coach-output-video"></div>
     </div>
