@@ -378,11 +378,14 @@ export function drawMiniBoard(svgEl, dots){
   svgEl.appendChild(mkEl("circle",{cx,cy,r:R.bull25,fill:"#1E9B55"}));
   svgEl.appendChild(mkEl("circle",{cx,cy,r:R.bull,  fill:"#C8362B"}));
 
-  // Detect old coordinate system (CX=265 from dart.html) and translate to current CX=210
+  // Translate old coordinate system (CX=265, dart.html) to current CX=210.
+  // New data is tagged with v:2 — no translation needed.
+  // For legacy data without v:2, detect by checking max coordinate: values > 440
+  // exceed the new viewBox and indicate the old 530×530 system.
   const OLD_CX=265, OLD_CY=265;
   const valid=dots.filter(s=>s.x!=null&&s.y!=null&&!isNaN(s.x)&&!isNaN(s.y));
-  const meanX=valid.length?valid.reduce((a,d)=>a+d.x,0)/valid.length:cx;
-  const needsTranslate=meanX>235;
+  const hasVersionFlag=valid.length>0&&valid[0].v===2;
+  const needsTranslate=!hasVersionFlag&&valid.some(s=>s.x>440||s.y>440);
   const adjX=needsTranslate?(x)=>cx+(x-OLD_CX):(x)=>x;
   const adjY=needsTranslate?(y)=>cy+(y-OLD_CY):(y)=>y;
 

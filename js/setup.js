@@ -222,7 +222,7 @@ export async function saveGameToFirebase(winnerIdx){
       const allT  = state.x01.allThrows[i];
       const avg   = turns.length ? Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10 : 0;
       const best  = turns.length ? Math.max(...turns) : 0;
-      const scatter = allT.filter(t=>t.svgX!=null&&t.svgY!=null).map(t=>({x:Math.round(t.svgX),y:Math.round(t.svgY),l:t.label,leg:t.leg||1}));
+      const scatter = allT.filter(t=>t.svgX!=null&&t.svgY!=null).map(t=>({x:Math.round(t.svgX),y:Math.round(t.svgY),l:t.label,leg:t.leg||1,v:2}));
       return {name, id:state.cfg.playerIds?.[i]||null, avg3:avg, best3:best,
         checkoutAtt:state.x01.checkoutAttempts[i], checkoutHit:state.x01.checkoutHits[i],
         first9:state.x01.first9?.[i]||null,
