@@ -458,6 +458,8 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
   if(state.cfg.mode==="Cricket") startCricket();
   else if(partyModes.includes(state.cfg.mode)) startParty();
   else startX01();
+  // Re-apply translations after game screen renders
+  setTimeout(() => applyTranslations(), 50);
 });
 
 // ── Central render helper — always re-applies i18n after render ───

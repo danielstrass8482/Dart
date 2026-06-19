@@ -426,6 +426,19 @@ export const translations = {
     // App-Status-Meldungen
     video_limit_msg: "Du hast heute dein Video-Analyse-Limit ({n}x) erreicht.",
     stimme_aktiviert_msg: "✓ Stimme aktiviert — {name} ist jetzt aktiv",
+
+    // Health-Chips (Belastung)
+    health_mittel: "Mittel",
+
+    // Lade-Platzhalter mit Kontext
+    lade_spieler: "Lade Spieler…",
+
+    // Online-Sektion
+    online_sub_long: "Spiele gegen Freunde auf anderen Geräten in Echtzeit",
+    online_create_hint: "Wähle Modus und Einstellungen, dann teile den Code mit deinem Gegner",
+
+    // Studio
+    studio_beschreibung: "Nimm deine eigene Stimme für die Ansagen auf. Alle aufgenommenen Zahlen ersetzen die synthetische Stimme.",
   },
 
   en: {
@@ -843,6 +856,19 @@ export const translations = {
     // App status messages
     video_limit_msg: "You've reached your video analysis limit ({n}x) for today.",
     stimme_aktiviert_msg: "✓ Voice activated — {name} is now active",
+
+    // Health chips
+    health_mittel: "Medium",
+
+    // Loading placeholders
+    lade_spieler: "Loading players…",
+
+    // Online section
+    online_sub_long: "Play against friends on other devices in real time",
+    online_create_hint: "Choose mode and settings, then share the code with your opponent",
+
+    // Studio
+    studio_beschreibung: "Record your own voice for announcements. All recorded numbers replace the synthetic voice.",
   }
 };
 
@@ -881,6 +907,8 @@ export function setLang(lang){
   applyTranslations();
   const activeTab = document.querySelector('.home-tab.active');
   if(activeTab) activeTab.click();
+  // Second pass after async tab-renders settle
+  setTimeout(() => applyTranslations(), 200);
 }
 
 export function getLang(){

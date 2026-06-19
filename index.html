@@ -24,7 +24,7 @@
     <div class="vidsession-code" id="vidsession-code-display"></div>
     <div style="font-size:11px;color:var(--dart-text-muted);word-break:break-all;margin-bottom:8px" id="vidsession-url-display"></div>
     <div class="vidsession-status" id="vidsession-status"><i data-lucide="loader" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Warte auf Handy…</div>
-    <button onclick="cancelVideoSession()" style="margin-top:12px;padding:8px 24px;border-radius:8px;border:1px solid var(--dart-border-alt);background:var(--dart-bg-card);color:var(--dart-text-sec);cursor:pointer;font-size:13px">Abbrechen</button>
+    <button onclick="cancelVideoSession()" style="margin-top:12px;padding:8px 24px;border-radius:8px;border:1px solid var(--dart-border-alt);background:var(--dart-bg-card);color:var(--dart-text-sec);cursor:pointer;font-size:13px" data-i18n="abbrechen">Abbrechen</button>
   </div>
 </div>
 
@@ -48,7 +48,7 @@
       <div class="health-chips" id="hc-exertion">
         <span class="health-chip" data-val="kaum">Kaum</span>
         <span class="health-chip" data-val="leicht">Leicht</span>
-        <span class="health-chip" data-val="mittel">Mittel</span>
+        <span class="health-chip" data-val="mittel" data-i18n="health_mittel">Mittel</span>
         <span class="health-chip" data-val="viel">Viel</span>
       </div>
     </div>
@@ -62,8 +62,8 @@
       </div>
     </div>
     <div class="health-modal-btns">
-      <button class="health-skip-btn" id="health-skip-btn">Überspringen</button>
-      <button class="health-save-btn" id="health-save-btn">Speichern →</button>
+      <button class="health-skip-btn" id="health-skip-btn" data-i18n="ob_skip">Überspringen</button>
+      <button class="health-save-btn" id="health-save-btn"><span data-i18n="speichern">Speichern</span> →</button>
     </div>
   </div>
 </div>
@@ -168,7 +168,7 @@
 
     <!-- LOKAL: Setup-Formular -->
     <div id="spielen-lokal" class="spielen-section">
-      <button class="spielen-back" onclick="showSpielenCards()"><i data-lucide="chevron-left" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ZURÜCK</button>
+      <button class="spielen-back" onclick="showSpielenCards()"><i data-lucide="chevron-left" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="zurueck">ZURÜCK</span></button>
       <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;align-items:center;padding:16px">
       <div class="setup-card">
     <label class="field-label" data-i18n="spielmodus">SPIELMODUS</label>
@@ -206,7 +206,7 @@
     <label class="field-label" data-i18n="spieler_auswaehlen">SPIELER AUSWÄHLEN</label>
     <div class="player-sel-hint" id="sel-hint" data-i18n="spieler_hint">Tippe Spieler an um sie auszuwählen (Reihenfolge = Startreihenfolge)</div>
     <div class="player-list" id="player-list">
-      <div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:12px">Lade Spieler…</div>
+      <div style="color:var(--dart-text-sec);font-size:12px;text-align:center;padding:12px" data-i18n="lade_spieler">Lade Spieler…</div>
     </div>
     <div class="add-player-row">
       <input class="add-player-input" id="new-player-input" data-i18n-placeholder="neuer_spieler" placeholder="Neuer Spieler…" />
@@ -267,7 +267,7 @@
 
     <!-- ONLINE: Raum erstellen/beitreten -->
     <div id="spielen-online" class="spielen-section">
-      <button class="spielen-back" onclick="showSpielenCards()"><i data-lucide="chevron-left" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ZURÜCK</button>
+      <button class="spielen-back" onclick="showSpielenCards()"><i data-lucide="chevron-left" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="zurueck">ZURÜCK</span></button>
       <div style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;align-items:center">
 
     <!-- Auth bar -->
@@ -275,12 +275,12 @@
 
     <div style="width:100%;max-width:480px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--dart-text);margin-bottom:4px"><i data-lucide="globe" style="width:22px;height:22px;stroke-width:1.5;vertical-align:middle"></i> ONLINE SPIELEN</div>
-      <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px">Spiele gegen Freunde auf anderen Geräten in Echtzeit</div>
+      <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px" data-i18n="online_sub_long">Spiele gegen Freunde auf anderen Geräten in Echtzeit</div>
 
       <!-- Create room -->
       <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:20px;margin-bottom:16px">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:12px" data-i18n="raum_erstellen">RAUM ERSTELLEN</div>
-        <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">Wähle Modus und Einstellungen, dann teile den Code mit deinem Gegner</div>
+        <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px" data-i18n="online_create_hint">Wähle Modus und Einstellungen, dann teile den Code mit deinem Gegner</div>
         <div class="btn-group" id="online-mode-group" style="margin-bottom:12px">
           <button class="btn-toggle active" data-value="501">501</button>
           <button class="btn-toggle" data-value="301">301</button>
@@ -410,7 +410,7 @@
     <div class="profil-section">
       <div class="profil-section-title"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="spielerprofile">SPIELERPROFILE</span></div>
       <div id="profil-player-list">
-        <div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:10px">Lade Spieler…</div>
+        <div style="color:var(--dart-text-sec);font-size:13px;text-align:center;padding:10px" data-i18n="lade_spieler">Lade Spieler…</div>
       </div>
       <div class="add-player-row" style="margin-top:12px">
         <input class="add-player-input" id="profil-new-player-input" data-i18n-placeholder="neuer_spieler" placeholder="Neuer Spieler anlegen…">
@@ -533,7 +533,7 @@
         <div data-i18n="app_version" style="margin-bottom:6px">DartTrainer · Persönliches Dart Scoring & Tracking</div>
         <div style="margin-bottom:6px">Version: 2.0 · Firebase Hosting via GitHub Pages</div>
         <div style="margin-bottom:6px"><span data-i18n="datenschutz">Datenschutzerklärung</span>: Daten werden in Firebase (Google) gespeichert. Keine Weitergabe an Dritte.</div>
-        <div>Entwickelt von Daniel Straß · 2025</div>
+        <div>Entwickelt von Daniel Straß · 2025</div> <!--i18n-ok-->
       </div>
     </div>
 
@@ -544,7 +544,7 @@
   <div class="home-tab-content" id="tab-studio" style="display:none!important">
   <div style="height:calc(100vh - 48px);overflow-y:auto;padding:16px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--dart-text);margin-bottom:4px"><i data-lucide="mic-2" style="width:20px;height:20px;stroke-width:2;vertical-align:middle"></i> STIMM-STUDIO</div>
-    <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:16px">Nimm deine eigene Stimme für die Ansagen auf. Alle aufgenommenen Zahlen ersetzen die synthetische Stimme.</div>
+    <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:16px" data-i18n="studio_beschreibung">Nimm deine eigene Stimme für die Ansagen auf. Alle aufgenommenen Zahlen ersetzen die synthetische Stimme.</div>
     <div style="background:var(--dart-bg-card);border-radius:6px;height:8px;margin-bottom:6px">
       <div id="studio-progress-bar" style="background:var(--dart-gold);height:8px;border-radius:6px;width:0%;transition:width .3s"></div>
     </div>
@@ -556,9 +556,9 @@
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button id="studio-rec-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-danger);border-radius:10px" disabled><i data-lucide="mic" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Aufnehmen</button>
         <button id="studio-play-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-bg-chip);border-radius:10px;display:none"><i data-lucide="play" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Anhören</button>
-        <button id="studio-save-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-success);border-radius:10px;display:none"><i data-lucide="check" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Speichern</button>
-        <button id="studio-skip-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:var(--dart-bg-chip);border-radius:10px"><i data-lucide="chevron-right" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Überspringen</button>
-        <button id="studio-delete-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:var(--dart-danger);border-radius:10px;display:none"><i data-lucide="trash-2" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> Löschen</button>
+        <button id="studio-save-btn" class="btn-add-player" style="font-size:16px;padding:12px 24px;background:var(--dart-success);border-radius:10px;display:none"><i data-lucide="check" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="speichern">Speichern</span></button>
+        <button id="studio-skip-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:var(--dart-bg-chip);border-radius:10px"><i data-lucide="chevron-right" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="ob_skip">Überspringen</span></button>
+        <button id="studio-delete-btn" class="btn-add-player" style="font-size:16px;padding:12px 20px;background:var(--dart-danger);border-radius:10px;display:none"><i data-lucide="trash-2" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="loeschen">Löschen</span></button>
       </div>
       <div id="studio-status" style="font-size:12px;color:var(--dart-text-sec);margin-top:12px;min-height:16px"></div>
     </div>
@@ -577,14 +577,14 @@
     <div id="online-players-list" style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:16px;width:100%;max-width:320px;margin-bottom:20px"></div>
     <div id="online-wait-status" style="font-size:13px;color:var(--dart-text-sec);margin-bottom:16px">Warte auf Mitspieler…</div>
     <button id="btn-start-online" class="btn-start" style="display:none;width:320px">SPIEL STARTEN</button>
-    <button id="btn-cancel-room" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:10px">Abbrechen</button>
+    <button id="btn-cancel-room" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);padding:8px 20px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:10px" data-i18n="abbrechen">Abbrechen</button>
   </div>
 </div>
 
 <!-- ═══════════════════════ TOURNAMENT SETUP SCREEN ═══════════════════════ -->
 <div id="tournament-setup" class="screen" style="background:var(--dart-bg-card);flex-direction:column">
   <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
-    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← ZURÜCK</button>
+    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="zurueck">ZURÜCK</span></button>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)" data-i18n="turnier_erstellen">TURNIER ERSTELLEN</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
@@ -628,7 +628,7 @@
 <!-- ═══════════════════════ TOURNAMENT VIEW SCREEN ═══════════════════════ -->
 <div id="tournament-view" class="screen" style="background:var(--dart-bg-card);flex-direction:column">
   <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
-    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));loadTournaments();" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← TURNIERE</button>
+    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));loadTournaments();" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="nav_turniere">TURNIERE</span></button>
     <div id="tv-title" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)">TURNIER</div>
     <div id="tv-status-badge" style="margin-left:auto"></div>
   </div>
@@ -641,7 +641,7 @@
 <div id="x01" class="screen" style="flex-direction:column;background:var(--dart-bg-card)">
   <div class="game-header">
     <button class="btn-nav" id="x01-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="zurueck">Zurück</span></button>
-    <div class="game-title" id="x01-title">501 · Runde 1</div>
+    <div class="game-title" id="x01-title">501</div>
     <button class="btn-nav" id="x01-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="undo">Undo</span></button>
   </div>
   <div id="target-feedback-toast" style="display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:var(--dart-text);padding:8px 16px;border-radius:8px;font-size:14px;z-index:500;pointer-events:none;white-space:nowrap"></div>
@@ -702,7 +702,7 @@
 <div id="cricket" class="screen">
   <div class="game-header">
     <button class="btn-nav" id="cr-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="zurueck">Zurück</span></button>
-    <div class="game-title" id="cr-title">Cricket · Runde 1</div>
+    <div class="game-title" id="cr-title">Cricket</div>
     <button class="btn-nav" id="cr-undo"><i data-lucide="rotate-ccw" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="undo">Undo</span></button>
   </div>
 
