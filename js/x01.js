@@ -643,11 +643,11 @@ export function showWinner(name,round){
       const displayName=playerObj?.nickname||p;
       const photoUrl=playerObj?.photoUrl||null;
       const isWinner=i===state.x01.winner;
-      // Dots from all legs: map svgX/svgY → x/y with v:2 so drawMiniBoard renders them
+      // Dots from all legs — only include state.x01.throws for the current player
       const dots=[
         ...(state.cfg.accumulated?.historicThrows?.[i]||[]).map(toMini),
         ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
-        ...state.x01.throws.filter(t=>t.svgX!=null).map(toMini)
+        ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
       ];
       const fieldFreq={};
       dots.forEach(d=>{
@@ -721,32 +721,24 @@ export function showWinner(name,round){
           return `<tr><td style="color:var(--dart-text-sec);padding:2px 0;font-size:11px">${seg}</td><td style="text-align:right;font-weight:${isBetter?700:400};color:${isBetter?gold:isWorse?"var(--dart-text-muted)":"var(--dart-text-sec)"};font-size:11px">${mine}</td></tr>`;
         }).join("");
 
-        const baHtml=ba?`<div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:9px;color:${muted};letter-spacing:1px;margin-bottom:6px">${t('gesamtstatistik').toUpperCase()}</div>
-          <div style="display:flex;align-items:center;justify-content:space-around">
-            <div style="text-align:center"><div style="font-size:9px;color:${muted}">${t('vorher')}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dart-text-muted)">${ba.ab}</div><div style="font-size:9px;color:${muted}">${ba.gb} ${t('spiele_label')}</div></div>
-            <div style="font-size:16px;color:${gold}">→</div>
-            <div style="text-align:center"><div style="font-size:9px;color:${muted}">${t('jetzt')}</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${ba.improved?"#43a047":ba.declined?"#e53935":"#fff"}">${ba.aa}</div><div style="font-size:9px;color:${muted}">${ba.gb+1} ${t('spiele_label')}</div></div>
-          </div>
-          <div style="margin-top:4px;font-size:10px;color:${ba.improved?"#43a047":ba.declined?"#e53935":"#888"}">${ba.improved?t('verbesserung'):ba.declined?t('rueckgang'):t('unveraendert')} (${ba.delta})</div>
-        </div>`:"";
+        const baHtml=ba?`<div style="font-size:10px;color:var(--dart-text-sec);text-align:center;padding:2px 0;border-top:1px solid rgba(255,255,255,0.08)">${t('vorher')}: <span style="color:var(--dart-text)">${ba.ab}</span> <span style="color:${gold}">→</span> <span style="color:${ba.improved?"#43a047":ba.declined?"#e53935":"var(--dart-text)"}">${ba.aa}</span> <span style="color:${ba.improved?"#43a047":ba.declined?"#e53935":"#888"}">(${ba.improved?"+":"−"}${ba.delta})</span></div>`:"";
 
-        html+=`<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;border:${s.isWinner?"2px solid "+gold:"1px solid rgba(255,255,255,0.12)"};display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center">
-            ${s.photoUrl?`<img src="${s.photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:${s.isWinner?"2px solid "+gold:"2px solid rgba(255,255,255,0.15)"}">`:`<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--dart-text);border:${s.isWinner?"2px solid "+gold:"2px solid rgba(255,255,255,0.1)"}">${s.displayName.slice(0,2).toUpperCase()}</div>`}
-            <div style="font-weight:700;font-size:13px;color:var(--dart-text)">${s.displayName}</div>
-            ${s.isWinner?`<div style="font-size:9px;font-weight:700;color:${gold};letter-spacing:2px;background:rgba(212,175,55,0.15);padding:2px 10px;border-radius:8px">WINNER</div>`:`<div style="height:17px"></div>`}
+        html+=`<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:8px;border:${s.isWinner?"2px solid "+gold:"1px solid rgba(255,255,255,0.12)"};display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center">
+            ${s.photoUrl?`<img src="${s.photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:${s.isWinner?"2px solid "+gold:"2px solid rgba(255,255,255,0.15)"}">`:`<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--dart-text);border:${s.isWinner?"2px solid "+gold:"2px solid rgba(255,255,255,0.1)"}">${s.displayName.slice(0,2).toUpperCase()}</div>`}
+            <div style="font-weight:700;font-size:12px;color:var(--dart-text)">${s.displayName}</div>
+            ${s.isWinner?`<div style="font-size:8px;font-weight:700;color:${gold};letter-spacing:2px;background:rgba(212,175,55,0.15);padding:1px 8px;border-radius:8px">WINNER</div>`:`<div style="height:14px"></div>`}
           </div>
-          <svg id="winner-scatter-${si}" style="width:140px;height:140px;display:block;margin:0 auto;flex-shrink:0"></svg>
+          <svg id="winner-scatter-${si}" style="max-width:280px;width:100%;aspect-ratio:1;display:block;margin:0 auto"></svg>
           <table style="width:100%;font-size:11px;border-collapse:collapse">
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Avg</td><td style="text-align:right;font-weight:700;color:${avgC}">${s.avg}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;font-weight:700;color:${f9C}">${s.f9??'—'}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Highscore</td><td style="text-align:right;font-weight:700;color:${bestC}">${s.best}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">CO%</td><td style="text-align:right;font-weight:700;color:${coC}">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
-            ${s.topFields?`<tr><td style="color:var(--dart-text-sec);padding:2px 0">Top</td><td style="text-align:right;color:#aaa;font-size:10px">${s.topFields}</td></tr>`:""}
+            <tr><td style="color:var(--dart-text-sec);padding:1px 0">Avg</td><td style="text-align:right;font-weight:700;color:${avgC}">${s.avg}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:1px 0">First 9</td><td style="text-align:right;font-weight:700;color:${f9C}">${s.f9??'—'}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:1px 0">Highscore</td><td style="text-align:right;font-weight:700;color:${bestC}">${s.best}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:1px 0">CO%</td><td style="text-align:right;font-weight:700;color:${coC}">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
+            ${s.topFields?`<tr><td style="color:var(--dart-text-sec);padding:1px 0">Top</td><td style="text-align:right;color:#aaa;font-size:10px">${s.topFields}</td></tr>`:""}
           </table>
           ${baHtml}
-          ${allSegs.length?`<div><div style="font-size:9px;color:${muted};letter-spacing:1px;margin-bottom:4px">SEGMENTS</div><table style="width:100%;font-size:11px;border-collapse:collapse">${segRows}</table></div>`:""}
+          ${allSegs.length?`<div><div style="font-size:8px;color:${muted};letter-spacing:1px;margin-bottom:2px">SEGMENTS</div><table style="width:100%;font-size:10px;border-collapse:collapse">${segRows}</table></div>`:""}
         </div>`;
       });
 
