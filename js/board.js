@@ -199,14 +199,15 @@ export function clearHits(svgEl){
  * First segment pulses strongly (next throw), rest are static and dimmer.
  * @param {SVGElement} svgEl
  * @param {number} remaining
+ * @param {string|null} [customPath] optional override path (e.g. for preferred doubles)
  */
-export function highlightCheckout(svgEl, remaining){
+export function highlightCheckout(svgEl, remaining, customPath=null){
   if(localStorage.getItem("dart_checkout_highlight")==="false") return;
   const g=svgEl.querySelector("#"+svgEl.id+"-checkout");
   if(!g){ return; }
   g.innerHTML="";
   const CHECKOUTS = window._CHECKOUTS;
-  const co=CHECKOUTS[remaining];
+  const co=customPath||(CHECKOUTS?.[remaining]);
   if(!co||remaining>170||remaining<=1) return;
 
   const ns="http://www.w3.org/2000/svg";
@@ -220,8 +221,8 @@ export function highlightCheckout(svgEl, remaining){
     const isBull=part==="Bull"||part==="D25";
     const num=isBull?25:parseInt(part.replace(/[TDS]/,""));
 
-    const fillColor=isNext?"rgba(80,255,120,0.45)":"rgba(80,200,255,0.20)";
-    const strokeColor=isNext?"#00ff88":"#44aaff";
+    const fillColor=isNext?"rgba(212,175,55,0.45)":"rgba(212,175,55,0.20)";
+    const strokeColor=isNext?"#D4AF37":"rgba(212,175,55,0.6)";
     const strokeWidth=isNext?"3":"1.5";
 
     if(isBull){
@@ -252,26 +253,7 @@ export function highlightCheckout(svgEl, remaining){
     g.appendChild(path);
 
     if(isNext){
-      path.innerHTML=`
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="0.9s" repeatCount="indefinite"/>
-        <animate attributeName="stroke-width" values="2;5;2" dur="0.9s" repeatCount="indefinite"/>`;
-      if(num>=1&&num<=20){
-        const mid=sectorAngle(idx)+toRad(9);
-        const labelR=isTriple?(R.triIn+R.triOut)/2:
-          isDouble?(R.dblIn+R.dblOut)/2:
-          (R.bull25+R.dblIn)/2;
-        const [lx,ly]=polarXY(labelR,mid);
-        const label=document.createElementNS(ns,"text");
-        label.setAttribute("x",lx); label.setAttribute("y",ly);
-        label.setAttribute("text-anchor","middle");
-        label.setAttribute("dominant-baseline","middle");
-        label.setAttribute("fill","#fff"); label.setAttribute("font-size","11");
-        label.setAttribute("font-family","'Bebas Neue',sans-serif");
-        label.setAttribute("pointer-events","none");
-        label.textContent=part;
-        label.innerHTML+=`<animate attributeName="opacity" values="0.6;1;0.6" dur="0.9s" repeatCount="indefinite"/>`;
-        g.appendChild(label);
-      }
+      path.innerHTML=`<animate attributeName="opacity" values="0.5;1;0.5" dur="0.9s" repeatCount="indefinite"/><animate attributeName="stroke-width" values="2;5;2" dur="0.9s" repeatCount="indefinite"/>`;
     } else {
       path.setAttribute("opacity","0.6");
     }

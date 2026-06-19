@@ -343,6 +343,22 @@ export function openPlayerEditDialog(player){
   document.getElementById("player-edit-weight").value = player.dartWeight||"";
   document.getElementById("player-edit-error").textContent = "";
 
+  // Preferred doubles grid
+  const prefDoubles = player.prefDoubles||[];
+  const doublesEl = document.getElementById("player-edit-doubles");
+  if(doublesEl){
+    const fields = [...Array(20)].map((_,i)=>({n:i+1,label:`D${i+1}`}));
+    fields.push({n:25,label:"Bull"});
+    doublesEl.innerHTML = fields.map(({n,label})=>{
+      const on = prefDoubles.includes(n);
+      return `<button type="button" class="pref-double-btn${on?" pref-on":""}" data-double="${n}"
+        style="padding:5px 2px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;
+        border:1px solid ${on?"var(--dart-gold)":"var(--dart-border)"};
+        background:${on?"rgba(212,175,55,0.2)":"var(--dart-bg-card)"};
+        color:${on?"var(--dart-gold)":"var(--dart-text-muted)"}">${label}</button>`;
+    }).join("");
+  }
+
   // Avatar preview
   _renderEditAvatar(player.photoUrl, player);
 
@@ -372,6 +388,16 @@ function _closeEditDialog(){
 document.addEventListener("DOMContentLoaded", ()=>{
   const closeBtn = document.getElementById("btn-player-edit-close");
   if(closeBtn) closeBtn.addEventListener("click", _closeEditDialog);
+
+  // Preferred doubles toggle
+  document.getElementById("player-edit-doubles")?.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".pref-double-btn");
+    if(!btn) return;
+    const on = btn.classList.toggle("pref-on");
+    btn.style.border = `1px solid ${on?"var(--dart-gold)":"var(--dart-border)"}`;
+    btn.style.background = on?"rgba(212,175,55,0.2)":"var(--dart-bg-card)";
+    btn.style.color = on?"var(--dart-gold)":"var(--dart-text-muted)";
+  });
 
   const photoBtn = document.getElementById("btn-player-photo");
   const photoInput = document.getElementById("player-edit-photo-input");
@@ -410,11 +436,14 @@ document.addEventListener("DOMContentLoaded", ()=>{
           const blob = await (await fetch(_pendingPhotoData)).blob();
           photoUrl = await window.dartDB.uploadPlayerPhoto(_editingPlayer.id, blob);
         }
+        const prefDoubles = [...document.querySelectorAll("#player-edit-doubles .pref-double-btn.pref-on")]
+          .map(btn=>parseInt(btn.dataset.double));
         const profileData = {
           name,
           nickname: document.getElementById("player-edit-nickname").value.trim()||null,
           dartBrand: document.getElementById("player-edit-brand").value.trim()||null,
           dartWeight: parseFloat(document.getElementById("player-edit-weight").value)||null,
+          prefDoubles,
           ...(photoUrl !== (_editingPlayer.photoUrl||null) ? {photoUrl} : {})
         };
         await window.dartDB.updatePlayerProfile(_editingPlayer.id, profileData);

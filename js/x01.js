@@ -3,11 +3,48 @@
  */
 
 import { state } from './state.js';
-import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout } from './board.js?v=2';
-import { soundBust, soundHit, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue } from './audio.js';
+import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout, drawMiniBoard } from './board.js?v=2';
+import { soundBust, soundHit, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath } from './audio.js';
 import { startMic, stopMic, maybeRestartMic, setVoiceFeedback, announceRequires, micEnabled, micActive } from './speech.js';
 import { runBotTurn } from './bot.js';
 import { t } from './i18n.js?v=3';
+
+/**
+ * Computes a checkout path ending in one of the preferred doubles.
+ * Returns null if no path found or no preferences set.
+ * @param {number} remaining
+ * @param {number[]} prefDoubles e.g. [20, 16, 8]
+ * @returns {string|null}
+ */
+function findPreferredCheckout(remaining, prefDoubles){
+  if(!prefDoubles?.length) return null;
+  const throws=[];
+  for(let n=1;n<=20;n++){
+    throws.push({v:n,s:`${n}`},{v:n*2,s:`D${n}`});
+    if(n*3<=60) throws.push({v:n*3,s:`T${n}`});
+  }
+  throws.push({v:25,s:"25"},{v:50,s:"Bull"});
+  for(const pd of prefDoubles){
+    const finVal=pd===25?50:2*pd;
+    const finStr=pd===25?"Bull":`D${pd}`;
+    if(remaining===finVal) return finStr;
+    const r2=remaining-finVal;
+    if(r2>0&&r2<=60){
+      const d1=throws.find(t=>t.v===r2);
+      if(d1) return `${d1.s} ${finStr}`;
+    }
+    if(r2>0&&r2<=120){
+      for(const t1 of throws.filter(t=>t.v<=60)){
+        const r3=r2-t1.v;
+        if(r3>0&&r3<=60){
+          const t2=throws.find(t=>t.v===r3&&t.s!==t1.s);
+          if(t2) return `${t1.s} ${t2.s} ${finStr}`;
+        }
+      }
+    }
+  }
+  return null;
+}
 
 /**
  * Returns appropriate delay (ms) before announcing "requires" based on turn score.
@@ -222,8 +259,13 @@ export function renderX01(){
     titleEl.textContent=`${state.cfg.mode}${legInfo?" · "+legInfo:""} · ${t('runde')} ${state.x01.round}`;
   }
 
-  if(remaining<=170&&remaining>1&&!state.x01.bust) highlightCheckout(state.boardSVG,remaining);
-  else clearCheckout(state.boardSVG);
+  if(remaining<=170&&remaining>1&&!state.x01.bust){
+    const pid=state.cfg.playerIds?.[state.x01.current];
+    const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
+    const prefDoubles=playerObj?.prefDoubles||[];
+    const prefPath=findPreferredCheckout(remaining,prefDoubles);
+    highlightCheckout(state.boardSVG,remaining,prefPath);
+  } else clearCheckout(state.boardSVG);
   disableBoard(state.boardSVG,!!state.x01.winner||state.x01.bust);
 
   // ── History table (landscape) ─────────────────────────────────
@@ -320,10 +362,10 @@ export function processX01Hit(hit, svgX=null, svgY=null){
     renderX01();
     if(state.x01.throws.length===3){
       const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
+      const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
       if(turnScore===0){ soundLow(); speakKeyWithCustom("no_score","No Score!"); }
-      else if(turnScore<=9){ soundLow(); speakScoreWithCustom(turnScore); }
-      else { soundHit(); speakScoreWithCustom(turnScore); }
-      setTimeout(announceRequires, requiresDelay(turnScore));
+      else if(turnScore<=9){ soundLow(); speakScoreWithCustom(turnScore, hitBull); }
+      else { soundHit(); speakScoreWithCustom(turnScore, hitBull); }
       setTimeout(advanceX01, 800);
     }
     return;
@@ -370,7 +412,6 @@ export function processX01Hit(hit, svgX=null, svgY=null){
     else { soundHit(); }
     const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
-    setTimeout(announceRequires, requiresDelay(turnScore));
   } else {
     soundHit();
   }
@@ -395,9 +436,19 @@ export function handleBouncer(){
   speakKeyWithCustom("bouncer","Bouncer!");
   renderX01();
   if(state.x01.throws.length===3){
-    const bouncerTurnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
-    setTimeout(announceRequires,requiresDelay(bouncerTurnScore));
     setTimeout(advanceX01,800);
+  }
+}
+
+/** Schedules requires + checkout-path announcement for the next player. */
+function _scheduleNextPlayerAnnounce(nextIdx){
+  if(state.x01.winner) return;
+  if(state.cfg.players.length < 2) return;
+  if(state.cfg.isBot?.[nextIdx]) return;
+  const score=state.x01.scores[nextIdx];
+  if(score >= 2 && score <= 170){
+    setTimeout(announceRequires, 1500);
+    setTimeout(()=>announceCheckoutPath(score), 2500);
   }
 }
 
@@ -424,6 +475,7 @@ export function advanceX01(){
     clearCheckout(state.boardSVG);
     redrawAllHits(state.boardSVG,state.x01.historicThrows[next],[]);
     renderX01(); maybeRestartMic();
+    _scheduleNextPlayerAnnounce(next);
     if(state.cfg.isBot?.[next]) setTimeout(runBotTurn,800);
     return;
   }
@@ -447,6 +499,7 @@ export function advanceX01(){
   if(next===0) state.x01.round++;
   redrawAllHits(state.boardSVG,state.x01.historicThrows[next],[]);
   renderX01(); maybeRestartMic();
+  _scheduleNextPlayerAnnounce(next);
   if(state.cfg.isBot?.[next]) setTimeout(runBotTurn,800);
 }
 
@@ -484,18 +537,20 @@ export function handleLegWin(winnerIdx){
   const legNum=state.cfg.currentLeg;
   document.getElementById("leg-label").textContent=
     state.cfg.totalSets>1
-      ? `SET ${state.cfg.currentSet} · LEG ${legNum} GEWONNEN!`
-      : `LEG ${legNum} GEWONNEN!`;
+      ? `SET ${state.cfg.currentSet} · LEG ${legNum} WON!`
+      : `LEG ${legNum} WON!`;
   document.getElementById("leg-winner-name").textContent=name;
+  const legsLeft=state.cfg.legsToWin-state.cfg.legWins[winnerIdx];
   const scoreHtml=state.cfg.players.map((p,i)=>
     `${p}: <strong>${state.cfg.legWins[i]}</strong> Leg${state.cfg.legWins[i]!==1?"s":""}`).join(" &nbsp;|&nbsp; ");
   document.getElementById("leg-score-display").innerHTML=scoreHtml;
   document.getElementById("leg-to-win").textContent=
-    t('noch_legs_zum_set').replace('{n}',state.cfg.legsToWin-state.cfg.legWins[winnerIdx]);
+    legsLeft===1?"1 leg to win the set":`${legsLeft} legs to win the set`;
 
+  const humanPlayers=state.cfg.players.filter((_,i)=>!state.cfg.isBot?.[i]);
   const legStats=document.getElementById("leg-stats-summary");
   if(legStats){
-    legStats.innerHTML=state.cfg.players.map((p,i)=>{
+    const buildLegCard=(p,i,visible)=>{
       if(state.cfg.isBot?.[i]) return "";
       const turns=state.x01.turnScores[i]||[];
       if(!turns.length) return "";
@@ -506,21 +561,44 @@ export function handleLegWin(winnerIdx){
       const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
       const f9=state.x01.first9[i];
       const isWinner=i===winnerIdx;
-      return `<div style="background:${isWinner?"rgba(232,196,74,0.15)":"rgba(255,255,255,0.05)"};
-        border:1px solid ${isWinner?"#e8c44a":"rgba(255,255,255,0.1)"};
-        border-radius:10px;padding:10px 14px;text-align:left">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${isWinner?"var(--dart-gold)":"var(--dart-border)"};letter-spacing:1px;margin-bottom:6px">
-          ${isWinner?"🏆 ":""}${p}
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr${f9?` 1fr`:""};gap:4px 12px;font-size:12px;color:var(--dart-text-sec)">
-          <span>${t('aufnahme_avg')}</span><span>Best</span><span>CO%</span>${f9?"<span>First 9</span>":""}
+      return `<div class="leg-stat-card" data-player-idx="${i}" style="display:${visible?"":"none"};background:${isWinner?"rgba(232,196,74,0.15)":"rgba(255,255,255,0.05)"};border:1px solid ${isWinner?"#e8c44a":"rgba(255,255,255,0.1)"};border-radius:10px;padding:10px 14px;text-align:left">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${isWinner?"var(--dart-gold)":"var(--dart-border)"};letter-spacing:1px;margin-bottom:6px">${isWinner?"🏆 ":""}${p}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr${f9?" 1fr":""};gap:4px 12px;font-size:12px;color:var(--dart-text-sec)">
+          <span>Avg</span><span>Best</span><span>CO%</span>${f9?"<span>First 9</span>":""}
           <span style="color:var(--dart-text);font-weight:600;font-size:15px">${avg}</span>
           <span style="color:var(--dart-text);font-weight:600;font-size:15px">${best}</span>
           <span style="color:var(--dart-text);font-weight:600;font-size:15px">${coPct}%</span>
           ${f9?`<span style="color:var(--dart-text);font-weight:600;font-size:15px">${f9}</span>`:""}
         </div>
       </div>`;
-    }).join("");
+    };
+    let html="";
+    if(humanPlayers.length>1){
+      html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">`;
+      state.cfg.players.forEach((p,i)=>{
+        if(state.cfg.isBot?.[i]) return;
+        const isFirst=!html.includes('leg-filter-btn');
+        html+=`<button class="leg-filter-btn" data-idx="${i}" style="padding:5px 12px;border-radius:16px;border:1px solid ${isFirst?"var(--dart-gold)":"var(--dart-border)"};background:${isFirst?"rgba(212,175,55,0.15)":"transparent"};color:${isFirst?"var(--dart-gold)":"var(--dart-text-muted)"};font-size:12px;cursor:pointer">${p}</button>`;
+      });
+      html+=`<button class="leg-filter-btn" data-idx="all" style="padding:5px 12px;border-radius:16px;border:1px solid var(--dart-border);background:transparent;color:var(--dart-text-muted);font-size:12px;cursor:pointer">All</button></div>`;
+    }
+    const firstHuman=state.cfg.players.findIndex((_,i)=>!state.cfg.isBot?.[i]);
+    html+=state.cfg.players.map((p,i)=>buildLegCard(p,i,humanPlayers.length<=1||i===firstHuman)).join("");
+    legStats.innerHTML=html;
+    legStats.addEventListener("click",(e)=>{
+      const btn=e.target.closest(".leg-filter-btn");
+      if(!btn) return;
+      const idx=btn.dataset.idx;
+      legStats.querySelectorAll(".leg-filter-btn").forEach(b=>{
+        const on=b===btn;
+        b.style.border=`1px solid ${on?"var(--dart-gold)":"var(--dart-border)"}`;
+        b.style.background=on?"rgba(212,175,55,0.15)":"transparent";
+        b.style.color=on?"var(--dart-gold)":"var(--dart-text-muted)";
+      });
+      legStats.querySelectorAll(".leg-stat-card").forEach(c=>{
+        c.style.display=(idx==="all"||c.dataset.playerIdx===idx)?"":"none";
+      });
+    },{once:false});
   }
 
   document.getElementById("leg-overlay").classList.add("visible");
@@ -542,7 +620,6 @@ export function showWinner(name,round){
 
   const sumEl=document.getElementById("winner-summary");
   if(sumEl&&state.cfg.mode!=="Cricket"&&state.x01.turnScores){
-    // Compute per-player stats
     const playerStats=state.cfg.players.map((p,i)=>{
       if(state.cfg.isBot?.[i]) return null;
       const turns=state.x01.turnScores[i];
@@ -558,38 +635,70 @@ export function showWinner(name,round){
       const displayName=playerObj?.nickname||p;
       const photoUrl=playerObj?.photoUrl||null;
       const isWinner=i===state.x01.winner;
-      return {avg,best,f9,coAtt,coHit,coPct,displayName,photoUrl,isWinner,idx:i,pid,playerObj};
+      const dots=[...state.x01.historicThrows[i],...state.x01.throws.filter(t=>t.svgX!=null&&t.leg===state.x01.throws[0]?.leg)];
+      const fieldFreq={};
+      dots.forEach(d=>{
+        if(d.miss) return;
+        const k=d.label?.replace(/^[TD]/,"")||"?";
+        const n=parseInt(k)||0;
+        if(n>0) fieldFreq[n]=(fieldFreq[n]||0)+1;
+      });
+      const topFields=Object.entries(fieldFreq).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k}(${v})`).join(" ");
+      return {avg,best,f9,coAtt,coHit,coPct,displayName,photoUrl,isWinner,idx:i,pid,playerObj,dots,topFields};
     });
     const humanStats=playerStats.filter(Boolean);
 
     if(!humanStats.length){ sumEl.style.display="none"; }
     else {
-      const cols=humanStats.length>1?"1fr 1fr":"1fr";
+      const isMulti=humanStats.length>1;
+      const cols=isMulti?"1fr 1fr":"1fr";
+
+      // Helper to color-highlight better stat
+      const better=(a,b,higherIsBetter=true)=>{
+        if(a===b) return ["#aaa","#aaa"];
+        const aWins=higherIsBetter?a>b:a<b;
+        return [aWins?"#43a047":"#aaa", aWins?"#aaa":"#43a047"];
+      };
+
       let html=`<div style="display:grid;grid-template-columns:${cols};gap:12px;margin-bottom:16px">`;
-      humanStats.forEach(s=>{
-        html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;
-          border:${s.isWinner?"2px solid #e8c44a":"1px solid rgba(255,255,255,0.12)"};text-align:left">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      const metricColors={avg:[],best:[],coPct:[],f9:[]};
+      if(isMulti&&humanStats.length===2){
+        const [a,b]=humanStats;
+        metricColors.avg=better(a.avg,b.avg);
+        metricColors.best=better(a.best,b.best);
+        metricColors.coPct=better(a.coPct,b.coPct);
+        metricColors.f9=better(a.f9??0,b.f9??0);
+      }
+
+      humanStats.forEach((s,si)=>{
+        const aC=isMulti&&humanStats.length===2?metricColors.avg[si]:"#fff";
+        const bC=isMulti&&humanStats.length===2?metricColors.best[si]:"#fff";
+        const cC=isMulti&&humanStats.length===2?metricColors.coPct[si]:"#fff";
+        const fC=isMulti&&humanStats.length===2?metricColors.f9[si]:"#fff";
+        html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px;border:${s.isWinner?"2px solid #e8c44a":"1px solid rgba(255,255,255,0.12)"};text-align:left">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
             ${s.photoUrl
-              ?`<img src="${s.photoUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-              :`<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--dart-text);flex-shrink:0">${s.displayName.slice(0,2).toUpperCase()}</div>`
+              ?`<img src="${s.photoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+              :`<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--dart-text);flex-shrink:0">${s.displayName.slice(0,2).toUpperCase()}</div>`
             }
             <div style="min-width:0">
-              <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dart-text)">${s.displayName}</div>
-              ${s.isWinner?`<div style="font-size:10px;color:var(--dart-gold);letter-spacing:1px">${t('sieger')}</div>`:""}
+              <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dart-text)">${s.displayName}</div>
+              ${s.isWinner?`<div style="font-size:9px;color:var(--dart-gold);letter-spacing:1px">WINNER</div>`:""}
             </div>
           </div>
-          <table style="width:100%;font-size:12px;border-collapse:collapse">
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">${t('aufnahme_avg')}</td><td style="text-align:right;font-weight:600;color:var(--dart-text)">${s.avg}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;color:var(--dart-text)">${s.f9!==null&&s.f9!==undefined?s.f9:"—"}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Highscore</td><td style="text-align:right;color:var(--dart-text)">${s.best}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Checkout</td><td style="text-align:right;color:var(--dart-text)">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
+          <svg id="winner-scatter-${si}" style="width:100%;aspect-ratio:1;max-width:160px;display:block;margin:0 auto 8px"></svg>
+          <table style="width:100%;font-size:11px;border-collapse:collapse">
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Avg</td><td style="text-align:right;font-weight:600;color:${aC}">${s.avg}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">First 9</td><td style="text-align:right;font-weight:600;color:${fC}">${s.f9??'—'}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">Highscore</td><td style="text-align:right;font-weight:600;color:${bC}">${s.best}</td></tr>
+            <tr><td style="color:var(--dart-text-sec);padding:2px 0">CO%</td><td style="text-align:right;font-weight:600;color:${cC}">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
+            ${s.topFields?`<tr><td style="color:var(--dart-text-sec);padding:2px 0">Top</td><td style="text-align:right;color:#aaa;font-size:10px">${s.topFields}</td></tr>`:""}
           </table>
         </div>`;
       });
       html+="</div>";
 
-      // Feature 4: Before / After overall stats
+      // Before/After overall stats
       humanStats.forEach(s=>{
         if(!s.pid) return;
         const pObj=s.playerObj;
@@ -628,6 +737,14 @@ export function showWinner(name,round){
 
       sumEl.innerHTML=html;
       sumEl.style.display="block";
+
+      // Draw scatter boards after DOM update
+      requestAnimationFrame(()=>{
+        humanStats.forEach((s,si)=>{
+          const svgEl=document.getElementById(`winner-scatter-${si}`);
+          if(svgEl&&s.dots.length) drawMiniBoard(svgEl, s.dots);
+        });
+      });
     }
   }
 

@@ -488,7 +488,7 @@
           <span id="setting-checkout-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
         <div>
           <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="heart-pulse" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="gesundheit">Gesundheitsdaten abfragen</span></span>
           <button class="help-btn" onclick="showHelp('Gesundheitsdaten','Vor jedem Spiel wirst du nach Schlaf und Befinden gefragt. Verknüpfe Fitness mit deiner Spielleistung und sieh ob du an ausgeruhten Tagen besser spielst.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
@@ -497,6 +497,26 @@
         <label style="position:relative;display:inline-block;width:46px;height:27px;flex-shrink:0">
           <input type="checkbox" id="setting-health" checked style="opacity:0;width:0;height:0">
           <span id="setting-health-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
+        <div>
+          <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="volume-1" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Checkout ansagen</span> <!--i18n-ok-->
+          <div style="font-size:11px;color:var(--dart-text-sec);margin-top:2px">Announce checkout path before each throw</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:46px;height:27px;flex-shrink:0">
+          <input type="checkbox" id="setting-checkout_announce" style="opacity:0;width:0;height:0">
+          <span id="setting-checkout_announce-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
+        </label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
+        <div>
+          <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Dart Slang</span>
+          <div style="font-size:11px;color:var(--dart-text-sec);margin-top:2px">26 = "Bed and Breakfast", 100 = "Ton" usw.</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:46px;height:27px;flex-shrink:0">
+          <input type="checkbox" id="setting-slang" style="opacity:0;width:0;height:0">
+          <span id="setting-slang-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
       </div>
     </div>
@@ -855,9 +875,7 @@
     <div id="leg-score-display" style="color:var(--dart-gold);font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-top:8px"></div>
     <div style="color:var(--dart-text-muted);font-size:13px;margin-top:6px" id="leg-to-win"></div>
     <div id="leg-stats-summary" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
-    <button class="coach-btn" id="btn-coach-leg" style="margin-top:12px"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="leg_analysieren">LEG ANALYSIEREN</span></button>
-    <div id="coach-output-leg" style="margin-top:12px;text-align:left;max-height:220px;overflow-y:auto"></div>
-    <button class="btn-new-game" id="btn-next-leg" style="margin-top:12px" data-i18n="naechstes_leg">NÄCHSTES LEG ▶</button>
+    <button class="btn-new-game" id="btn-next-leg" style="margin-top:16px" data-i18n="naechstes_leg">NEXT LEG ▶</button>
   </div>
 </div>
 
@@ -891,9 +909,14 @@
       <label class="field-label">DART-MARKE</label>
       <input id="player-edit-brand" class="add-player-input" style="width:100%;box-sizing:border-box" placeholder="z.B. Target, Winmau, Unicorn">
     </div>
-    <div style="margin-bottom:20px">
+    <div style="margin-bottom:12px">
       <label class="field-label">DART-GEWICHT (Gramm)</label>
       <input id="player-edit-weight" type="number" class="add-player-input" style="width:100%;box-sizing:border-box" placeholder="z.B. 23" min="10" max="50">
+    </div>
+    <div style="margin-bottom:20px">
+      <label class="field-label">BEVORZUGTE DOPPELFELDER</label>
+      <div style="font-size:11px;color:var(--dart-text-muted);margin-bottom:6px">Checkout priorisiert diese Felder</div>
+      <div id="player-edit-doubles" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
     </div>
 
     <div id="player-edit-error" style="color:var(--dart-danger);font-size:13px;margin-bottom:10px;min-height:16px"></div>
