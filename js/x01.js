@@ -187,40 +187,40 @@ export function renderX01(){
       const legDots=state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])}${"▫".repeat(Math.max(0,state.cfg.legsToWin-state.cfg.legWins[i]))} `:"";
       const setDots=state.cfg.totalSets>1?`Set ${state.cfg.setWins[i]} `:"";
       const lpScoreStyle=isActive
-        ?`font-family:'Manrope',sans-serif;font-size:40px;font-weight:800;line-height:1;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 6px;display:inline-block;":""}`
-        :`font-family:'Manrope',sans-serif;font-size:26px;font-weight:800;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 4px;display:inline-block;":""}`;
+        ?`font-family:'Manrope',sans-serif;font-size:50px;font-weight:800;line-height:1;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 8px;display:inline-block;":""}`
+        :`font-family:'Manrope',sans-serif;font-size:36px;font-weight:800;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 5px;display:inline-block;":""}`;
       const checkoutHtml=isActive&&co
-        ?`<div style="font-size:10px;color:#F4D77E;font-weight:700;margin-top:3px;line-height:1.3">${co} <span style="opacity:.65;font-size:9px">${co.split(" ").length}-${t('dart_finish')}</span></div>`
+        ?`<div style="font-size:11px;color:#F4D77E;font-weight:700;margin-top:4px;line-height:1.3">${co} <span style="opacity:.65;font-size:10px">${co.split(" ").length}-${t('dart_finish')}</span></div>`
         :"";
       if(isActive){
         return `<div class="lp-player active">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
             ${photoUrl
-              ?`<img src="${photoUrl}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex-shrink:0">`
-              :`<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+              ?`<img src="${photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex-shrink:0">`
+              :`<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
             }
             <div style="min-width:0">
-              <div style="font-size:12px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
-              <div style="font-size:9px;font-weight:700;color:#C9A227;letter-spacing:.1em">${t('am_zug')}</div>
+              <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+              <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.1em">${t('am_zug')}</div>
             </div>
           </div>
           <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
           ${checkoutHtml}
-          ${chips?`<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:2px">${chips}</div>`:""}
+          ${chips?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px">${chips}</div>`:""}
         </div>`;
       } else {
         return `<div class="lp-player">
-          <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
             ${photoUrl
-              ?`<img src="${photoUrl}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #303038;flex-shrink:0">`
-              :`<div style="width:22px;height:22px;border-radius:50%;background:#1C1C21;border:1px solid #303038;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#9A9AA2;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+              ?`<img src="${photoUrl}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid #303038;flex-shrink:0">`
+              :`<div style="width:30px;height:30px;border-radius:50%;background:#1C1C21;border:1px solid #303038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#9A9AA2;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
             }
             <div style="min-width:0">
-              <div style="font-size:11px;font-weight:700;color:#9A9AA2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${setDots}${legDots}${displayName}</div>
+              <div style="font-size:13px;font-weight:700;color:#9A9AA2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${setDots}${legDots}${displayName}</div>
             </div>
           </div>
           <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
-          ${avgVal?`<div style="font-size:9px;font-weight:700;color:#6E6E78;margin-top:1px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</div>`:""}
+          ${avgVal?`<div style="font-size:10px;font-weight:700;color:#6E6E78;margin-top:2px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</div>`:""}
         </div>`;
       }
     }).join("");
