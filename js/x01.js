@@ -180,43 +180,49 @@ export function renderX01(){
       const lpCheckout=lpRemaining<=170&&lpRemaining>1&&!state.x01.bust;
       const chips=isActive?state.x01.throws.map(t=>{
         const cls=t.miss?"color:var(--dart-danger)":t.label.startsWith("T")?"color:var(--dart-success)":t.label.startsWith("D")?"color:#6aaada":"color:var(--dart-text-sec)";
-        return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:2px 5px;background:var(--dart-border);border-radius:4px;${cls}">${t.label}</span>`;
+        return `<span style="font-family:'Bebas Neue',sans-serif;font-size:13px;padding:1px 4px;background:var(--dart-border);border-radius:4px;${cls}">${t.label}</span>`;
       }).join(" "):"";
       const f9=state.x01.first9[i];
       const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legDots=state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])}${"▫".repeat(Math.max(0,state.cfg.legsToWin-state.cfg.legWins[i]))} `:"";
       const setDots=state.cfg.totalSets>1?`Set ${state.cfg.setWins[i]} `:"";
       const lpScoreStyle=isActive
-        ?`font-family:'Manrope',sans-serif;font-size:66px;font-weight:800;line-height:.85;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .3s,color .3s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:8px;padding:0 8px;display:inline-block;":""}`
-        :`font-family:'Manrope',sans-serif;font-size:32px;font-weight:800;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .3s,color .3s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:8px;padding:0 8px;display:inline-block;":""}`;
-      const activeAvatarHtml=isActive?`
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-          ${photoUrl
-            ?`<img src="${photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex-shrink:0">`
-            :`<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
-          }
-          <div style="min-width:0">
-            <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
-            <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">${t('am_zug')}</div>
+        ?`font-family:'Manrope',sans-serif;font-size:40px;font-weight:800;line-height:1;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 6px;display:inline-block;":""}`
+        :`font-family:'Manrope',sans-serif;font-size:26px;font-weight:800;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 4px;display:inline-block;":""}`;
+      const checkoutHtml=isActive&&co
+        ?`<div style="font-size:10px;color:#F4D77E;font-weight:700;margin-top:3px;line-height:1.3">${co} <span style="opacity:.65;font-size:9px">${co.split(" ").length}-${t('dart_finish')}</span></div>`
+        :"";
+      if(isActive){
+        return `<div class="lp-player active">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+            ${photoUrl
+              ?`<img src="${photoUrl}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid #C9A227;flex-shrink:0">`
+              :`<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+            }
+            <div style="min-width:0">
+              <div style="font-size:12px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+              <div style="font-size:9px;font-weight:700;color:#C9A227;letter-spacing:.1em">${t('am_zug')}</div>
+            </div>
           </div>
-        </div>`:"";
-      const inactivePlayerHtml=`
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-          ${photoUrl
-            ?`<img src="${photoUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid #303038;flex-shrink:0">`
-            :`<div style="width:26px;height:26px;border-radius:50%;background:#1C1C21;border:1px solid #303038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#9A9AA2;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
-          }
-          <div style="min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#C9C9D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${setDots}${legDots}${displayName}</div>
-            ${avgVal?`<div style="font-size:10px;font-weight:700;color:#6E6E78">Ø ${avgVal}</div>`:""}
-          </div>
+          <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
+          ${checkoutHtml}
+          ${chips?`<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:2px">${chips}</div>`:""}
         </div>`;
-      return `<div class="lp-player${isActive?" active":""}">
-        ${isActive?activeAvatarHtml:inactivePlayerHtml}
-        ${isActive?`<div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:#7E7E86;margin-bottom:2px">${t('verbleibend')}</div>`:""}
-        <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
-        <div class="lp-throws">${isActive&&chips?chips:`<span style="color:#7E7E86;font-size:10px;font-weight:700">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`}</div>
-      </div>`;
+      } else {
+        return `<div class="lp-player">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px">
+            ${photoUrl
+              ?`<img src="${photoUrl}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #303038;flex-shrink:0">`
+              :`<div style="width:22px;height:22px;border-radius:50%;background:#1C1C21;border:1px solid #303038;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#9A9AA2;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
+            }
+            <div style="min-width:0">
+              <div style="font-size:11px;font-weight:700;color:#9A9AA2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${setDots}${legDots}${displayName}</div>
+            </div>
+          </div>
+          <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
+          ${avgVal?`<div style="font-size:9px;font-weight:700;color:#6E6E78;margin-top:1px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</div>`:""}
+        </div>`;
+      }
     }).join("");
   }
 
@@ -687,6 +693,28 @@ export function handleLegWin(winnerIdx){
   document.getElementById("leg-overlay").classList.add("visible");
 }
 
+/** Dynamically sizes winner dartboards to fill remaining scroll space. */
+function resizeWinnerBoards(){
+  const overlay=document.getElementById('winner-overlay');
+  if(!overlay||!overlay.classList.contains('visible')) return;
+  const scroll=overlay.querySelector('#winner-tab-match > .winner-tab-scroll');
+  if(!scroll) return;
+  const summary=overlay.querySelector('#winner-summary');
+  const boardsRow=summary?.querySelector('.tv-boards-row');
+  if(!boardsRow) return;
+  const scrollH=scroll.clientHeight;
+  const scrollW=scroll.clientWidth;
+  const headerH=summary?.querySelector('.tv-header')?.offsetHeight||0;
+  const statsH=summary?.querySelector('.tv-stats-table')?.offsetHeight||0;
+  const legH=summary?.querySelector('.tv-leg-label')?.offsetHeight||0;
+  const availH=scrollH-22-headerH-statsH-legH-28; // 22=vert-pad, 28=row-pad+names
+  const n=boardsRow.querySelectorAll('.tv-mini-board').length||1;
+  const availW=(scrollW-32-20*(n-1))/n; // 32=horiz-pad, 20=gap per board
+  const size=Math.max(80,Math.min(Math.floor(availH),Math.floor(availW)));
+  overlay.style.setProperty('--winner-board-size',`${size}px`);
+}
+window.addEventListener('resize',resizeWinnerBoards);
+
 /**
  * Shows the winner overlay.
  * @param {string} name
@@ -742,6 +770,7 @@ export function showWinner(name,round){
           const svgEl=document.getElementById(`winner-scatter-${si}`);
           if(svgEl) drawMiniBoard(svgEl,s.dots,12);
         });
+        resizeWinnerBoards();
       });
     }
   }
