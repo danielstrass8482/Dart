@@ -516,10 +516,12 @@ export function advanceX01(){
  * @param {Array} players - stat objects per player
  * @param {string} mode - 'leg' or 'winner'
  * @param {string|null} legLabel - optional overlay title
+ * @param {boolean} big - use enlarged sizes (Match tab)
  */
-function buildTvStatsHTML(players, mode, legLabel) {
+function buildTvStatsHTML(players, mode, legLabel, big=false) {
   if (!players.length) return '';
   const pfx = mode === 'winner' ? 'winner' : 'leg';
+  const wrapCls = `tv-overlay-wrap${big?' tv-lg':''}`;
 
   function avatar(s) {
     const cls = s.isWinner ? ' tv-avatar-winner' : '';
@@ -552,7 +554,7 @@ function buildTvStatsHTML(players, mode, legLabel) {
   if (players.length === 1) {
     const s = players[0];
     const coPct = s.coAtt>0 ? `${s.coHit}/${s.coAtt} (${s.coPct}%)` : '—';
-    return `<div class="tv-overlay-wrap">${hdr}
+    return `<div class="${wrapCls}">${hdr}
       <div class="tv-header"><div class="tv-player tv-player-center">
         ${avatar(s)}<div class="tv-pname">${s.displayName}</div>
         ${s.isWinner?'<div class="tv-winner-badge">WINNER</div>':''}
@@ -579,7 +581,7 @@ function buildTvStatsHTML(players, mode, legLabel) {
     ? `<div class="tv-result-score">${p1.score}<span class="tv-result-sep">:</span>${p2.score}</div><div class="tv-result-label">${p1.scoreLabel||''}</div>`
     : `<div class="tv-result-score">${state.cfg.legWins[p1.idx]}<span class="tv-result-sep">:</span>${state.cfg.legWins[p2.idx]}</div><div class="tv-result-label">LEGS</div>`;
 
-  return `<div class="tv-overlay-wrap">${hdr}
+  return `<div class="${wrapCls}">${hdr}
     <div class="tv-header">
       <div class="tv-player">
         ${avatar(p1)}<div class="tv-pname">${p1.displayName}</div>
@@ -733,7 +735,7 @@ export function showWinner(name,round){
     if(!humanStats.length){
       sumEl.style.display='none';
     } else {
-      sumEl.innerHTML=buildTvStatsHTML(humanStats,'winner',null);
+      sumEl.innerHTML=buildTvStatsHTML(humanStats,'winner',null,true);
       sumEl.style.display='block';
       requestAnimationFrame(()=>{
         humanStats.forEach((s,si)=>{
@@ -745,6 +747,11 @@ export function showWinner(name,round){
   }
 
   document.getElementById("winner-overlay").classList.add("visible");
+  // Always open on MATCH tab
+  document.getElementById("winner-tab-match")?.classList.remove("winner-tab-hidden");
+  document.getElementById("winner-tab-analysis")?.classList.add("winner-tab-hidden");
+  document.getElementById("tab-btn-match")?.classList.add("winner-tab-active");
+  document.getElementById("tab-btn-analysis")?.classList.remove("winner-tab-active");
   if(window._updateCoachLimitDisplay) window._updateCoachLimitDisplay();
   if(window._buildCoachPlayerSelector) window._buildCoachPlayerSelector();
   const winnerIdx=state.cfg.players.indexOf(name);

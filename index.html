@@ -799,57 +799,69 @@
 </div>
 
 <div class="winner-overlay" id="winner-overlay">
-  <div style="width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:20px 16px;text-align:center;box-sizing:border-box;margin:0 auto">
-    <div id="winner-summary" style="margin-bottom:16px"></div>
+  <!-- Tab navigation -->
+  <div class="winner-tab-bar">
+    <button class="winner-tab-btn winner-tab-active" id="tab-btn-match">MATCH</button>
+    <button class="winner-tab-btn" id="tab-btn-analysis">ANALYSIS <span class="winner-tab-premium">PREMIUM</span></button>
+  </div>
 
-    <!-- Text Coach with player selector -->
-    <div style="margin-top:16px">
-      <div id="coach-player-selector" style="display:none;margin-bottom:10px">
-        <div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:6px" data-i18n="analyse_fuer">ANALYSE FÜR</div>
+  <!-- Tab 1: MATCH — Stats ohne Scrollen -->
+  <div class="winner-tab-pane" id="winner-tab-match">
+    <div class="winner-tab-scroll">
+      <div id="winner-summary"></div>
+      <button class="btn-new-game" id="btn-new-game" style="width:100%;margin-top:12px" data-i18n="neues_spiel">NEUES SPIEL</button>
+    </div>
+  </div>
+
+  <!-- Tab 2: ANALYSIS — Coach & Video -->
+  <div class="winner-tab-pane winner-tab-hidden" id="winner-tab-analysis">
+    <div class="winner-tab-scroll">
+      <!-- Player selector -->
+      <div id="coach-player-selector" style="display:none;margin-bottom:12px;text-align:center">
+        <div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px" data-i18n="analyse_fuer">ANALYSE FÜR</div>
         <div id="coach-player-btns" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
       </div>
+      <!-- Stats Analysis -->
       <button class="coach-btn" id="btn-coach-winner"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="statistik_analyse">STATISTIK-ANALYSE</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
       <div id="coach-output-winner"></div>
       <div class="coach-limit" id="coach-limit-winner"></div>
-    </div>
-
-    <!-- Saved analyses -->
-    <div id="coach-history-wrap" style="display:none;margin-top:12px;text-align:left">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-sec);margin-bottom:6px;cursor:pointer" id="btn-toggle-history">
-        <i data-lucide="list" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="gespeicherte_analysen">GESPEICHERTE ANALYSEN</span> ▼
+      <!-- Saved analyses -->
+      <div id="coach-history-wrap" style="display:none;margin-top:12px;text-align:left">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dart-text-sec);margin-bottom:6px;cursor:pointer" id="btn-toggle-history">
+          <i data-lucide="list" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="gespeicherte_analysen">GESPEICHERTE ANALYSEN</span> ▼
+        </div>
+        <div id="coach-history-list" style="display:none"></div>
       </div>
-      <div id="coach-history-list" style="display:none"></div>
-    </div>
-
-    <!-- Video Coach -->
-    <div style="margin-top:12px;background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:14px;text-align:left">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wurf_analyse_video">WURF-ANALYSE (VIDEO)</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
-      <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px" data-i18n="video_hint">Kurzes Video (3–5 Sek.) — von der Seite, Hüfthöhe.</div>
-      <input type="file" id="video-upload" accept="video/*" style="display:none">
-      <button id="btn-video-phone-winner" style="width:100%;padding:11px;border:2px solid var(--dart-gold);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-gold);font-weight:700;margin-bottom:8px">
-        <i data-lucide="smartphone" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="mit_handy_aufnehmen">MIT HANDY AUFNEHMEN</span>
-      </button>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button id="btn-video-record-winner" style="flex:1;padding:10px;border:2px solid var(--dart-danger);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-danger)">
-          <i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="tablet_kamera">TABLET-KAMERA</span>
+      <!-- Video Coach -->
+      <div style="margin-top:12px;background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:10px;padding:14px;text-align:left">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;margin-bottom:6px"><i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wurf_analyse_video">WURF-ANALYSE (VIDEO)</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
+        <div style="font-size:12px;color:var(--dart-text-sec);margin-bottom:10px" data-i18n="video_hint">Kurzes Video (3–5 Sek.) — von der Seite, Hüfthöhe.</div>
+        <input type="file" id="video-upload" accept="video/*" style="display:none">
+        <button id="btn-video-phone-winner" style="width:100%;padding:11px;border:2px solid var(--dart-gold);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-gold);font-weight:700;margin-bottom:8px">
+          <i data-lucide="smartphone" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="mit_handy_aufnehmen">MIT HANDY AUFNEHMEN</span>
         </button>
-        <button id="btn-video-select" style="flex:1;padding:10px;border:2px dashed var(--dart-border);border-radius:8px;background:var(--dart-bg-card);cursor:pointer;font-size:13px;color:var(--dart-text-muted)">
-          <i data-lucide="upload" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="hochladen">HOCHLADEN</span>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="btn-video-record-winner" style="flex:1;padding:10px;border:2px solid var(--dart-danger);border-radius:8px;background:var(--dart-bg-chip);cursor:pointer;font-size:13px;color:var(--dart-danger)">
+            <i data-lucide="camera" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="tablet_kamera">TABLET-KAMERA</span>
+          </button>
+          <button id="btn-video-select" style="flex:1;padding:10px;border:2px dashed var(--dart-border);border-radius:8px;background:var(--dart-bg-card);cursor:pointer;font-size:13px;color:var(--dart-text-muted)">
+            <i data-lucide="upload" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="hochladen">HOCHLADEN</span>
+          </button>
+        </div>
+        <button id="btn-video-stop-winner" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:var(--dart-danger);color:var(--dart-text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">
+          <i data-lucide="square" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> STOP
         </button>
+        <div id="video-preview-wrap" style="display:none;margin-bottom:8px">
+          <video id="video-preview" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
+          <div id="video-frames-info" style="font-size:11px;color:var(--dart-text-sec);margin-top:4px;text-align:center"></div>
+        </div>
+        <button id="btn-video-analyze" class="coach-btn" style="display:none;font-size:16px;padding:10px">
+          <i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wurf_analysieren_btn">WURF ANALYSIEREN</span>
+        </button>
+        <div id="coach-output-video"></div>
       </div>
-      <button id="btn-video-stop-winner" style="display:none;width:100%;padding:10px;border:none;border-radius:8px;background:var(--dart-danger);color:var(--dart-text);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">
-        <i data-lucide="square" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> STOP
-      </button>
-      <div id="video-preview-wrap" style="display:none;margin-bottom:8px">
-        <video id="video-preview" style="width:100%;border-radius:8px;max-height:160px" muted playsinline></video>
-        <div id="video-frames-info" style="font-size:11px;color:var(--dart-text-sec);margin-top:4px;text-align:center"></div>
-      </div>
-      <button id="btn-video-analyze" class="coach-btn" style="display:none;font-size:16px;padding:10px">
-        <i data-lucide="video" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="wurf_analysieren_btn">WURF ANALYSIEREN</span>
-      </button>
-      <div id="coach-output-video"></div>
+      <button class="btn-new-game" id="btn-new-game-analysis" style="width:100%;margin-top:16px" data-i18n="neues_spiel">NEUES SPIEL</button>
     </div>
-    <button class="btn-new-game" id="btn-new-game" style="margin-top:16px" data-i18n="neues_spiel">NEUES SPIEL</button>
   </div>
 </div>
 

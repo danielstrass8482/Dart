@@ -1,12 +1,26 @@
 /* ── Winner overlay ── */
 .winner-overlay { position: fixed; inset: 0; background: var(--dart-bg-screen);
-  display: none; align-items: center; justify-content: center; z-index: 100; text-align: center; }
+  display: none; align-items: stretch; justify-content: flex-start; z-index: 100;
+  flex-direction: column; text-align: center; }
 .winner-overlay.visible { display: flex; }
-.winner-label { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--dart-gold); letter-spacing: 3px; margin-bottom: 6px; }
-.winner-name { font-family: 'Bebas Neue', sans-serif; font-size: 60px; color: var(--dart-gold); letter-spacing: 2px; }
-.winner-round { color: var(--dart-text-sec); font-size: 14px; margin-top: 6px; }
-.btn-new-game { margin-top: 28px; padding: 14px 36px; background: var(--dart-gold); border: none; border-radius: 10px;
-  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; }
+.btn-new-game { padding: 14px 36px; background: var(--dart-gold); border: none; border-radius: 10px;
+  font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; cursor: pointer; }
+
+/* ── Winner overlay tab system ── */
+.winner-tab-bar { display: flex; flex-shrink: 0; background: var(--dart-bg-card);
+  border-bottom: 1px solid var(--dart-border); }
+.winner-tab-btn { flex: 1; padding: 14px 8px 11px; border: none; background: transparent;
+  color: var(--dart-text-muted); font-family: 'Bebas Neue', sans-serif; font-size: 17px;
+  letter-spacing: 2px; cursor: pointer; border-bottom: 3px solid transparent; transition: color .2s, border-color .2s; }
+.winner-tab-btn.winner-tab-active { color: var(--dart-gold); border-bottom-color: var(--dart-gold);
+  background: rgba(212,175,55,0.04); }
+.winner-tab-premium { background: var(--dart-gold); color: #000; font-size: 9px; padding: 1px 6px;
+  border-radius: 8px; vertical-align: middle; margin-left: 5px; font-weight: 700; font-family: sans-serif; }
+.winner-tab-pane { flex: 1; min-height: 0; overflow-y: auto; display: flex;
+  align-items: flex-start; justify-content: center; }
+.winner-tab-hidden { display: none !important; }
+.winner-tab-scroll { width: 100%; max-width: 560px; padding: 14px 16px 20px;
+  box-sizing: border-box; text-align: center; }
 
 /* ── Video Session (Second Screen) ── */
 .vidsession-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center; }
@@ -69,6 +83,25 @@
 .tv-single-row:last-child { border-bottom:none; }
 .tv-single-label { font-size:9px; letter-spacing:1.5px; color:var(--dart-text-sec); text-transform:uppercase; text-align:left; }
 .tv-single-val { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--dart-text); flex-shrink:0; }
+/* ── Large variant for MATCH tab ── */
+.tv-lg .tv-avatar-img { width:76px; height:76px; }
+.tv-lg .tv-avatar-init { width:76px; height:76px; font-size:28px; }
+.tv-lg .tv-result-score { font-size:64px; }
+.tv-lg .tv-result-sep { font-size:48px; }
+.tv-lg .tv-result { min-width:96px; }
+.tv-lg .tv-pname { font-size:17px; max-width:130px; }
+.tv-lg .tv-winner-badge { font-size:9px; padding:3px 10px; }
+.tv-lg .tv-winner-badge-ph { height:18px; }
+.tv-lg .tv-header { margin-bottom:16px; }
+.tv-lg .tv-val-left, .tv-lg .tv-val-right { font-size:23px; }
+.tv-lg .tv-val-win { font-size:26px !important; }
+.tv-lg .tv-bar-track { height:5px; border-radius:3px; }
+.tv-lg .tv-stat-row { padding:8px 0 5px; }
+.tv-lg .tv-stat-label { font-size:9px; letter-spacing:2px; }
+.tv-lg .tv-mini-board { width:140px; height:140px; }
+.tv-lg .tv-boards-row { gap:20px; padding:10px 0 4px; }
+.tv-lg .tv-single-val { font-size:24px; }
+.tv-lg .tv-single-label { font-size:10px; }
 
 /* ── Health Check Modal ── */
 .health-modal-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.80);z-index:400;align-items:center;justify-content:center; }
