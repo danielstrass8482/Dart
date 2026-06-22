@@ -294,6 +294,21 @@ document.getElementById("party-back").addEventListener("click", showSetup);
 
 // ── Winner overlay buttons ────────────────────────────────────────
 document.getElementById("btn-new-game").addEventListener("click", showSetup);
+document.getElementById("btn-new-game-analysis")?.addEventListener("click", showSetup);
+
+// Tab switching
+document.getElementById("tab-btn-match")?.addEventListener("click",()=>{
+  document.getElementById("winner-tab-match").classList.remove("winner-tab-hidden");
+  document.getElementById("winner-tab-analysis").classList.add("winner-tab-hidden");
+  document.getElementById("tab-btn-match").classList.add("winner-tab-active");
+  document.getElementById("tab-btn-analysis").classList.remove("winner-tab-active");
+});
+document.getElementById("tab-btn-analysis")?.addEventListener("click",()=>{
+  document.getElementById("winner-tab-analysis").classList.remove("winner-tab-hidden");
+  document.getElementById("winner-tab-match").classList.add("winner-tab-hidden");
+  document.getElementById("tab-btn-analysis").classList.add("winner-tab-active");
+  document.getElementById("tab-btn-match").classList.remove("winner-tab-active");
+});
 function _accumulateLegStats(){
   if(!state.cfg?.accumulated||!state.x01) return;
   state.cfg.players.forEach((_,i)=>{
