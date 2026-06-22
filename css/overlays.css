@@ -103,39 +103,48 @@
 .tv-lg .tv-single-val { font-size:24px; }
 .tv-lg .tv-single-label { font-size:10px; }
 
-/* ── MATCH tab: button gepinnt am unteren Rand, Boards füllen den Rest ── */
+/* ── MATCH tab: content scrolls, button pinned at absolute bottom ── */
 #winner-tab-match {
+  display: flex;
   flex-direction: column;
   align-items: stretch;
+  justify-content: flex-start;
   overflow: hidden;
 }
-#winner-tab-match .winner-tab-scroll {
-  flex: 1;
+#winner-tab-match > .winner-tab-scroll {
+  flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 560px;
   margin-left: auto;
   margin-right: auto;
-  padding-bottom: 8px;
+  padding: 14px 16px 8px;
+  box-sizing: border-box;
+  text-align: center;
 }
 .match-new-game-bar {
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 100%;
   padding: 10px 16px 14px;
   background: var(--dart-bg-screen);
   border-top: 1px solid rgba(255,255,255,0.06);
   box-sizing: border-box;
 }
-/* ── Landscape: Boards massiv größer, breiterer Content-Bereich ── */
+/* ── Landscape: boards dominate ── */
 @media (orientation: landscape) {
-  #winner-tab-match .winner-tab-scroll {
+  #winner-tab-match > .winner-tab-scroll {
     max-width: min(98vw, 900px);
   }
   #winner-tab-match .tv-mini-board {
-    width: clamp(180px, 28vw, 280px);
-    height: clamp(180px, 28vw, 280px);
+    width: clamp(200px, 42vh, 440px);
+    height: clamp(200px, 42vh, 440px);
   }
   #winner-tab-match .tv-boards-row {
-    gap: 36px;
-    padding: 18px 0 8px;
+    gap: 56px;
+    padding: 20px 0 8px;
   }
   #winner-tab-match .tv-board-name {
     font-size: 14px;
