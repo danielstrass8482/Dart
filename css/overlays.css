@@ -133,22 +133,40 @@
   border-top: 1px solid rgba(255,255,255,0.06);
   box-sizing: border-box;
 }
-/* ── Landscape: boards dominate ── */
+/* ── Landscape: compact header+stats so boards fit without scrolling ── */
 @media (orientation: landscape) {
   #winner-tab-match > .winner-tab-scroll {
     max-width: min(98vw, 900px);
   }
+  /* Compact avatars (96→56px frees ~40px header height) */
+  #winner-tab-match .tv-lg .tv-avatar-img,
+  #winner-tab-match .tv-lg .tv-avatar-init {
+    width: 56px;
+    height: 56px;
+  }
+  #winner-tab-match .tv-lg .tv-avatar-init { font-size: 20px; border-radius: 8px; }
+  #winner-tab-match .tv-lg .tv-result-score { font-size: 44px; }
+  #winner-tab-match .tv-lg .tv-result-sep { font-size: 34px; }
+  #winner-tab-match .tv-lg .tv-result { min-width: 72px; }
+  #winner-tab-match .tv-lg .tv-pname { font-size: 13px; }
+  #winner-tab-match .tv-lg .tv-header { margin-bottom: 8px; }
+  /* Compact stat rows (13→6px padding frees ~42px over 6 rows) */
+  #winner-tab-match .tv-lg .tv-stat-row { padding: 4px 0 2px; }
+  #winner-tab-match .tv-lg .tv-val-left,
+  #winner-tab-match .tv-lg .tv-val-right { font-size: 17px; }
+  #winner-tab-match .tv-lg .tv-val-win { font-size: 19px !important; }
+  /* Boards: fill remaining height (100vh - ~500px fixed+content overhead) */
   #winner-tab-match .tv-mini-board {
-    width: clamp(200px, 42vh, 440px);
-    height: clamp(200px, 42vh, 440px);
+    width: clamp(120px, calc(100vh - 500px), 280px);
+    height: clamp(120px, calc(100vh - 500px), 280px);
   }
   #winner-tab-match .tv-boards-row {
-    gap: 56px;
-    padding: 20px 0 8px;
+    gap: 20px;
+    padding: 10px 0 4px;
   }
   #winner-tab-match .tv-board-name {
-    font-size: 14px;
-    letter-spacing: 2px;
+    font-size: 12px;
+    letter-spacing: 1px;
   }
 }
 
