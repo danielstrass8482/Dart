@@ -49,8 +49,8 @@
 .tv-player { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; min-width:0; }
 .tv-player-r { align-items:center; }
 .tv-player-center { align-items:center; }
-.tv-avatar-img { width:56px; height:56px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); flex-shrink:0; }
-.tv-avatar-init { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--dart-text); border:2px solid rgba(255,255,255,0.15); flex-shrink:0; }
+.tv-avatar-img { width:72px; height:72px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.15); flex-shrink:0; }
+.tv-avatar-init { width:72px; height:72px; border-radius:10px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--dart-text); border:2px solid rgba(255,255,255,0.15); flex-shrink:0; }
 .tv-avatar-winner { border-color:var(--dart-gold) !important; box-shadow:0 0 12px rgba(212,175,55,0.4); }
 .tv-pname { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:1px; color:var(--dart-text); max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tv-winner-badge { font-size:8px; font-weight:700; letter-spacing:2px; color:var(--dart-gold); background:rgba(212,175,55,0.15); border:1px solid rgba(212,175,55,0.5); padding:2px 8px; border-radius:10px; white-space:nowrap; }
@@ -84,8 +84,8 @@
 .tv-single-label { font-size:9px; letter-spacing:1.5px; color:var(--dart-text-sec); text-transform:uppercase; text-align:left; }
 .tv-single-val { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--dart-text); flex-shrink:0; }
 /* ── Large variant for MATCH tab ── */
-.tv-lg .tv-avatar-img { width:76px; height:76px; }
-.tv-lg .tv-avatar-init { width:76px; height:76px; font-size:28px; }
+.tv-lg .tv-avatar-img { width:96px; height:96px; border-radius:12px; }
+.tv-lg .tv-avatar-init { width:96px; height:96px; font-size:34px; border-radius:12px; }
 .tv-lg .tv-result-score { font-size:64px; }
 .tv-lg .tv-result-sep { font-size:48px; }
 .tv-lg .tv-result { min-width:96px; }

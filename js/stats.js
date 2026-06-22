@@ -450,7 +450,7 @@ export async function loadAndRenderStats(){
         <span class="winner-tag" style="color:${isWin&&pid?"var(--dart-success)":"var(--dart-text)"}">${g.winner||"—"}</span>
         <span class="mode-tag">${g.mode||"—"}</span>
         <span>${(g.rounds||0)*3}</span>
-        <span style="color:var(--dart-text-sec);font-size:11px">${ds}</span>
+        <span style="color:var(--dart-text-sec);font-size:13px">${ds}</span>
       </div>`;
     });
     html+=`</div>`;
