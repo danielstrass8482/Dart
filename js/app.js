@@ -434,8 +434,13 @@ document.getElementById("bot-group").addEventListener("click",e=>{
   document.getElementById("bot-personality-section").style.display=selectedBot==="none"?"none":"";
 });
 
-document.getElementById("bot-personality-group").addEventListener("click",e=>{
+document.getElementById("bot-personality-group").addEventListener("click",async e=>{
   const v=togVal(e); if(!v) return;
+  const _premiumPersonalities=["uebermuetig","nervoese","gluecksspieler","kaltbluetig","aufholer"];
+  if(_premiumPersonalities.includes(v)){
+    const access=await canUseFeature("botPersonalities");
+    if(!access.allowed){ showPremiumOverlay("botPersonalities"); return; }
+  }
   selectedPersonality=v;
   document.querySelectorAll("#bot-personality-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedPersonality));
   document.getElementById("bot-personality-desc").textContent=t(BOT_PERSONALITY_DESCS[selectedPersonality])||"";
@@ -846,16 +851,24 @@ function buildCoachPlayerSelector(){
   humanPlayers.forEach((name,hi)=>{
     const realIdx=state.cfg.players.indexOf(name);
     const col=playerColor(name);
+    const pid=state.cfg.playerIds?.[realIdx]||null;
+    const playerObj=pid?state.allPlayers?.find(p=>p.id===pid):null;
+    const photoUrl=playerObj?.photoUrl||null;
+    const initials=name.slice(0,2).toUpperCase();
+    const avatarHtml=photoUrl
+      ?`<img src="${photoUrl}" style="width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0">`
+      :`<span style="width:30px;height:30px;border-radius:6px;background:${col}33;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:${col};flex-shrink:0">${initials}</span>`;
     const btn=document.createElement("button");
-    btn.style.cssText=`padding:6px 14px;border-radius:20px;border:2px solid ${col};background:${hi===0?col:"#2a2a2a"};cursor:pointer;font-size:13px;font-weight:600;color:${hi===0?"var(--dart-text)":"var(--dart-text-muted)"};box-shadow:${hi===0?"0 0 8px "+col:"none"}`;
-    btn.textContent=name;
+    btn.style.cssText=`display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:10px;border:2px solid ${col};background:${hi===0?col+"22":"var(--dart-bg-card)"};cursor:pointer;font-size:13px;font-weight:600;color:${hi===0?"var(--dart-text)":"var(--dart-text-muted)"};box-shadow:${hi===0?"0 0 10px "+col+"66":"none"}`;
+    btn.innerHTML=`${avatarHtml}<span>${name}</span>`;
     btn.addEventListener("click",()=>{
       coachSelectedPlayerIdx=realIdx;
       btns.querySelectorAll("button").forEach((b,bi)=>{
         const bcol=playerColor(humanPlayers[bi]);
-        b.style.background=bi===hi?bcol:"var(--dart-border)";
+        b.style.background=bi===hi?bcol+"22":"var(--dart-bg-card)";
         b.style.color=bi===hi?"var(--dart-text)":"var(--dart-text-muted)";
-        b.style.boxShadow=bi===hi?"0 0 8px "+bcol:"none";
+        b.style.boxShadow=bi===hi?"0 0 10px "+bcol+"66":"none";
+        b.style.borderColor=bcol;
       });
     });
     btns.appendChild(btn);
@@ -865,6 +878,8 @@ function buildCoachPlayerSelector(){
 }
 
 document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
+  const access=await canUseFeature("coachAnalysis");
+  if(!access.allowed){ showPremiumOverlay("coachAnalysis"); return; }
   const btn=document.getElementById("btn-coach-winner");
   const outputEl=document.getElementById("coach-output-winner");
   const limitEl=document.getElementById("coach-limit-winner");
