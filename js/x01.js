@@ -85,6 +85,7 @@ export async function startX01(starter=0){
     first9: state.cfg.players.map(()=>null),
     checkoutAttempts: state.cfg.players.map(()=>0),
     checkoutHits: state.cfg.players.map(()=>0),
+    checkoutScores: state.cfg.players.map(()=>[]),
     checkoutAttemptThisTurn: false,
     doubleStats: state.cfg.players.map(()=>({})),
     bouncers: state.cfg.players.map(()=>0),
@@ -397,7 +398,9 @@ export function processX01Hit(hit, svgX=null, svgY=null){
     state.x01.scores[state.x01.current]=0;
     state.x01.winner=state.x01.current;
     state.x01.checkoutHits[state.x01.current]++;
-    state.x01.turnScores[state.x01.current].push(state.x01.throws.reduce((s,t)=>s+t.score,0));
+    const _coScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
+    state.x01.checkoutScores[state.x01.current].push(_coScore);
+    state.x01.turnScores[state.x01.current].push(_coScore);
     if(localStorage.getItem("dart_slang_enabled")==="true"){
       if(hit.label==="D1") queueAudio("Madhouse!","el_slang_madhouse_");
       else if(hit.label==="D20") queueAudio("Double Top! Game Shot!","el_slang_double_top_game_shot_");
@@ -509,6 +512,102 @@ export function advanceX01(){
 }
 
 /**
+ * Builds TV-style stats comparison HTML for the leg/winner overlays.
+ * @param {Array} players - stat objects per player
+ * @param {string} mode - 'leg' or 'winner'
+ * @param {string|null} legLabel - optional overlay title
+ */
+function buildTvStatsHTML(players, mode, legLabel) {
+  if (!players.length) return '';
+  const pfx = mode === 'winner' ? 'winner' : 'leg';
+
+  function avatar(s) {
+    const cls = s.isWinner ? ' tv-avatar-winner' : '';
+    if (s.photoUrl) return `<img src="${s.photoUrl}" class="tv-avatar-img${cls}">`;
+    return `<div class="tv-avatar-init${cls}">${s.displayName.slice(0,2).toUpperCase()}</div>`;
+  }
+
+  function statRow(label, v1, v2, dv1, dv2, higherBetter=true) {
+    const n1=parseFloat(v1)||0, n2=parseFloat(v2)||0, tot=n1+n2;
+    const f1=tot>0?Math.max(3,Math.round(n1/tot*100)):50;
+    const f2=Math.max(3,100-f1);
+    const p1w=n1!==n2&&(higherBetter?n1>n2:n1<n2);
+    const p2w=n1!==n2&&(higherBetter?n2>n1:n2<n1);
+    return `<div class="tv-stat-row">
+      <div class="tv-val-left${p1w?' tv-val-win':p2w?' tv-val-dim':''}">${dv1??v1}</div>
+      <div class="tv-bar-label-col">
+        <div class="tv-bar-track">
+          <div class="tv-bar-seg${p1w?' tv-bar-gold':p2w?' tv-bar-fade':' tv-bar-neutral'}" style="flex:${f1}"></div>
+          <div class="tv-bar-gap"></div>
+          <div class="tv-bar-seg${p2w?' tv-bar-gold':p1w?' tv-bar-fade':' tv-bar-neutral'}" style="flex:${f2}"></div>
+        </div>
+        <div class="tv-stat-label">${label}</div>
+      </div>
+      <div class="tv-val-right${p2w?' tv-val-win':p1w?' tv-val-dim':''}">${dv2??v2}</div>
+    </div>`;
+  }
+
+  const hdr = legLabel ? `<div class="tv-leg-label">${legLabel}</div>` : '';
+
+  if (players.length === 1) {
+    const s = players[0];
+    const coPct = s.coAtt>0 ? `${s.coHit}/${s.coAtt} (${s.coPct}%)` : '—';
+    return `<div class="tv-overlay-wrap">${hdr}
+      <div class="tv-header"><div class="tv-player tv-player-center">
+        ${avatar(s)}<div class="tv-pname">${s.displayName}</div>
+        ${s.isWinner?'<div class="tv-winner-badge">WINNER</div>':''}
+      </div></div>
+      <div class="tv-stats-table">
+        <div class="tv-single-row"><span class="tv-single-label">THREE-DART AVERAGE</span><span class="tv-single-val">${s.avg}</span></div>
+        <div class="tv-single-row"><span class="tv-single-label">180s</span><span class="tv-single-val">${s.s180}</span></div>
+        <div class="tv-single-row"><span class="tv-single-label">140+</span><span class="tv-single-val">${s.s140}</span></div>
+        <div class="tv-single-row"><span class="tv-single-label">100+</span><span class="tv-single-val">${s.s100}</span></div>
+        <div class="tv-single-row"><span class="tv-single-label">CHECKOUT %</span><span class="tv-single-val">${coPct}</span></div>
+        ${s.highCo>0?`<div class="tv-single-row"><span class="tv-single-label">HIGHEST CHECKOUT</span><span class="tv-single-val">${s.highCo}</span></div>`:''}
+        ${s.scoreLabel?`<div class="tv-single-row"><span class="tv-single-label">${s.scoreLabel}</span><span class="tv-single-val">${s.score}</span></div>`:''}
+      </div>
+      ${s.dots?.length?`<div class="tv-boards-row"><div class="tv-board-col"><svg id="${pfx}-scatter-0" class="tv-mini-board"></svg></div></div>`:''}
+    </div>`;
+  }
+
+  // 2-player TV comparison
+  const [p1, p2] = players;
+  const co1 = p1.coAtt>0?`${p1.coHit}/${p1.coAtt} (${p1.coPct}%)`:`0/${p1.coAtt||0}`;
+  const co2 = p2.coAtt>0?`${p2.coHit}/${p2.coAtt} (${p2.coPct}%)`:`0/${p2.coAtt||0}`;
+  const hasHighCo = p1.highCo>0||p2.highCo>0;
+  const headerScore = p1.score!=null
+    ? `<div class="tv-result-score">${p1.score}<span class="tv-result-sep">:</span>${p2.score}</div><div class="tv-result-label">${p1.scoreLabel||''}</div>`
+    : `<div class="tv-result-score">${state.cfg.legWins[p1.idx]}<span class="tv-result-sep">:</span>${state.cfg.legWins[p2.idx]}</div><div class="tv-result-label">LEGS</div>`;
+
+  return `<div class="tv-overlay-wrap">${hdr}
+    <div class="tv-header">
+      <div class="tv-player">
+        ${avatar(p1)}<div class="tv-pname">${p1.displayName}</div>
+        ${p1.isWinner?'<div class="tv-winner-badge">WINNER</div>':'<div class="tv-winner-badge-ph"></div>'}
+      </div>
+      <div class="tv-result">${headerScore}</div>
+      <div class="tv-player tv-player-r">
+        ${avatar(p2)}<div class="tv-pname">${p2.displayName}</div>
+        ${p2.isWinner?'<div class="tv-winner-badge">WINNER</div>':'<div class="tv-winner-badge-ph"></div>'}
+      </div>
+    </div>
+    <div class="tv-stats-table">
+      ${statRow('THREE-DART AVERAGE',p1.avg,p2.avg)}
+      ${statRow('180s',p1.s180,p2.s180)}
+      ${statRow('140+',p1.s140,p2.s140)}
+      ${statRow('100+',p1.s100,p2.s100)}
+      ${statRow('CHECKOUT %',p1.coPct,p2.coPct,co1,co2)}
+      ${hasHighCo?statRow('HIGHEST CHECKOUT',p1.highCo,p2.highCo,p1.highCo||'—',p2.highCo||'—'):''}
+      ${p1.scoreLabel?statRow(p1.scoreLabel,p1.score,p2.score):''}
+    </div>
+    <div class="tv-boards-row">
+      <div class="tv-board-col"><svg id="${pfx}-scatter-0" class="tv-mini-board"></svg><div class="tv-board-name">${p1.displayName}</div></div>
+      <div class="tv-board-col"><svg id="${pfx}-scatter-1" class="tv-mini-board"></svg><div class="tv-board-name">${p2.displayName}</div></div>
+    </div>
+  </div>`;
+}
+
+/**
  * Handles leg win, set win, and match win logic.
  * @param {number} winnerIdx
  */
@@ -540,70 +639,47 @@ export function handleLegWin(winnerIdx){
   }
 
   const legNum=state.cfg.currentLeg;
-  document.getElementById("leg-label").textContent=
-    state.cfg.totalSets>1
-      ? `SET ${state.cfg.currentSet} · LEG ${legNum} WON!`
-      : `LEG ${legNum} WON!`;
-  document.getElementById("leg-winner-name").textContent=name;
-  const legsLeft=state.cfg.legsToWin-state.cfg.legWins[winnerIdx];
-  const scoreHtml=state.cfg.players.map((p,i)=>
-    `${p}: <strong>${state.cfg.legWins[i]}</strong> Leg${state.cfg.legWins[i]!==1?"s":""}`).join(" &nbsp;|&nbsp; ");
-  document.getElementById("leg-score-display").innerHTML=scoreHtml;
-  document.getElementById("leg-to-win").textContent=
-    legsLeft===1?"1 leg to win the set":`${legsLeft} legs to win the set`;
+  const _legLabel=state.cfg.totalSets>1
+    ?`SET ${state.cfg.currentSet} · LEG ${legNum} WON!`
+    :`LEG ${legNum} WON!`;
 
-  const humanPlayers=state.cfg.players.filter((_,i)=>!state.cfg.isBot?.[i]);
   const legStats=document.getElementById("leg-stats-summary");
   if(legStats){
-    const buildLegCard=(p,i,visible)=>{
-      if(state.cfg.isBot?.[i]) return "";
+    const toMini=t=>({x:t.svgX,y:t.svgY,v:2,miss:t.miss,label:t.label});
+    const legPlayerStats=state.cfg.players.map((p,i)=>{
+      if(state.cfg.isBot?.[i]) return null;
       const turns=state.x01.turnScores[i]||[];
-      if(!turns.length) return "";
+      if(!turns.length) return null;
       const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
-      const best=Math.max(...turns);
+      const s180=turns.filter(v=>v===180).length;
+      const s140=turns.filter(v=>v>=140&&v<180).length;
+      const s100=turns.filter(v=>v>=100&&v<140).length;
       const coAtt=state.x01.checkoutAttempts[i]||0;
       const coHit=state.x01.checkoutHits[i]||0;
       const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
-      const f9=state.x01.first9[i];
+      const coArr=state.x01.checkoutScores?.[i]||[];
+      const highCo=coArr.length?Math.max(...coArr):0;
+      const pid=state.cfg.playerIds?.[i];
+      const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
+      const displayName=playerObj?.nickname||p;
+      const photoUrl=playerObj?.photoUrl||null;
       const isWinner=i===winnerIdx;
-      return `<div class="leg-stat-card" data-player-idx="${i}" style="display:${visible?"":"none"};background:${isWinner?"rgba(232,196,74,0.15)":"rgba(255,255,255,0.05)"};border:1px solid ${isWinner?"#e8c44a":"rgba(255,255,255,0.1)"};border-radius:10px;padding:10px 14px;text-align:left">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${isWinner?"var(--dart-gold)":"var(--dart-border)"};letter-spacing:1px;margin-bottom:6px">${isWinner?"🏆 ":""}${p}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr${f9?" 1fr":""};gap:4px 12px;font-size:12px;color:var(--dart-text-sec)">
-          <span>Avg</span><span>Best</span><span>CO%</span>${f9?"<span>First 9</span>":""}
-          <span style="color:var(--dart-text);font-weight:600;font-size:15px">${avg}</span>
-          <span style="color:var(--dart-text);font-weight:600;font-size:15px">${best}</span>
-          <span style="color:var(--dart-text);font-weight:600;font-size:15px">${coPct}%</span>
-          ${f9?`<span style="color:var(--dart-text);font-weight:600;font-size:15px">${f9}</span>`:""}
-        </div>
-      </div>`;
-    };
-    let html="";
-    if(humanPlayers.length>1){
-      html+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">`;
-      state.cfg.players.forEach((p,i)=>{
-        if(state.cfg.isBot?.[i]) return;
-        const isFirst=!html.includes('leg-filter-btn');
-        html+=`<button class="leg-filter-btn" data-idx="${i}" style="padding:5px 12px;border-radius:16px;border:1px solid ${isFirst?"var(--dart-gold)":"var(--dart-border)"};background:${isFirst?"rgba(212,175,55,0.15)":"transparent"};color:${isFirst?"var(--dart-gold)":"var(--dart-text-muted)"};font-size:12px;cursor:pointer">${p}</button>`;
+      const dots=[
+        ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
+        ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
+      ];
+      return {avg,s180,s140,s100,coAtt,coHit,coPct,highCo,displayName,photoUrl,isWinner,idx:i,dots,score:null,scoreLabel:null};
+    }).filter(Boolean);
+
+    if(legPlayerStats.length){
+      legStats.innerHTML=buildTvStatsHTML(legPlayerStats,'leg',_legLabel);
+      requestAnimationFrame(()=>{
+        legPlayerStats.forEach((s,si)=>{
+          const svgEl=document.getElementById(`leg-scatter-${si}`);
+          if(svgEl) drawMiniBoard(svgEl,s.dots,12);
+        });
       });
-      html+=`<button class="leg-filter-btn" data-idx="all" style="padding:5px 12px;border-radius:16px;border:1px solid var(--dart-border);background:transparent;color:var(--dart-text-muted);font-size:12px;cursor:pointer">All</button></div>`;
     }
-    const firstHuman=state.cfg.players.findIndex((_,i)=>!state.cfg.isBot?.[i]);
-    html+=state.cfg.players.map((p,i)=>buildLegCard(p,i,humanPlayers.length<=1||i===firstHuman)).join("");
-    legStats.innerHTML=html;
-    legStats.addEventListener("click",(e)=>{
-      const btn=e.target.closest(".leg-filter-btn");
-      if(!btn) return;
-      const idx=btn.dataset.idx;
-      legStats.querySelectorAll(".leg-filter-btn").forEach(b=>{
-        const on=b===btn;
-        b.style.border=`1px solid ${on?"var(--dart-gold)":"var(--dart-border)"}`;
-        b.style.background=on?"rgba(212,175,55,0.15)":"transparent";
-        b.style.color=on?"var(--dart-gold)":"var(--dart-text-muted)";
-      });
-      legStats.querySelectorAll(".leg-stat-card").forEach(c=>{
-        c.style.display=(idx==="all"||c.dataset.playerIdx===idx)?"":"none";
-      });
-    },{once:false});
   }
 
   document.getElementById("leg-overlay").classList.add("visible");
@@ -615,137 +691,50 @@ export function handleLegWin(winnerIdx){
  * @param {number} round
  */
 export function showWinner(name,round){
-  document.getElementById("winner-name").textContent=name;
-  const legInfo = state.cfg.totalSets>1
-    ? `${state.cfg.players.map((p,i)=>`${p}: ${state.cfg.setWins[i]} Set${state.cfg.setWins[i]!==1?'s':''}`).join(' | ')}`
-    : state.cfg.totalLegs>1
-      ? `${state.cfg.legWins.map((w,i)=>state.cfg.players[i]+": "+w+" Leg"+( w!==1?"s":"")).join(" | ")}`
-      : `${t('runde')} ${round}`;
-  document.getElementById("winner-round").textContent=legInfo;
-
   const sumEl=document.getElementById("winner-summary");
   if(sumEl&&state.cfg.mode!=="Cricket"&&state.x01.turnScores){
     const toMini=t=>({x:t.svgX,y:t.svgY,v:2,miss:t.miss,label:t.label});
     const playerStats=state.cfg.players.map((p,i)=>{
       if(state.cfg.isBot?.[i]) return null;
-      // Combine accumulated game stats with current leg
       const accTurns=state.cfg.accumulated?.turnScores?.[i]||[];
       const turns=[...accTurns,...(state.x01.turnScores[i]||[])];
       if(!turns.length) return null;
       const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
-      const best=Math.max(...turns);
-      const f9=state.cfg.accumulated?.first9?.[i]??state.x01.first9?.[i];
+      const s180=turns.filter(v=>v===180).length;
+      const s140=turns.filter(v=>v>=140&&v<180).length;
+      const s100=turns.filter(v=>v>=100&&v<140).length;
       const coAtt=(state.cfg.accumulated?.checkoutAttempts?.[i]||0)+(state.x01.checkoutAttempts?.[i]||0);
       const coHit=(state.cfg.accumulated?.checkoutHits?.[i]||0)+(state.x01.checkoutHits?.[i]||0);
       const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
+      const allCheckouts=[
+        ...(state.cfg.accumulated?.checkoutScores?.[i]||[]),
+        ...(state.x01.checkoutScores?.[i]||[])
+      ];
+      const highCo=allCheckouts.length?Math.max(...allCheckouts):0;
       const pid=state.cfg.playerIds?.[i];
       const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
       const displayName=playerObj?.nickname||p;
       const photoUrl=playerObj?.photoUrl||null;
       const isWinner=i===state.x01.winner;
-      // Dots from all legs — only include state.x01.throws for the current player
       const dots=[
         ...(state.cfg.accumulated?.historicThrows?.[i]||[]).map(toMini),
         ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
         ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
       ];
-      const fieldFreq={};
-      dots.forEach(d=>{
-        if(d.miss) return;
-        const k=d.label?.replace(/^[TD]/,"")||"?";
-        const n=parseInt(k)||0;
-        if(n>0) fieldFreq[n]=(fieldFreq[n]||0)+1;
-      });
-      const topFields=Object.entries(fieldFreq).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>`${k}(${v})`).join(" ");
-      return {avg,best,f9,coAtt,coHit,coPct,displayName,photoUrl,isWinner,idx:i,pid,playerObj,dots,topFields};
+      let score=null, scoreLabel=null;
+      if(state.cfg.totalSets>1){
+        score=state.cfg.setWins[i]; scoreLabel='SETS WON';
+      } else if(state.cfg.totalLegs>1){
+        score=state.cfg.legWins[i]; scoreLabel='LEGS WON';
+      }
+      return {avg,s180,s140,s100,coAtt,coHit,coPct,highCo,displayName,photoUrl,isWinner,idx:i,dots,score,scoreLabel};
     });
     const humanStats=playerStats.filter(Boolean);
-
-    if(!humanStats.length){ sumEl.style.display="none"; }
-    else {
-      const isMulti=humanStats.length>1;
-      const gold="#D4AF37";
-      const muted="var(--dart-text-muted)";
-
-      // Segment frequencies per player
-      const segFreqs=humanStats.map(s=>{
-        const freq={};
-        s.dots.forEach(d=>{
-          if(d.miss) return;
-          const n=parseInt(d.label?.replace(/^[TD]/,""))||0;
-          if(n>0) freq[n]=(freq[n]||0)+1;
-        });
-        return freq;
-      });
-
-      // Top 10 segments sorted by combined hits across all players
-      const allSegNums=[...new Set(segFreqs.flatMap(f=>Object.keys(f).map(Number)))];
-      const allSegs=allSegNums.sort((x,y)=>{
-        const tX=segFreqs.reduce((sum,f)=>sum+(f[x]||0),0);
-        const tY=segFreqs.reduce((sum,f)=>sum+(f[y]||0),0);
-        return tY-tX;
-      }).slice(0,5);
-
-      // Before/After data per player — use s.avg (all-legs combined) as current game avg
-      const baData=humanStats.map(s=>{
-        if(!s.pid||!s.playerObj?.stats) return null;
-        const pObj=s.playerObj;
-        const gb=pObj.stats.games||0;
-        if(gb<1) return null;
-        const ab=pObj.stats.avgPerTurn||0;
-        const cur=s.avg;
-        const aa=Math.round((ab*gb+cur)/(gb+1)*10)/10;
-        const delta=Math.abs(Math.round((aa-ab)*10)/10);
-        return {ab,aa,gb,delta,improved:aa>ab,declined:aa<ab};
-      });
-
-      // Gold for the better value, muted for worse
-      const cmpHi=(myVal,otherVal)=>myVal===otherVal?"#aaa":myVal>otherVal?gold:muted;
-
-      const cols=isMulti?"1fr 1fr":"1fr";
-      let html=`<div style="display:grid;grid-template-columns:${cols};gap:12px;margin-bottom:16px">`;
-
-      humanStats.forEach((s,si)=>{
-        const ba=baData[si]||null;
-        const other=(isMulti&&humanStats.length===2)?humanStats[1-si]:null;
-        const avgC=other?cmpHi(s.avg,other.avg):"#fff";
-        const bestC=other?cmpHi(s.best,other.best):"#fff";
-        const coC=other?cmpHi(s.coPct,other.coPct):"#fff";
-        const f9C=other?cmpHi(s.f9??0,other.f9??0):"#fff";
-
-        const segRows=allSegs.map(seg=>{
-          const mine=segFreqs[si][seg]||0;
-          const theirs=other?(segFreqs[1-si][seg]||0):-1;
-          const isBetter=theirs>=0&&mine>theirs;
-          const isWorse=theirs>=0&&mine<theirs;
-          return `<tr><td style="color:var(--dart-text-sec);padding:2px 0;font-size:11px">${seg}</td><td style="text-align:right;font-weight:${isBetter?700:400};color:${isBetter?gold:isWorse?"var(--dart-text-muted)":"var(--dart-text-sec)"};font-size:11px">${mine}</td></tr>`;
-        }).join("");
-
-        const baHtml=ba?`<div style="font-size:10px;color:var(--dart-text-sec);text-align:center;padding:2px 0;border-top:1px solid rgba(255,255,255,0.08)">${t('vorher')}: <span style="color:var(--dart-text)">${ba.ab}</span> <span style="color:${gold}">→</span> <span style="color:${ba.improved?"#43a047":ba.declined?"#e53935":"var(--dart-text)"}">${ba.aa}</span> <span style="color:${ba.improved?"#43a047":ba.declined?"#e53935":"#888"}">(${ba.improved?"+":"−"}${ba.delta})</span></div>`:"";
-
-        html+=`<div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:8px;border:${s.isWinner?"2px solid "+gold:"1px solid rgba(255,255,255,0.12)"};display:flex;flex-direction:column;gap:6px">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center">
-            ${s.photoUrl?`<img src="${s.photoUrl}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:${s.isWinner?"2px solid "+gold:"2px solid rgba(255,255,255,0.15)"}">`:`<div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--dart-text);border:${s.isWinner?"2px solid "+gold:"2px solid rgba(255,255,255,0.1)"}">${s.displayName.slice(0,2).toUpperCase()}</div>`}
-            <div style="font-weight:700;font-size:12px;color:var(--dart-text)">${s.displayName}</div>
-            ${s.isWinner?`<div style="font-size:8px;font-weight:700;color:${gold};letter-spacing:2px;background:rgba(212,175,55,0.15);padding:1px 8px;border-radius:8px">WINNER</div>`:`<div style="height:14px"></div>`}
-          </div>
-          <svg id="winner-scatter-${si}" style="max-width:280px;width:100%;aspect-ratio:1;display:block;margin:0 auto"></svg>
-          <table style="width:100%;font-size:11px;border-collapse:collapse">
-            <tr><td style="color:var(--dart-text-sec);padding:1px 0">Avg</td><td style="text-align:right;font-weight:700;color:${avgC}">${s.avg}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:1px 0">First 9</td><td style="text-align:right;font-weight:700;color:${f9C}">${s.f9??'—'}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:1px 0">Highscore</td><td style="text-align:right;font-weight:700;color:${bestC}">${s.best}</td></tr>
-            <tr><td style="color:var(--dart-text-sec);padding:1px 0">CO%</td><td style="text-align:right;font-weight:700;color:${coC}">${s.coHit}/${s.coAtt} (${s.coPct}%)</td></tr>
-            ${s.topFields?`<tr><td style="color:var(--dart-text-sec);padding:1px 0">Top</td><td style="text-align:right;color:#aaa;font-size:10px">${s.topFields}</td></tr>`:""}
-          </table>
-          ${baHtml}
-          ${allSegs.length?`<div><div style="font-size:8px;color:${muted};letter-spacing:1px;margin-bottom:2px">SEGMENTS</div><table style="width:100%;font-size:10px;border-collapse:collapse">${segRows}</table></div>`:""}
-        </div>`;
-      });
-
-      html+="</div>";
-      sumEl.innerHTML=html;
-      sumEl.style.display="block";
-
+    if(!humanStats.length){
+      sumEl.style.display='none';
+    } else {
+      sumEl.innerHTML=buildTvStatsHTML(humanStats,'winner',null);
+      sumEl.style.display='block';
       requestAnimationFrame(()=>{
         humanStats.forEach((s,si)=>{
           const svgEl=document.getElementById(`winner-scatter-${si}`);
