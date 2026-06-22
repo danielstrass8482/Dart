@@ -103,6 +103,46 @@
 .tv-lg .tv-single-val { font-size:24px; }
 .tv-lg .tv-single-label { font-size:10px; }
 
+/* ── MATCH tab: button gepinnt am unteren Rand, Boards füllen den Rest ── */
+#winner-tab-match {
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+}
+#winner-tab-match .winner-tab-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: 8px;
+}
+.match-new-game-bar {
+  flex-shrink: 0;
+  padding: 10px 16px 14px;
+  background: var(--dart-bg-screen);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  box-sizing: border-box;
+}
+/* ── Landscape: Boards massiv größer, breiterer Content-Bereich ── */
+@media (orientation: landscape) {
+  #winner-tab-match .winner-tab-scroll {
+    max-width: min(98vw, 900px);
+  }
+  #winner-tab-match .tv-mini-board {
+    width: clamp(180px, 28vw, 280px);
+    height: clamp(180px, 28vw, 280px);
+  }
+  #winner-tab-match .tv-boards-row {
+    gap: 36px;
+    padding: 18px 0 8px;
+  }
+  #winner-tab-match .tv-board-name {
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+}
+
 /* ── Health Check Modal ── */
 .health-modal-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.80);z-index:400;align-items:center;justify-content:center; }
 .health-modal-backdrop.visible { display:flex; }
