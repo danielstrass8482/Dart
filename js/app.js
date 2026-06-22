@@ -306,6 +306,8 @@ function _accumulateLegStats(){
     state.cfg.accumulated.historicThrows[i].push(...legThrows);
     state.cfg.accumulated.checkoutAttempts[i]+=(state.x01.checkoutAttempts?.[i]||0);
     state.cfg.accumulated.checkoutHits[i]+=(state.x01.checkoutHits?.[i]||0);
+    if(state.cfg.accumulated.checkoutScores)
+      state.cfg.accumulated.checkoutScores[i].push(...(state.x01.checkoutScores?.[i]||[]));
     if(state.cfg.accumulated.first9[i]===null&&state.x01.first9?.[i]!=null)
       state.cfg.accumulated.first9[i]=state.x01.first9[i];
   });
@@ -488,6 +490,7 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
       historicThrows:players.map(()=>[]),
       checkoutAttempts:players.map(()=>0),
       checkoutHits:players.map(()=>0),
+      checkoutScores:players.map(()=>[]),
       first9:players.map(()=>null)
     }
   };
@@ -842,8 +845,8 @@ function buildCoachPlayerSelector(){
     });
     btns.appendChild(btn);
   });
-  const winnerName=document.getElementById("winner-name").textContent;
-  coachSelectedPlayerIdx=state.cfg.players.indexOf(winnerName);
+  const winnerIdx=state.x01?.winner??0;
+  coachSelectedPlayerIdx=winnerIdx;
 }
 
 document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
@@ -858,7 +861,7 @@ document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
   const turns=state.x01.turnScores?.[i]||[];
   const avg=turns.length?Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10:0;
   const best=turns.length?Math.max(...turns):0;
-  const sessionStats={ mode:state.cfg.mode, rounds:state.cfg.mode!=="Cricket"?state.x01.round:state.cr.round, players:[{ name:playerName, id:pid, avg3:avg, best3:best, checkoutAtt:state.x01.checkoutAttempts?.[i]||0, checkoutHit:state.x01.checkoutHits?.[i]||0, first9:state.x01.first9?.[i]||null, winner:document.getElementById("winner-name").textContent===playerName }] };
+  const sessionStats={ mode:state.cfg.mode, rounds:state.cfg.mode!=="Cricket"?state.x01.round:state.cr.round, players:[{ name:playerName, id:pid, avg3:avg, best3:best, checkoutAtt:state.x01.checkoutAttempts?.[i]||0, checkoutHit:state.x01.checkoutHits?.[i]||0, first9:state.x01.first9?.[i]||null, winner:state.x01?.winner===i }] };
   const prompt=buildCoachPrompt(playerStats, sessionStats, allGamesCache, pid, state.cfg.healthData||null);
   await callCoach(prompt, outputEl, limitEl, btn);
   if(outputEl.querySelector(".coach-box")&&window.dartDB){

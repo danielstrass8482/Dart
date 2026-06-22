@@ -28,6 +28,48 @@
 .vr-btn-send { background:var(--dart-gold);color:var(--dart-bg-card); }
 .vr-status { font-size:13px;color:var(--dart-text-sec);margin-top:10px;min-height:20px; }
 
+/* ── TV Sport Comparison Overlay ── */
+.tv-overlay-wrap { width:100%; text-align:center; }
+.tv-leg-label { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:3px; color:var(--dart-gold); margin-bottom:14px; }
+.tv-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; gap:6px; }
+.tv-player { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; min-width:0; }
+.tv-player-r { align-items:center; }
+.tv-player-center { align-items:center; }
+.tv-avatar-img { width:56px; height:56px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.15); flex-shrink:0; }
+.tv-avatar-init { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--dart-text); border:2px solid rgba(255,255,255,0.15); flex-shrink:0; }
+.tv-avatar-winner { border-color:var(--dart-gold) !important; box-shadow:0 0 12px rgba(212,175,55,0.4); }
+.tv-pname { font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:1px; color:var(--dart-text); max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tv-winner-badge { font-size:8px; font-weight:700; letter-spacing:2px; color:var(--dart-gold); background:rgba(212,175,55,0.15); border:1px solid rgba(212,175,55,0.5); padding:2px 8px; border-radius:10px; white-space:nowrap; }
+.tv-winner-badge-ph { height:16px; }
+.tv-result { flex:0 0 auto; padding:0 6px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:72px; }
+.tv-result-score { font-family:'Bebas Neue',sans-serif; font-size:44px; color:var(--dart-text); line-height:1; }
+.tv-result-sep { color:var(--dart-text-sec); margin:0 3px; font-size:32px; vertical-align:middle; }
+.tv-result-label { font-size:9px; letter-spacing:3px; color:var(--dart-text-sec); margin-top:2px; }
+.tv-stats-table { border-top:1px solid rgba(255,255,255,0.08); padding:4px 0 6px; margin-bottom:14px; }
+.tv-stat-row { display:grid; grid-template-columns:1fr 44% 1fr; align-items:center; gap:0; padding:5px 0 3px; border-bottom:1px solid rgba(255,255,255,0.05); }
+.tv-stat-row:last-child { border-bottom:none; }
+.tv-val-left { text-align:right; font-family:'Bebas Neue',sans-serif; font-size:19px; color:rgba(255,255,255,0.35); padding-right:10px; line-height:1; }
+.tv-val-right { text-align:left; font-family:'Bebas Neue',sans-serif; font-size:19px; color:rgba(255,255,255,0.35); padding-left:10px; line-height:1; }
+.tv-val-win { color:var(--dart-gold) !important; font-size:21px !important; }
+.tv-val-dim { color:rgba(255,255,255,0.22) !important; }
+.tv-bar-label-col { display:flex; flex-direction:column; gap:3px; align-items:stretch; }
+.tv-bar-track { display:flex; height:3px; border-radius:2px; overflow:hidden; }
+.tv-bar-seg { min-width:2px; }
+.tv-bar-gold { background:var(--dart-gold); }
+.tv-bar-fade { background:rgba(255,255,255,0.1); }
+.tv-bar-neutral { background:rgba(255,255,255,0.18); }
+.tv-bar-gap { width:2px; background:var(--dart-bg-screen); flex-shrink:0; }
+.tv-stat-label { font-size:8px; letter-spacing:1.5px; color:var(--dart-text-muted); text-align:center; text-transform:uppercase; }
+.tv-boards-row { display:flex; gap:16px; justify-content:center; padding:6px 0 2px; }
+.tv-board-col { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.tv-mini-board { width:120px; height:120px; display:block; }
+.tv-board-name { font-size:10px; letter-spacing:1px; color:var(--dart-text-sec); font-family:'Bebas Neue',sans-serif; }
+/* Single-player variant */
+.tv-single-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.06); gap:8px; }
+.tv-single-row:last-child { border-bottom:none; }
+.tv-single-label { font-size:9px; letter-spacing:1.5px; color:var(--dart-text-sec); text-transform:uppercase; text-align:left; }
+.tv-single-val { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--dart-text); flex-shrink:0; }
+
 /* ── Health Check Modal ── */
 .health-modal-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.80);z-index:400;align-items:center;justify-content:center; }
 .health-modal-backdrop.visible { display:flex; }
