@@ -133,7 +133,13 @@
   border-top: 1px solid rgba(255,255,255,0.06);
   box-sizing: border-box;
 }
-/* ── Landscape: compact header+stats so boards fit without scrolling ── */
+/* ── Winner boards: JS measures remaining space, sets --winner-board-size ── */
+#winner-tab-match .tv-mini-board {
+  width: var(--winner-board-size, 140px);
+  height: var(--winner-board-size, 140px);
+  transition: width .2s ease, height .2s ease;
+}
+/* ── Landscape: compact header+stats to maximise board space ── */
 @media (orientation: landscape) {
   #winner-tab-match > .winner-tab-scroll {
     max-width: min(98vw, 900px);
@@ -155,11 +161,6 @@
   #winner-tab-match .tv-lg .tv-val-left,
   #winner-tab-match .tv-lg .tv-val-right { font-size: 17px; }
   #winner-tab-match .tv-lg .tv-val-win { font-size: 19px !important; }
-  /* Boards: fill remaining height (100vh - ~500px fixed+content overhead) */
-  #winner-tab-match .tv-mini-board {
-    width: clamp(120px, calc(100vh - 500px), 280px);
-    height: clamp(120px, calc(100vh - 500px), 280px);
-  }
   #winner-tab-match .tv-boards-row {
     gap: 20px;
     padding: 10px 0 4px;

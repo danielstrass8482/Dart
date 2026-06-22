@@ -18,10 +18,10 @@
 @media (orientation: landscape) {
   .game-body { flex-direction: row; }
   .board-wrap { flex: 1; height: 100%; min-width: 0; }
-  .board-wrap svg { width: auto; height: 100%; max-height: 100%; max-width: calc(100vw - 200px); }
+  .board-wrap svg { width: auto; height: 100%; max-height: 100%; max-width: 65vw; }
   .score-strip { display: none !important; }
   .bottom-bar { display: none !important; }
-  .landscape-panel { display: flex !important; }
+  .landscape-panel { display: flex !important; flex: 0 0 35vw; min-width: 260px; max-width: 400px; }
   .game-header { padding: 4px 10px; }
   .game-title { font-size: 13px; }
 }
@@ -59,14 +59,17 @@
 /* ── Landscape panel (right side) ── */
 .landscape-panel { display: none; flex-direction: column; flex: 1; min-width: 140px; max-width: 240px;
   background: var(--dart-bg-card); overflow-y: auto; gap: 0; }
-.lp-player { padding: 11px 16px; border-bottom: 1px solid #1f1f24; background: #121216; }
-.lp-player.active { background: linear-gradient(150deg, rgba(212,175,55,.13), rgba(212,175,55,.02)); border-left: 3px solid #D4AF37; animation: glowPulse 2.6s ease-in-out infinite; }
+.lp-player { flex: 1; min-width: 0; padding: 8px 10px; border-right: 1px solid #1f1f24; background: #121216; transition: background .25s ease; }
+.lp-player:last-child { border-right: none; }
+.lp-player.active { background: linear-gradient(150deg, rgba(212,175,55,.15), rgba(212,175,55,.04)); border-left: 3px solid #D4AF37; }
 .lp-player .lp-name { font-size: 10px; color: var(--dart-text-sec); letter-spacing: 1px; }
 .lp-player.active .lp-name { color: var(--dart-gold); }
 .lp-player .lp-score { font-family: 'Manrope', sans-serif !important; font-variant-numeric: tabular-nums; font-size: 32px; font-weight: 800; color: #9A9AA2; line-height: 1; letter-spacing: -0.04em; }
 .lp-player .lp-throws { font-size: 11px; color: var(--dart-text-muted); margin-top: 2px; }
 .lp-player .lp-sub { font-size: 10px; color: var(--dart-text-muted); }
-.lp-controls { padding: 10px 12px; border-bottom: 1px solid var(--dart-border); display: flex; flex-direction: column; gap: 6px; }
+.lp-footer { flex-shrink: 0; border-top: 1px solid var(--dart-border); display: flex; flex-direction: column; }
+#lp-players { display: flex; flex-direction: row; border-bottom: 1px solid #1f1f24; }
+.lp-controls { padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
 .lp-remaining { font-family: 'Manrope', sans-serif !important; font-variant-numeric: tabular-nums; font-size: 60px; font-weight: 800; color: var(--dart-text); text-align: center; line-height: 1; }
 .lp-checkout { font-size: 12px; color: var(--dart-gold); text-align: center; transition: padding .2s, background .2s; }
 .lp-checkout:not(:empty) {
