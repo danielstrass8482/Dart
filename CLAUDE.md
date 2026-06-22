@@ -1,8 +1,8 @@
 # DartTrainer — Claude Code Übergabe-Dokumentation
 
 ## Projektübersicht
-Single-File HTML-App (`dart.html`) — Dart-Scoring-App mit KI-Coach, Statistiken, Sprachsteuerung und Voice-Samples.
-Deployed auf GitHub Pages: `https://danielstrass8482.github.io/Dart/dart.html`
+Modulare HTML/CSS/JS-App (`index.html` + `js/` + `css/`) — Dart-Scoring-App mit KI-Coach, Statistiken, Sprachsteuerung und Voice-Samples.
+Deployed auf GitHub Pages: `https://danielstrass8482.github.io/Dart/`
 
 ---
 
@@ -90,7 +90,7 @@ service cloud.firestore {
 
 ---
 
-## App-Architektur (dart.html)
+## App-Architektur
 
 ### Screens
 - `#setup` — Home (Tabs: Spiel, Statistiken, Online, Studio[hidden])
@@ -188,13 +188,13 @@ service cloud.firestore {
 
 ## Deployment
 
-### GitHub Pages (dart.html)
+### GitHub Pages (index.html + js/ + css/)
 ```bash
-git add dart.html
+git add -A
 git commit -m "feat: ..."
 git push
 ```
-Live unter: `https://danielstrass8482.github.io/Dart/dart.html`
+Live unter: `https://danielstrass8482.github.io/Dart/`
 
 ### Cloud Functions
 ```bash
@@ -205,33 +205,6 @@ firebase deploy --only functions:dartCoach
 ### API Keys / Secrets
 - `ANTHROPIC_API_KEY` → Firebase Secret Manager
 - ElevenLabs Key (noch einzurichten) → ebenfalls Firebase Secret Manager
-
----
-
-## Refactoring-Empfehlung
-Die `dart.html` (4.500 Zeilen) sollte aufgeteilt werden:
-```
-dart/
-├── index.html
-├── css/
-│   ├── base.css
-│   ├── game.css
-│   └── stats.css
-├── js/
-│   ├── firebase.js      — Firebase init + dartDB
-│   ├── board.js         — SVG Dartscheibe, hitFromXY
-│   ├── x01.js           — 501/301 Spiellogik
-│   ├── cricket.js       — Cricket Spiellogik
-│   ├── party.js         — Party-Modi
-│   ├── audio.js         — Sound, TTS, Custom Voice
-│   ├── speech.js        — Sprachsteuerung
-│   ├── stats.js         — Statistiken, Charts
-│   ├── coach.js         — KI-Coach
-│   └── setup.js         — Setup, Spielerverwaltung
-└── functions/
-    ├── dartCoach.js
-    └── dartTTS.js       — (neu: ElevenLabs Proxy)
-```
 
 Für App-Store: **Capacitor** verwenden um die Web-App in eine native iOS/Android App zu verpacken.
 
