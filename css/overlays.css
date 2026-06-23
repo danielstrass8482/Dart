@@ -147,10 +147,10 @@
   /* Avatars in landscape — big enough to read, boards adapt via JS */
   #winner-tab-match .tv-lg .tv-avatar-img,
   #winner-tab-match .tv-lg .tv-avatar-init {
-    width: 180px;
-    height: 180px;
+    width: 176px;
+    height: 176px;
   }
-  #winner-tab-match .tv-lg .tv-avatar-init { font-size: 62px; border-radius: 18px; }
+  #winner-tab-match .tv-lg .tv-avatar-init { font-size: 60px; border-radius: 18px; }
   #winner-tab-match .tv-lg .tv-result-score { font-size: 44px; }
   #winner-tab-match .tv-lg .tv-result-sep { font-size: 34px; }
   #winner-tab-match .tv-lg .tv-result { min-width: 72px; }
