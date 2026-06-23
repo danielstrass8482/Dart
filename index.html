@@ -130,7 +130,6 @@
   <div class="home-tabs">
     <button class="home-tab active" data-tab="spielen"><i data-lucide="target" style="width:22px;height:22px;stroke-width:2"></i> <span data-i18n="nav_spielen">SPIELEN</span></button>
     <button class="home-tab" data-tab="statistiken"><i data-lucide="bar-chart-2" style="width:22px;height:22px;stroke-width:2"></i> <span data-i18n="nav_stats">STATS</span></button>
-    <button class="home-tab" data-tab="turniere" style="opacity:.45;pointer-events:none;position:relative"><i data-lucide="trophy" style="width:22px;height:22px;stroke-width:2"></i> <span data-i18n="nav_turniere">TURNIERE</span><span style="position:absolute;top:2px;right:2px;font-size:8px;font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;color:#fff;background:#555;border-radius:3px;padding:1px 4px;line-height:1.4">Coming Soon</span></button>
     <button class="home-tab" data-tab="profil"><i data-lucide="user-circle" style="width:22px;height:22px;stroke-width:2"></i> <span data-i18n="nav_profil">PROFIL</span></button>
   </div>
 
@@ -604,7 +603,7 @@
 <!-- ═══════════════════════ TOURNAMENT SETUP SCREEN ═══════════════════════ -->
 <div id="tournament-setup" class="screen" style="background:var(--dart-bg-card);flex-direction:column">
   <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
-    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="zurueck">ZURÜCK</span></button>
+    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='spielen'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-spielen'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="zurueck">ZURÜCK</span></button>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)" data-i18n="turnier_erstellen">TURNIER ERSTELLEN</div>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px">
@@ -648,7 +647,7 @@
 <!-- ═══════════════════════ TOURNAMENT VIEW SCREEN ═══════════════════════ -->
 <div id="tournament-view" class="screen" style="background:var(--dart-bg-card);flex-direction:column">
   <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
-    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='turniere'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-turniere'));loadTournaments();" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="nav_turniere">TURNIERE</span></button>
+    <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='spielen'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-spielen'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="zurueck">ZURÜCK</span></button>
     <div id="tv-title" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)">TURNIER</div>
     <div id="tv-status-badge" style="margin-left:auto"></div>
   </div>

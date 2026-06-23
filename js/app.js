@@ -538,7 +538,6 @@ document.querySelectorAll(".home-tab").forEach(btn=>{
     if(tabEl) tabEl.classList.add("active");
     applyTranslations();
     if(btn.dataset.tab==="statistiken") loadAndRenderStats();
-    if(btn.dataset.tab==="turniere") loadTournaments();
     if(btn.dataset.tab==="profil") initProfilTab();
     if(btn.dataset.tab==="spielen") updateAuthUI(window.currentUser);
     // Nochmal nach dynamischem Render
