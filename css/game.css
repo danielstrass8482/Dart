@@ -66,8 +66,8 @@
 /* Upper section: turn-history table */
 .lp-history { flex: 1 1 0; overflow-y: auto; min-height: 0; border-bottom: 1px solid var(--dart-border); }
 
-/* Player strip — auto height, side by side */
-#lp-players { flex: 0 0 auto; display: flex; flex-direction: row; overflow: hidden; }
+/* Player strip — auto height, side by side, equal height via stretch */
+#lp-players { flex: 0 0 auto; display: flex; flex-direction: row; align-items: stretch; overflow: hidden; }
 .lp-player { flex: 1; min-width: 0; padding: 10px 10px; border-right: 1px solid #1f1f24; background: #121216;
   opacity: 0.55; transition: background .25s ease, border-color .25s, opacity .25s;
   display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
@@ -77,7 +77,8 @@
 .lp-player .lp-name { font-size: 10px; color: var(--dart-text-sec); letter-spacing: 1px; }
 .lp-player.active .lp-name { color: var(--dart-gold); }
 .lp-player .lp-score { font-family: 'Manrope', sans-serif !important; font-variant-numeric: tabular-nums;
-  font-size: 2rem; font-weight: 800; color: #9A9AA2; line-height: 1; letter-spacing: -0.04em; }
+  font-size: 2rem; font-weight: 800; color: #9A9AA2; line-height: 1; letter-spacing: -0.04em;
+  align-self: center; }
 .lp-player .lp-throws { font-size: 11px; color: var(--dart-text-muted); margin-top: 2px; }
 .lp-player .lp-sub { font-size: 10px; color: var(--dart-text-muted); }
 
