@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout, drawMiniBoard } from './board.js?v=2';
-import { soundBust, soundHit, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath } from './audio.js';
+import { speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath } from './audio.js';
 import { startMic, stopMic, maybeRestartMic, setVoiceFeedback, announceRequires, micEnabled, micActive } from './speech.js';
 import { runBotTurn } from './bot.js';
 import { t } from './i18n.js?v=3';
@@ -365,14 +365,12 @@ export function processX01Hit(hit, svgX=null, svgY=null){
   if(state.cfg.online && window._pushThrowToRoom) window._pushThrowToRoom(hit);
 
   if(hit.miss){
-    soundHit();
     renderX01();
     if(state.x01.throws.length===3){
       const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
       const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
-      if(turnScore===0){ soundLow(); speakKeyWithCustom("no_score","No Score!"); }
-      else if(turnScore<=9){ soundLow(); speakScoreWithCustom(turnScore, hitBull); }
-      else { soundHit(); speakScoreWithCustom(turnScore, hitBull); }
+      if(turnScore===0){ speakKeyWithCustom("no_score","No Score!"); }
+      else { speakScoreWithCustom(turnScore, hitBull); }
       setTimeout(advanceX01, 800);
     }
     return;
@@ -388,7 +386,7 @@ export function processX01Hit(hit, svgX=null, svgY=null){
 
   if(tent<0||tent===1){
     state.x01.bust=true;
-    soundBust(); speakKeyWithCustom("bust","Bust!");
+    speakKeyWithCustom("bust","Bust!");
     renderX01();
     setTimeout(advanceX01, 1500);
     return;
@@ -396,7 +394,7 @@ export function processX01Hit(hit, svgX=null, svgY=null){
   if(tent===0){
     if(!hit.label.startsWith("D")&&hit.label!=="Bull"){
       state.x01.bust=true;
-      soundBust(); speakKeyWithCustom("bust","Bust!");
+      speakKeyWithCustom("bust","Bust!");
       renderX01();
       setTimeout(advanceX01, 1500);
       return;
@@ -412,7 +410,6 @@ export function processX01Hit(hit, svgX=null, svgY=null){
       else if(hit.label==="D20") queueAudio("Double Top! Game Shot!","el_slang_double_top_game_shot_");
       else queueAudio("Game Shot!","el_slang_game_shot_");
     }
-    soundApplause();
     handleLegWin(state.x01.current);
     renderX01();
     return;
@@ -420,14 +417,8 @@ export function processX01Hit(hit, svgX=null, svgY=null){
 
   const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
   if(state.x01.throws.length===3){
-    if(turnScore===0){ soundLow(); }
-    else if(turnScore<=9){ soundLow(); }
-    else if(turnScore>=100){ soundApplause(); }
-    else { soundHit(); }
     const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
-  } else {
-    soundHit();
   }
 
   renderX01();

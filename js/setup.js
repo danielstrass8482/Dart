@@ -102,8 +102,14 @@ export function renderPlayerList(){
  */
 export function togglePlayer(p){
   const idx=state.selectedPlayers.findIndex(s=>s.id===p.id);
-  if(idx>=0) state.selectedPlayers.splice(idx,1);
-  else state.selectedPlayers.push(p);
+  if(idx>=0){
+    state.selectedPlayers.splice(idx,1);
+  } else if(state.selectedPlayers.length>=2){
+    alert("Für Spiele mit mehr als 2 Spielern kommt bald ein dedizierter Turniermodus.");
+    return;
+  } else {
+    state.selectedPlayers.push(p);
+  }
   renderPlayerList();
 }
 

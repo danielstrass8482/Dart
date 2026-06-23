@@ -4,7 +4,6 @@
 
 import { state } from './state.js';
 import { startX01, processX01Hit, advanceX01 } from './x01.js?v=2';
-import { soundHit } from './audio.js';
 import { t } from './i18n.js?v=3';
 
 export let onlineMode="501", onlineLegs=1, onlineSets=1;
@@ -139,7 +138,6 @@ export function applyRemoteThrow(hit){
   if(state.x01.winner||state.x01.bust||state.x01.throws.length>=3||state.x01.current===myPlayerIdx) return;
   state.x01.throws.push({...hit,svgX:null,svgY:null});
   state.x01.allThrows[state.x01.current].push({...hit,svgX:null,svgY:null});
-  soundHit();
   if(window._renderX01) window._renderX01();
   if(state.x01.throws.length===3) setTimeout(advanceX01,800);
 }
