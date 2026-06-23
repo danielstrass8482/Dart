@@ -144,13 +144,13 @@
   #winner-tab-match > .winner-tab-scroll {
     max-width: min(98vw, 900px);
   }
-  /* Compact avatars (96→56px frees ~40px header height) */
+  /* Avatars in landscape — big enough to read, boards adapt via JS */
   #winner-tab-match .tv-lg .tv-avatar-img,
   #winner-tab-match .tv-lg .tv-avatar-init {
-    width: 56px;
-    height: 56px;
+    width: 80px;
+    height: 80px;
   }
-  #winner-tab-match .tv-lg .tv-avatar-init { font-size: 20px; border-radius: 8px; }
+  #winner-tab-match .tv-lg .tv-avatar-init { font-size: 28px; border-radius: 10px; }
   #winner-tab-match .tv-lg .tv-result-score { font-size: 44px; }
   #winner-tab-match .tv-lg .tv-result-sep { font-size: 34px; }
   #winner-tab-match .tv-lg .tv-result { min-width: 72px; }
