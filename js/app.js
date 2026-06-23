@@ -848,28 +848,25 @@ function buildCoachPlayerSelector(){
   if(humanPlayers.length<=1){ sel.style.display="none"; coachSelectedPlayerIdx=0; return; }
   sel.style.display="";
   btns.innerHTML="";
+  const GOLD='#D4AF37';
+  function selectorBtnStyle(active){
+    return `display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 16px 8px;border-radius:12px;border:2px solid ${active?GOLD:'var(--dart-border)'};background:${active?'rgba(212,175,55,0.12)':'var(--dart-bg-card)'};cursor:pointer;font-size:12px;font-weight:700;color:${active?GOLD:'var(--dart-text-sec)'};min-width:84px;`;
+  }
   humanPlayers.forEach((name,hi)=>{
     const realIdx=state.cfg.players.indexOf(name);
-    const col=playerColor(name);
     const pid=state.cfg.playerIds?.[realIdx]||null;
     const playerObj=pid?state.allPlayers?.find(p=>p.id===pid):null;
     const photoUrl=playerObj?.photoUrl||null;
     const initials=name.slice(0,2).toUpperCase();
     const avatarHtml=photoUrl
-      ?`<img src="${photoUrl}" style="width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0">`
-      :`<span style="width:30px;height:30px;border-radius:6px;background:${col}33;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:${col};flex-shrink:0">${initials}</span>`;
+      ?`<img src="${photoUrl}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0">`
+      :`<span style="width:52px;height:52px;border-radius:10px;background:#1C1C21;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#9A9AA2;flex-shrink:0">${initials}</span>`;
     const btn=document.createElement("button");
-    btn.style.cssText=`display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:10px;border:2px solid ${col};background:${hi===0?col+"22":"var(--dart-bg-card)"};cursor:pointer;font-size:13px;font-weight:600;color:${hi===0?"var(--dart-text)":"var(--dart-text-muted)"};box-shadow:${hi===0?"0 0 10px "+col+"66":"none"}`;
+    btn.style.cssText=selectorBtnStyle(hi===0);
     btn.innerHTML=`${avatarHtml}<span>${name}</span>`;
     btn.addEventListener("click",()=>{
       coachSelectedPlayerIdx=realIdx;
-      btns.querySelectorAll("button").forEach((b,bi)=>{
-        const bcol=playerColor(humanPlayers[bi]);
-        b.style.background=bi===hi?bcol+"22":"var(--dart-bg-card)";
-        b.style.color=bi===hi?"var(--dart-text)":"var(--dart-text-muted)";
-        b.style.boxShadow=bi===hi?"0 0 10px "+bcol+"66":"none";
-        b.style.borderColor=bcol;
-      });
+      btns.querySelectorAll("button").forEach((b,bi)=>{ b.style.cssText=selectorBtnStyle(bi===hi); });
     });
     btns.appendChild(btn);
   });
