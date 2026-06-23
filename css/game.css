@@ -17,14 +17,13 @@
 /* ── Landscape: side-by-side (tablet ≥ 768px) ── */
 @media (min-width: 768px) and (orientation: landscape) {
   .game-body { flex-direction: row; }
-  /* board-wrap gets remaining ~65% after panel takes 35% */
-  .board-wrap { flex: 1; height: 100%; min-width: 0; justify-content: flex-start; padding-left: 4px; }
-  /* SVG fills column; aspect-ratio:1/1 (base) keeps it square */
+  /* board gets all remaining space; SVG centers itself via preserveAspectRatio */
+  .board-wrap { flex: 1; height: 100%; min-width: 0; justify-content: center; align-items: center; padding-left: 4px; }
   .board-wrap svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
   .score-strip { display: none !important; }
   .bottom-bar { display: none !important; }
-  /* right panel: exactly 35%, full height */
-  .landscape-panel { display: flex !important; flex: 0 0 35%; min-width: 0; max-width: none; height: 100%; }
+  /* right panel: fixed 320px, full height, internal padding + gap */
+  .landscape-panel { display: flex !important; flex: 0 0 320px; min-width: 320px; max-width: 320px; height: 100%; padding: 12px; gap: 8px; box-sizing: border-box; }
   .game-header { padding: 4px 10px; }
   .game-title { font-size: 13px; }
 }
@@ -66,8 +65,8 @@
 /* Upper section: turn-history table */
 .lp-history { flex: 1 1 0; overflow-y: auto; min-height: 0; border-bottom: 1px solid var(--dart-border); }
 
-/* Player strip — fills lower half, side by side */
-#lp-players { flex: 1 1 0; display: flex; flex-direction: row; min-height: 0; overflow: hidden; border-bottom: 1px solid var(--dart-border); }
+/* Player strip — auto height, side by side */
+#lp-players { flex: 0 0 auto; display: flex; flex-direction: row; overflow: hidden; }
 .lp-player { flex: 1; min-width: 0; padding: 10px 10px; border-right: 1px solid #1f1f24; background: #121216;
   opacity: 0.55; transition: background .25s ease, border-color .25s, opacity .25s;
   display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
@@ -82,8 +81,7 @@
 .lp-player .lp-sub { font-size: 10px; color: var(--dart-text-muted); }
 
 /* Controls bar below players */
-.lp-controls { padding: 6px 8px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;
-  border-top: 1px solid var(--dart-border); }
+.lp-controls { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .lp-slots { display: flex; gap: 4px; flex-shrink: 0; }
 .lp-slot { flex: 1; border-radius: 12px; background: #121216; border: none;
   display: flex; align-items: center; justify-content: center;
@@ -100,7 +98,7 @@
 .lp-mic.listening { background: var(--dart-danger); animation: pulse-mic 1s infinite; }
 
 /* Bouncer button — volle Breite, ganz unten */
-.lp-bouncer-btn { width: 100%; padding: 11px 14px; border: none; border-top: 1px solid var(--dart-border);
+.lp-bouncer-btn { width: 100%; padding: 11px 14px; border: 1px solid rgba(232,165,58,.35); border-radius: 8px;
   cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px;
   background: rgba(232,165,58,.10); color: var(--dart-warning);
   display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
