@@ -707,7 +707,7 @@ function resizeWinnerBoards(){
   const headerH=summary?.querySelector('.tv-header')?.offsetHeight||0;
   const statsH=summary?.querySelector('.tv-stats-table')?.offsetHeight||0;
   const legH=summary?.querySelector('.tv-leg-label')?.offsetHeight||0;
-  const availH=scrollH-22-headerH-statsH-legH-28; // 22=vert-pad, 28=row-pad+names
+  const availH=scrollH-22-headerH-statsH-legH-50; // 22=vert-pad, 28=row-pad+names, ~22=offsetHeight excludes margins (.tv-header mb-8 + .tv-stats-table mb-14)
   const n=boardsRow.querySelectorAll('.tv-mini-board').length||1;
   const availW=(scrollW-32-20*(n-1))/n; // 32=horiz-pad, 20=gap per board
   const size=Math.max(80,Math.min(Math.floor(availH),Math.floor(availW)));
