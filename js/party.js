@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js?v=2';
-import { soundHit, soundApplause, soundBust, speak, speakScoreWithCustom } from './audio.js';
+import { speak, speakScoreWithCustom } from './audio.js';
 import { t } from './i18n.js?v=3';
 
 export let boardSVGparty;
@@ -264,15 +264,12 @@ export function handlePartyClick(e){
   state.pg.throws.push({...hit,svgX:x,svgY:y});
   state.pg.historicThrows[state.pg.current].push({...hit,svgX:x,svgY:y});
   redrawAllHits(boardSVGparty,state.pg.historicThrows[state.pg.current],state.pg.throws);
-  soundHit();
-
   if(state.pg.mode==="AtC"){
     const target=state.pg.atcTarget[state.pg.current];
     if(target<=20){
       const hitNum=hit.score===50?25:(hit.label.match(/\d+/)?parseInt(hit.label.match(/\d+/)[0]):0);
       if(hitNum===target){
         state.pg.atcTarget[state.pg.current]++;
-        soundApplause();
         if(state.pg.atcTarget[state.pg.current]>20){ partyWin(state.pg.current); return; }
       }
     }
@@ -286,19 +283,18 @@ export function handlePartyClick(e){
       const hasSingle=state.pg.throws.some(t=>{ const b=parseInt(t.label)||0; return b===target&&!t.label.startsWith("T")&&!t.label.startsWith("D"); });
       const hasDouble=state.pg.throws.some(t=>t.label===`D${target}`);
       const hasTriple=state.pg.throws.some(t=>t.label===`T${target}`);
-      if(hasSingle&&hasDouble&&hasTriple){ speak("Shanghai!"); soundApplause(); partyWin(state.pg.current); return; }
+      if(hasSingle&&hasDouble&&hasTriple){ speak("Shanghai!"); partyWin(state.pg.current); return; }
     }
   }
   else if(state.pg.mode==="Highscore"){
     state.pg.hsScores[state.pg.current]+=hit.score;
-    if(hit.score>=100) soundApplause();
   }
   else if(state.pg.mode==="Killer"){
     const pi=state.pg.current;
     const hitNum=parseInt(hit.label.replace(/[TD]/,""))||0;
     if(!state.pg.killerIsKiller[pi]){
       if(hit.label===`D${state.pg.killerNumbers[pi]}`){
-        state.pg.killerIsKiller[pi]=true; speak("Killer!"); soundApplause();
+        state.pg.killerIsKiller[pi]=true; speak("Killer!");
       }
     } else {
       state.cfg.players.forEach((_,oi)=>{
@@ -337,7 +333,7 @@ export function handlePartyClick(e){
     const rem=state.pg.coTargets[state.pg.coRound]-spent;
     if(rem===0&&(hit.label.startsWith("D")||hit.label==="Bull")){
       state.pg.coHits++;
-      soundApplause(); speak("Checkout!");
+      speak("Checkout!");
       renderParty();
       setTimeout(advanceParty,1000); return;
     }
@@ -393,7 +389,7 @@ export function advanceParty(){
     ).length;
     const misses=state.pg.throws.length-hits;
     state.pg.bob27Score[pi]+=hits*(fieldVal*2)-misses*fieldVal;
-    if(state.pg.bob27Score[pi]<0){ speak("Game Over!"); soundBust(); }
+    if(state.pg.bob27Score[pi]<0){ speak("Game Over!"); }
     if(pi===state.cfg.players.length-1){
       state.pg.bob27Round++;
       if(state.pg.bob27Round>20){
@@ -436,7 +432,6 @@ export function advanceParty(){
  */
 export function partyWin(winnerIdx){
   state.pg.winner=winnerIdx;
-  soundApplause();
   if(window._showWinner) window._showWinner(state.cfg.players[winnerIdx],0);
   if(window._saveGameToFirebase) window._saveGameToFirebase(winnerIdx);
 }

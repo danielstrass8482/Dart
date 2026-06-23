@@ -44,7 +44,7 @@ import {
 
 // ── Audio ────────────────────────────────────────────────────────
 import {
-  unlockAudio, soundBust, soundHit, soundApplause, soundLow,
+  unlockAudio,
   speakScoreWithCustom, speakKeyWithCustom, speakScore, speak, doSpeak,
   numToWords, prewarmElevenLabs, voiceURLCache, elTTSCache, getVoiceId,
   fetchTTSUrl, testVoice, speakElevenLabs, queueAudio

@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { numToWords, soundBust, soundApplause, soundHit, soundLow, speakKeyWithCustom, speakScoreWithCustom, speak } from './audio.js';
+import { numToWords, speakKeyWithCustom, speakScoreWithCustom, speak } from './audio.js';
 import { flashSegment } from './board.js?v=2';
 import { requiresDelay } from './x01.js?v=2';
 import { t } from './i18n.js?v=3';
@@ -237,9 +237,8 @@ export function handleVoiceHit(hit){
     if(state.x01.throws.length===3){
       const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
       const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
-      if(turnScore===0){ soundLow(); speakKeyWithCustom("no_score","No Score!"); }
-      else if(turnScore<=9){ soundLow(); speakScoreWithCustom(turnScore, hitBull); }
-      else { soundHit(); speakScoreWithCustom(turnScore, hitBull); }
+      if(turnScore===0){ speakKeyWithCustom("no_score","No Score!"); }
+      else { speakScoreWithCustom(turnScore, hitBull); }
       setTimeout(()=>window._advanceX01&&window._advanceX01(),350);
     }
     return;
@@ -252,20 +251,19 @@ export function handleVoiceHit(hit){
 
   if(tent<0||tent===1){
     state.x01.bust=true;
-    soundBust(); speakKeyWithCustom("bust","Bust!");
+    speakKeyWithCustom("bust","Bust!");
     if(window._renderX01) window._renderX01();
     setTimeout(()=>window._advanceX01&&window._advanceX01(), 1500); return;
   }
   if(tent===0){
     if(!hit.label.startsWith("D")&&hit.label!=="Bull"){
-      state.x01.bust=true; soundBust(); speakKeyWithCustom("bust","Bust!");
+      state.x01.bust=true; speakKeyWithCustom("bust","Bust!");
       if(window._renderX01) window._renderX01();
       setTimeout(()=>window._advanceX01&&window._advanceX01(), 1500); return;
     }
     state.x01.scores[state.x01.current]=0; state.x01.winner=state.x01.current;
     state.x01.checkoutHits[state.x01.current]++;
     state.x01.turnScores[state.x01.current].push(spent);
-    soundApplause();
     if(window._handleLegWin) window._handleLegWin(state.x01.current);
     if(window._renderX01) window._renderX01();
     return;
@@ -273,13 +271,9 @@ export function handleVoiceHit(hit){
 
   const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
   if(state.x01.throws.length===3){
-    if(turnScore===0){ soundLow(); }
-    else if(turnScore<=9){ soundLow(); }
-    else if(turnScore>=100){ soundApplause(); }
-    else { soundHit(); }
     const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
-  } else { soundHit(); }
+  }
 
   if(window._renderX01) window._renderX01();
   if(state.x01.throws.length===3) setTimeout(()=>window._advanceX01&&window._advanceX01(),350);

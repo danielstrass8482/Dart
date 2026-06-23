@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { soundHit, soundBust, soundApplause, soundLow, speakKeyWithCustom, speakScoreWithCustom } from './audio.js';
+import { speakKeyWithCustom, speakScoreWithCustom } from './audio.js';
 import { SECTORS, R, clearCheckout, disableBoard, redrawAllHits } from './board.js?v=2';
 
 export const BOT_ACCURACY={ easy:0.22, medium:0.52, pro:0.82 };
@@ -240,7 +240,6 @@ export function runBotTurn(){
 
       state.x01.throws.push(t);
       state.x01.allThrows[botIdx].push(t);
-      soundHit();
       if(window._renderX01) window._renderX01();
 
       if(i===turns.length-1){
@@ -254,18 +253,15 @@ export function runBotTurn(){
             state.x01.winner=botIdx;
             state.x01.checkoutHits[botIdx]++;
             state.x01.turnScores[botIdx].push(spent);
-            soundApplause();
             speakScoreWithCustom(spent);
             if(window._handleLegWin) window._handleLegWin(botIdx);
             if(window._renderX01) window._renderX01();
           } else if(newRem>0){
             speakScoreWithCustom(spent);
-            if(spent>=100) soundApplause();
-            else if(spent<=9) soundLow();
             if(window._advanceX01) window._advanceX01();
           } else {
             state.x01.bust=true;
-            soundBust(); speakKeyWithCustom("bust","Bust!");
+            speakKeyWithCustom("bust","Bust!");
             if(window._renderX01) window._renderX01();
             setTimeout(()=>{
               state.x01.history.push({scores:[...state.x01.scores],current:state.x01.current,round:state.x01.round,
