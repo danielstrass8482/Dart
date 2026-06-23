@@ -677,24 +677,26 @@
 
     <!-- Landscape right panel -->
     <div class="landscape-panel" id="landscape-panel">
+      <!-- Oben ~50%: Wurf-Tabelle -->
       <div class="lp-history" id="lp-history"></div>
-      <div class="lp-footer">
-        <div id="lp-players"></div>
-        <div class="lp-controls">
-          <div class="lp-slots">
-            <div class="lp-slot" id="lp-slot-0">—</div>
-            <div class="lp-slot" id="lp-slot-1">—</div>
-            <div class="lp-slot" id="lp-slot-2">—</div>
-          </div>
-          <button class="lp-btn ok" id="lp-next" style="display:none" data-i18n="naechster_spieler">NÄCHSTER SPIELER</button>
-          <div style="display:flex;align-items:center;justify-content:center;gap:4px">
-            <div id="voice-feedback" style="color:var(--dart-text-muted);font-size:11px;min-height:14px;padding:2px 0"></div>
-            <button class="help-btn" onclick="showHelp('Sprachsteuerung','Sage deine Würfe an: &quot;Triple Zwanzig&quot;, &quot;Doppel Sechzehn&quot;, &quot;Daneben&quot;. Funktioniert auf Deutsch und Englisch.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
-          </div>
-          <button class="lp-mic" id="lp-mic"><i data-lucide="mic" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
-          <button class="lp-mic" id="lp-bouncer" style="background:var(--dart-bg-chip);color:var(--dart-warning)"><i data-lucide="corner-down-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Bouncer</button>
+      <!-- Unten ~50%: Spieler-Blöcke nebeneinander -->
+      <div id="lp-players"></div>
+      <!-- Aktuelle Würfe + Controls -->
+      <div class="lp-controls">
+        <div class="lp-slots">
+          <div class="lp-slot" id="lp-slot-0">—</div>
+          <div class="lp-slot" id="lp-slot-1">—</div>
+          <div class="lp-slot" id="lp-slot-2">—</div>
         </div>
+        <button class="lp-btn ok" id="lp-next" style="display:none" data-i18n="naechster_spieler">NÄCHSTER SPIELER</button>
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px">
+          <div id="voice-feedback" style="color:var(--dart-text-muted);font-size:11px;min-height:14px;padding:2px 0"></div>
+          <button class="help-btn" onclick="showHelp('Sprachsteuerung','Sage deine Würfe an: &quot;Triple Zwanzig&quot;, &quot;Doppel Sechzehn&quot;, &quot;Daneben&quot;. Funktioniert auf Deutsch und Englisch.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
+        </div>
+        <button class="lp-mic" id="lp-mic"><i data-lucide="mic" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
       </div>
+      <!-- Bouncer-Button: ganz unten, volle Breite -->
+      <button class="lp-bouncer-btn" id="lp-bouncer"><i data-lucide="corner-down-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Bouncer</button>
     </div>
   </div>
 
