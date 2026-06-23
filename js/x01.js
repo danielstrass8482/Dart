@@ -190,7 +190,7 @@ export function renderX01(){
         ?`font-family:'Manrope',sans-serif;font-size:3rem;font-weight:800;line-height:1;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 8px;display:inline-block;":""}`
         :`font-family:'Manrope',sans-serif;font-size:2rem;font-weight:800;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 5px;display:inline-block;":""}`;
       const checkoutHtml=isActive&&co
-        ?`<div style="font-size:11px;color:#F4D77E;font-weight:700;margin-top:4px;line-height:1.3">${co} <span style="opacity:.65;font-size:10px">${co.split(" ").length}-${t('dart_finish')}</span></div>`
+        ?`<div style="font-size:10px;color:#F4D77E;font-weight:700;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${co}</div>`
         :"";
       if(isActive){
         return `<div class="lp-player active">
