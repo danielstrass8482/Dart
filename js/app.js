@@ -850,7 +850,7 @@ function buildCoachPlayerSelector(){
   btns.innerHTML="";
   const GOLD='#D4AF37';
   function selectorBtnStyle(active){
-    return `display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 16px 8px;border-radius:12px;border:2px solid ${active?GOLD:'var(--dart-border)'};background:${active?'rgba(212,175,55,0.12)':'var(--dart-bg-card)'};cursor:pointer;font-size:12px;font-weight:700;color:${active?GOLD:'var(--dart-text-sec)'};min-width:84px;`;
+    return `display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 16px 8px;border-radius:12px;border:2px solid ${active?GOLD:'var(--dart-border)'};background:${active?'rgba(212,175,55,0.12)':'var(--dart-bg-card)'};cursor:pointer;font-size:12px;font-weight:700;color:${active?GOLD:'var(--dart-text-sec)'};min-width:140px;`;
   }
   humanPlayers.forEach((name,hi)=>{
     const realIdx=state.cfg.players.indexOf(name);
@@ -859,8 +859,8 @@ function buildCoachPlayerSelector(){
     const photoUrl=playerObj?.photoUrl||null;
     const initials=name.slice(0,2).toUpperCase();
     const avatarHtml=photoUrl
-      ?`<img src="${photoUrl}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0">`
-      :`<span style="width:52px;height:52px;border-radius:10px;background:#1C1C21;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#9A9AA2;flex-shrink:0">${initials}</span>`;
+      ?`<img src="${photoUrl}" style="width:120px;height:120px;border-radius:14px;object-fit:cover;flex-shrink:0">`
+      :`<span style="width:120px;height:120px;border-radius:14px;background:#1C1C21;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:44px;color:#9A9AA2;flex-shrink:0">${initials}</span>`;
     const btn=document.createElement("button");
     btn.style.cssText=selectorBtnStyle(hi===0);
     btn.innerHTML=`${avatarHtml}<span>${name}</span>`;
