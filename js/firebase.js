@@ -311,19 +311,21 @@ window.upgradeAnonymousAccount = async function(email, password, name){
 };
 
 onAuthStateChanged(auth, user=>{
-  window.currentUser = user;
-  if(user){
-    initDartDB();
-    if(window.updateAuthUI) window.updateAuthUI(user);
-    if(document.getElementById("setup")){
-      const authScreen = document.getElementById("auth-screen");
-      if(authScreen && authScreen.classList.contains("active")){
-        if(window.showScreen) window.showScreen("setup");
-        if(window.loadPlayers) window.loadPlayers();
+  (window.splashPromise || Promise.resolve()).then(()=>{
+    window.currentUser = user;
+    if(user){
+      initDartDB();
+      if(window.updateAuthUI) window.updateAuthUI(user);
+      if(document.getElementById("setup")){
+        const authScreen = document.getElementById("auth-screen");
+        if(authScreen && authScreen.classList.contains("active")){
+          if(window.showScreen) window.showScreen("setup");
+          if(window.loadPlayers) window.loadPlayers();
+        }
       }
+    } else {
+      const authScreen = document.getElementById("auth-screen");
+      if(authScreen && window.showScreen) window.showScreen("auth-screen");
     }
-  } else {
-    const authScreen = document.getElementById("auth-screen");
-    if(authScreen && window.showScreen) window.showScreen("auth-screen");
-  }
+  });
 });
