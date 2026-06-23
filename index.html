@@ -15,6 +15,28 @@
 </head>
 <body>
 
+<!-- Splash Screen -->
+<div id="splash-screen" style="
+  position:fixed;inset:0;z-index:99999;
+  background:#08080A;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 0.5s ease;
+">
+  <img src="assets/02_feature_graphic_1024x500.png" alt="DartTrainer" style="
+    max-width:100%;max-height:100%;
+    object-fit:contain;
+  ">
+</div>
+<script>
+(function(){
+  var splash = document.getElementById('splash-screen');
+  setTimeout(function(){
+    splash.style.opacity = '0';
+    setTimeout(function(){ splash.style.display = 'none'; }, 500);
+  }, 2000);
+})();
+</script>
+
 <!-- Video Session Host Modal -->
 <div class="vidsession-backdrop" id="vidsession-backdrop">
   <div class="vidsession-modal">
