@@ -413,6 +413,12 @@ export const translations = {
     datenschutz: "Datenschutzerklärung",
     impressum: "Impressum",
     app_version: "DartTrainer · Persönliches Dart Scoring & Tracking",
+    legal_datenschutz_text: "Daten werden in Firebase (Google) gespeichert, keine Weitergabe an Dritte",
+    legal_entwickelt: "Entwickelt von Daniel Straß 2026",
+
+    // Checkout Ansagen
+    checkout_ansagen_label: "Checkout Ansagen",
+    checkout_ansagen_sub: "Checkout-Pfad vor jedem Wurf ansagen",
 
     // Health Connect
     health_verbinden: "HEALTH CONNECT VERBINDEN",
@@ -934,6 +940,12 @@ export const translations = {
     datenschutz: "Privacy Policy",
     impressum: "Imprint",
     app_version: "DartTrainer · Personal Dart Scoring & Tracking",
+    legal_datenschutz_text: "Data is stored in Firebase (Google), no sharing with third parties",
+    legal_entwickelt: "Developed by Daniel Straß 2026",
+
+    // Checkout Announcements
+    checkout_ansagen_label: "Checkout Announcements",
+    checkout_ansagen_sub: "Announce Checkout Path before each throw",
 
     // Health Connect
     health_verbinden: "CONNECT HEALTH",
