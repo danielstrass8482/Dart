@@ -7,7 +7,7 @@
   font-family: 'Manrope', sans-serif; }
 
 /* ── PORTRAIT: Scoreboard rows above/below board ── */
-.game-body { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; background: var(--dart-bg-card); align-items: stretch; }
+.game-body { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow: hidden; background: #08080A; align-items: stretch; }
 
 /* Board wrap — always square SVG centered */
 .board-wrap { flex: 1; min-height: 0; min-width: 0; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }

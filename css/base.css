@@ -3,7 +3,7 @@
 /* ── Design Tokens ── */
 :root {
   --dart-bg-app:      #08080A;
-  --dart-bg-screen:   #0B0B0E;
+  --dart-bg-screen:   #08080A;
   --dart-bg-card:     #121216;
   --dart-bg-card-alt: #0E0E11;
   --dart-bg-input:    #0F0F12;
