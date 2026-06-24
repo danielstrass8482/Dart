@@ -28,8 +28,14 @@
   ">
 </div>
 <script>
+var SPLASH_ENABLED = false; // set to true to re-enable splash screen
 window.splashPromise = new Promise(function(resolve) {
   var splash = document.getElementById('splash-screen');
+  if (!SPLASH_ENABLED) {
+    splash.style.display = 'none';
+    resolve();
+    return;
+  }
   setTimeout(function(){
     splash.style.opacity = '0';
     setTimeout(function(){
@@ -105,7 +111,7 @@ window.splashPromise = new Promise(function(resolve) {
 </div>
 
 <!-- ═══════════════════════ AUTH SCREEN ═══════════════════════ -->
-<div id="auth-screen" class="screen active" style="background:var(--dart-bg-card);align-items:center;justify-content:center;overflow-y:auto">
+<div id="auth-screen" class="screen active" style="background:#08080A;align-items:center;justify-content:center;overflow-y:auto">
   <div style="width:100%;max-width:360px;padding:24px 20px">
     <div style="text-align:center;margin-bottom:32px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--dart-gold);letter-spacing:4px;line-height:1">DARTTRAINER</div>
@@ -350,7 +356,7 @@ window.splashPromise = new Promise(function(resolve) {
     </div>
     <!-- Sub: STATISTIKEN -->
     <div class="sub-tab-content active" id="sub-tab-stats">
-    <div style="flex:1;padding:16px 24px;overflow-y:auto;background:var(--dart-bg-card)">
+    <div style="flex:1;padding:16px 24px;overflow-y:auto;background:#08080A">
       <div class="stats-player-bar" id="stats-player-bar"></div>
       <div class="stats-time-bar">
         <button class="time-btn active" data-range="today" data-i18n="heute">Heute</button>
@@ -378,7 +384,7 @@ window.splashPromise = new Promise(function(resolve) {
     </div>
     <!-- Sub: ANALYSE -->
     <div class="sub-tab-content" id="sub-tab-analyse">
-    <div style="flex:1;padding:16px;overflow-y:auto;background:var(--dart-bg-card)">
+    <div style="flex:1;padding:16px;overflow-y:auto;background:#08080A">
       <div id="analyse-player-bar" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
       <div class="stats-section-title"><i data-lucide="trending-up" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="erweiterte_stats">ERWEITERTE STATISTIKEN</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle">PREMIUM</span></div>
       <div class="stats-section-title" style="display:flex;align-items:center"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="coach_analyse_titel">COACH-ANALYSE</span> <button class="help-btn" onclick="showHelp('help_coach_analyse_title','help_coach_analyse_text')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
@@ -409,7 +415,7 @@ window.splashPromise = new Promise(function(resolve) {
 
   <!-- TAB: TURNIERE -->
   <div class="home-tab-content" id="tab-turniere">
-  <div style="flex:1;padding:16px;overflow-y:auto;background:var(--dart-bg-card)">
+  <div style="flex:1;padding:16px;overflow-y:auto;background:#08080A">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;display:flex;align-items:center;gap:6px"><i data-lucide="trophy" style="width:20px;height:20px;stroke-width:2;vertical-align:middle"></i> TURNIERE <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;vertical-align:middle;font-family:sans-serif">PREMIUM</span><button class="help-btn" onclick="showHelp('help_turnier_title','help_turnier_text')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button></div>
       <button onclick="openTournamentSetup()" style="padding:9px 16px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer"><i data-lucide="plus" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="erstellen_btn">ERSTELLEN</span></button>
@@ -420,7 +426,7 @@ window.splashPromise = new Promise(function(resolve) {
 
   <!-- TAB: PROFIL -->
   <div class="home-tab-content" id="tab-profil">
-  <div style="flex:1;padding:16px;overflow-y:auto;background:var(--dart-bg-card)">
+  <div style="flex:1;padding:16px;overflow-y:auto;background:#08080A">
 
     <!-- Spielerprofile -->
     <div class="profil-section">
@@ -605,7 +611,7 @@ window.splashPromise = new Promise(function(resolve) {
 </div>
 
 <!-- ═══════════════════════ ONLINE WAITING SCREEN ═══════════════════════ -->
-<div id="online-wait" class="screen" style="background:var(--dart-bg-card)">
+<div id="online-wait" class="screen" style="background:#08080A">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dart-gold);letter-spacing:3px;margin-bottom:8px" data-i18n="online_raum_code">RAUM-CODE</div>
     <div id="online-room-display" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--dart-text);letter-spacing:8px;margin-bottom:8px"></div>
@@ -618,7 +624,7 @@ window.splashPromise = new Promise(function(resolve) {
 </div>
 
 <!-- ═══════════════════════ TOURNAMENT SETUP SCREEN ═══════════════════════ -->
-<div id="tournament-setup" class="screen" style="background:var(--dart-bg-card);flex-direction:column">
+<div id="tournament-setup" class="screen" style="background:#08080A;flex-direction:column">
   <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
     <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='spielen'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-spielen'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="zurueck">ZURÜCK</span></button>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)" data-i18n="turnier_erstellen">TURNIER ERSTELLEN</div>
@@ -662,7 +668,7 @@ window.splashPromise = new Promise(function(resolve) {
 </div>
 
 <!-- ═══════════════════════ TOURNAMENT VIEW SCREEN ═══════════════════════ -->
-<div id="tournament-view" class="screen" style="background:var(--dart-bg-card);flex-direction:column">
+<div id="tournament-view" class="screen" style="background:#08080A;flex-direction:column">
   <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
     <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='spielen'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-spielen'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="zurueck">ZURÜCK</span></button>
     <div id="tv-title" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)">TURNIER</div>
@@ -674,7 +680,7 @@ window.splashPromise = new Promise(function(resolve) {
 </div>
 
 <!-- ═══════════════════════ X01 SCREEN ═══════════════════════ -->
-<div id="x01" class="screen" style="flex-direction:column;background:var(--dart-bg-card)">
+<div id="x01" class="screen" style="flex-direction:column;background:#08080A">
   <div class="game-header">
     <button class="btn-nav" id="x01-back"><i data-lucide="chevron-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="zurueck">Zurück</span></button>
     <div class="game-title" id="x01-title">501</div>
