@@ -47,7 +47,7 @@
 .bottom-checkout { font-size: 10px; color: var(--dart-gold); text-align: center; margin-top: 1px; }
 .bottom-throws { display: flex; gap: 4px; flex: 1; }
 .bottom-slot { flex: 1; border-radius: 12px; display: flex; align-items: center;
-  justify-content: center; background: #121216; border: none;
+  justify-content: center; background: #08080A; border: 1px solid rgba(212,175,55,.15);
   font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: #3a3a40; padding: 14px 0; }
 .bottom-slot.hit { background: rgba(212,175,55,.14); color: #F4D77E; }
 .bottom-slot.bust { background: rgba(200,54,43,.15); border: 1px solid rgba(200,54,43,.45); color: var(--dart-danger); }
@@ -68,7 +68,7 @@
 
 /* Player strip — auto height, side by side, equal height via stretch */
 #lp-players { flex: 0 0 auto; display: flex; flex-direction: row; align-items: stretch; overflow: hidden; }
-.lp-player { flex: 1; min-width: 0; padding: 10px 10px; border-right: 1px solid #1f1f24; background: #121216;
+.lp-player { flex: 1; min-width: 0; padding: 10px 10px; border-right: 1px solid #1f1f24; background: #08080A;
   opacity: 0.55; transition: background .25s ease, border-color .25s, opacity .25s;
   display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
 .lp-player:last-child { border-right: none; }
@@ -85,7 +85,7 @@
 /* Controls bar below players */
 .lp-controls { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .lp-slots { display: flex; gap: 4px; flex-shrink: 0; }
-.lp-slot { flex: 1; border-radius: 12px; background: #121216; border: none;
+.lp-slot { flex: 1; border-radius: 12px; background: #08080A; border: 1px solid rgba(212,175,55,.15);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: #3a3a40; padding: 12px 0; }
 .lp-slot.hit { background: rgba(212,175,55,.14); color: #F4D77E; }
@@ -111,7 +111,7 @@
 .turn-table-wrap { display: none; }
 
 .throw-slot { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--dart-text-sec);
-  background: var(--dart-bg-card); border: 1px dashed var(--dart-border-alt); transition: all .2s; }
+  background: #08080A; border: 1px dashed rgba(212,175,55,.25); transition: all .2s; }
 .throw-slot.hit { background: rgba(46,201,113,.1); border: 1px solid var(--dart-success); color: var(--dart-text); }
 .throw-slot.bust { background: rgba(200,54,43,.12); border: 1px solid var(--dart-danger); }
 .bust-label { color: var(--dart-danger); text-align: center; margin-top: 8px; font-size: 13px; font-weight: 600; }

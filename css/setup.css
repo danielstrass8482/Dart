@@ -109,20 +109,20 @@
 /* ── Sub-tabs (Statistiken) ── */
 .sub-tabs-bar { display:flex;border-bottom:2px solid var(--dart-border);flex-shrink:0;background:#08080A; }
 .sub-tab { flex:1;padding:10px;border:none;background:none;font-family:'Bebas Neue',sans-serif;
-  font-size:16px;letter-spacing:1px;cursor:pointer;color:var(--dart-text-sec);border-bottom:2px solid transparent;
+  font-size:16px;letter-spacing:1px;cursor:pointer;color:#6E6E78;border-bottom:2px solid transparent;
   margin-bottom:-2px; }
-.sub-tab.active { color:var(--dart-text);border-bottom-color:var(--dart-gold); }
+.sub-tab.active { color:var(--dart-gold);border-bottom-color:var(--dart-gold); }
 .sub-tab-content { display:none;flex:1;flex-direction:column;min-height:0;overflow-y:auto; }
 .sub-tab-content.active { display:flex; }
 
 /* ── Profil-Tab ── */
-.profil-section { background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:16px;padding:14px 16px;margin-bottom:14px; }
-.account-card { background:linear-gradient(135deg,rgba(212,175,55,.1),rgba(212,175,55,.02));border:1px solid rgba(212,175,55,.22);border-radius:18px; }
+.profil-section { background:#08080A;border:1px solid rgba(212,175,55,.19);border-radius:16px;padding:14px 16px;margin-bottom:14px; }
+.account-card { background:#08080A;border:1px solid rgba(212,175,55,.22);border-radius:18px; }
 .profil-section-title { font-family:'Manrope',sans-serif;font-size:11px;font-weight:700;
   text-transform:uppercase;letter-spacing:.1em;color:var(--dart-text-muted);margin-bottom:8px; }
 
 /* ── Turnier-Tab ── */
-.tournament-card { background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:16px;
+.tournament-card { background:#08080A;border:1px solid rgba(212,175,55,.19);border-radius:12px;padding:16px;
   margin-bottom:10px;cursor:pointer;transition:box-shadow .15s; }
 .tournament-card:hover { box-shadow:0 2px 10px rgba(0,0,0,.08); }
 .tournament-status-badge { display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;
@@ -167,7 +167,7 @@
 /* ── Player management ── */
 .player-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
 .player-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-  border-radius: 8px; border: 2px solid var(--dart-border); background: var(--dart-bg-card-alt); cursor: pointer; transition: all .15s; }
+  border-radius: 8px; border: 1px solid rgba(212,175,55,.19); background: #08080A; cursor: pointer; transition: all .15s; }
 .player-item.selected { border-color: var(--dart-gold); background: rgba(212,175,55,.1); }
 .player-item .pi-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
   justify-content: center; font-family: 'Bebas Neue',sans-serif; font-size: 16px; color: var(--dart-text); flex-shrink: 0; }
