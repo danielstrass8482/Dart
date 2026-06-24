@@ -553,6 +553,11 @@ export const translations = {
     premium_gesperrt: "PREMIUM FEATURE",
     premium_freischalten_kurz: "Jetzt freischalten",
 
+    bot_premium_hinweis: "Bot-Gegner ist ein Premium-Feature",
+    voice_id_gespeichert: "✓ Gespeichert",
+    voice_id_fehler: "✗ Fehler",
+    voice_id_speichern: "ID speichern",
+
     // Misc
     anzahl_runden: "ANZAHL RUNDEN",
     erstellen_btn: "ERSTELLEN",
@@ -1094,6 +1099,11 @@ export const translations = {
     // Premium Lock
     premium_gesperrt: "PREMIUM FEATURE",
     premium_freischalten_kurz: "Unlock now",
+
+    bot_premium_hinweis: "Bot opponent is a premium feature",
+    voice_id_gespeichert: "✓ Saved",
+    voice_id_fehler: "✗ Error",
+    voice_id_speichern: "Save ID",
 
     // Misc
     anzahl_runden: "NUMBER OF ROUNDS",
