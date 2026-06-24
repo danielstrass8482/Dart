@@ -234,6 +234,18 @@ function initDartDB(){
         updatedAt: Date.now()
       }, { merge: true });
     },
+    async getBetaPremium(uid){
+      try{
+        const snap = await getDoc(doc(db, "dart_users", uid));
+        return snap.exists() ? snap.data() : null;
+      }catch(e){ return null; }
+    },
+    async saveBetaPremium(uid){
+      return setDoc(doc(db, "dart_users", uid), {
+        betaPremium: true,
+        betaPremiumAt: Date.now()
+      }, { merge: true });
+    },
     async getSubscription(uid){
       try{
         const snap = await getDoc(
