@@ -7,7 +7,7 @@
   font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; cursor: pointer; }
 
 /* ── Winner overlay tab system ── */
-.winner-tab-bar { display: flex; flex-shrink: 0; background: var(--dart-bg-card);
+.winner-tab-bar { display: flex; flex-shrink: 0; background: #08080A;
   border-bottom: 1px solid var(--dart-border); }
 .winner-tab-btn { flex: 1; padding: 14px 8px 11px; border: none; background: transparent;
   color: var(--dart-text-muted); font-family: 'Bebas Neue', sans-serif; font-size: 17px;

@@ -558,7 +558,7 @@ window.splashPromise = new Promise(function(resolve) {
       <div data-i18n="health_sub" style="font-size:13px;color:var(--dart-text-muted);margin-bottom:10px;line-height:1.6">
         Verbinde Garmin, Oura, Fitbit und mehr für automatische Gesundheitsdaten.
       </div>
-      <div data-i18n="health_browser_hinweis" style="background:var(--dart-bg-card);border-radius:8px;padding:10px;font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">
+      <div data-i18n="health_browser_hinweis" style="background:#08080A;border-radius:8px;padding:10px;font-size:12px;color:var(--dart-text-sec);margin-bottom:10px">
         ℹ️ Automatische Verbindung nur in der Android App verfügbar. Im Browser: manuelle Eingabe vor dem Spiel.
       </div>
       <a href="https://health.google/health-connect-android-api/" target="_blank"
@@ -625,7 +625,7 @@ window.splashPromise = new Promise(function(resolve) {
 
 <!-- ═══════════════════════ TOURNAMENT SETUP SCREEN ═══════════════════════ -->
 <div id="tournament-setup" class="screen" style="background:#08080A;flex-direction:column">
-  <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+  <div style="background:#08080A;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
     <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='spielen'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-spielen'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="zurueck">ZURÜCK</span></button>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)" data-i18n="turnier_erstellen">TURNIER ERSTELLEN</div>
   </div>
@@ -669,7 +669,7 @@ window.splashPromise = new Promise(function(resolve) {
 
 <!-- ═══════════════════════ TOURNAMENT VIEW SCREEN ═══════════════════════ -->
 <div id="tournament-view" class="screen" style="background:#08080A;flex-direction:column">
-  <div style="background:var(--dart-bg-card);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
+  <div style="background:#08080A;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">
     <button onclick="showSetup();document.querySelectorAll('.home-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='spielen'));document.querySelectorAll('.home-tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-spielen'));" style="background:none;border:none;color:var(--dart-gold);font-size:16px;cursor:pointer;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">← <span data-i18n="zurueck">ZURÜCK</span></button>
     <div id="tv-title" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--dart-text)">TURNIER</div>
     <div id="tv-status-badge" style="margin-left:auto"></div>
