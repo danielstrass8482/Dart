@@ -133,8 +133,6 @@ function getMonthKey(){
 
 // Premium-Overlay anzeigen
 export function showPremiumOverlay(featureId){
-  const feature = PREMIUM_FEATURES[featureId];
-  if(!feature) return;
   const overlay = document.createElement("div");
   overlay.style.cssText = `
     position:fixed;inset:0;background:rgba(0,0,0,0.85);
@@ -145,36 +143,30 @@ export function showPremiumOverlay(featureId){
     <div style="background:var(--dart-bg-card);border:1px solid var(--gold);
       border-radius:16px;padding:32px;max-width:360px;
       width:100%;text-align:center">
-      <div style="font-size:48px;margin-bottom:12px">
-        ${feature.icon}
-      </div>
       <div style="font-family:'Bebas Neue',sans-serif;
         font-size:24px;color:var(--gold);letter-spacing:2px;
-        margin-bottom:8px">
-        PREMIUM FEATURE
+        margin-bottom:12px">
+        ${t('paywall_titel')}
       </div>
-      <div style="font-size:16px;color:var(--dart-text);font-weight:600;
-        margin-bottom:8px">
-        ${t(feature.nameKey)}
-      </div>
-      <div style="font-size:13px;color:var(--dart-text-sec);margin-bottom:24px">
-        ${t(feature.descKey)}
+      <div style="font-size:15px;color:var(--dart-text);font-weight:600;
+        margin-bottom:20px">
+        ${t('paywall_untertitel')}
       </div>
       <div style="background:rgba(232,196,74,0.1);
         border:1px solid var(--gold);border-radius:8px;
-        padding:12px;margin-bottom:20px;font-size:12px;color:var(--dart-gold)">
-        ${t('beta_kostenlos_alle')}<br>
-        <span style="color:var(--dart-text-sec)">
-          ${t('beta_sichern_features')}
-        </span>
+        padding:12px;margin-bottom:20px;font-size:13px;color:var(--dart-gold)">
+        ${t('paywall_beta_hinweis')}
       </div>
       <button onclick="this.closest('[style*=fixed]').remove()"
         style="width:100%;padding:14px;background:var(--gold);
         border:none;border-radius:10px;font-family:'Bebas Neue',
         sans-serif;font-size:20px;letter-spacing:2px;
-        color:#000;cursor:pointer;margin-bottom:10px">
-        ${t('weiter_beta')}
+        color:#000;cursor:pointer;margin-bottom:8px">
+        ${t('paywall_freischalten')}
       </button>
+      <div style="font-size:11px;color:var(--dart-text-muted);margin-bottom:10px">
+        ${t('paywall_kleintext')}
+      </div>
       <button onclick="this.closest('[style*=fixed]').remove()"
         style="width:100%;padding:10px;background:none;
         border:1px solid var(--dart-border);border-radius:10px;color:var(--dart-text-muted);
