@@ -68,9 +68,36 @@ export const PREMIUM_FEATURES = {
 // Beta-Modus: alle Features für alle entsperrt
 export const BETA_MODE = true;
 
+// Admin-UIDs — hier Firebase UIDs der Admins eintragen
+const ADMIN_UIDS = [];
+
+// Ob der User via "Jetzt Freischalten" Premium freigeschaltet hat
+export let betaPremiumActive = false;
+export function setBetaPremiumActive(val){ betaPremiumActive = val; }
+
+// Admin-Prüfung (client-side, nur für UI-Sichtbarkeit)
+export function isAdmin(){
+  const user = window.currentUser;
+  if(!user || user.isAnonymous) return false;
+  if(ADMIN_UIDS.length && ADMIN_UIDS.includes(user.uid)) return true;
+  return user.email === 'daniel.strass@gmx.de';
+}
+
+// betaPremium-Status aus Firebase laden
+export async function loadBetaPremiumStatus(){
+  if(BETA_MODE) return;
+  const user = window.fbAuth?.currentUser;
+  if(!user || user.isAnonymous) return;
+  try{
+    const data = await window.dartDB?.getBetaPremium(user.uid);
+    if(data?.betaPremium) betaPremiumActive = true;
+  }catch(e){ console.warn("loadBetaPremiumStatus:", e); }
+}
+
 // Premium-Status prüfen
 export async function isPremium(){
   if(BETA_MODE) return true;
+  if(betaPremiumActive) return true;
   const user = window.fbAuth?.currentUser;
   if(!user) return false;
   try{
@@ -97,6 +124,7 @@ export async function registerBetaUser(){
 // Feature-Zugang prüfen
 export async function canUseFeature(featureId){
   if(BETA_MODE) return { allowed: true, reason: "beta" };
+  if(betaPremiumActive) return { allowed: true, reason: "beta_premium" };
   const premium = await isPremium();
   if(premium) return { allowed: true, reason: "premium" };
   const feature = PREMIUM_FEATURES[featureId];
@@ -140,11 +168,11 @@ export function showPremiumOverlay(featureId){
     z-index:1000;padding:20px
   `;
   overlay.innerHTML = `
-    <div style="background:var(--dart-bg-card);border:1px solid var(--gold);
+    <div style="background:var(--dart-bg-card);border:1px solid var(--dart-gold);
       border-radius:16px;padding:32px;max-width:360px;
       width:100%;text-align:center">
       <div style="font-family:'Bebas Neue',sans-serif;
-        font-size:24px;color:var(--gold);letter-spacing:2px;
+        font-size:24px;color:var(--dart-gold);letter-spacing:2px;
         margin-bottom:12px">
         ${t('paywall_titel')}
       </div>
@@ -153,12 +181,12 @@ export function showPremiumOverlay(featureId){
         ${t('paywall_untertitel')}
       </div>
       <div style="background:rgba(232,196,74,0.1);
-        border:1px solid var(--gold);border-radius:8px;
+        border:1px solid var(--dart-gold);border-radius:8px;
         padding:12px;margin-bottom:20px;font-size:13px;color:var(--dart-gold)">
         ${t('paywall_beta_hinweis')}
       </div>
-      <button onclick="this.closest('[style*=fixed]').remove()"
-        style="width:100%;padding:14px;background:var(--gold);
+      <button onclick="window.unlockBetaPremium(this.closest('[style*=fixed]'))"
+        style="width:100%;padding:14px;background:#D4AF37;
         border:none;border-radius:10px;font-family:'Bebas Neue',
         sans-serif;font-size:20px;letter-spacing:2px;
         color:#000;cursor:pointer;margin-bottom:8px">

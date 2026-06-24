@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ── Premium ──────────────────────────────────────────────────────
-import { registerBetaUser, BETA_MODE, canUseFeature, showPremiumOverlay } from './premium.js';
+import { registerBetaUser, BETA_MODE, canUseFeature, showPremiumOverlay,
+         loadBetaPremiumStatus, isAdmin, betaPremiumActive, setBetaPremiumActive } from './premium.js';
 
 // ── Onboarding & Help ────────────────────────────────────────────
 import { checkOnboarding, showOnboarding, showHelp } from './onboarding.js';
@@ -220,6 +221,17 @@ boardSVGparty.addEventListener("pointerup", handlePartyClick);
 // ── Audio unlock ──────────────────────────────────────────────────
 document.addEventListener("pointerdown", unlockAudio, {once:true});
 document.addEventListener("touchstart", unlockAudio, {once:true, passive:true});
+
+// ── Premium unlock (Paywall "Jetzt Freischalten") ─────────────────
+window.unlockBetaPremium = async function(overlayEl){
+  const user = window.fbAuth?.currentUser;
+  if(user && !user.isAnonymous && window.dartDB){
+    try{ await window.dartDB.saveBetaPremium(user.uid); }
+    catch(e){ console.warn("saveBetaPremium:", e); }
+  }
+  setBetaPremiumActive(true);
+  overlayEl?.remove();
+};
 
 // ── Orientation ───────────────────────────────────────────────────
 window.addEventListener("orientationchange",()=>{
@@ -743,6 +755,7 @@ function initProfilTab(){
     </div>`;
   if(upgradeEl) upgradeEl.style.display=isAnon?"":"none";
   renderPremiumStatus(isAnon, displayName, email);
+  renderAdminToggle();
   renderVoiceSelector();
   syncVoicesFromFirestore();
   renderProfilPlayerList();
@@ -780,6 +793,37 @@ function renderPremiumStatus(isAnon, displayName, email){
       </div>`;
   }
 }
+
+function renderAdminToggle(){
+  let el = document.getElementById("profil-admin-section");
+  if(!el){
+    const premStatEl = document.getElementById("profil-premium-status");
+    if(!premStatEl) return;
+    el = document.createElement("div");
+    el.className = "profil-section";
+    el.id = "profil-admin-section";
+    premStatEl.parentNode.insertBefore(el, premStatEl.nextSibling);
+  }
+  if(!isAdmin()){ el.style.display="none"; return; }
+  el.style.display="";
+  const checked = betaPremiumActive ? "checked" : "";
+  el.innerHTML = `
+    <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:16px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--dart-text-muted);letter-spacing:2px;margin-bottom:10px">⚙ ADMIN</div>
+      <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:12px">
+        <div>
+          <div style="font-weight:600;font-size:14px;color:var(--dart-text)">${t('premium_simulieren')}</div>
+          <div style="font-size:12px;color:var(--dart-text-sec);margin-top:2px">${t('premium_simulieren_sub')}</div>
+        </div>
+        <input type="checkbox" id="admin-premium-toggle" ${checked}
+          style="width:18px;height:18px;cursor:pointer;accent-color:var(--dart-gold);flex-shrink:0">
+      </label>
+    </div>`;
+  document.getElementById("admin-premium-toggle")?.addEventListener("change",(e)=>{
+    setBetaPremiumActive(e.target.checked);
+  });
+}
+
 document.getElementById("btn-profil-signout")?.addEventListener("click",()=>window.signOutUser());
 document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=>{
   const name=document.getElementById("profil-upgrade-name").value.trim();
@@ -1165,10 +1209,10 @@ function renderVoiceSelector(){
   list.innerHTML=BUILTIN_VOICES.map(v=>{
     const isActive=v.id&&v.id===activeId; const hasId=!!v.id;
     const border=isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border:1px solid rgba(212,175,55,.1);";
-    const testBtns=hasId
-      ?`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">180</button>`
-       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Game On</button>`
-       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Bust</button>`
+    const testBtns=(hasId || !v.free)
+      ?`<button style="${bS}" data-tv-id="${v.id||''}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">180</button>`
+       +`<button style="${bS}" data-tv-id="${v.id||''}" data-tv-key="el_game_on" data-tv-text="Game on!">Game On</button>`
+       +`<button style="${bS}" data-tv-id="${v.id||''}" data-tv-key="el_bust" data-tv-text="Bust.">Bust</button>`
       :"";
     let actionBtn;
     if(v.free){
@@ -1184,7 +1228,7 @@ function renderVoiceSelector(){
       <div style="display:flex;gap:6px;flex-wrap:wrap">${testBtns}${actionBtn}</div>
     </div>`;
   }).join("");
-  list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",()=>testVoice(btn.dataset.tvId,btn.dataset.tvKey,btn.dataset.tvText)));
+  list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",()=>testVoice(btn.dataset.tvId||null,btn.dataset.tvKey,btn.dataset.tvText)));
   list.querySelectorAll("[data-activate-id]").forEach(btn=>btn.addEventListener("click",()=>activateVoice(btn.dataset.activateId,btn.dataset.activateName)));
   list.querySelectorAll("[data-premium-voice]").forEach(btn=>btn.addEventListener("click",()=>showPremiumOverlay('voiceCustom')));
   window.refreshIcons?.();
@@ -1205,6 +1249,7 @@ window.addEventListener("dbReady", ()=>{ loadPlayers().then(()=>renderStatsPlaye
 window.addEventListener("dbReady", ()=>{
   const user = window.currentUser;
   if(user && !user.isAnonymous) registerBetaUser();
+  loadBetaPremiumStatus();
 });
 
 // ── Lucide icon refresh helper ────────────────────────────────────

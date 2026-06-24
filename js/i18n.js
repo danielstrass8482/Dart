@@ -545,6 +545,10 @@ export const translations = {
     statistik_analyse: "STATISTIK-ANALYSE",
     wurf_analyse_video: "WURF-ANALYSE (VIDEO)",
 
+    // Admin
+    premium_simulieren: "Premium simulieren",
+    premium_simulieren_sub: "Admin: eigenen Premium-Status ein/ausschalten",
+
     // Misc
     anzahl_runden: "ANZAHL RUNDEN",
     erstellen_btn: "ERSTELLEN",
@@ -1078,6 +1082,10 @@ export const translations = {
     analyse_fuer: "ANALYSIS FOR",
     statistik_analyse: "STATS ANALYSIS",
     wurf_analyse_video: "THROW ANALYSIS (VIDEO)",
+
+    // Admin
+    premium_simulieren: "Simulate Premium",
+    premium_simulieren_sub: "Admin: toggle your own premium status",
 
     // Misc
     anzahl_runden: "NUMBER OF ROUNDS",
