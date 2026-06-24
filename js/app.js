@@ -1292,33 +1292,30 @@ async function renderVoiceSelector(){
   const bS="padding:6px 10px;border:1px solid rgba(212,175,55,.25);border-radius:7px;background:#08080A;font-size:12px;cursor:pointer;color:var(--dart-text-sec);";
   const premBadge=`<span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle;margin-left:5px">PREMIUM</span>`;
   list.innerHTML=BUILTIN_VOICES.map(v=>{
-    const isActive=v.id&&v.id===activeId; const hasId=!!v.id;
+    const isActive=v.id&&v.id===activeId; const hasId=!!v.id; const canActivate=v.free||isPrem;
     const border=isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border:1px solid rgba(212,175,55,.1);";
-    const testBtns=(hasId || !v.free)
-      ?`<button style="${bS}" data-tv-id="${v.id||''}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">180</button>`
-       +`<button style="${bS}" data-tv-id="${v.id||''}" data-tv-key="el_game_on" data-tv-text="Game on!">Game On</button>`
-       +`<button style="${bS}" data-tv-id="${v.id||''}" data-tv-key="el_bust" data-tv-text="Bust.">Bust</button>`
+    // Test buttons only render when voice has a real ID — prevents null-ID fallback to active voice
+    const testBtns=hasId
+      ?`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">180</button>`
+       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Game On</button>`
+       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Bust</button>`
       :"";
-    let actionBtn;
-    if(v.free || isPrem){
-      // Free voices and premium users: show normal activate/active button
-      actionBtn=isActive
-        ?`<button style="padding:6px 10px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktiv')}</button>`
-        :hasId?`<button style="padding:6px 10px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktivieren')}</button>`
-        :`<span style="font-size:11px;color:var(--dart-text-muted)">–</span>`;
-    } else {
-      // Non-free, non-premium: show lock/unlock button
-      actionBtn=`<button style="padding:6px 10px;border:1px solid rgba(212,175,55,.4);border-radius:7px;background:rgba(212,175,55,.08);color:var(--dart-gold);font-size:12px;cursor:pointer;" data-premium-voice="${v.name}"><i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('voice_freischalten')}</button>`;
+    // Tile click: activate if canActivate+hasId, paywall if non-premium, inactive if no ID yet
+    let tileData="",tileCursor="default";
+    if(!isActive){
+      if(canActivate&&hasId){ tileData=`data-voice-activate-id="${v.id}" data-voice-activate-name="${v.name}"`; tileCursor="pointer"; }
+      else if(!canActivate){ tileData=`data-voice-paywall="1"`; tileCursor="pointer"; }
     }
-    const badge=(!v.free && !isPrem)?premBadge:"";
-    return `<div style="${border}border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${badge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${testBtns}${actionBtn}</div>
+    const badge=(!v.free&&!isPrem)?premBadge:"";
+    return `<div style="${border}border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;cursor:${tileCursor}" ${tileData}>
+      <div style="display:flex;justify-content:space-between;align-items:center;${hasId?"margin-bottom:8px":""}"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${badge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}</div>
+      ${hasId?`<div style="display:flex;gap:6px;flex-wrap:wrap">${testBtns}</div>`:""}
     </div>`;
   }).join("");
-  list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",()=>testVoice(btn.dataset.tvId||null,btn.dataset.tvKey,btn.dataset.tvText)));
-  list.querySelectorAll("[data-activate-id]").forEach(btn=>btn.addEventListener("click",()=>activateVoice(btn.dataset.activateId,btn.dataset.activateName)));
-  list.querySelectorAll("[data-premium-voice]").forEach(btn=>btn.addEventListener("click",()=>showPremiumOverlay('voiceCustom')));
+  // stopPropagation prevents tile-click from firing when a test button is clicked
+  list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();testVoice(btn.dataset.tvId,btn.dataset.tvKey,btn.dataset.tvText);}));
+  list.querySelectorAll("[data-voice-activate-id]").forEach(tile=>tile.addEventListener("click",()=>activateVoice(tile.dataset.voiceActivateId,tile.dataset.voiceActivateName)));
+  list.querySelectorAll("[data-voice-paywall]").forEach(tile=>tile.addEventListener("click",()=>showPremiumOverlay('premiumVoices')));
   window.refreshIcons?.();
 }
 
