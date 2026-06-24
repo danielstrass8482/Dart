@@ -102,12 +102,12 @@
 }
 .spielen-section { display:none;flex:1;flex-direction:column;min-height:0; }
 .spielen-section.active { display:flex; }
-.spielen-back { background:var(--dart-bg-card);color:var(--dart-gold);border:none;padding:10px 16px;
+.spielen-back { background:#08080A;color:var(--dart-gold);border:none;padding:10px 16px;
   font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer;
   text-align:left;flex-shrink:0; }
 
 /* ── Sub-tabs (Statistiken) ── */
-.sub-tabs-bar { display:flex;border-bottom:2px solid var(--dart-border);flex-shrink:0;background:var(--dart-bg-card); }
+.sub-tabs-bar { display:flex;border-bottom:2px solid var(--dart-border);flex-shrink:0;background:#08080A; }
 .sub-tab { flex:1;padding:10px;border:none;background:none;font-family:'Bebas Neue',sans-serif;
   font-size:16px;letter-spacing:1px;cursor:pointer;color:var(--dart-text-sec);border-bottom:2px solid transparent;
   margin-bottom:-2px; }
@@ -138,7 +138,7 @@
 .bracket-round-title { font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;
   color:var(--dart-text-sec);margin:10px 0 4px; }
 
-.setup-card { background: var(--dart-bg-card); border: 1px solid var(--dart-border); border-radius: 16px; padding: 24px 48px; width: 100%; max-width: 960px; }
+.setup-card { background: #08080A; border-radius: 16px; padding: 24px 48px; width: 100%; max-width: 960px; }
 #mode-group { display: flex; gap: 12px; }
 #mode-group .btn-toggle { flex: 1; padding: 16px; }
 .logo { text-align: center; margin-bottom: 28px; }
@@ -159,7 +159,7 @@
 
 /* ── Setup overrides ── */
 #setup { background: #08080A; }
-.setup-card { background: var(--dart-bg-card); border: 1px solid var(--dart-border); }
+.setup-card { background: #08080A; border: none; }
 .field-label { color: var(--dart-text-muted); }
 .btn-toggle { background: var(--dart-bg-card); color: var(--dart-text-muted); border: 1px solid var(--dart-border); }
 .player-input { background: var(--dart-bg-card); border: 1px solid var(--dart-border); color: var(--dart-text); }
@@ -184,7 +184,7 @@
 .player-edit-backdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
   z-index:2000;align-items:flex-start;justify-content:center;padding-top:60px; }
 .player-edit-backdrop.open { display:flex; }
-.player-edit-modal { background:var(--dart-bg-card);border-radius:16px 16px 0 0;padding:24px;
+.player-edit-modal { background:#08080A;border-radius:16px 16px 0 0;padding:24px;
   width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-sizing:border-box; }
 .player-edit-modal input { color: var(--dart-text) !important; background: var(--dart-bg-input);
   border: 1px solid var(--dart-border); border-radius: 10px; padding: 10px 14px; }

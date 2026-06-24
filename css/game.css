@@ -1,6 +1,6 @@
 /* ── Game header ── */
 .game-header { display: flex; align-items: center; justify-content: space-between;
-  padding: 5px 12px; background: var(--dart-bg-card); border-bottom: 1px solid var(--dart-border); flex-shrink: 0; }
+  padding: 5px 12px; background: #08080A; border-bottom: 1px solid var(--dart-border); flex-shrink: 0; }
 .game-title { font-size: 14px; font-weight: 700; letter-spacing: .2em; color: #9A9AA2; }
 .btn-nav { background: #16161A; border: 1px solid #26262C; color: #A6A6AE; padding: 9px 14px;
   border-radius: 10px; font-size: 12px; font-weight: 700; letter-spacing: .06em; cursor: pointer;
@@ -30,7 +30,7 @@
 }
 
 /* ── Scoreboard strip (portrait top) ── */
-.score-strip { display: flex; background: var(--dart-bg-card); flex-shrink: 0; border-bottom: 1px solid var(--dart-border); }
+.score-strip { display: flex; background: #08080A; flex-shrink: 0; border-bottom: 1px solid var(--dart-border); }
 .score-cell { flex: 1; padding: 6px 10px; border-right: 1px solid var(--dart-border); min-width: 0; }
 .score-cell:last-child { border-right: none; }
 .score-cell.active { background: linear-gradient(150deg, rgba(212,175,55,.13) 0%, rgba(212,175,55,.02) 100%); border-bottom: 3px solid #D4AF37; animation: glowPulse 2.6s ease-in-out infinite; }
@@ -41,7 +41,7 @@
 
 /* ── Bottom controls bar (portrait) ── */
 .bottom-bar { display: flex; align-items: center; gap: 6px; padding: 5px 8px;
-  background: var(--dart-bg-card); flex-shrink: 0; border-top: 1px solid var(--dart-border); }
+  background: #08080A; flex-shrink: 0; border-top: 1px solid var(--dart-border); }
 .bottom-remaining { font-family: 'Bebas Neue', sans-serif; font-size: 30px; color: var(--dart-text);
   min-width: 60px; text-align: center; line-height: 1; }
 .bottom-checkout { font-size: 10px; color: var(--dart-gold); text-align: center; margin-top: 1px; }
@@ -61,7 +61,7 @@
 
 /* ── Landscape panel (right side) ── */
 .landscape-panel { display: none; flex-direction: column; flex: 1; min-width: 140px; max-width: 240px;
-  background: var(--dart-bg-card); overflow: hidden; gap: 0; }
+  background: #08080A; overflow: hidden; gap: 0; }
 
 /* Upper section: turn-history table */
 .lp-history { flex: 1 1 0; overflow-y: auto; min-height: 0; border-bottom: 1px solid var(--dart-border); }
@@ -136,7 +136,7 @@
   font-style: italic; padding: 2px 0; }
 
 /* ── Cricket scoreboard ── */
-.cricket-board { padding: 6px 14px; background: var(--dart-bg-card); flex-shrink: 0; overflow-x: auto; border-bottom: 1px solid var(--dart-border); }
+.cricket-board { padding: 6px 14px; background: #08080A; flex-shrink: 0; overflow-x: auto; border-bottom: 1px solid var(--dart-border); }
 .cricket-table { width: 100%; border-collapse: collapse; font-family: 'Bebas Neue', sans-serif; }
 .cricket-table th { color: var(--dart-text-sec); text-align: center; padding: 3px 6px; font-size: 13px; font-family: 'DM Sans', sans-serif; letter-spacing: 1px; }
 .cricket-table th.target-col { text-align: left; color: var(--dart-text-sec); font-size: 10px; }
