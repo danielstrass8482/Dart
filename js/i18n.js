@@ -316,6 +316,11 @@ export const translations = {
     beta_sichern_features: "Registriere dich jetzt um deine Features dauerhaft zu sichern.",
     weiter_beta: "WEITER (BETA)",
     schliessen: "Schließen",
+    paywall_titel: "Premium Feature",
+    paywall_untertitel: "Dieses Feature ist Teil von DartTrainer Premium.",
+    paywall_beta_hinweis: "Während der Beta für alle kostenlos verfügbar.",
+    paywall_freischalten: "Jetzt freischalten",
+    paywall_kleintext: "Nach der Beta kostenpflichtig.",
 
     // Studio
     studio_von: "von",
@@ -845,6 +850,11 @@ export const translations = {
     beta_sichern_features: "Register now to permanently secure your features.",
     weiter_beta: "CONTINUE (BETA)",
     schliessen: "Close",
+    paywall_titel: "Premium Feature",
+    paywall_untertitel: "This feature is part of DartTrainer Premium.",
+    paywall_beta_hinweis: "Available for free during the beta.",
+    paywall_freischalten: "Unlock Now",
+    paywall_kleintext: "Will require a subscription after beta.",
 
     // Studio
     studio_von: "of",
