@@ -392,9 +392,9 @@ export function drawMiniBoard(svgEl, dots, dotR=5){
   dots.slice(-600).forEach(s=>{
     if(s.x==null||s.y==null||isNaN(s.x)||isNaN(s.y)) return;
     const px=adjX(s.x), py=adjY(s.y);
-    // Points outside the board circle are red; everything inside is gold
     const dist=Math.sqrt((px-cx)*(px-cx)+(py-cy)*(py-cy));
-    const isMiss=dist>R.board;
+    // Use stored label/miss flag when available; fall back to geometry for legacy data
+    const isMiss=s.l==="Miss"||s.label==="Miss"||s.miss===true||(!s.l&&!s.label&&dist>R.dblOut);
     svgEl.appendChild(mkEl("circle",{
       cx:px, cy:py, r:String(dotR),
       fill: isMiss?"rgba(220,50,50,0.5)":"rgba(244,215,126,0.55)",
