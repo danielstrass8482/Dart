@@ -449,8 +449,13 @@ document.getElementById("rounds-group")?.addEventListener("click",e=>{
   document.querySelectorAll("#rounds-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==selectedRounds));
 });
 
-document.getElementById("bot-group").addEventListener("click",e=>{
+document.getElementById("bot-group").addEventListener("click",async e=>{
   const v=togVal(e); if(!v) return;
+  // "Kein Bot" is always free; all bot levels (easy/medium/pro) are premium
+  if(v!=="none"){
+    const isPrem=await isPremium();
+    if(!isPrem){ showPremiumOverlay("botOpponent"); return; }
+  }
   selectedBot=v;
   document.querySelectorAll("#bot-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedBot));
   const botSection=document.getElementById("bot-personality-section");
@@ -851,18 +856,37 @@ function premiumLockEl(){
 }
 
 function applyBotPremiumState(isPrem){
+  // Fix 3: gate the entire bot level area, not just personality section
+  document.getElementById("bot-premium-indicator")?.remove();
+  const botGroup=document.getElementById("bot-group");
+  if(botGroup){
+    // Grey out level buttons (not "Kein Bot") when non-premium
+    botGroup.querySelectorAll(".btn-toggle:not([data-value='none'])").forEach(btn=>{
+      btn.style.opacity=isPrem?"":"0.35";
+    });
+    if(!isPrem){
+      const indicator=document.createElement("div");
+      indicator.id="bot-premium-indicator";
+      indicator.style.cssText="margin-top:6px;display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.25);border-radius:8px";
+      indicator.innerHTML=`
+        <i data-lucide="lock" style="width:14px;height:14px;stroke-width:2;color:var(--dart-gold);flex-shrink:0"></i>
+        <span style="font-size:12px;color:var(--dart-gold);flex:1">${t('bot_premium_hinweis')}</span>
+        <button onclick="event.stopPropagation();window.unlockPremiumAndRefresh()" style="padding:5px 12px;background:var(--dart-gold);border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:#000;cursor:pointer;white-space:nowrap">${t('premium_freischalten_kurz')}</button>`;
+      botGroup.insertAdjacentElement("afterend", indicator);
+      window.refreshIcons?.();
+    }
+  }
+  // Personality section overlay
   const section=document.getElementById("bot-personality-section");
   if(!section) return;
   section.querySelector(".premium-lock-overlay")?.remove();
-  // Hide/show lock icons on individual personality buttons
   section.querySelectorAll("#bot-personality-group [data-lucide='lock']").forEach(icon=>{
     icon.style.display=isPrem?"none":"";
   });
-  if(!isPrem){
+  if(!isPrem && section.style.display!=="none"){
     section.style.position="relative";
     section.style.overflow="hidden";
-    const overlay=premiumLockEl();
-    section.appendChild(overlay);
+    section.appendChild(premiumLockEl());
     window.refreshIcons?.();
   }
 }
@@ -1271,7 +1295,8 @@ async function syncVoicesFromFirestore(){
   try{
     const remote=await window.dartDB.loadGlobalVoices();
     if(remote&&remote.length){
-      remote.forEach(rv=>{ const bv=BUILTIN_VOICES.find(v=>v.name===rv.name); if(bv&&rv.id) bv.id=rv.id; });
+      // Root cause Jerry B: use normalized match (lowercase, strip spaces) so "Jerry B"/"jerryb"/"Jerry_B" all match
+      remote.forEach(rv=>{ const rn=(rv.name||"").toLowerCase().replace(/[\s_-]+/g,""); const bv=BUILTIN_VOICES.find(v=>v.name.toLowerCase().replace(/[\s_-]+/g,"")===rn); if(bv&&rv.id) bv.id=rv.id; });
       voicesCache=null; renderVoiceSelector(); setVoiceSyncStatus("✓ Synced");
     } else { setVoiceSyncStatus("✓ Basis-Stimmen"); }
   }catch(e){ console.warn("syncVoicesFromFirestore:",e); setVoiceSyncStatus("✗ "+t('fehler_prefix')+e.message); }
@@ -1289,6 +1314,7 @@ async function renderVoiceSelector(){
   const list=document.getElementById("voice-selector-list"); if(!list) return;
   const activeId=getVoiceId();
   const isPrem=await isPremium();
+  const admin=isAdmin();
   const bS="padding:6px 10px;border:1px solid rgba(212,175,55,.25);border-radius:7px;background:#08080A;font-size:12px;cursor:pointer;color:var(--dart-text-sec);";
   const premBadge=`<span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle;margin-left:5px">PREMIUM</span>`;
   list.innerHTML=BUILTIN_VOICES.map(v=>{
@@ -1307,13 +1333,47 @@ async function renderVoiceSelector(){
       else if(!canActivate){ tileData=`data-voice-paywall="1"`; tileCursor="pointer"; }
     }
     const badge=(!v.free&&!isPrem)?premBadge:"";
+    // Visible lock hint inside tile when non-premium, non-free (Fix 2 — Admin Toggle)
+    const lockHint=(!v.free&&!isPrem)
+      ?`<div style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:6px 10px;background:rgba(212,175,55,.07);border-radius:6px">
+          <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;color:var(--dart-gold)"></i>
+          <span style="font-size:12px;color:var(--dart-gold)">${t('premium_freischalten_kurz')}</span>
+        </div>` :"";
+    // Admin: show voice ID input to set ElevenLabs ID and save to Firestore (Fix 1 — Jerry B)
+    const adminSection=admin
+      ?`<div class="admin-vid-row" style="margin-top:8px;display:flex;gap:6px;align-items:center">
+          <input type="text" value="${v.id||''}" placeholder="ElevenLabs Voice ID…" data-admin-vid-name="${v.name}"
+            style="flex:1;min-width:0;padding:4px 7px;background:#08080A;border:1px solid rgba(212,175,55,.2);border-radius:5px;color:var(--dart-text-sec);font-size:10px;font-family:monospace">
+          <button data-admin-vid-save="${v.name}" style="padding:4px 8px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);border-radius:5px;color:var(--dart-gold);font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0">${t('voice_id_speichern')}</button>
+        </div>` :"";
+    const hasContent=hasId||lockHint||adminSection;
     return `<div style="${border}border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;cursor:${tileCursor}" ${tileData}>
-      <div style="display:flex;justify-content:space-between;align-items:center;${hasId?"margin-bottom:8px":""}"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${badge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;${hasContent?"margin-bottom:8px":""}">
+        <span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${badge}</span>
+        ${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}
+      </div>
       ${hasId?`<div style="display:flex;gap:6px;flex-wrap:wrap">${testBtns}</div>`:""}
+      ${lockHint}${adminSection}
     </div>`;
   }).join("");
-  // stopPropagation prevents tile-click from firing when a test button is clicked
+  // stopPropagation prevents tile-click from firing when test buttons or admin inputs are clicked
   list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();testVoice(btn.dataset.tvId,btn.dataset.tvKey,btn.dataset.tvText);}));
+  list.querySelectorAll(".admin-vid-row input,.admin-vid-row button").forEach(el=>el.addEventListener("click",e=>e.stopPropagation()));
+  list.querySelectorAll("[data-admin-vid-save]").forEach(btn=>btn.addEventListener("click",async()=>{
+    const name=btn.dataset.adminVidSave;
+    const input=btn.closest(".admin-vid-row").querySelector("[data-admin-vid-name]");
+    const newId=(input?.value||"").trim()||null;
+    const bv=BUILTIN_VOICES.find(v=>v.name===name);
+    if(bv) bv.id=newId;
+    if(window.dartDB){
+      const voices=BUILTIN_VOICES.map(v=>({name:v.name,id:v.id})).filter(v=>v.id);
+      try{
+        await window.dartDB.saveGlobalVoices(voices);
+        btn.textContent=t('voice_id_gespeichert');
+        setTimeout(()=>{ btn.textContent=t('voice_id_speichern'); voicesCache=null; renderVoiceSelector(); },1500);
+      }catch(ex){ btn.textContent=t('voice_id_fehler'); console.warn("saveGlobalVoices:",ex); }
+    } else { voicesCache=null; renderVoiceSelector(); }
+  }));
   list.querySelectorAll("[data-voice-activate-id]").forEach(tile=>tile.addEventListener("click",()=>activateVoice(tile.dataset.voiceActivateId,tile.dataset.voiceActivateName)));
   list.querySelectorAll("[data-voice-paywall]").forEach(tile=>tile.addEventListener("click",()=>showPremiumOverlay('premiumVoices')));
   window.refreshIcons?.();
