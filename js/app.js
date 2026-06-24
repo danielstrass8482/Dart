@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Premium ──────────────────────────────────────────────────────
 import { registerBetaUser, BETA_MODE, canUseFeature, showPremiumOverlay,
          loadBetaPremiumStatus, isAdmin, betaPremiumActive, setBetaPremiumActive,
-         adminOverrideNonPremium, setAdminOverrideNonPremium } from './premium.js';
+         adminOverrideNonPremium, setAdminOverrideNonPremium, isPremium } from './premium.js';
 
 // ── Onboarding & Help ────────────────────────────────────────────
 import { checkOnboarding, showOnboarding, showHelp } from './onboarding.js';
@@ -232,7 +232,11 @@ window.unlockBetaPremium = async function(overlayEl){
   }
   setBetaPremiumActive(true);
   overlayEl?.remove();
+  refreshPremiumUI();
 };
+
+// Shortcut used by in-place lock overlays (no overlay element to remove)
+window.unlockPremiumAndRefresh = () => window.unlockBetaPremium(null);
 
 // ── Orientation ───────────────────────────────────────────────────
 window.addEventListener("orientationchange",()=>{
@@ -444,7 +448,9 @@ document.getElementById("bot-group").addEventListener("click",e=>{
   const v=togVal(e); if(!v) return;
   selectedBot=v;
   document.querySelectorAll("#bot-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedBot));
-  document.getElementById("bot-personality-section").style.display=selectedBot==="none"?"none":"";
+  const botSection=document.getElementById("bot-personality-section");
+  botSection.style.display=selectedBot==="none"?"none":"";
+  if(selectedBot!=="none") isPremium().then(isPrem=>applyBotPremiumState(isPrem));
 });
 
 document.getElementById("bot-personality-group").addEventListener("click",async e=>{
@@ -822,7 +828,73 @@ function renderAdminToggle(){
     </div>`;
   document.getElementById("admin-premium-toggle")?.addEventListener("change",(e)=>{
     setAdminOverrideNonPremium(e.target.checked);
+    refreshPremiumUI();
   });
+}
+
+// ── Premium Lock UI Helpers ───────────────────────────────────────
+
+function premiumLockEl(){
+  const el=document.createElement("div");
+  el.className="premium-lock-overlay";
+  el.style.cssText="position:absolute;inset:0;z-index:10;background:rgba(8,8,10,0.86);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px;border-radius:inherit";
+  el.innerHTML=`
+    <i data-lucide="lock" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-gold)"></i>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--dart-gold);letter-spacing:2px">${t('premium_gesperrt')}</div>
+    <button onclick="window.unlockPremiumAndRefresh()" style="padding:9px 20px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:#000;cursor:pointer">${t('premium_freischalten_kurz')}</button>`;
+  return el;
+}
+
+function applyBotPremiumState(isPrem){
+  const section=document.getElementById("bot-personality-section");
+  if(!section) return;
+  section.querySelector(".premium-lock-overlay")?.remove();
+  // Hide/show lock icons on individual personality buttons
+  section.querySelectorAll("#bot-personality-group [data-lucide='lock']").forEach(icon=>{
+    icon.style.display=isPrem?"none":"";
+  });
+  if(!isPrem){
+    section.style.position="relative";
+    section.style.overflow="hidden";
+    const overlay=premiumLockEl();
+    section.appendChild(overlay);
+    window.refreshIcons?.();
+  }
+}
+
+function applyCoachAnalyseLock(isPrem){
+  const wrap=document.getElementById("coach-analyse-wrap");
+  if(!wrap) return;
+  wrap.querySelector(".premium-lock-overlay")?.remove();
+  const btn=document.getElementById("btn-coach-analyse-tab");
+  if(btn) btn.disabled=!isPrem;
+  if(!isPrem){
+    const overlay=premiumLockEl();
+    wrap.appendChild(overlay);
+    window.refreshIcons?.();
+  }
+}
+
+function applyVideoAnalyseLock(isPrem){
+  const wrap=document.getElementById("video-analyse-wrap-stats");
+  if(!wrap) return;
+  wrap.querySelector(".premium-lock-overlay")?.remove();
+  if(!isPrem){
+    const overlay=premiumLockEl();
+    wrap.appendChild(overlay);
+    window.refreshIcons?.();
+  }
+}
+
+async function refreshPremiumUI(){
+  const isPrem=await isPremium();
+  applyCoachAnalyseLock(isPrem);
+  applyVideoAnalyseLock(isPrem);
+  applyBotPremiumState(isPrem);
+  renderVoiceSelector();
+  if(document.getElementById("tab-statistiken")?.classList.contains("active")){
+    loadAndRenderStats();
+  }
 }
 
 document.getElementById("btn-profil-signout")?.addEventListener("click",()=>window.signOutUser());
@@ -1121,9 +1193,14 @@ async function initAnalyseTab(){
   const limitEl=document.getElementById("coach-limit-analyse-tab");
   const coachBtn=document.getElementById("btn-coach-analyse-tab");
   if(limitEl) limitEl.textContent=`${coachLeft} / ${COACH_DAILY_LIMIT} ${t('coach_limit')}`;
-  if(coachBtn) coachBtn.disabled=coachLeft<=0;
   loadCoachHistoryAnalyseTab(analyseSelectedPlayer);
   renderVoiceSelector(); syncVoicesFromFirestore();
+  // Apply premium locks for this tab
+  const isPrem=await isPremium();
+  applyCoachAnalyseLock(isPrem);
+  applyVideoAnalyseLock(isPrem);
+  // Coach button: only enable when premium AND calls left
+  if(coachBtn) coachBtn.disabled=!isPrem||coachLeft<=0;
 }
 
 document.getElementById("btn-coach-analyse-tab").addEventListener("click",async()=>{
@@ -1202,9 +1279,10 @@ window.addEventListener("dbReady",async()=>{
 function showVoiceConfirm(msg){ const el=document.getElementById("voice-selector-confirm"); if(!el) return; el.textContent=msg; el.style.display=""; clearTimeout(el._t); el._t=setTimeout(()=>el.style.display="none",3000); }
 function activateVoice(voiceId, voiceName){ localStorage.setItem("dart_active_voice_id",voiceId); Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]); if(window.dartDB) window.dartDB.saveUserVoice(voiceId).catch(e=>console.warn("saveUserVoice:",e)); renderVoiceSelector(); showVoiceConfirm(t('stimme_aktiviert_msg').replace('{name}',voiceName)); }
 
-function renderVoiceSelector(){
+async function renderVoiceSelector(){
   const list=document.getElementById("voice-selector-list"); if(!list) return;
   const activeId=getVoiceId();
+  const isPrem=await isPremium();
   const bS="padding:6px 10px;border:1px solid rgba(212,175,55,.25);border-radius:7px;background:#08080A;font-size:12px;cursor:pointer;color:var(--dart-text-sec);";
   const premBadge=`<span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle;margin-left:5px">PREMIUM</span>`;
   list.innerHTML=BUILTIN_VOICES.map(v=>{
@@ -1216,16 +1294,19 @@ function renderVoiceSelector(){
        +`<button style="${bS}" data-tv-id="${v.id||''}" data-tv-key="el_bust" data-tv-text="Bust.">Bust</button>`
       :"";
     let actionBtn;
-    if(v.free){
+    if(v.free || isPrem){
+      // Free voices and premium users: show normal activate/active button
       actionBtn=isActive
         ?`<button style="padding:6px 10px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktiv')}</button>`
         :hasId?`<button style="padding:6px 10px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktivieren')}</button>`
         :`<span style="font-size:11px;color:var(--dart-text-muted)">–</span>`;
     } else {
+      // Non-free, non-premium: show lock/unlock button
       actionBtn=`<button style="padding:6px 10px;border:1px solid rgba(212,175,55,.4);border-radius:7px;background:rgba(212,175,55,.08);color:var(--dart-gold);font-size:12px;cursor:pointer;" data-premium-voice="${v.name}"><i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('voice_freischalten')}</button>`;
     }
+    const badge=(!v.free && !isPrem)?premBadge:"";
     return `<div style="${border}border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${v.free?"":premBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${badge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">${testBtns}${actionBtn}</div>
     </div>`;
   }).join("");
@@ -1250,7 +1331,7 @@ window.addEventListener("dbReady", ()=>{ loadPlayers().then(()=>renderStatsPlaye
 window.addEventListener("dbReady", ()=>{
   const user = window.currentUser;
   if(user && !user.isAnonymous) registerBetaUser();
-  loadBetaPremiumStatus();
+  loadBetaPremiumStatus().then(()=>refreshPremiumUI());
 });
 
 // ── Lucide icon refresh helper ────────────────────────────────────
