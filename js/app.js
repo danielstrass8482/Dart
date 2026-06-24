@@ -225,13 +225,18 @@ document.addEventListener("touchstart", unlockAudio, {once:true, passive:true});
 
 // ── Premium unlock (Paywall "Jetzt Freischalten") ─────────────────
 window.unlockBetaPremium = async function(overlayEl){
+  console.log('[Premium] unlockBetaPremium called, uid:', window.fbAuth?.currentUser?.uid, 'anon:', window.fbAuth?.currentUser?.isAnonymous);
   const user = window.fbAuth?.currentUser;
   if(user && !user.isAnonymous && window.dartDB){
-    try{ await window.dartDB.saveBetaPremium(user.uid); }
-    catch(e){ console.warn("saveBetaPremium:", e); }
+    try{
+      await window.dartDB.saveBetaPremium(user.uid);
+      console.log('[Premium] Firebase betaPremium write OK');
+    }catch(e){ console.warn('[Premium] saveBetaPremium error:', e); }
   }
   setBetaPremiumActive(true);
+  setAdminOverrideNonPremium(false); // clear any admin test-override so isPremium() returns true
   overlayEl?.remove();
+  console.log('[Premium] state updated, calling refreshPremiumUI');
   refreshPremiumUI();
 };
 
@@ -892,6 +897,7 @@ async function refreshPremiumUI(){
   applyVideoAnalyseLock(isPrem);
   applyBotPremiumState(isPrem);
   renderVoiceSelector();
+  renderAdminToggle(); // sync checkbox visual after override changes
   if(document.getElementById("tab-statistiken")?.classList.contains("active")){
     loadAndRenderStats();
   }
