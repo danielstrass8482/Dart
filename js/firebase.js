@@ -44,13 +44,8 @@ const gProvider = new GoogleAuthProvider();
 window.currentUser = null;
 window.fbAuth = auth;
 
-// Local voices seed — Firestore is authoritative; this is the offline fallback
-if(!localStorage.getItem("dart_voices")){
-  localStorage.setItem("dart_voices", JSON.stringify([
-    { id: "JBFqnCBsd6RMkjVDRZzb", name: "George", builtin: true },
-    { id: "itKfO3PIfQAXJTALxBD6", name: "Daniel", builtin: true },
-  ]));
-}
+// Clear stale localStorage voice data so BUILTIN_VOICES in app.js is authoritative
+localStorage.removeItem("dart_voices");
 
 /**
  * Initializes window.dartDB with all Firestore/Storage operations.

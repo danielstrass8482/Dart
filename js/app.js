@@ -1126,11 +1126,15 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
 });
 
 // ── Voice Settings ────────────────────────────────────────────────
-const BUILTIN_VOICES=[{id:"JBFqnCBsd6RMkjVDRZzb",name:"George",builtin:true},{id:"itKfO3PIfQAXJTALxBD6",name:"Daniel",builtin:true}];
+const BUILTIN_VOICES=[
+  {id:"JBFqnCBsd6RMkjVDRZzb", name:"George", builtin:true, free:true},
+  {id:null,                    name:"Haseeb", builtin:true, free:true},
+  {id:null,                    name:"Jerry B",builtin:true, free:false},
+  {id:null,                    name:"Guy",    builtin:true, free:false},
+];
 let voicesCache=null;
 
-function loadVoices(){ if(voicesCache) return voicesCache; try{ return JSON.parse(localStorage.getItem("dart_voices")||"null")||[...BUILTIN_VOICES]; }catch(e){ return [...BUILTIN_VOICES]; } }
-function saveVoices(voices){ voicesCache=voices; localStorage.setItem("dart_voices",JSON.stringify(voices)); if(window.dartDB) window.dartDB.saveGlobalVoices(voices).catch(e=>console.warn("saveGlobalVoices:",e)); }
+function loadVoices(){ if(voicesCache) return voicesCache; voicesCache=[...BUILTIN_VOICES]; return voicesCache; }
 function setVoiceSyncStatus(msg){ const el=document.getElementById("voice-sync-status"); if(el) el.textContent=msg; }
 
 async function syncVoicesFromFirestore(){
@@ -1138,8 +1142,10 @@ async function syncVoicesFromFirestore(){
   setVoiceSyncStatus("⏳ Sync…");
   try{
     const remote=await window.dartDB.loadGlobalVoices();
-    if(remote&&remote.length){ voicesCache=remote; localStorage.setItem("dart_voices",JSON.stringify(remote)); renderVoiceSelector(); setVoiceSyncStatus("✓ Synced · "+remote.length+" Stimmen"); }
-    else { const local=loadVoices(); if(local.some(v=>!v.builtin)){ saveVoices(local); setVoiceSyncStatus("✓ "+local.length+" Stimmen hochgeladen"); } else { setVoiceSyncStatus("✓ Nur Basis-Stimmen"); } }
+    if(remote&&remote.length){
+      remote.forEach(rv=>{ const bv=BUILTIN_VOICES.find(v=>v.name===rv.name); if(bv&&rv.id) bv.id=rv.id; });
+      voicesCache=null; renderVoiceSelector(); setVoiceSyncStatus("✓ Synced");
+    } else { setVoiceSyncStatus("✓ Basis-Stimmen"); }
   }catch(e){ console.warn("syncVoicesFromFirestore:",e); setVoiceSyncStatus("✗ "+t('fehler_prefix')+e.message); }
 }
 
@@ -1153,46 +1159,37 @@ function activateVoice(voiceId, voiceName){ localStorage.setItem("dart_active_vo
 
 function renderVoiceSelector(){
   const list=document.getElementById("voice-selector-list"); if(!list) return;
-  const voices=loadVoices(); const activeId=getVoiceId();
-  const tvBtn="padding:7px 11px;border:1px solid var(--dart-border);border-radius:7px;background:var(--dart-bg-card);font-size:12px;cursor:pointer;color:var(--dart-text-sec);";
-  list.innerHTML=voices.map((v,i)=>{
-    const isActive=v.id===activeId; const shortId=v.id.length>22?v.id.slice(0,10)+"…"+v.id.slice(-8):v.id;
-    const premiumBadge=!v.builtin?` <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span>`:"";
-    return `<div style="border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;${isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border-top:1px solid var(--dart-divider);"}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${premiumBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}</div>
-      <div style="font-size:11px;color:var(--dart-text-muted);font-family:monospace;margin-bottom:8px">ID: ${shortId}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">Test: 180</button>
-        <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Test: Game On</button>
-        <button style="${tvBtn}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Test: Bust</button>
-        ${isActive?`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktiv')}</button>`:`<button style="padding:7px 11px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktivieren')}</button>`}
-        ${!v.builtin?`<button style="padding:7px 11px;border:1px solid var(--dart-danger);border-radius:7px;background:rgba(200,54,43,.12);color:var(--dart-danger);font-size:12px;cursor:pointer;" data-delete-idx="${i}"><i data-lucide="trash-2" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>`:""}
-      </div>
+  const activeId=getVoiceId();
+  const bS="padding:6px 10px;border:1px solid rgba(212,175,55,.25);border-radius:7px;background:#08080A;font-size:12px;cursor:pointer;color:var(--dart-text-sec);";
+  const premBadge=`<span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle;margin-left:5px">PREMIUM</span>`;
+  list.innerHTML=BUILTIN_VOICES.map(v=>{
+    const isActive=v.id&&v.id===activeId; const hasId=!!v.id;
+    const border=isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border:1px solid rgba(212,175,55,.1);";
+    const testBtns=hasId
+      ?`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">180</button>`
+       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Game On</button>`
+       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Bust</button>`
+      :"";
+    let actionBtn;
+    if(v.free){
+      actionBtn=isActive
+        ?`<button style="padding:6px 10px;border:none;border-radius:7px;background:var(--dart-success);color:var(--dart-text);font-size:12px;cursor:default;" disabled><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktiv')}</button>`
+        :hasId?`<button style="padding:6px 10px;border:none;border-radius:7px;background:var(--dart-bg-chip);color:var(--dart-text);font-size:12px;cursor:pointer;" data-activate-id="${v.id}" data-activate-name="${v.name}"><i data-lucide="check" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('aktivieren')}</button>`
+        :`<span style="font-size:11px;color:var(--dart-text-muted)">–</span>`;
+    } else {
+      actionBtn=`<button style="padding:6px 10px;border:1px solid rgba(212,175,55,.4);border-radius:7px;background:rgba(212,175,55,.08);color:var(--dart-gold);font-size:12px;cursor:pointer;" data-premium-voice="${v.name}"><i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> ${t('voice_freischalten')}</button>`;
+    }
+    return `<div style="${border}border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${v.free?"":premBadge}</span>${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${testBtns}${actionBtn}</div>
     </div>`;
   }).join("");
   list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",()=>testVoice(btn.dataset.tvId,btn.dataset.tvKey,btn.dataset.tvText)));
   list.querySelectorAll("[data-activate-id]").forEach(btn=>btn.addEventListener("click",()=>activateVoice(btn.dataset.activateId,btn.dataset.activateName)));
+  list.querySelectorAll("[data-premium-voice]").forEach(btn=>btn.addEventListener("click",()=>showPremiumOverlay('voiceCustom')));
   window.refreshIcons?.();
-  list.querySelectorAll("[data-delete-idx]").forEach(btn=>btn.addEventListener("click",()=>{
-    const vs=loadVoices(); const removed=vs.splice(parseInt(btn.dataset.deleteIdx),1)[0];
-    if(removed.id===getVoiceId()){ const fallback=vs.find(v=>v.builtin)||vs[0]; if(fallback){ localStorage.setItem("dart_active_voice_id",fallback.id); Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]); } }
-    saveVoices(vs); renderVoiceSelector();
-  }));
 }
 
-document.getElementById("btn-voice-new-test-180").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_score_180","One Hundred, and Eighty!"); else speakElevenLabs("One Hundred and Eighty!","el_score_180"); });
-document.getElementById("btn-voice-new-test-gameon").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_game_on","Game on!"); else speakElevenLabs("Game on!","el_game_on"); });
-document.getElementById("btn-voice-new-test-bust").addEventListener("click",()=>{ const id=document.getElementById("voice-new-id").value.trim(); if(id) testVoice(id,"el_bust","Bust."); else speakElevenLabs("Bust!","el_bust"); });
-document.getElementById("btn-voice-new-add").addEventListener("click",()=>{
-  const name=document.getElementById("voice-new-name").value.trim(), id=document.getElementById("voice-new-id").value.trim(), errEl=document.getElementById("voice-new-error");
-  if(!name||!id){ errEl.textContent=t('voice_pflichtfelder'); return; }
-  const vs=loadVoices();
-  if(vs.filter(v=>!v.builtin).length>=10){ errEl.textContent=t('voice_max_stimmen'); return; }
-  if(vs.some(v=>v.id===id)){ errEl.textContent=t('voice_id_exists'); return; }
-  errEl.textContent=""; vs.push({id,name,builtin:false}); saveVoices(vs);
-  document.getElementById("voice-new-name").value=""; document.getElementById("voice-new-id").value="";
-  renderVoiceSelector(); showVoiceConfirm(t('voice_hinzugefuegt').replace('{name}',name));
-});
 document.getElementById("btn-voice-sync").addEventListener("click",()=>syncVoicesFromFirestore());
 
 // ── Wire healthchips ──────────────────────────────────────────────
