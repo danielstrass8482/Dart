@@ -6,6 +6,7 @@ import { state } from './state.js';
 import { drawMiniBoard } from './board.js?v=2';
 import { loadCoachHistoryStats } from './coach.js';
 import { t } from './i18n.js?v=3';
+import { isPremium } from './premium.js';
 
 export let statsSelectedPlayer = null;
 export let statsRange = 'all';
@@ -492,16 +493,32 @@ export async function loadAndRenderStats(){
     html+=`<div id="coach-history-stats" style="margin-top:12px"></div>`;
 
     // ── Premium: Erweiterte Statistiken (2-Spalten, am Ende) ──────────
+    const isPrem = await isPremium();
     if(allScatter.length){
       html+=`<div style="border-top:2px solid var(--dart-gold);margin-top:24px;padding-top:16px"></div>
       <div class="stats-section-title" style="display:flex;align-items:center;gap:8px;margin-top:0">
         <i data-lucide="microscope" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> ${t('erweiterte_stats')}
-        <span style="font-size:9px;background:var(--dart-gold);color:#000;padding:2px 6px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700">PREMIUM</span>
-      </div>
-      <div class="adv-grid">
-        <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:14px;padding:12px">${buildAdvancedColumn("a")}</div>
-        <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:14px;padding:12px">${buildAdvancedColumn("b")}</div>
+        ${!isPrem?`<span style="font-size:9px;background:var(--dart-gold);color:#000;padding:2px 6px;border-radius:10px;font-family:'DM Sans',sans-serif;font-weight:700">PREMIUM</span>`:""}
       </div>`;
+      if(isPrem){
+        html+=`<div class="adv-grid">
+          <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:14px;padding:12px">${buildAdvancedColumn("a")}</div>
+          <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:14px;padding:12px">${buildAdvancedColumn("b")}</div>
+        </div>`;
+      } else {
+        html+=`<div id="adv-stats-wrap" style="position:relative;border-radius:14px">
+          <div class="adv-grid" style="pointer-events:none">
+            <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:14px;padding:12px">${buildAdvancedColumn("a")}</div>
+            <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:14px;padding:12px">${buildAdvancedColumn("b")}</div>
+          </div>
+          <div style="position:absolute;inset:0;z-index:10;background:rgba(8,8,10,0.75);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px">
+            <i data-lucide="lock" style="width:36px;height:36px;stroke-width:1.5;color:var(--dart-gold)"></i>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dart-gold);letter-spacing:2px">${t('premium_gesperrt')}</div>
+            <div style="font-size:12px;color:var(--dart-text-sec);max-width:220px">${t('erweiterte_stats')}</div>
+            <button onclick="window.unlockPremiumAndRefresh()" style="padding:10px 24px;background:var(--dart-gold);border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#000;cursor:pointer">${t('premium_freischalten_kurz')}</button>
+          </div>
+        </div>`;
+      }
     }
 
     box.innerHTML=html;
@@ -509,7 +526,14 @@ export async function loadAndRenderStats(){
     loadCoachHistoryStats(statsSelectedPlayer);
 
     if(allScatter.length){
-      setupAdvancedUI(pid);
+      if(isPrem){
+        setupAdvancedUI(pid);
+      } else {
+        ['a','b'].forEach(side=>{
+          const svg=document.getElementById(`scatter-board-${side}`);
+          if(svg) drawMiniBoard(svg,[]);
+        });
+      }
     }
 
     if(chartGames.length>=2){

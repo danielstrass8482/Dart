@@ -549,6 +549,10 @@ export const translations = {
     premium_simulieren: "Non-Premium-Ansicht testen",
     premium_simulieren_sub: "Admin: Premium temporär deaktivieren um Nicht-Premium-Ansicht zu sehen",
 
+    // Premium Lock
+    premium_gesperrt: "PREMIUM FEATURE",
+    premium_freischalten_kurz: "Jetzt freischalten",
+
     // Misc
     anzahl_runden: "ANZAHL RUNDEN",
     erstellen_btn: "ERSTELLEN",
@@ -1086,6 +1090,10 @@ export const translations = {
     // Admin
     premium_simulieren: "Test Non-Premium View",
     premium_simulieren_sub: "Admin: temporarily disable premium to test non-premium view",
+
+    // Premium Lock
+    premium_gesperrt: "PREMIUM FEATURE",
+    premium_freischalten_kurz: "Unlock now",
 
     // Misc
     anzahl_runden: "NUMBER OF ROUNDS",
