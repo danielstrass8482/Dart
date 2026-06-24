@@ -23,8 +23,8 @@
   transition:opacity 0.5s ease;
 ">
   <img src="assets/02_feature_graphic_1024x500.png" alt="DartTrainer" style="
-    max-width:100%;max-height:100%;
-    object-fit:contain;
+    width:100vw;height:100vh;
+    object-fit:cover;object-position:center center;
   ">
 </div>
 <script>
@@ -165,28 +165,20 @@ window.splashPromise = new Promise(function(resolve) {
     <div id="spielen-cards" class="spielen-cards-wrap">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;font-weight:800;letter-spacing:.1em;color:var(--dart-text);margin-bottom:16px;padding-top:4px">DARTTRAINER</div>
       <div class="spielen-card" onclick="showSpielenSection('lokal')">
-        <div class="spielen-card-icon"><i data-lucide="users" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
-        <div>
-          <div class="spielen-card-title" data-i18n="lokal_spielen">LOKAL SPIELEN</div>
-          <div class="spielen-card-sub" data-i18n="lokal_sub">Gegen Freunde oder Bot</div>
-        </div>
-        <div class="spielen-card-arrow"><i data-lucide="chevron-right" style="width:20px;height:20px;stroke-width:2;color:var(--dart-text-muted)"></i></div>
+        <div class="spielen-card-icon"><i data-lucide="users" style="width:32px;height:32px;stroke-width:1.5;color:#D4AF37"></i></div>
+        <div class="spielen-card-title" data-i18n="lokal_spielen">LOKAL SPIELEN</div>
+        <div class="spielen-card-sub" data-i18n="lokal_sub">Gegen Freunde oder Bot</div>
       </div>
       <div class="spielen-card" onclick="showSpielenSection('online')">
-        <div class="spielen-card-icon"><i data-lucide="globe" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
-        <div>
-          <div class="spielen-card-title" data-i18n="online_spielen">ONLINE SPIELEN</div>
-          <div class="spielen-card-sub" data-i18n="online_sub">Gegen Freunde weltweit</div>
-        </div>
-        <div class="spielen-card-arrow"><i data-lucide="chevron-right" style="width:20px;height:20px;stroke-width:2;color:var(--dart-text-muted)"></i></div>
+        <div class="spielen-card-icon"><i data-lucide="globe" style="width:32px;height:32px;stroke-width:1.5;color:#D4AF37"></i></div>
+        <div class="spielen-card-title" data-i18n="online_spielen">ONLINE SPIELEN</div>
+        <div class="spielen-card-sub" data-i18n="online_sub">Gegen Freunde weltweit</div>
       </div>
-      <div class="spielen-card" style="opacity:.45;pointer-events:none;user-select:none">
-        <div class="spielen-card-icon"><i data-lucide="trophy" style="width:28px;height:28px;stroke-width:1.5;color:var(--dart-text-muted)"></i></div>
-        <div style="flex:1">
-          <div class="spielen-card-title" data-i18n="turnier">TURNIER</div>
-          <div class="spielen-card-sub" data-i18n="turnier_sub">Lokal oder Online</div>
-        </div>
-        <span style="font-size:10px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;color:#fff;background:#555;border-radius:4px;padding:2px 6px;white-space:nowrap">Coming Soon</span>
+      <div class="spielen-card spielen-card-disabled">
+        <div class="spielen-card-icon"><i data-lucide="trophy" style="width:32px;height:32px;stroke-width:1.5;color:#D4AF37"></i></div>
+        <div class="spielen-card-title" data-i18n="turnier">TURNIER</div>
+        <div class="spielen-card-sub" data-i18n="turnier_sub">Lokal oder Online</div>
+        <span class="spielen-coming-soon" data-i18n="coming_soon">Demnächst</span>
       </div>
     </div>
 

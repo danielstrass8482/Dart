@@ -30,6 +30,7 @@ export const translations = {
     online_sub: "Gegen Freunde weltweit",
     turnier: "TURNIER",
     turnier_sub: "Lokal oder Online",
+    coming_soon: "Demnächst",
 
     // Setup
     spielmodus: "SPIELMODUS",
@@ -557,6 +558,7 @@ export const translations = {
     online_sub: "Against friends worldwide",
     turnier: "TOURNAMENT",
     turnier_sub: "Local or Online",
+    coming_soon: "Coming Soon",
 
     // Setup
     spielmodus: "GAME MODE",

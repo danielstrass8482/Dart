@@ -21,7 +21,7 @@
   display: flex;
   height: 74px;
   background: #08080A;
-  border-top: 1px solid #1a1a1f;
+  border-bottom: 1px solid #D4AF37;
   flex-shrink: 0;
   width: 100%;
   align-items: flex-start;
@@ -56,14 +56,50 @@
 
 /* ── Spielen cards ── */
 .spielen-cards-wrap { padding:20px 16px;flex:1;overflow-y:auto; }
-.spielen-card { display:flex;align-items:center;gap:14px;background:var(--dart-bg-card);border:1px solid var(--dart-border);
-  border-radius:14px;padding:16px 20px;margin-bottom:14px;cursor:pointer;
-  transition:box-shadow .15s; }
-.spielen-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.10); }
-.spielen-card-icon { font-size:28px;flex-shrink:0; }
-.spielen-card-title { font-family:'Bebas Neue',sans-serif;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dart-text); }
-.spielen-card-sub { font-size:12px;color:var(--dart-text-muted);font-weight:500;margin-top:2px; }
-.spielen-card-arrow { margin-left:auto;color:var(--dart-text-sec);font-size:20px; }
+.spielen-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  background: #08080A;
+  border: 1px solid rgba(212,175,55,.18);
+  border-radius: 16px;
+  padding: 28px 20px 22px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: box-shadow .2s, border-color .2s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.spielen-card:hover, .spielen-card:active {
+  box-shadow: 0 0 0 1.5px #D4AF37, 0 0 24px rgba(212,175,55,.28);
+  border-color: #D4AF37;
+}
+.spielen-card-disabled { opacity:.4;pointer-events:none; }
+.spielen-card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: rgba(212,175,55,.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+.spielen-card-title { font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.08em;text-transform:uppercase;color:var(--dart-text); }
+.spielen-card-sub { font-size:13px;color:var(--dart-text-muted);font-weight:500; }
+.spielen-card-arrow { display:none; }
+.spielen-coming-soon {
+  font-size: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1.5px;
+  color: #08080A;
+  background: rgba(212,175,55,.6);
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-top: 2px;
+}
 .spielen-section { display:none;flex:1;flex-direction:column;min-height:0; }
 .spielen-section.active { display:flex; }
 .spielen-back { background:var(--dart-bg-card);color:var(--dart-gold);border:none;padding:10px 16px;
@@ -122,7 +158,7 @@
 .btn-start:hover { opacity: .85; }
 
 /* ── Setup overrides ── */
-#setup { background: var(--dart-bg-card); }
+#setup { background: #08080A; }
 .setup-card { background: var(--dart-bg-card); border: 1px solid var(--dart-border); }
 .field-label { color: var(--dart-text-muted); }
 .btn-toggle { background: var(--dart-bg-card); color: var(--dart-text-muted); border: 1px solid var(--dart-border); }
