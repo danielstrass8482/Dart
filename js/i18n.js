@@ -478,6 +478,7 @@ export const translations = {
     video_gesendet: "✅ Gesendet",
     an_tablet_senden: "📤 AN TABLET SENDEN",
     // Voice-Studio
+    voice_freischalten: "FREISCHALTEN",
     voice_pflichtfelder: "Name und Voice ID sind Pflichtfelder.",
     voice_max_stimmen: "Maximum 10 eigene Stimmen erreicht.",
     voice_id_exists: "Diese Voice ID ist bereits in der Liste.",
@@ -1006,6 +1007,7 @@ export const translations = {
     video_gesendet: "✅ Sent",
     an_tablet_senden: "📤 SEND TO TABLET",
     // Voice studio
+    voice_freischalten: "UNLOCK",
     voice_pflichtfelder: "Name and Voice ID are required.",
     voice_max_stimmen: "Maximum of 10 custom voices reached.",
     voice_id_exists: "This Voice ID is already in the list.",
