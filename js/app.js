@@ -28,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Premium ──────────────────────────────────────────────────────
 import { registerBetaUser, BETA_MODE, canUseFeature, showPremiumOverlay,
-         loadBetaPremiumStatus, isAdmin, betaPremiumActive, setBetaPremiumActive } from './premium.js';
+         loadBetaPremiumStatus, isAdmin, betaPremiumActive, setBetaPremiumActive,
+         adminOverrideNonPremium, setAdminOverrideNonPremium } from './premium.js';
 
 // ── Onboarding & Help ────────────────────────────────────────────
 import { checkOnboarding, showOnboarding, showHelp } from './onboarding.js';
@@ -806,7 +807,7 @@ function renderAdminToggle(){
   }
   if(!isAdmin()){ el.style.display="none"; return; }
   el.style.display="";
-  const checked = betaPremiumActive ? "checked" : "";
+  const checked = adminOverrideNonPremium ? "checked" : "";
   el.innerHTML = `
     <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:12px;padding:16px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--dart-text-muted);letter-spacing:2px;margin-bottom:10px">⚙ ADMIN</div>
@@ -820,7 +821,7 @@ function renderAdminToggle(){
       </label>
     </div>`;
   document.getElementById("admin-premium-toggle")?.addEventListener("change",(e)=>{
-    setBetaPremiumActive(e.target.checked);
+    setAdminOverrideNonPremium(e.target.checked);
   });
 }
 
