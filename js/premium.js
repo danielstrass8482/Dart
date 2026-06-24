@@ -128,11 +128,8 @@ function getMonthKey(){
 // Premium-Overlay anzeigen
 export function showPremiumOverlay(featureId){
   const overlay = document.createElement("div");
-  overlay.style.cssText = `
-    position:fixed;inset:0;background:rgba(0,0,0,0.85);
-    display:flex;align-items:center;justify-content:center;
-    z-index:1000;padding:20px
-  `;
+  overlay.className = "premium-paywall-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px";
   overlay.innerHTML = `
     <div style="background:var(--dart-bg-card);border:1px solid var(--dart-gold);
       border-radius:16px;padding:32px;max-width:360px;
@@ -151,7 +148,7 @@ export function showPremiumOverlay(featureId){
         padding:12px;margin-bottom:20px;font-size:13px;color:var(--dart-gold)">
         ${t('paywall_beta_hinweis')}
       </div>
-      <button onclick="window.unlockBetaPremium(this.closest('[style*=fixed]'))"
+      <button onclick="window.unlockBetaPremium(this.closest('.premium-paywall-overlay'))"
         style="width:100%;padding:14px;background:#D4AF37;
         border:none;border-radius:10px;font-family:'Bebas Neue',
         sans-serif;font-size:20px;letter-spacing:2px;
@@ -161,7 +158,7 @@ export function showPremiumOverlay(featureId){
       <div style="font-size:11px;color:var(--dart-text-muted);margin-bottom:10px">
         ${t('paywall_kleintext')}
       </div>
-      <button onclick="this.closest('[style*=fixed]').remove()"
+      <button onclick="this.closest('.premium-paywall-overlay').remove()"
         style="width:100%;padding:10px;background:none;
         border:1px solid var(--dart-border);border-radius:10px;color:var(--dart-text-muted);
         font-size:13px;cursor:pointer">
