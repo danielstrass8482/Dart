@@ -546,8 +546,8 @@ export const translations = {
     wurf_analyse_video: "WURF-ANALYSE (VIDEO)",
 
     // Admin
-    premium_simulieren: "Premium simulieren",
-    premium_simulieren_sub: "Admin: eigenen Premium-Status ein/ausschalten",
+    premium_simulieren: "Non-Premium-Ansicht testen",
+    premium_simulieren_sub: "Admin: Premium temporär deaktivieren um Nicht-Premium-Ansicht zu sehen",
 
     // Misc
     anzahl_runden: "ANZAHL RUNDEN",
@@ -1084,8 +1084,8 @@ export const translations = {
     wurf_analyse_video: "THROW ANALYSIS (VIDEO)",
 
     // Admin
-    premium_simulieren: "Simulate Premium",
-    premium_simulieren_sub: "Admin: toggle your own premium status",
+    premium_simulieren: "Test Non-Premium View",
+    premium_simulieren_sub: "Admin: temporarily disable premium to test non-premium view",
 
     // Misc
     anzahl_runden: "NUMBER OF ROUNDS",

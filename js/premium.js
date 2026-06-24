@@ -6,63 +6,14 @@
 
 import { t } from './i18n.js?v=3';
 
+// Kanonische Liste der Premium-Features
 export const PREMIUM_FEATURES = {
-  coachAnalysis: {
-    id: "coachAnalysis",
-    nameKey: "feat_coach_name",
-    descKey: "feat_coach_desc",
-    freeLimit: 3,
-    icon: "🧠"
-  },
-  videoAnalysis: {
-    id: "videoAnalysis",
-    nameKey: "feat_video_name",
-    descKey: "feat_video_desc",
-    freeLimit: 1,
-    icon: "🎥"
-  },
-  advancedStats: {
-    id: "advancedStats",
-    nameKey: "feat_stats_name",
-    descKey: "feat_stats_desc",
-    freeLimit: 0,
-    icon: "📊"
-  },
-  voiceCustom: {
-    id: "voiceCustom",
-    nameKey: "feat_voice_name",
-    descKey: "feat_voice_desc",
-    freeLimit: 0,
-    icon: "🎙️"
-  },
-  botPersonalities: {
-    id: "botPersonalities",
-    nameKey: "feat_bot_name",
-    descKey: "feat_bot_desc",
-    freeLimit: 1,
-    icon: "🤖"
-  },
-  tournaments: {
-    id: "tournaments",
-    nameKey: "feat_tn_name",
-    descKey: "feat_tn_desc",
-    freeLimit: 0,
-    icon: "🏆"
-  },
-  healthIntegration: {
-    id: "healthIntegration",
-    nameKey: "feat_health_name",
-    descKey: "feat_health_desc",
-    freeLimit: 0,
-    icon: "❤️"
-  },
-  voiceLang: {
-    id: "voiceLang",
-    nameKey: "feat_voicelang_name",
-    descKey: "feat_voicelang_desc",
-    freeLimit: 0,
-    icon: "🌍"
-  }
+  scatterplot:   { id: "scatterplot",   nameKey: "feat_scatterplot_name",   descKey: "feat_scatterplot_desc",   icon: "🎯" },
+  statsAnalysis: { id: "statsAnalysis", nameKey: "feat_statsanalysis_name", descKey: "feat_statsanalysis_desc", icon: "🧠" },
+  videoAnalysis: { id: "videoAnalysis", nameKey: "feat_video_name",          descKey: "feat_video_desc",          icon: "🎥" },
+  advancedStats: { id: "advancedStats", nameKey: "feat_stats_name",          descKey: "feat_stats_desc",          icon: "📊" },
+  premiumVoices: { id: "premiumVoices", nameKey: "feat_voice_name",          descKey: "feat_voice_desc",          icon: "🎙️" },
+  botOpponent:   { id: "botOpponent",   nameKey: "feat_bot_name",            descKey: "feat_bot_desc",            icon: "🤖" },
 };
 
 // Beta-Modus: alle Features für alle entsperrt
@@ -71,9 +22,13 @@ export const BETA_MODE = true;
 // Admin-UIDs — hier Firebase UIDs der Admins eintragen
 const ADMIN_UIDS = [];
 
-// Ob der User via "Jetzt Freischalten" Premium freigeschaltet hat
+// In-Memory-Cache: User hat betaPremium: true in Firebase gesetzt
 export let betaPremiumActive = false;
 export function setBetaPremiumActive(val){ betaPremiumActive = val; }
+
+// Lokaler Admin-Override: erzwingt isPremium()=false für Nicht-Premium-Ansicht
+export let adminOverrideNonPremium = false;
+export function setAdminOverrideNonPremium(val){ adminOverrideNonPremium = val; }
 
 // Admin-Prüfung (client-side, nur für UI-Sichtbarkeit)
 export function isAdmin(){
@@ -83,7 +38,7 @@ export function isAdmin(){
   return user.email === 'daniel.strass@gmx.de';
 }
 
-// betaPremium-Status aus Firebase laden
+// betaPremium-Status aus Firebase laden (Vorladen beim App-Start)
 export async function loadBetaPremiumStatus(){
   if(BETA_MODE) return;
   const user = window.fbAuth?.currentUser;
@@ -94,18 +49,29 @@ export async function loadBetaPremiumStatus(){
   }catch(e){ console.warn("loadBetaPremiumStatus:", e); }
 }
 
-// Premium-Status prüfen
-export async function isPremium(){
+/**
+ * Zentrale Premium-Prüfung.
+ * Reihenfolge:
+ *   1. Admin-Override aktiv → false (Admin testet Nicht-Premium-Ansicht)
+ *   2. BETA_MODE → true (alle User haben Premium)
+ *   3. isAdmin() → true
+ *   4. betaPremiumActive (In-Memory-Cache) → true
+ *   5. Firebase betaPremium: true → true (und Cache befüllen)
+ *   6. Sonst → false
+ */
+export async function isPremium(user){
+  if(adminOverrideNonPremium) return false;
   if(BETA_MODE) return true;
+  if(isAdmin()) return true;
   if(betaPremiumActive) return true;
-  const user = window.fbAuth?.currentUser;
-  if(!user) return false;
-  try{
-    const snap = await window.dartDB.getSubscription(user.uid);
-    if(!snap) return false;
-    const { status, expiresAt } = snap;
-    return status === "active" && expiresAt > Date.now();
-  }catch(e){ return false; }
+  const u = user || window.fbAuth?.currentUser;
+  if(u && !u.isAnonymous && window.dartDB){
+    try{
+      const data = await window.dartDB.getBetaPremium(u.uid);
+      if(data?.betaPremium){ betaPremiumActive = true; return true; }
+    }catch(e){}
+  }
+  return false;
 }
 
 // Beta-User registrieren (bekommt später Grandfathering)
