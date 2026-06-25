@@ -193,12 +193,12 @@ buildBoard(boardSVGparty);
 setPartyBoard(boardSVGparty);
 
 // Prevent pinch-to-zoom and double-tap-zoom (iOS Safari ignores user-scalable=no)
-document.addEventListener('gesturestart', e=>e.preventDefault(), {passive:false});
-document.addEventListener('gesturechange', e=>e.preventDefault(), {passive:false});
-document.addEventListener('gestureend', e=>e.preventDefault(), {passive:false});
-document.addEventListener('touchmove', e=>{ if(e.touches.length>1) e.preventDefault(); }, {passive:false});
+document.addEventListener('gesturestart', e=>{ if(e.cancelable) e.preventDefault(); }, {passive:false});
+document.addEventListener('gesturechange', e=>{ if(e.cancelable) e.preventDefault(); }, {passive:false});
+document.addEventListener('gestureend', e=>{ if(e.cancelable) e.preventDefault(); }, {passive:false});
+document.addEventListener('touchmove', e=>{ if(e.touches.length>1 && e.cancelable) e.preventDefault(); }, {passive:false});
 let _lastTap=0;
-document.addEventListener('touchend', e=>{ const now=Date.now(); if(now-_lastTap<300) e.preventDefault(); _lastTap=now; }, {passive:false});
+document.addEventListener('touchend', e=>{ const now=Date.now(); if(now-_lastTap<300 && e.cancelable) e.preventDefault(); _lastTap=now; }, {passive:false});
 
 // Board click listeners — x01 board intercepts for target practice
 boardSVG.addEventListener("pointerup", (e)=>{
@@ -452,7 +452,7 @@ document.getElementById("rounds-group")?.addEventListener("click",e=>{
 
 document.getElementById("bot-group").addEventListener("click",async e=>{
   const v=togVal(e); if(!v) return;
-  if(v!=="none" && state.selectedPlayers.length>=2) return;
+  if(v!=="none" && state.selectedPlayers.length>=2){ showAlert(t('bot_nur_ein_spieler')); return; }
   // "Kein Bot" is always free; all bot levels (easy/medium/pro) are premium
   if(v!=="none"){
     const isPrem=await isPremium();
@@ -469,7 +469,6 @@ function updateBotGroupState(){
   const twoPlayers = state.selectedPlayers.length >= 2;
   document.querySelectorAll("#bot-group .btn-toggle").forEach(b => {
     if(b.dataset.value === "none") return;
-    b.disabled = twoPlayers;
     b.style.opacity = twoPlayers ? "0.35" : "";
   });
 }
