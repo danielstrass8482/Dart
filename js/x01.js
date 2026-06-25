@@ -645,13 +645,14 @@ export function handleLegWin(winnerIdx){
   showWinner(name, state.x01.round, true, _legLabel);
 }
 
-/** Dynamically sizes winner dartboards to fill remaining scroll space. */
-function resizeWinnerBoards(){
-  const overlay=document.getElementById('winner-overlay');
+/** Dynamically sizes dartboards to fill remaining scroll space for any result overlay. */
+function resizeWinnerBoards(overlayId='winner-overlay'){
+  const isLegOv=overlayId==='leg-overlay';
+  const overlay=document.getElementById(overlayId);
   if(!overlay||!overlay.classList.contains('visible')) return;
-  const scroll=overlay.querySelector('#winner-tab-match > .winner-tab-scroll');
+  const scroll=overlay.querySelector(`#${isLegOv?'leg-tab-match':'winner-tab-match'} > .winner-tab-scroll`);
   if(!scroll) return;
-  const summary=overlay.querySelector('#winner-summary');
+  const summary=overlay.querySelector(`#${isLegOv?'leg-stats-summary':'winner-summary'}`);
   const boardsRow=summary?.querySelector('.tv-boards-row');
   if(!boardsRow) return;
   const scrollH=scroll.clientHeight;
@@ -659,13 +660,16 @@ function resizeWinnerBoards(){
   const headerH=summary?.querySelector('.tv-header')?.offsetHeight||0;
   const statsH=summary?.querySelector('.tv-stats-table')?.offsetHeight||0;
   const legH=summary?.querySelector('.tv-leg-label')?.offsetHeight||0;
-  const availH=scrollH-22-headerH-statsH-legH-50; // 22=vert-pad, 28=row-pad+names, ~22=offsetHeight excludes margins (.tv-header mb-8 + .tv-stats-table mb-14)
+  const availH=scrollH-22-headerH-statsH-legH-50;
   const n=boardsRow.querySelectorAll('.tv-mini-board').length||1;
-  const availW=(scrollW-32-20*(n-1))/n; // 32=horiz-pad, 20=gap per board
+  const availW=(scrollW-32-20*(n-1))/n;
   const size=Math.max(80,Math.min(Math.floor(availH),Math.floor(availW)));
   overlay.style.setProperty('--winner-board-size',`${size}px`);
 }
-window.addEventListener('resize',resizeWinnerBoards);
+window.addEventListener('resize',()=>{
+  resizeWinnerBoards('winner-overlay');
+  resizeWinnerBoards('leg-overlay');
+});
 
 /**
  * Shows the result overlay — shared by leg wins and the final match win.
@@ -738,7 +742,7 @@ export function showWinner(name, round, isLeg=false, legLabel=null){
           const svgEl=document.getElementById(`${pfx}-scatter-${si}`);
           if(svgEl) drawMiniBoard(svgEl,s.dots,12);
         });
-        if(!isLeg) resizeWinnerBoards();
+        resizeWinnerBoards(isLeg?'leg-overlay':'winner-overlay');
       });
     }
   }
