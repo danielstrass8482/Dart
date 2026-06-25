@@ -111,8 +111,10 @@ export function renderX01(){
   const remaining=Math.max(0, state.x01.scores[state.x01.current]-spent);
   const _coActive=remaining<=170&&remaining>1&&!state.x01.bust;
   const _prefDoubles=(()=>{ if(!_coActive) return []; const pid=state.cfg.playerIds?.[state.x01.current]; const pl=state.allPlayers?.find(p=>p.id===pid); return pl?.prefDoubles||[]; })();
-  const _prefPath=_coActive?findPreferredCheckout(remaining,_prefDoubles):null;
-  const co=_coActive?(_prefPath||CHECKOUTS[remaining]||""):null;
+  const _optPath=_coActive?(CHECKOUTS[remaining]||""):"";
+  const _prefPathRaw=_coActive?findPreferredCheckout(remaining,_prefDoubles):null;
+  const _prefPath=(_prefPathRaw&&_optPath&&_prefPathRaw.split(" ").length===_optPath.split(" ").length)?_prefPathRaw:null;
+  const co=_coActive?(_prefPath||_optPath||null):null;
   const showNext=state.x01.throws.length>0&&!state.x01.winner;
   const isBust=state.x01.bust;
 
@@ -452,7 +454,12 @@ function _scheduleNextPlayerAnnounce(nextIdx){
   const score=state.x01.scores[nextIdx];
   if(score >= 2 && score <= 170){
     setTimeout(announceRequires, 1500);
-    setTimeout(()=>announceCheckoutPath(score), 2500);
+    const _optPath=window._CHECKOUTS?.[score]||"";
+    const _pid=state.cfg.playerIds?.[nextIdx];
+    const _pl=state.allPlayers?.find(p=>p.id===_pid);
+    const _prefRaw=findPreferredCheckout(score,_pl?.prefDoubles||[]);
+    const _annPath=(_prefRaw&&_optPath&&_prefRaw.split(" ").length===_optPath.split(" ").length)?_prefRaw:null;
+    setTimeout(()=>announceCheckoutPath(score,_annPath),2500);
   }
 }
 

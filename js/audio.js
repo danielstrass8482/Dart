@@ -374,12 +374,13 @@ function partToReadable(part){
  * Only fires when dart_checkout_announce setting is enabled.
  * @param {number} remaining
  */
-export async function announceCheckoutPath(remaining){
+export async function announceCheckoutPath(remaining, customPath=null){
   if(localStorage.getItem("dart_checkout_announce")!=="true") return;
-  const co=window._CHECKOUTS?.[remaining];
+  const co=customPath||window._CHECKOUTS?.[remaining];
   if(!co) return;
   const readable=co.split(" ").map(partToReadable).join(", ");
-  await queueAudio("Checkout: "+readable, `el_co_${remaining}`);
+  const cacheKey=customPath?`el_co_${customPath.replace(/ /g,"_")}`:`el_co_${remaining}`;
+  await queueAudio("Checkout: "+readable, cacheKey);
 }
 
 /**
