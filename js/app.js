@@ -1322,7 +1322,7 @@ async function renderVoiceSelector(){
     const border=isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border:1px solid rgba(212,175,55,.1);";
     // Test buttons only render when voice has a real ID — prevents null-ID fallback to active voice
     const testBtns=hasId
-      ?`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred, and Eighty!">180</button>`
+      ?`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_score_180" data-tv-text="One Hundred and Eighty!">180</button>`
        +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Game On</button>`
        +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Bust</button>`
       :"";
