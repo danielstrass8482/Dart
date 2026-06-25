@@ -642,46 +642,7 @@ export function handleLegWin(winnerIdx){
     ?`SET ${state.cfg.currentSet} · LEG ${legNum} WON!`
     :`LEG ${legNum} WON!`;
 
-  const legStats=document.getElementById("leg-stats-summary");
-  if(legStats){
-    const toMini=t=>({x:t.svgX,y:t.svgY,v:2,miss:t.miss,label:t.label});
-    const legPlayerStats=state.cfg.players.map((p,i)=>{
-      if(state.cfg.isBot?.[i]) return null;
-      const turns=state.x01.turnScores[i]||[];
-      if(!turns.length) return null;
-      const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
-      const s180=turns.filter(v=>v===180).length;
-      const s140=turns.filter(v=>v>=140&&v<180).length;
-      const s100=turns.filter(v=>v>=100&&v<140).length;
-      const coAtt=state.x01.checkoutAttempts[i]||0;
-      const coHit=state.x01.checkoutHits[i]||0;
-      const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
-      const coArr=state.x01.checkoutScores?.[i]||[];
-      const highCo=coArr.length?Math.max(...coArr):0;
-      const pid=state.cfg.playerIds?.[i];
-      const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
-      const displayName=playerObj?.nickname||p;
-      const photoUrl=playerObj?.photoUrl||null;
-      const isWinner=i===winnerIdx;
-      const dots=[
-        ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
-        ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
-      ];
-      return {avg,s180,s140,s100,coAtt,coHit,coPct,highCo,displayName,photoUrl,isWinner,idx:i,dots,score:null,scoreLabel:null};
-    }).filter(Boolean);
-
-    if(legPlayerStats.length){
-      legStats.innerHTML=buildTvStatsHTML(legPlayerStats,'leg',_legLabel);
-      requestAnimationFrame(()=>{
-        legPlayerStats.forEach((s,si)=>{
-          const svgEl=document.getElementById(`leg-scatter-${si}`);
-          if(svgEl) drawMiniBoard(svgEl,s.dots,12);
-        });
-      });
-    }
-  }
-
-  document.getElementById("leg-overlay").classList.add("visible");
+  showWinner(name, state.x01.round, true, _legLabel);
 }
 
 /** Dynamically sizes winner dartboards to fill remaining scroll space. */
@@ -707,46 +668,62 @@ function resizeWinnerBoards(){
 window.addEventListener('resize',resizeWinnerBoards);
 
 /**
- * Shows the winner overlay.
- * @param {string} name
- * @param {number} round
+ * Shows the result overlay — shared by leg wins and the final match win.
+ * @param {string} name  winner's display name
+ * @param {number} round current round number
+ * @param {boolean} isLeg  true = between-leg screen, false = final match winner
+ * @param {string|null} legLabel  header label for leg screens (e.g. "LEG 2 WON!")
  */
-export function showWinner(name,round){
-  const sumEl=document.getElementById("winner-summary");
+export function showWinner(name, round, isLeg=false, legLabel=null){
+  const winnerIdx=state.cfg.players.indexOf(name);
+  const pfx=isLeg?'leg':'winner';
+  const sumEl=document.getElementById(isLeg?'leg-stats-summary':'winner-summary');
+
   if(sumEl&&state.cfg.mode!=="Cricket"&&state.x01.turnScores){
     const toMini=t=>({x:t.svgX,y:t.svgY,v:2,miss:t.miss,label:t.label});
     const playerStats=state.cfg.players.map((p,i)=>{
       if(state.cfg.isBot?.[i]) return null;
-      const accTurns=state.cfg.accumulated?.turnScores?.[i]||[];
-      const turns=[...accTurns,...(state.x01.turnScores[i]||[])];
+      let turns, coAtt, coHit, dots, allCheckouts;
+      if(isLeg){
+        turns=state.x01.turnScores[i]||[];
+        coAtt=state.x01.checkoutAttempts[i]||0;
+        coHit=state.x01.checkoutHits[i]||0;
+        allCheckouts=state.x01.checkoutScores?.[i]||[];
+        dots=[
+          ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
+          ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
+        ];
+      } else {
+        const accTurns=state.cfg.accumulated?.turnScores?.[i]||[];
+        turns=[...accTurns,...(state.x01.turnScores[i]||[])];
+        coAtt=(state.cfg.accumulated?.checkoutAttempts?.[i]||0)+(state.x01.checkoutAttempts?.[i]||0);
+        coHit=(state.cfg.accumulated?.checkoutHits?.[i]||0)+(state.x01.checkoutHits?.[i]||0);
+        allCheckouts=[
+          ...(state.cfg.accumulated?.checkoutScores?.[i]||[]),
+          ...(state.x01.checkoutScores?.[i]||[])
+        ];
+        dots=[
+          ...(state.cfg.accumulated?.historicThrows?.[i]||[]).map(toMini),
+          ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
+          ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
+        ];
+      }
       if(!turns.length) return null;
       const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
       const s180=turns.filter(v=>v===180).length;
       const s140=turns.filter(v=>v>=140&&v<180).length;
       const s100=turns.filter(v=>v>=100&&v<140).length;
-      const coAtt=(state.cfg.accumulated?.checkoutAttempts?.[i]||0)+(state.x01.checkoutAttempts?.[i]||0);
-      const coHit=(state.cfg.accumulated?.checkoutHits?.[i]||0)+(state.x01.checkoutHits?.[i]||0);
       const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
-      const allCheckouts=[
-        ...(state.cfg.accumulated?.checkoutScores?.[i]||[]),
-        ...(state.x01.checkoutScores?.[i]||[])
-      ];
       const highCo=allCheckouts.length?Math.max(...allCheckouts):0;
       const pid=state.cfg.playerIds?.[i];
       const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
       const displayName=playerObj?.nickname||p;
       const photoUrl=playerObj?.photoUrl||null;
-      const isWinner=i===state.x01.winner;
-      const dots=[
-        ...(state.cfg.accumulated?.historicThrows?.[i]||[]).map(toMini),
-        ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
-        ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
-      ];
+      const isWinner=isLeg?(i===winnerIdx):(i===state.x01.winner);
       let score=null, scoreLabel=null;
-      if(state.cfg.totalSets>1){
-        score=state.cfg.setWins[i]; scoreLabel='SETS WON';
-      } else if(state.cfg.totalLegs>1){
-        score=state.cfg.legWins[i]; scoreLabel='LEGS WON';
+      if(!isLeg){
+        if(state.cfg.totalSets>1){ score=state.cfg.setWins[i]; scoreLabel='SETS WON'; }
+        else if(state.cfg.totalLegs>1){ score=state.cfg.legWins[i]; scoreLabel='LEGS WON'; }
       }
       return {avg,s180,s140,s100,coAtt,coHit,coPct,highCo,displayName,photoUrl,isWinner,idx:i,dots,score,scoreLabel};
     });
@@ -754,29 +731,30 @@ export function showWinner(name,round){
     if(!humanStats.length){
       sumEl.style.display='none';
     } else {
-      sumEl.innerHTML=buildTvStatsHTML(humanStats,'winner',null,true);
+      sumEl.innerHTML=buildTvStatsHTML(humanStats,pfx,isLeg?legLabel:null,true);
       sumEl.style.display='block';
       requestAnimationFrame(()=>{
         humanStats.forEach((s,si)=>{
-          const svgEl=document.getElementById(`winner-scatter-${si}`);
+          const svgEl=document.getElementById(`${pfx}-scatter-${si}`);
           if(svgEl) drawMiniBoard(svgEl,s.dots,12);
         });
-        resizeWinnerBoards();
+        if(!isLeg) resizeWinnerBoards();
       });
     }
   }
 
-  document.getElementById("winner-overlay").classList.add("visible");
-  // Always open on MATCH tab
-  document.getElementById("winner-tab-match")?.classList.remove("winner-tab-hidden");
-  document.getElementById("winner-tab-analysis")?.classList.add("winner-tab-hidden");
-  document.getElementById("tab-btn-match")?.classList.add("winner-tab-active");
-  document.getElementById("tab-btn-analysis")?.classList.remove("winner-tab-active");
-  if(window._updateCoachLimitDisplay) window._updateCoachLimitDisplay();
-  if(window._buildCoachPlayerSelector) window._buildCoachPlayerSelector();
-  const winnerIdx=state.cfg.players.indexOf(name);
-  const winnerPid=state.cfg.playerIds?.[winnerIdx]||null;
-  if(winnerPid && window._loadCoachHistory) window._loadCoachHistory(winnerPid);
+  document.getElementById(isLeg?'leg-overlay':'winner-overlay').classList.add("visible");
+
+  if(!isLeg){
+    document.getElementById("winner-tab-match")?.classList.remove("winner-tab-hidden");
+    document.getElementById("winner-tab-analysis")?.classList.add("winner-tab-hidden");
+    document.getElementById("tab-btn-match")?.classList.add("winner-tab-active");
+    document.getElementById("tab-btn-analysis")?.classList.remove("winner-tab-active");
+    if(window._updateCoachLimitDisplay) window._updateCoachLimitDisplay();
+    if(window._buildCoachPlayerSelector) window._buildCoachPlayerSelector();
+    const winnerPid=state.cfg.playerIds?.[winnerIdx]||null;
+    if(winnerPid && window._loadCoachHistory) window._loadCoachHistory(winnerPid);
+  }
 }
 
 /**
