@@ -109,7 +109,10 @@ export function renderX01(){
   const CHECKOUTS = window._CHECKOUTS;
   const spent=state.x01.throws.reduce((s,t)=>s+t.score,0);
   const remaining=Math.max(0, state.x01.scores[state.x01.current]-spent);
-  const co=remaining<=170&&remaining>1&&!state.x01.bust?CHECKOUTS[remaining]||"":null;
+  const _coActive=remaining<=170&&remaining>1&&!state.x01.bust;
+  const _prefDoubles=(()=>{ if(!_coActive) return []; const pid=state.cfg.playerIds?.[state.x01.current]; const pl=state.allPlayers?.find(p=>p.id===pid); return pl?.prefDoubles||[]; })();
+  const _prefPath=_coActive?findPreferredCheckout(remaining,_prefDoubles):null;
+  const co=_coActive?(_prefPath||CHECKOUTS[remaining]||""):null;
   const showNext=state.x01.throws.length>0&&!state.x01.winner;
   const isBust=state.x01.bust;
 
@@ -266,12 +269,8 @@ export function renderX01(){
     titleEl.textContent=`${state.cfg.mode}${legInfo?" · "+legInfo:""} · ${t('runde')} ${state.x01.round}`;
   }
 
-  if(remaining<=170&&remaining>1&&!state.x01.bust){
-    const pid=state.cfg.playerIds?.[state.x01.current];
-    const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
-    const prefDoubles=playerObj?.prefDoubles||[];
-    const prefPath=findPreferredCheckout(remaining,prefDoubles);
-    highlightCheckout(state.boardSVG,remaining,prefPath);
+  if(_coActive){
+    highlightCheckout(state.boardSVG,remaining,_prefPath);
   } else clearCheckout(state.boardSVG);
   disableBoard(state.boardSVG,!!state.x01.winner||state.x01.bust);
 
