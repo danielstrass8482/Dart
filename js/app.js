@@ -465,11 +465,29 @@ document.getElementById("bot-group").addEventListener("click",async e=>{
   if(selectedBot!=="none") isPremium().then(isPrem=>applyBotPremiumState(isPrem));
 });
 
+const _botTwoPlayerHandlers = new Map();
+
 function updateBotGroupState(){
   const twoPlayers = state.selectedPlayers.length >= 2;
   document.querySelectorAll("#bot-group .btn-toggle").forEach(b => {
     if(b.dataset.value === "none") return;
     b.style.opacity = twoPlayers ? "0.35" : "";
+
+    // Remove old direct handlers
+    const old = _botTwoPlayerHandlers.get(b);
+    if(old){
+      b.removeEventListener("pointerup", old.pu);
+      b.removeEventListener("click", old.cl);
+      _botTwoPlayerHandlers.delete(b);
+    }
+
+    if(twoPlayers){
+      const pu = (e) => { e.stopPropagation(); showAlert(t('bot_nur_ein_spieler')); };
+      const cl = (e) => { e.stopPropagation(); };
+      b.addEventListener("pointerup", pu);
+      b.addEventListener("click", cl);
+      _botTwoPlayerHandlers.set(b, {pu, cl});
+    }
   });
 }
 
@@ -940,6 +958,7 @@ async function refreshPremiumUI(){
   applyCoachAnalyseLock(isPrem);
   applyVideoAnalyseLock(isPrem);
   applyBotPremiumState(isPrem);
+  updateBotGroupState();
   renderVoiceSelector();
   renderAdminToggle(); // sync checkbox visual after override changes
   if(document.getElementById("tab-statistiken")?.classList.contains("active")){
