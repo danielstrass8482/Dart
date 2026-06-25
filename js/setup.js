@@ -9,6 +9,7 @@ import { startParty } from './party.js';
 import { collectHealthData } from './coach.js';
 import { BOT_PERSONALITIES } from './bot.js';
 import { t } from './i18n.js?v=3';
+import { showAlert, showConfirm } from './modal.js';
 
 export const AVATAR_COLORS=["#e53935","#1e88e5","#43a047","#fb8c00","#8e24aa","#00897b","#e91e63","#546e7a"];
 
@@ -80,12 +81,12 @@ export function renderPlayerList(){
     const delBtn=div.querySelector(".pi-delete");
     delBtn.addEventListener("click", async (e)=>{
       e.stopPropagation();
-      if(!confirm(t('spieler_loeschen_confirm').replace('{name}',p.name))) return;
+      if(!await showConfirm(t('spieler_loeschen_confirm').replace('{name}',p.name))) return;
       try{
         await window.dartDB.deletePlayer(p.id);
         state.selectedPlayers=state.selectedPlayers.filter(s=>s.id!==p.id);
         await loadPlayers();
-      }catch(err){ alert(t('fehler_loeschen')+err.message); }
+      }catch(err){ await showAlert(t('fehler_loeschen')+err.message); }
     });
     list.appendChild(div);
   });
@@ -105,7 +106,7 @@ export function togglePlayer(p){
   if(idx>=0){
     state.selectedPlayers.splice(idx,1);
   } else if(state.selectedPlayers.length>=2){
-    alert("Für Spiele mit mehr als 2 Spielern kommt bald ein dedizierter Turniermodus.");
+    showAlert(t('turnier_max_spieler'));
     return;
   } else {
     state.selectedPlayers.push(p);

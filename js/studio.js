@@ -4,6 +4,7 @@
 
 import { voiceURLCache } from './audio.js';
 import { t } from './i18n.js?v=3';
+import { showConfirm } from './modal.js';
 
 let studioKeys=[];
 let studioIdx=0;
@@ -159,7 +160,7 @@ export function wireStudioButtons(){
 
   document.getElementById("studio-delete-btn").addEventListener("click",async()=>{
     const item=studioKeys[studioIdx];
-    if(!confirm(t('studio_loeschen_confirm').replace('{label}',item.label))) return;
+    if(!await showConfirm(t('studio_loeschen_confirm').replace('{label}',item.label))) return;
     await window.dartDB.deleteVoiceSample(item.key);
     studioRecorded.delete(item.key);
     delete voiceURLCache[item.key];

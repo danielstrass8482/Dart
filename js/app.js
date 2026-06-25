@@ -7,6 +7,7 @@ import './firebase.js';
 
 // ── i18n ─────────────────────────────────────────────────────────
 import { t, setLang, getLang, applyTranslations, SUPPORTED_LANGS } from './i18n.js?v=3';
+import { showAlert } from './modal.js';
 
 // Sicherstellen dass window.t gesetzt ist (für inline onclick-Handler in HTML)
 window.t = t;
@@ -485,10 +486,10 @@ document.getElementById("btn-add-player").addEventListener("click", async ()=>{
   const input=document.getElementById("new-player-input");
   const name=input.value.trim();
   if(!name) return;
-  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert(t('spieler_existiert')); return; }
-  if(!window.dartDB){ alert(t('db_nicht_bereit')); return; }
+  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ await showAlert(t('spieler_existiert')); return; }
+  if(!window.dartDB){ await showAlert(t('db_nicht_bereit')); return; }
   try{ await window.dartDB.savePlayer(name); input.value=""; await loadPlayers(); }
-  catch(e){ alert(t('fehler_prefix')+e.message); }
+  catch(e){ await showAlert(t('fehler_prefix')+e.message); }
 });
 document.getElementById("new-player-input").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("btn-add-player").click(); });
 
@@ -497,16 +498,16 @@ document.getElementById("profil-btn-add-player")?.addEventListener("click", asyn
   const input=document.getElementById("profil-new-player-input");
   const name=input.value.trim();
   if(!name) return;
-  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ alert(t('spieler_existiert')); return; }
-  if(!window.dartDB){ alert(t('db_nicht_bereit')); return; }
+  if(state.allPlayers.find(p=>p.name.toLowerCase()===name.toLowerCase())){ await showAlert(t('spieler_existiert')); return; }
+  if(!window.dartDB){ await showAlert(t('db_nicht_bereit')); return; }
   try{ await window.dartDB.savePlayer(name); input.value=""; await loadPlayers(); }
-  catch(e){ alert(t('fehler_prefix')+e.message); }
+  catch(e){ await showAlert(t('fehler_prefix')+e.message); }
 });
 document.getElementById("profil-new-player-input")?.addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("profil-btn-add-player")?.click(); });
 
 document.getElementById("btn-start").addEventListener("click",async()=>{
-  if(state.selectedPlayers.length<1){ alert(t('min_1_spieler')); return; }
-  if(selectedMode==="Killer"&&state.selectedPlayers.length<2&&selectedBot==="none"){ alert(t('killer_min_2')); return; }
+  if(state.selectedPlayers.length<1){ await showAlert(t('min_1_spieler')); return; }
+  if(selectedMode==="Killer"&&state.selectedPlayers.length<2&&selectedBot==="none"){ await showAlert(t('killer_min_2')); return; }
 
   const healthData = localStorage.getItem("dart_health_enabled") !== "false" ? await collectHealthData() : null;
 
@@ -671,7 +672,7 @@ document.getElementById("tn-type-group")?.addEventListener("click",e=>{
 document.getElementById("btn-create-tournament")?.addEventListener("click",async()=>{
   const name=document.getElementById("tn-name").value.trim()||t('tn_default');
   const checked=[...document.querySelectorAll("#tn-player-list input:checked")];
-  if(checked.length<2){alert(t('tn_min_2_spieler'));return;}
+  if(checked.length<2){await showAlert(t('tn_min_2_spieler'));return;}
   const players=checked.map(c=>{ const p=state.allPlayers.find(x=>x.id===c.value); return p?.name||"?"; });
   const playerIds=checked.map(c=>c.value);
   const matches=tnFormat==="round_robin" ? generateRoundRobin(players) : generateKnockout(players);
@@ -935,7 +936,7 @@ document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=
   const errEl=document.getElementById("profil-upgrade-error");
   errEl.textContent="";
   if(!name||!email||pw.length<6){errEl.textContent=t('auth_fill_all');return;}
-  try{ await window.upgradeAnonymousAccount(email,pw,name); alert(t('account_erstellt')); initProfilTab(); }
+  try{ await window.upgradeAnonymousAccount(email,pw,name); await showAlert(t('account_erstellt')); initProfilTab(); }
   catch(e){ errEl.textContent=e.code==="auth/email-already-in-use"?t('auth_email_taken2'):e.message; }
 });
 document.getElementById("btn-profil-google")?.addEventListener("click",async()=>{ try{ await window.signInWithGoogle(); initProfilTab(); }catch(e){} });
@@ -1078,7 +1079,7 @@ async function startVideoRecording(previewEl, recordBtn, stopBtn, wrapEl, analyz
     let countdown=5;
     const timer=setInterval(()=>{ countdown--; stopBtn.textContent=`⏹ STOP (${countdown}s)`; if(countdown<=0){ clearInterval(timer); if(mediaRecorder?.state==="recording") mediaRecorder.stop(); } },1000);
     stopBtn.onclick=()=>{ clearInterval(timer); if(mediaRecorder?.state==="recording") mediaRecorder.stop(); };
-  }catch(err){ alert(t('kamera_fehler')+err.message); }
+  }catch(err){ await showAlert(t('kamera_fehler')+err.message); }
 }
 
 document.getElementById("btn-video-record-winner").addEventListener("click",()=>startVideoRecording(document.getElementById("video-preview"),document.getElementById("btn-video-record-winner"),document.getElementById("btn-video-stop-winner"),document.getElementById("video-preview-wrap"),document.getElementById("btn-video-analyze")));
@@ -1108,7 +1109,7 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
   const btn=document.getElementById("btn-video-analyze");
   if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">${t('video_limit_msg').replace('{n}',VIDEO_COACH_LIMIT)}</div>`; return; }
   const videoEl=document.getElementById("video-preview");
-  if(!videoEl.src){ alert(t('video_auswaehlen')); return; }
+  if(!videoEl.src){ await showAlert(t('video_auswaehlen')); return; }
   btn.disabled=true; btn.textContent=t('extrahiere_frames');
   outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">${t('analysiere_technik')}</span></div>`;
   try{
@@ -1132,7 +1133,7 @@ const APP_URL="https://danielstrass8482.github.io/Dart/dart.html";
 let _videoSessionUnsubscribe=null, _videoSessionCode=null, _videoSessionAnalyzeCb=null;
 
 async function startVideoHostSession(analyzeCb){
-  if(!window.dartDB){ alert(t('db_nicht_bereit')); return; }
+  if(!window.dartDB){ await showAlert(t('db_nicht_bereit')); return; }
   const code=Math.random().toString(36).substring(2,6).toUpperCase();
   _videoSessionCode=code; _videoSessionAnalyzeCb=analyzeCb;
   await window.dartDB.createVideoSession(code, {});
@@ -1261,7 +1262,7 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
   const left=videoCoachCallsLeft(), outputEl=document.getElementById("coach-output-video-analyse-tab"), btn=document.getElementById("btn-video-analyze-analyse-tab");
   if(left<=0){ outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px">${t('video_limit_msg').replace('{n}',VIDEO_COACH_LIMIT)}</div>`; return; }
   const videoEl=document.getElementById("video-preview-analyse-tab");
-  if(!videoEl.src){ alert(t('video_auswaehlen')); return; }
+  if(!videoEl.src){ await showAlert(t('video_auswaehlen')); return; }
   btn.disabled=true; btn.textContent=t('extrahiere_frames');
   outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">${t('analysiere_technik')}</span></div>`;
   try{
