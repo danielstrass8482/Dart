@@ -893,9 +893,13 @@ window.splashPromise = new Promise(function(resolve) {
 
 <!-- ═══════════════════════ LEG WINNER OVERLAY ═══════════════════════ -->
 <div class="winner-overlay" id="leg-overlay">
-  <div style="width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:20px 16px;box-sizing:border-box;margin:0 auto;text-align:center">
-    <div id="leg-stats-summary"></div>
-    <button class="btn-new-game" id="btn-next-leg" style="margin-top:16px;width:100%" data-i18n="naechstes_leg">NEXT LEG ▶</button>
+  <div class="winner-tab-pane" id="leg-tab-match">
+    <div class="winner-tab-scroll">
+      <div id="leg-stats-summary"></div>
+    </div>
+    <div class="match-new-game-bar">
+      <button class="btn-new-game" id="btn-next-leg" style="width:100%" data-i18n="naechstes_leg">NEXT LEG ▶</button>
+    </div>
   </div>
 </div>
 

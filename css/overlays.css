@@ -103,15 +103,16 @@
 .tv-lg .tv-single-val { font-size:24px; }
 .tv-lg .tv-single-label { font-size:10px; }
 
-/* ── MATCH tab: content scrolls, button pinned at absolute bottom ── */
-#winner-tab-match {
+/* ── MATCH tab + LEG tab: content scrolls, button pinned at absolute bottom ── */
+#winner-tab-match, #leg-tab-match {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
   overflow: hidden;
 }
-#winner-tab-match > .winner-tab-scroll {
+#winner-tab-match > .winner-tab-scroll,
+#leg-tab-match > .winner-tab-scroll {
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
@@ -133,39 +134,55 @@
   border-top: 1px solid rgba(255,255,255,0.06);
   box-sizing: border-box;
 }
-/* ── Winner boards: JS measures remaining space, sets --winner-board-size ── */
-#winner-tab-match .tv-mini-board {
+/* ── Winner/Leg boards: JS measures remaining space, sets --winner-board-size ── */
+#winner-tab-match .tv-mini-board,
+#leg-tab-match .tv-mini-board {
   width: var(--winner-board-size, 140px);
   height: var(--winner-board-size, 140px);
   transition: width .2s ease, height .2s ease;
 }
 /* ── Landscape: compact header+stats to maximise board space ── */
 @media (orientation: landscape) {
-  #winner-tab-match > .winner-tab-scroll {
+  #winner-tab-match > .winner-tab-scroll,
+  #leg-tab-match > .winner-tab-scroll {
     max-width: min(98vw, 900px);
   }
   /* Avatars in landscape — big enough to read, boards adapt via JS */
   #winner-tab-match .tv-lg .tv-avatar-img,
-  #winner-tab-match .tv-lg .tv-avatar-init {
+  #winner-tab-match .tv-lg .tv-avatar-init,
+  #leg-tab-match .tv-lg .tv-avatar-img,
+  #leg-tab-match .tv-lg .tv-avatar-init {
     width: 175px;
     height: 175px;
   }
-  #winner-tab-match .tv-lg .tv-avatar-init { font-size: 60px; border-radius: 18px; }
-  #winner-tab-match .tv-lg .tv-result-score { font-size: 44px; }
-  #winner-tab-match .tv-lg .tv-result-sep { font-size: 34px; }
-  #winner-tab-match .tv-lg .tv-result { min-width: 72px; }
-  #winner-tab-match .tv-lg .tv-pname { font-size: 13px; }
-  #winner-tab-match .tv-lg .tv-header { margin-bottom: 8px; }
+  #winner-tab-match .tv-lg .tv-avatar-init,
+  #leg-tab-match .tv-lg .tv-avatar-init { font-size: 60px; border-radius: 18px; }
+  #winner-tab-match .tv-lg .tv-result-score,
+  #leg-tab-match .tv-lg .tv-result-score { font-size: 44px; }
+  #winner-tab-match .tv-lg .tv-result-sep,
+  #leg-tab-match .tv-lg .tv-result-sep { font-size: 34px; }
+  #winner-tab-match .tv-lg .tv-result,
+  #leg-tab-match .tv-lg .tv-result { min-width: 72px; }
+  #winner-tab-match .tv-lg .tv-pname,
+  #leg-tab-match .tv-lg .tv-pname { font-size: 13px; }
+  #winner-tab-match .tv-lg .tv-header,
+  #leg-tab-match .tv-lg .tv-header { margin-bottom: 8px; }
   /* Compact stat rows (13→6px padding frees ~42px over 6 rows) */
-  #winner-tab-match .tv-lg .tv-stat-row { padding: 4px 0 2px; }
+  #winner-tab-match .tv-lg .tv-stat-row,
+  #leg-tab-match .tv-lg .tv-stat-row { padding: 4px 0 2px; }
   #winner-tab-match .tv-lg .tv-val-left,
-  #winner-tab-match .tv-lg .tv-val-right { font-size: 17px; }
-  #winner-tab-match .tv-lg .tv-val-win { font-size: 19px !important; }
-  #winner-tab-match .tv-boards-row {
+  #winner-tab-match .tv-lg .tv-val-right,
+  #leg-tab-match .tv-lg .tv-val-left,
+  #leg-tab-match .tv-lg .tv-val-right { font-size: 17px; }
+  #winner-tab-match .tv-lg .tv-val-win,
+  #leg-tab-match .tv-lg .tv-val-win { font-size: 19px !important; }
+  #winner-tab-match .tv-boards-row,
+  #leg-tab-match .tv-boards-row {
     gap: 20px;
     padding: 10px 0 4px;
   }
-  #winner-tab-match .tv-board-name {
+  #winner-tab-match .tv-board-name,
+  #leg-tab-match .tv-board-name {
     font-size: 12px;
     letter-spacing: 1px;
   }
