@@ -182,7 +182,6 @@ export function setVoiceFeedback(text){
  */
 export function announceRequires(){
   if(!state.x01||!state.cfg||!state.cfg.players) return;
-  if(state.cfg.players.length < 2) return;
   const idx = state.x01.current;
   if(state.cfg.isBot?.[idx]) return;
   const score = state.x01.scores[idx];
