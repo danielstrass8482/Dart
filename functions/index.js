@@ -25,12 +25,13 @@ const VOICE_SETTINGS_DRAMATIC = { stability: 0.20, similarity_boost: 0.95, style
 const VOICE_SETTINGS_NEUTRAL  = { stability: 0.45, similarity_boost: 0.90, style: 0.50, use_speaker_boost: true };
 
 // Keys using eleven_multilingual_v2 (higher quality for dramatic moments)
-const MULTILINGUAL_KEYS = new Set(["score_180", "score_171", "score_167", "score_160", "score_140", "score_121", "game_on"]);
-const DRAMATIC_KEYS = new Set(["score_180", "score_171", "score_167", "score_160", "score_140", "game_on"]);
+const MULTILINGUAL_KEYS = new Set(["score_180", "score_180b", "score_171", "score_167", "score_160", "score_140", "score_121", "game_on"]);
+const DRAMATIC_KEYS = new Set(["score_180", "score_180b", "score_171", "score_167", "score_160", "score_140", "game_on"]);
 
 // Commas/periods create natural pauses for ElevenLabs; no CAPS (causes rushing)
 const SPECIAL_TEXTS = {
-  score_180: "One hundred, and eighty!",
+  score_180:  "One hundred, and eighty!",
+  score_180b: "One hundred and eighty!",
   score_171: "One hundred, and seventy one.",
   score_167: "One hundred, and sixty seven.",
   score_160: "One hundred, and sixty.",

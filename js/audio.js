@@ -283,14 +283,14 @@ export async function prewarmTTS(text, storageKey){
 /** Pre-warms commonly used score TTS entries. */
 export function prewarmElevenLabs(){
   const scoreKeys=[
-    [180,"One Hundred and Eighty!"],[171,"One Hundred and Seventy One!"],
+    [180,"One Hundred and Eighty!","el_score_180b"],[171,"One Hundred and Seventy One!"],
     [167,"One Hundred and Sixty Seven!"],[160,"One Hundred and Sixty!"],
     [140,"One Hundred and Forty!"],[121,null],[100,"One Hundred!"],
     [81,null],[60,null],[45,"Forty Five!"],[41,null],[26,"Bed and Breakfast!"],
     [0,"No Score!"]
   ];
-  for(const [score,override] of scoreKeys){
-    const key=`el_score_${score}`;
+  for(const [score,override,customKey] of scoreKeys){
+    const key=customKey??`el_score_${score}`;
     const text=override??(score===50?"Bull's Eye!":numToWords(score)+"!");
     prewarmTTS(text, key);
   }
@@ -309,6 +309,7 @@ export function prewarmElevenLabs(){
  * @returns {string|null}
  */
 function detectDartSlang(score, throws){
+  if(score===180) return null;
   if(!throws||!throws.length) return null;
   const active=throws.filter(t=>!t.miss&&!t.bouncer);
   const labels=active.map(t=>t.label||"");
@@ -357,7 +358,7 @@ export async function speakScoreWithCustom(score, hitBull=false){
     numToWords(score)+"!"
   );
   const slangKey=slangText?`el_slang_${slangText.replace(/[\s!]/g,"_").toLowerCase()}`:null;
-  const key=slangKey??(score===50?`el_score_50_${hitBull?"bull":"norm"}`:`el_score_${score}`);
+  const key=slangKey??(score===50?`el_score_50_${hitBull?"bull":"norm"}`:score===180?`el_score_180b`:`el_score_${score}`);
   await queueAudio(text,key);
 }
 
