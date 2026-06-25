@@ -947,7 +947,7 @@ document.getElementById("btn-profil-google")?.addEventListener("click",async()=>
 // Fix: rely solely on the checkbox's own "change" event, and clone+replace
 // it on every init so re-opening the Profil tab can't stack listeners.
 const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", health:"dart_health_enabled", checkout_announce:"dart_checkout_announce", slang:"dart_slang_enabled" };
-const SETTING_DEFAULTS = { tts:true, mic:true, checkout:true, health:true, checkout_announce:false, slang:false };
+const SETTING_DEFAULTS = { tts:true, mic:true, checkout:true, health:true, checkout_announce:true, slang:false };
 
 function updateToggleVisual(checkbox){
   const isOn=checkbox.checked;
