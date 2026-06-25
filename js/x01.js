@@ -449,7 +449,6 @@ export function handleBouncer(){
 /** Schedules requires + checkout-path announcement for the next player. */
 function _scheduleNextPlayerAnnounce(nextIdx){
   if(state.x01.winner) return;
-  if(state.cfg.players.length < 2) return;
   if(state.cfg.isBot?.[nextIdx]) return;
   const score=state.x01.scores[nextIdx];
   if(score >= 2 && score <= 170){
