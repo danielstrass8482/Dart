@@ -386,7 +386,8 @@ export function processX01Hit(hit, svgX=null, svgY=null){
 
   if(tent<0||tent===1){
     state.x01.bust=true;
-    speakKeyWithCustom("bust","Bust!");
+    if(tent<0) speakKeyWithCustom("bust","Bust!");
+    else speakKeyWithCustom("no_score","No Score!");
     renderX01();
     setTimeout(advanceX01, 1500);
     return;
@@ -394,7 +395,7 @@ export function processX01Hit(hit, svgX=null, svgY=null){
   if(tent===0){
     if(!hit.label.startsWith("D")&&hit.label!=="Bull"){
       state.x01.bust=true;
-      speakKeyWithCustom("bust","Bust!");
+      speakKeyWithCustom("no_score","No Score!");
       renderX01();
       setTimeout(advanceX01, 1500);
       return;
