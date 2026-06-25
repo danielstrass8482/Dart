@@ -85,7 +85,6 @@ export function speak(text){
  * @param {string} lang BCP-47 language tag
  */
 export function doSpeak(text, lang){
-  if(localStorage.getItem("dart_tts_enabled")==="false") return;
   if(!window.speechSynthesis) return;
   const trySpeak=()=>{
     if(window.speechSynthesis.paused) window.speechSynthesis.resume();
@@ -176,6 +175,7 @@ async function playAudioQueue(){
 }
 
 export function queueAudio(text,key){
+  if(localStorage.getItem("dart_tts_enabled")==="false") return Promise.resolve();
   return new Promise(resolve=>{
     audioQueue.push({text,key,resolve});
     playAudioQueue();
@@ -348,7 +348,6 @@ function detectDartSlang(score, throws){
  * @param {boolean} hitBull true when turn included a Bull or Bull25 throw
  */
 export async function speakScoreWithCustom(score, hitBull=false){
-  if(localStorage.getItem("dart_tts_enabled")==="false") return;
   const slangOn=localStorage.getItem("dart_slang_enabled")==="true";
   const slangText=slangOn?detectDartSlang(score,state.x01?.throws):null;
   const text=slangText??(
@@ -376,7 +375,6 @@ function partToReadable(part){
  * @param {number} remaining
  */
 export async function announceCheckoutPath(remaining){
-  if(localStorage.getItem("dart_tts_enabled")==="false") return;
   if(localStorage.getItem("dart_checkout_announce")!=="true") return;
   const co=window._CHECKOUTS?.[remaining];
   if(!co) return;
@@ -390,6 +388,5 @@ export async function announceCheckoutPath(remaining){
  * @param {string} fallbackText
  */
 export async function speakKeyWithCustom(key, fallbackText){
-  if(localStorage.getItem("dart_tts_enabled")==="false") return;
   await queueAudio(fallbackText,`el_${key}`);
 }
