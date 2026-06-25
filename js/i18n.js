@@ -125,7 +125,7 @@ export const translations = {
     gewinner: "GEWINNER",
     neues_spiel: "NEUES SPIEL",
     naechstes_set: "NÄCHSTES SET ▶",
-    naechstes_leg: "NÄCHSTES LEG ▶",
+    naechstes_leg: "NÄCHSTES LEG",
     leg_analysieren: "LEG ANALYSIEREN",
 
     // Allgemein
@@ -672,7 +672,7 @@ export const translations = {
     gewinner: "WINNER",
     neues_spiel: "NEW GAME",
     naechstes_set: "NEXT SET ▶",
-    naechstes_leg: "NEXT LEG ▶",
+    naechstes_leg: "NEXT LEG",
     leg_analysieren: "ANALYSE LEG",
 
     // Allgemein
