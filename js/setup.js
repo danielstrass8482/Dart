@@ -11,6 +11,9 @@ import { BOT_PERSONALITIES } from './bot.js';
 import { t } from './i18n.js?v=3';
 import { showAlert, showConfirm } from './modal.js';
 
+let _onPlayerSelectionChanged = null;
+export function setPlayerSelectionHook(fn) { _onPlayerSelectionChanged = fn; }
+
 export const AVATAR_COLORS=["#e53935","#1e88e5","#43a047","#fb8c00","#8e24aa","#00897b","#e91e63","#546e7a"];
 
 /**
@@ -112,6 +115,7 @@ export function togglePlayer(p){
     state.selectedPlayers.push(p);
   }
   renderPlayerList();
+  _onPlayerSelectionChanged?.();
 }
 
 /** Loads players from Firebase and renders the list. */

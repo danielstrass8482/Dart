@@ -565,6 +565,7 @@ export const translations = {
     // App-Modal
     modal_ok: "OK",
     turnier_max_spieler: "Für Spiele mit mehr als 2 Spielern kommt bald ein dedizierter Turniermodus.",
+    bot_deaktiviert: "Bot wurde deaktiviert, da zwei Spieler ausgewählt sind.",
   },
 
   en: {
@@ -1116,6 +1117,7 @@ export const translations = {
     // App Modal
     modal_ok: "OK",
     turnier_max_spieler: "A dedicated tournament mode is coming soon for games with 3 or more players.",
+    bot_deaktiviert: "Bot was deactivated because two players are selected.",
   }
 };
 

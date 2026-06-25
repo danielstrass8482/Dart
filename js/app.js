@@ -73,7 +73,7 @@ import {
   loadPlayers, renderPlayerList, renderProfilPlayerList, togglePlayer, playerColor, showScreen,
   showSetup, showSpielenCards, showSpielenSection, saveGameToFirebase,
   updateAllPlayerStats, updateAuthUI, applySettings, BOT_PERSONALITY_DESCS,
-  updateRotateOverlay, detectContext
+  updateRotateOverlay, detectContext, setPlayerSelectionHook
 } from './setup.js?v=2';
 
 // ── Stats ────────────────────────────────────────────────────────
@@ -452,6 +452,7 @@ document.getElementById("rounds-group")?.addEventListener("click",e=>{
 
 document.getElementById("bot-group").addEventListener("click",async e=>{
   const v=togVal(e); if(!v) return;
+  if(v!=="none" && state.selectedPlayers.length>=2) return;
   // "Kein Bot" is always free; all bot levels (easy/medium/pro) are premium
   if(v!=="none"){
     const isPrem=await isPremium();
@@ -462,6 +463,25 @@ document.getElementById("bot-group").addEventListener("click",async e=>{
   const botSection=document.getElementById("bot-personality-section");
   botSection.style.display=selectedBot==="none"?"none":"";
   if(selectedBot!=="none") isPremium().then(isPrem=>applyBotPremiumState(isPrem));
+});
+
+function updateBotGroupState(){
+  const twoPlayers = state.selectedPlayers.length >= 2;
+  document.querySelectorAll("#bot-group .btn-toggle").forEach(b => {
+    if(b.dataset.value === "none") return;
+    b.disabled = twoPlayers;
+    b.style.opacity = twoPlayers ? "0.35" : "";
+  });
+}
+
+setPlayerSelectionHook(() => {
+  if(state.selectedPlayers.length >= 2 && selectedBot !== "none"){
+    selectedBot = "none";
+    document.querySelectorAll("#bot-group .btn-toggle").forEach(b => b.classList.toggle("active", b.dataset.value === "none"));
+    document.getElementById("bot-personality-section").style.display = "none";
+    showAlert(t('bot_deaktiviert'));
+  }
+  updateBotGroupState();
 });
 
 document.getElementById("bot-personality-group").addEventListener("click",async e=>{
