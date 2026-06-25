@@ -566,6 +566,7 @@ export const translations = {
     modal_ok: "OK",
     turnier_max_spieler: "Für Spiele mit mehr als 2 Spielern kommt bald ein dedizierter Turniermodus.",
     bot_deaktiviert: "Bot wurde deaktiviert, da zwei Spieler ausgewählt sind.",
+    bot_nur_ein_spieler: "Bot ist nur bei einem Spieler verfügbar. Entferne einen Spieler um den Bot zu aktivieren.",
   },
 
   en: {
@@ -1118,6 +1119,7 @@ export const translations = {
     modal_ok: "OK",
     turnier_max_spieler: "A dedicated tournament mode is coming soon for games with 3 or more players.",
     bot_deaktiviert: "Bot was deactivated because two players are selected.",
+    bot_nur_ein_spieler: "Bot is only available with one player. Remove a player to activate the bot.",
   }
 };
 
