@@ -129,15 +129,6 @@ export function renderX01(){
       const playerScore=state.x01.scores[i];
       const playerRemaining=isActive?remaining:playerScore;
       const isCheckout=playerRemaining<=170&&playerRemaining>1&&!state.x01.bust;
-      const throwChips=isActive&&state.x01.throws.length
-        ? state.x01.throws.map(t=>{
-            const col=t.miss?"#e53935":t.label.startsWith("T")?"#6bba8a":t.label.startsWith("D")?"#6aaada":"#ccc";
-            return `<span style="font-family:'Bebas Neue',sans-serif;font-size:14px;padding:1px 5px;background:var(--dart-border);border-radius:4px;color:${col}">${t.label}</span>`;
-          }).join(" ")
-        : "";
-      const coHint=isActive&&co?`<span style="color:var(--dart-gold);font-size:11px;margin-left:6px">→ ${co} · ${co.split(" ").length}-Dart Finish</span>`:"";
-      const f9=state.x01.first9[i];
-      const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legInfo=state.cfg.totalSets>1?`S${state.cfg.setWins[i]} `:state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])} `:"";
       const scoreStyle=isActive
         ?`font-family:'Manrope',sans-serif;font-size:66px;font-weight:800;line-height:.85;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .3s,color .3s;${isCheckout?"background:var(--dart-gold);color:#000;border-radius:5px;padding:0 5px;":""}`
@@ -160,17 +151,33 @@ export function renderX01(){
           }
           <div style="min-width:0">
             <div style="font-size:13px;font-weight:700;color:#C9C9D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${legInfo}${displayName}</div>
-            ${avgVal?`<div style="font-size:10px;font-weight:700;color:#6E6E78">Ø ${avgVal}</div>`:""}
           </div>
         </div>`;
       return `<div class="score-cell${isActive?" active":""}">
         ${activeHeader}
         ${isActive?`<div style="font-size:9px;font-weight:700;letter-spacing:.18em;color:#7E7E86;margin-top:2px">${t('verbleibend')}</div>`:""}
         <div class="sc-score" style="${scoreStyle}">${playerRemaining}</div>
-        <div class="sc-throws">${throwChips}${coHint||(!throwChips?`<span style="color:#7E7E86;font-size:11px;font-weight:700">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</span>`:"")}</div>
       </div>`;
     }).join("");
   }
+
+  // ── Info bar: throws + checkout (portrait, below score strip) ──
+  const infoThrowsEl=document.getElementById("x01-throws-row");
+  if(infoThrowsEl){
+    if(state.x01.throws.length>0){
+      const slots=[0,1,2].map(idx=>{
+        const th=state.x01.throws[idx];
+        if(!th) return `<span style="color:#6E6E78">—</span>`;
+        const col=(th.miss||th.bouncer)?"var(--dart-danger)":"#D4AF37";
+        return `<span style="color:${col}">${th.label}</span>`;
+      });
+      infoThrowsEl.innerHTML=slots.join(`<span style="color:#6E6E78;margin:0 4px">·</span>`);
+    } else {
+      infoThrowsEl.innerHTML="";
+    }
+  }
+  const infoCheckoutEl=document.getElementById("x01-checkout-row");
+  if(infoCheckoutEl) infoCheckoutEl.textContent=co||"";
 
   // ── Landscape panel players ───────────────────────────────────
   const lpPlayers=document.getElementById("lp-players");
