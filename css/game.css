@@ -23,11 +23,17 @@
   .board-wrap svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
   .score-strip { display: none !important; }
   .bottom-bar { display: none !important; }
+  #x01-info-bar { display: none !important; }
   /* right panel: fixed 320px wide, stretch vertically (no height:100% — let align-self:stretch resolve it) */
   .landscape-panel { display: flex !important; flex: 0 0 320px; min-width: 320px; max-width: 320px; align-self: stretch; padding: 12px; gap: 8px; box-sizing: border-box; overflow: hidden; }
   .game-header { padding: 4px 10px; }
   .game-title { font-size: 13px; }
 }
+
+/* ── X01 Info bar (portrait: below score strip) ── */
+#x01-info-bar { flex-shrink: 0; padding: 3px 14px; background: #08080A; border-bottom: 1px solid var(--dart-border); }
+#x01-throws-row { height: 22px; display: flex; align-items: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: .06em; white-space: nowrap; overflow: hidden; }
+#x01-checkout-row { height: 16px; display: flex; align-items: center; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--dart-gold-light); white-space: nowrap; overflow: hidden; }
 
 /* ── Scoreboard strip (portrait top) ── */
 .score-strip { display: flex; background: #08080A; flex-shrink: 0; border-bottom: 1px solid var(--dart-border); }
