@@ -109,3 +109,58 @@ i[data-lucide] {
 }
 .player-active { animation: glowPulse 2.6s ease-in-out infinite; }
 .checkout-banner { animation: coPulse 2s ease-in-out infinite; }
+
+/* ── App Modal ── */
+#app-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+#app-modal-overlay.active { display: flex; }
+#app-modal-box {
+  background: var(--dart-bg-app);
+  border: 1px solid var(--dart-gold);
+  border-radius: var(--dart-r-lg);
+  padding: 28px 24px;
+  max-width: 340px;
+  width: 90%;
+  font-family: 'Manrope', sans-serif;
+}
+#app-modal-msg {
+  color: var(--dart-text);
+  font-size: 15px;
+  line-height: 1.55;
+  margin-bottom: 24px;
+  white-space: pre-line;
+}
+#app-modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+#app-modal-cancel {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--dart-border-alt);
+  border-radius: var(--dart-r-sm);
+  color: var(--dart-text-sec);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
+#app-modal-ok {
+  padding: 10px 24px;
+  background: var(--dart-gold);
+  border: none;
+  border-radius: var(--dart-r-sm);
+  color: #000;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: .5px;
+}

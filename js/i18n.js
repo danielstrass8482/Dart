@@ -561,6 +561,10 @@ export const translations = {
     // Misc
     anzahl_runden: "ANZAHL RUNDEN",
     erstellen_btn: "ERSTELLEN",
+
+    // App-Modal
+    modal_ok: "OK",
+    turnier_max_spieler: "Für Spiele mit mehr als 2 Spielern kommt bald ein dedizierter Turniermodus.",
   },
 
   en: {
@@ -1108,6 +1112,10 @@ export const translations = {
     // Misc
     anzahl_runden: "NUMBER OF ROUNDS",
     erstellen_btn: "CREATE",
+
+    // App Modal
+    modal_ok: "OK",
+    turnier_max_spieler: "A dedicated tournament mode is coming soon for games with 3 or more players.",
   }
 };
 
