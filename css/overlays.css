@@ -1,7 +1,7 @@
 /* ── Winner overlay ── */
 .winner-overlay { position: fixed; inset: 0; background: var(--dart-bg-screen);
   display: none; align-items: stretch; justify-content: flex-start; z-index: 100;
-  flex-direction: column; text-align: center; }
+  flex-direction: column; text-align: center; max-height: 100vh; overflow: hidden; }
 .winner-overlay.visible { display: flex; }
 .btn-new-game { padding: 14px 36px; background: var(--dart-gold); border: none; border-radius: 10px;
   font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: #000; cursor: pointer; }
