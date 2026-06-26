@@ -32,8 +32,8 @@
 
 /* ── X01 Info bar (portrait: below score strip) ── */
 #x01-info-bar { flex-shrink: 0; padding: 3px 14px; background: #08080A; border-bottom: 1px solid var(--dart-border); }
-#x01-throws-row { height: 22px; display: flex; align-items: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: .06em; white-space: nowrap; overflow: hidden; }
-#x01-checkout-row { height: 16px; display: flex; align-items: center; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--dart-gold-light); white-space: nowrap; overflow: hidden; }
+#x01-throws-row { height: 24px; min-height: 24px; max-height: 24px; flex-shrink: 0; display: flex; align-items: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: .06em; white-space: nowrap; overflow: hidden; }
+#x01-checkout-row { height: 20px; min-height: 20px; max-height: 20px; flex-shrink: 0; display: flex; align-items: center; font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--dart-gold-light); white-space: nowrap; overflow: hidden; }
 
 /* ── Scoreboard strip (portrait top) ── */
 .score-strip { display: flex; background: #08080A; flex-shrink: 0; border-bottom: 1px solid var(--dart-border); }

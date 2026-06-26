@@ -277,8 +277,6 @@ document.getElementById("x01-undo").addEventListener("click",()=>{
   redrawAllHits(state.boardSVG,state.x01.historicThrows[state.x01.current],state.x01.throws);
   renderX01();
 });
-document.getElementById("lp-next").addEventListener("click", advanceX01);
-document.getElementById("bottom-next").addEventListener("click", advanceX01);
 // micEnabled is a live binding from speech.js — imported at top.
 // We use a closure over the imported binding for mic button clicks.
 document.getElementById("lp-mic").addEventListener("click",()=>{ if(!micEnabled) startMic(); else stopMic(); });
