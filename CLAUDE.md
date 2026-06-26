@@ -12,12 +12,13 @@ Deployed auf GitHub Pages: `https://danielstrass8482.github.io/Dart/`
 
 ## Migration Status
 - [ ] Neues Firebase-Projekt angelegt (darttrainer-app)
-- [ ] Firebase Config in `index.html` als `window.FIREBASE_CONFIG` eingetragen
+- [ ] Firebase Config in `index.html` als `window.FIREBASE_CONFIG` eingetragen (Template vorbereitet — apiKey/messagingSenderId/appId noch eintragen, dann Kommentar in index.html entfernen)
 - [ ] Functions neu deployed ins neue Projekt
 - [ ] Firestore Rules gesetzt (firestore.rules)
 - [ ] Storage Rules gesetzt (storage.rules)
 - [ ] Daten migriert via `node scripts/migrate-data.js`
-- [ ] Cloud Function URLs in `js/coach.js` aktualisiert
+- [x] Cloud Function URLs in `js/coach.js` aktualisiert → darttrainer-app
+- [x] `.firebaserc` auf darttrainer-app umgestellt (Firebase CLI)
 - [ ] Firebase Hosting konfiguriert + Domain darttrainer.app
 - [ ] GitHub Pages deaktiviert
 

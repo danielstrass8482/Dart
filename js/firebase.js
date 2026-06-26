@@ -16,17 +16,9 @@ import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuth
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
 
-// TODO: Firebase Config hier eintragen — in index.html <head> einfügen:
-// <script>
-//   window.FIREBASE_CONFIG = {
-//     apiKey: "...",
-//     authDomain: "darttrainer-app.firebaseapp.com",
-//     projectId: "darttrainer-app",
-//     storageBucket: "darttrainer-app.firebasestorage.app",
-//     messagingSenderId: "...",
-//     appId: "..."
-//   };
-// </script>
+// window.FIREBASE_CONFIG wird in index.html gesetzt (darttrainer-app).
+// Solange nicht gesetzt: FALLBACK auf fitness-tracker-c6f97 (kein Breaking Change während Migration).
+// Aktivieren: Kommentar in index.html entfernen und apiKey/messagingSenderId/appId eintragen.
 const FALLBACK_CONFIG = {
   apiKey: "AIzaSyBvTU5OhJnvJW-hYJYYVTro2rNcNr60aCk",
   authDomain: "fitness-tracker-c6f97.firebaseapp.com",
