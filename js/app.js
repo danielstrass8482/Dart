@@ -53,8 +53,6 @@ import {
   fetchTTSUrl, testVoice, speakElevenLabs, queueAudio
 } from './audio.js';
 
-// ── Speech ───────────────────────────────────────────────────────
-import { initMic, startMic, stopMic, setVoiceFeedback, announceRequires, maybeRestartMic, handleVoiceHit, parseVoiceThrow, micEnabled } from './speech.js';
 
 // ── Bot ──────────────────────────────────────────────────────────
 import { runBotTurn, BOT_PERSONALITIES } from './bot.js';
@@ -259,8 +257,6 @@ window.addEventListener("orientationchange",()=>{
 });
 window.matchMedia("(orientation:portrait)").addEventListener("change", updateRotateOverlay);
 
-// ── Mic init ──────────────────────────────────────────────────────
-window.addEventListener("load", initMic);
 
 // ── X01 navigation buttons ────────────────────────────────────────
 document.getElementById("x01-back").addEventListener("click", showSetup);
@@ -277,10 +273,6 @@ document.getElementById("x01-undo").addEventListener("click",()=>{
   redrawAllHits(state.boardSVG,state.x01.historicThrows[state.x01.current],state.x01.throws);
   renderX01();
 });
-// micEnabled is a live binding from speech.js — imported at top.
-// We use a closure over the imported binding for mic button clicks.
-document.getElementById("lp-mic").addEventListener("click",()=>{ if(!micEnabled) startMic(); else stopMic(); });
-document.getElementById("bottom-mic").addEventListener("click",()=>{ if(!micEnabled) startMic(); else stopMic(); });
 document.getElementById("lp-bouncer").addEventListener("click", handleBouncer);
 document.getElementById("bottom-bouncer").addEventListener("click", handleBouncer);
 
