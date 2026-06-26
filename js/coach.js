@@ -141,8 +141,8 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
       ? "- Trend: Letzte 5 vs. vorherige 5 Spiele explizit vergleichen."
       : "- Trend: Explicitly compare last 5 vs. previous 5 games.",
     de
-      ? "- Präzision & Streuung: Werte X/Y-Koordinaten aus wenn vorhanden. Unterscheide systematischen Drift (links/rechts/oben/unten) von wilder Streuung."
-      : "- Precision & scatter: Evaluate X/Y coordinates if available. Distinguish systematic drift (left/right/up/down) from random scatter.",
+      ? "- Präzision & Streuung: Werte Segment-Treffer aus wenn vorhanden. Unterscheide systematischen Drift (links/rechts/oben/unten vom Zielsegment) von wilder Streuung."
+      : "- Precision & scatter: Evaluate segment hits if available. Distinguish systematic drift (left/right/up/down from target segment) from random scatter.",
     de
       ? "- Match-Dynamik: High Scores, Checkout-Effizienz, Muster bei bestimmten Doppelfeldern."
       : "- Match dynamics: High scores, checkout efficiency, patterns on specific doubles.",
@@ -160,9 +160,8 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
       : "- Option B (Checkout & Pressure): Practice formats like Bob's 27, Around the Clock Doubles.",
     "",
     de
-      ? "Wenn Gesundheitsdaten vorhanden: Beziehe sie explizit in die Analyse ein. Erkläre konkret wie Schlaf und Belastung die heutige Leistung beeinflusst haben könnten."
-      : "If health data is present: Include it explicitly in the analysis. Explain concretely how sleep and exertion may have affected today's performance.",
-    "",
+      ? "Wenn Gesundheitsdaten vorhanden: Beziehe sie explizit in die Analyse ein."
+      : "If health data is present: Include it explicitly.",
     de ? "Nur Analyse, kein Intro, kein Outro." : "Analysis only, no intro, no outro.",
     ""
   ];
@@ -208,30 +207,54 @@ export function buildCoachPrompt(stats, sessionStats, allGames, playerId, health
       .flatMap(g=>(g.players||[]).filter(p=>p.id===playerId).flatMap(p=>p.scatter||[]))
       .filter(p=>p.x!=null&&p.y!=null&&!isNaN(p.x)&&!isNaN(p.y));
     if(scatter.length>=5){
+      const BOARD=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+      const getSegNum=l=>{
+        if(!l||l==='Miss'||l==='↩') return null;
+        if(l==='Bull'||l==='Bull 25') return 0;
+        const m=l.match(/\d+/); return m?parseInt(m[0]):null;
+      };
+      const validThrows=scatter.filter(p=>p.l&&p.l!=='↩');
+      const nonMiss=validThrows.filter(p=>p.l!=='Miss');
+      const missRate=Math.round((validThrows.length-nonMiss.length)/Math.max(validThrows.length,1)*100);
+      const segCounts={};
+      nonMiss.forEach(p=>{const n=getSegNum(p.l); if(n!==null&&n!==0) segCounts[n]=(segCounts[n]||0)+1;});
+      const sorted=Object.entries(segCounts).sort((a,b)=>b[1]-a[1]);
+      const topSegNum=sorted.length?parseInt(sorted[0][0]):20;
+      const topPct=Math.round(sorted.length?sorted[0][1]/Math.max(validThrows.length,1)*100:0);
+      const topSegLabel=`T${topSegNum}`;
+      const tIdx=BOARD.indexOf(topSegNum);
+      const leftNum=BOARD[(tIdx+1)%20];
+      const rightNum=BOARD[(tIdx+19)%20];
+      const leftPct=Math.round(nonMiss.filter(p=>getSegNum(p.l)===leftNum).length/Math.max(validThrows.length,1)*100);
+      const rightPct=Math.round(nonMiss.filter(p=>getSegNum(p.l)===rightNum).length/Math.max(validThrows.length,1)*100);
       const cx=Math.round(scatter.reduce((s,p)=>s+p.x,0)/scatter.length);
       const cy=Math.round(scatter.reduce((s,p)=>s+p.y,0)/scatter.length);
-      const driftX=cx-265;
-      const driftY=cy-265;
-      const hDrift=de
-        ? (Math.abs(driftX)<15?"mittig":driftX<0?`${Math.abs(driftX)}px links`:`${driftX}px rechts`)
-        : (Math.abs(driftX)<15?"centered":driftX<0?`${Math.abs(driftX)}px left`:`${driftX}px right`);
-      const vDrift=de
-        ? (Math.abs(driftY)<15?"mittig":driftY<0?`${Math.abs(driftY)}px oben`:`${driftY}px unten`)
-        : (Math.abs(driftY)<15?"centered":driftY<0?`${Math.abs(driftY)}px up`:`${driftY}px down`);
+      const highPct=Math.round(validThrows.filter(p=>p.y<cy-15).length/Math.max(validThrows.length,1)*100);
+      const lowPct=Math.round(validThrows.filter(p=>p.y>cy+15).length/Math.max(validThrows.length,1)*100);
       const radius=Math.round(scatter.reduce((s,p)=>s+Math.sqrt((p.x-cx)**2+(p.y-cy)**2),0)/scatter.length);
-      const precision=de
-        ? (radius<20?"sehr präzise":radius<40?"gut":radius<70?"mittlere Streuung":"große Streuung")
-        : (radius<20?"very precise":radius<40?"good":radius<70?"moderate scatter":"wide scatter");
-      const missRate=Math.round(scatter.filter(p=>p.l==="Miss").length/scatter.length*100);
-      lines.push("", de ? "=== TREFFERBILD-ANALYSE (letzte 5 Spiele) ===" : "=== SCATTER ANALYSIS (last 5 games) ===");
-      lines.push(de ? `Würfe analysiert: ${scatter.length}` : `Throws analyzed: ${scatter.length}`);
-      lines.push(`Cluster center X:${cx} Y:${cy} (board center: 265/265)`);
-      lines.push(de ? `Horizontaler Drift: ${hDrift}` : `Horizontal drift: ${hDrift}`);
-      lines.push(de ? `Vertikaler Drift: ${vDrift}` : `Vertical drift: ${vDrift}`);
-      lines.push(de ? `Streuungsradius: ${radius}px — ${precision}` : `Scatter radius: ${radius}px — ${precision}`);
+
+      lines.push("", de?"=== TREFFERBILD-ANALYSE (letzte 5 Spiele) ===":"=== THROW PATTERN ANALYSIS (last 5 games) ===");
+      lines.push(de?`Würfe analysiert: ${validThrows.length}`:`Throws analyzed: ${validThrows.length}`);
+      lines.push(de?`Häufigstes getroffenes Segment: ${topSegLabel} (${topPct}% aller Würfe)`:`Most hit segment: ${topSegLabel} (${topPct}% of all throws)`);
       lines.push(`Miss rate: ${missRate}%`);
-      if(Math.abs(driftX)>=20||Math.abs(driftY)>=20)
-        lines.push(de ? `→ Systematischer Drift erkannt: ${hDrift} / ${vDrift}` : `→ Systematic drift detected: ${hDrift} / ${vDrift}`);
+
+      if(de){
+        lines.push(`\nZielsegment-Erkennung:\nStandard ist Triple 20. Wenn ${topSegLabel} nicht T20 ist und ${topPct}% über 40%: schreibe "Es sieht aus als würfst du primär auf ${topSegLabel} — ich nehme das als Referenz für diese Analyse."`);
+        lines.push(`\nDrift-Analyse relativ zum Zielsegment:`);
+        lines.push(`Links-Drift (${leftPct}% auf T${leftNum}):\n- über 30%: "Deutliche Links-Drift auf T${leftNum} (${leftPct}%). Mögliche Ursachen: Ellbogen zu weit innen, Körper dreht beim Abwurf nach links. Das ist ein klares Technik-Thema das gezieltes Training erfordert."\n- 10 bis 30%: "Leichte Links-Drift (${leftPct}%). Beobachte ob dein Ellbogen beim Abwurf nach innen zieht."\n- unter 10%: nicht erwähnen.`);
+        lines.push(`Rechts-Drift (${rightPct}% auf T${rightNum}):\n- über 30%: "Deutliche Rechts-Drift auf T${rightNum} (${rightPct}%). Mögliche Ursachen: Abwurf zu früh, Handgelenk klappt seitlich weg."\n- 10 bis 30%: "Rechts-Drift (${rightPct}%). Möglicherweise löst du den Dart einen Moment zu früh."\n- unter 10%: nicht erwähnen.`);
+        lines.push(`Oben-Drift (${highPct}% im Single-Ring oder darüber):\n- über 30%: "Deutliche Tendenz zu hoch (${highPct}%). Followthrough zu steil oder Abwurf-Winkel zu aggressiv."\n- 10 bis 30%: "Leicht zu hoch (${highPct}%) — prüfe ob dein Followthrough wirklich zum Triple zeigt."\n- unter 10%: nicht erwähnen.`);
+        lines.push(`Unten-Drift (${lowPct}% unter Zielsegment):\n- über 30%: "Deutliche Tendenz zu tief (${lowPct}%). Dart wird zu früh losgelassen."\n- 10 bis 30%: "Leicht zu tief (${lowPct}%) — Loslasse-Zeitpunkt prüfen."\n- unter 10%: nicht erwähnen.`);
+        lines.push(`Streuung:\n- unter 30px: "Sehr präzises Wurfbild — du triffst konsistent im Zielsegment."\n- 30 bis 60px: "Gute Konsistenz mit normalem Streuradius."\n- 60 bis 100px: "Mittlere Streuung — Rhythmus und Standfestigkeit prüfen."\n- über 100px: "Große Streuung — hier liegt das größte Verbesserungspotenzial."\nStreuungsradius: ${radius}px`);
+      } else {
+        lines.push(`\nTarget detection:\nDefault is Triple 20. If ${topSegLabel} is not T20 and ${topPct}% is above 40%: write "It looks like you're primarily aiming at ${topSegLabel} — using that as reference."`);
+        lines.push(`\nDrift analysis relative to target segment:`);
+        lines.push(`Left drift (${leftPct}% on T${leftNum}):\n- above 30%: "Significant left drift to T${leftNum} (${leftPct}%). Likely causes: elbow too far inward, body rotating left on release. This is a clear technique issue requiring focused training."\n- 10 to 30%: "Slight left drift (${leftPct}%). Watch if your elbow pulls inward on release."\n- below 10%: skip.`);
+        lines.push(`Right drift (${rightPct}% on T${rightNum}):\n- above 30%: "Significant right drift to T${rightNum} (${rightPct}%). Likely causes: releasing too early, wrist flicking sideways."\n- 10 to 30%: "Slight right drift (${rightPct}%). You may be releasing the dart a moment too early."\n- below 10%: skip.`);
+        lines.push(`High drift (${highPct}% in single ring or above):\n- above 30%: "Consistent tendency to throw high (${highPct}%). Follow-through too steep or release angle too aggressive."\n- 10 to 30%: "Slightly high (${highPct}%) — check if your follow-through actually points at the triple."\n- below 10%: skip.`);
+        lines.push(`Low drift (${lowPct}% below target):\n- above 30%: "Consistent tendency to throw low (${lowPct}%). Dart released too early."\n- 10 to 30%: "Slightly low (${lowPct}%) — check your release timing."\n- below 10%: skip.`);
+        lines.push(`Scatter radius:\n- below 30px: "Very precise throw pattern — highly consistent."\n- 30 to 60px: "Good consistency with normal scatter radius."\n- 60 to 100px: "Moderate scatter — check rhythm and stance stability."\n- above 100px: "Wide scatter — biggest improvement potential here."\nScatter radius: ${radius}px`);
+      }
     }
   }
 
@@ -444,16 +467,90 @@ export async function extractVideoFrames(videoEl, numFrames=5){
 }
 
 /**
+ * Computes segment-based scatter drift data from a player's last 5 games.
+ * @param {Array} allGames
+ * @param {string} playerId
+ * @returns {{topSegment,leftPct,rightPct,highPct,lowPct,leftNeighbor,rightNeighbor}|null}
+ */
+export function computeScatterDrift(allGames, playerId){
+  if(!allGames||!playerId) return null;
+  const BOARD=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+  const getSegNum=l=>{
+    if(!l||l==='Miss'||l==='↩') return null;
+    if(l==='Bull'||l==='Bull 25') return 0;
+    const m=l.match(/\d+/); return m?parseInt(m[0]):null;
+  };
+  const pGames=allGames.filter(g=>(g.playerIds||[]).includes(playerId));
+  const scatter=pGames.slice(0,5)
+    .flatMap(g=>(g.players||[]).filter(p=>p.id===playerId).flatMap(p=>p.scatter||[]))
+    .filter(p=>p.x!=null&&p.y!=null&&!isNaN(p.x)&&!isNaN(p.y));
+  if(scatter.length<5) return null;
+  const validThrows=scatter.filter(p=>p.l&&p.l!=='↩');
+  const nonMiss=validThrows.filter(p=>p.l!=='Miss');
+  const segCounts={};
+  nonMiss.forEach(p=>{const n=getSegNum(p.l); if(n!==null&&n!==0) segCounts[n]=(segCounts[n]||0)+1;});
+  const sorted=Object.entries(segCounts).sort((a,b)=>b[1]-a[1]);
+  const topSegNum=sorted.length?parseInt(sorted[0][0]):20;
+  const tIdx=BOARD.indexOf(topSegNum);
+  const leftNum=BOARD[(tIdx+1)%20];
+  const rightNum=BOARD[(tIdx+19)%20];
+  const cy=Math.round(scatter.reduce((s,p)=>s+p.y,0)/scatter.length);
+  const tot=Math.max(validThrows.length,1);
+  return {
+    topSegment:`T${topSegNum}`,
+    leftNeighbor:`T${leftNum}`,
+    rightNeighbor:`T${rightNum}`,
+    leftPct:Math.round(nonMiss.filter(p=>getSegNum(p.l)===leftNum).length/tot*100),
+    rightPct:Math.round(nonMiss.filter(p=>getSegNum(p.l)===rightNum).length/tot*100),
+    highPct:Math.round(validThrows.filter(p=>p.y<cy-15).length/tot*100),
+    lowPct:Math.round(validThrows.filter(p=>p.y>cy+15).length/tot*100)
+  };
+}
+
+/**
  * Builds the video coach prompt.
  * @param {number} numFrames
- * @param {Object|null} sessionStats
+ * @param {Object|string|null} sessionStats
+ * @param {{topSegment,leftPct,rightPct,highPct,lowPct,leftNeighbor,rightNeighbor}|null} driftData
  * @returns {string}
  */
-export function buildVideoCoachPrompt(numFrames, sessionStats){
+export function buildVideoCoachPrompt(numFrames, sessionStats, driftData=null){
   const lang = localStorage.getItem('dart_lang') || 'de';
+  const de = lang === 'de';
   const langEntry = SUPPORTED_LANGS.find(l => l.code === lang);
   const langInstruction = langEntry?.coachInstruction || SUPPORTED_LANGS.find(l => l.code === 'en').coachInstruction;
-  return `${langInstruction}
+
+  let driftBlock = '';
+  if(driftData){
+    const parts=[];
+    if(driftData.leftPct>10) parts.push(de
+      ?`Links-Drift bekannt (${driftData.leftPct}%) — prüfe besonders Ellbogen-Position und Körperrotation.`
+      :`Known left drift (${driftData.leftPct}%) — pay close attention to elbow position and body rotation.`);
+    if(driftData.rightPct>10) parts.push(de
+      ?`Rechts-Drift bekannt (${driftData.rightPct}%) — prüfe Abwurf-Timing und Handgelenk.`
+      :`Known right drift (${driftData.rightPct}%) — check release timing and wrist.`);
+    if(driftData.highPct>10) parts.push(de
+      ?`Tendenz zu hoch bekannt (${driftData.highPct}%) — prüfe Followthrough-Richtung.`
+      :`Known tendency to throw high (${driftData.highPct}%) — check follow-through direction.`);
+    if(driftData.lowPct>10) parts.push(de
+      ?`Tendenz zu tief bekannt (${driftData.lowPct}%) — prüfe Loslasse-Zeitpunkt.`
+      :`Known tendency to throw low (${driftData.lowPct}%) — check release timing.`);
+    if(parts.length>0){
+      driftBlock='\n\n'+(de?'=== VORBEKANNTE MUSTER AUS STATISTIKEN ===':'=== KNOWN PATTERNS FROM STATISTICS ===')+'\n'+parts.join('\n')+'\n'+(de?'Gehe bei diesen Punkten besonders in die Tiefe.':'Go into extra depth on these points.');
+    }
+  }
+
+  const sessionCtx=sessionStats
+    ?(de
+      ?`\n\nKontext: Der Spieler hat gerade eine Partie ${typeof sessionStats==='string'?sessionStats:(sessionStats.mode||'')} gespielt${typeof sessionStats==='object'&&sessionStats.players?` mit einem Ø von ${sessionStats.players[0]?.avg3||'unbekannt'} Punkten`:'`}.`
+      :`\n\nContext: The player just played ${typeof sessionStats==='string'?sessionStats:(sessionStats.mode||'')}${typeof sessionStats==='object'&&sessionStats.players?` with an average of ${sessionStats.players[0]?.avg3||'unknown'} points`:'`}.`)
+    :'';
+
+  const videoHint=de
+    ?'\n\nWenn Ellbogen-Position, Stand oder Followthrough im Video nicht eindeutig erkennbar sind: Füge am Ende hinzu: "Für eine genauere Analyse des [Ellbogens/Stands/Followthroughs] wäre ein Video von [vorne/der Seite/auf Hüfthöhe] hilfreich — lade gerne ein weiteres Video hoch." Nicht bei Fingerführung oder Timing.'
+    :'\n\nIf elbow position, stance, or follow-through are not clearly visible: Add at the end: "For a closer look at your [elbow/stance/follow-through], a video from [the front/the side/hip height] would help — feel free to upload another clip." Not for finger grip or timing.';
+
+  return `${langInstruction}${driftBlock}
 
 Du bist ein erfahrener Dart-Coach und analysierst die Wurftechnik eines Spielers.
 
@@ -464,11 +561,9 @@ Analysiere in 5-6 Sätzen:
 2. Wurfarm (Ellbogen-Position, Winkel, Stabilität)
 3. Abwurf-Moment (Timing, Fingerführung soweit sichtbar)
 4. Followthrough (zeigt der Arm zum Ziel?)
-5. Wichtigste Verbesserungsempfehlung
+5. Wichtigste Verbesserungsempfehlung${sessionCtx}
 
-${sessionStats?`Kontext: Der Spieler hat gerade eine Partie ${sessionStats.mode} gespielt mit einem Ø von ${sessionStats.players?.[0]?.avg3||'unbekannt'} Punkten.`:""}
-
-Sei konkret und konstruktiv. Wenn etwas auf dem Video nicht klar erkennbar ist, sag das kurz.`;
+Sei konkret und konstruktiv. Wenn etwas auf dem Video nicht klar erkennbar ist, sag das kurz.${videoHint}`;
 }
 
 /**

@@ -85,7 +85,7 @@ import {
 // ── Coach ────────────────────────────────────────────────────────
 import {
   buildCoachPrompt, formatCoachText, callClaudeViaProxy, callCoach,
-  extractVideoFrames, buildVideoCoachPrompt, loadCoachHistory, loadCoachHistoryStats,
+  extractVideoFrames, buildVideoCoachPrompt, computeScatterDrift, loadCoachHistory, loadCoachHistoryStats,
   loadCoachHistoryAnalyseTab, updateCoachLimitDisplay, coachCallsLeft, COACH_DAILY_LIMIT,
   recordCoachUsage, videoCoachCallsLeft, recordVideoCoachUsage, VIDEO_COACH_LIMIT,
   collectHealthData, initHealthChips, showHealthModal
@@ -1142,7 +1142,8 @@ document.getElementById("btn-video-analyze").addEventListener("click",async()=>{
   outputEl.innerHTML=`<div class="coach-box" style="margin-top:8px"><span style="color:var(--dart-text-sec)">${t('analysiere_technik')}</span></div>`;
   try{
     const frames=await extractVideoFrames(videoEl, 5); btn.textContent=t('claude_analysiert');
-    const content=[{type:"text",text:buildVideoCoachPrompt(frames.length,null)},...frames.map((b64,i)=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}})),{type:"text",text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}];
+    const _vpid=state.cfg.playerIds?.[coachSelectedPlayerIdx]||null;
+    const content=[{type:"text",text:buildVideoCoachPrompt(frames.length,null,computeScatterDrift(allGamesCache,_vpid))},...frames.map((b64,i)=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}})),{type:"text",text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}];
     const data=await callClaudeViaProxy([{role:"user",content}]);
     const text=data.content?.[0]?.text||t('keine_antwort');
     recordVideoCoachUsage();
@@ -1296,7 +1297,7 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
   try{
     const frames=await extractVideoFrames(videoEl,5); btn.textContent=t('claude_analysiert');
     const playerName=analyseSelectedPlayer?(state.allPlayers.find(x=>x.id===analyseSelectedPlayer)?.name||null):null;
-    const content=[{type:"text",text:buildVideoCoachPrompt(frames.length,playerName)},...frames.map(b64=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}})),{type:"text",text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}];
+    const content=[{type:"text",text:buildVideoCoachPrompt(frames.length,playerName,computeScatterDrift(allGamesCache,analyseSelectedPlayer))},...frames.map(b64=>({type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}})),{type:"text",text:`Frame-Reihenfolge: 1=Anfang, ${frames.length}=Ende der Wurfbewegung.`}];
     const data=await callClaudeViaProxy([{role:"user",content}]);
     const text=data.content?.[0]?.text||t('keine_antwort');
     recordVideoCoachUsage(); const newLeft=videoCoachCallsLeft();
