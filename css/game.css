@@ -25,7 +25,7 @@
   .bottom-bar { display: none !important; }
   #x01-info-bar { display: none !important; }
   /* right panel: fixed 320px wide, stretch vertically (no height:100% — let align-self:stretch resolve it) */
-  .landscape-panel { display: flex !important; flex: 0 0 320px; min-width: 320px; max-width: 320px; align-self: stretch; padding: 12px; gap: 8px; box-sizing: border-box; overflow: hidden; }
+  .landscape-panel { display: flex !important; flex: 0 0 380px; min-width: 380px; max-width: 380px; align-self: stretch; padding: 12px; gap: 8px; box-sizing: border-box; overflow: hidden; }
   .game-header { padding: 4px 10px; }
   .game-title { font-size: 13px; }
 }
