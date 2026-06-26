@@ -26,7 +26,7 @@
   .landscape-panel { display: flex !important; padding: 12px; box-sizing: border-box; gap: 8px; overflow: hidden; align-items: stretch; width: 100%; }
   .landscape-panel > * { width: 100%; box-sizing: border-box; }
   #lp-players { display: flex !important; flex-direction: row !important; width: 100% !important; flex-shrink: 0; }
-  .lp-player { flex: 1 !important; min-width: 0 !important; width: 50% !important; }
+  .lp-player { flex: 1 !important; min-width: 0 !important; width: 50% !important; flex-direction: row !important; padding: 0 !important; overflow: hidden !important; }
   .game-header { padding: 4px 10px; }
   .game-title { font-size: 13px; }
 }
@@ -78,12 +78,11 @@
 
 /* Player strip — auto height, side by side, equal height via stretch */
 #lp-players { flex: 0 0 auto; display: flex; flex-direction: row; align-items: stretch; overflow: hidden; }
-.lp-player { flex: 1; min-width: 0; padding: 10px 10px; border-right: 1px solid #1f1f24; background: #08080A;
-  opacity: 0.55; transition: background .25s ease, border-color .25s, opacity .25s;
-  display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+.lp-player { flex: 1; min-width: 0; padding: 0; border-right: 1px solid #1f1f24; background: #08080A;
+  opacity: 0.6; transition: background .25s ease, border-color .25s, opacity .25s;
+  display: flex; flex-direction: row; overflow: hidden; min-height: 90px; }
 .lp-player:last-child { border-right: none; }
-.lp-player.active { background: linear-gradient(150deg, rgba(212,175,55,.18), rgba(212,175,55,.05));
-  border: 2px solid #D4AF37; opacity: 1; }
+.lp-player.active { background: #1a1500; border: 1.5px solid #D4AF37; opacity: 1; }
 .lp-player .lp-name { font-size: 10px; color: var(--dart-text-sec); letter-spacing: 1px; }
 .lp-player.active .lp-name { color: var(--dart-gold); }
 .lp-player .lp-score { font-family: 'Manrope', sans-serif !important; font-variant-numeric: tabular-nums;
