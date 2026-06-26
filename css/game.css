@@ -33,10 +33,10 @@
 /* ── X01 Info bar (portrait: below score strip) ── */
 #x01-info-bar { flex-shrink: 0; padding: 3px 14px; background: #08080A; border-bottom: 1px solid var(--dart-border); }
 #x01-throws-row { height: 24px; min-height: 24px; max-height: 24px; flex-shrink: 0; display: flex; align-items: center; font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: .06em; white-space: nowrap; overflow: hidden; }
-#x01-checkout-row { flex-shrink: 0; border-radius: 12px; background: #08080A; border: 1px solid rgba(212,175,55,.15);
+#x01-checkout-row { flex-shrink: 0; height: 64px; min-height: 64px; border-radius: 12px; background: #08080A; border: 1px solid rgba(212,175,55,.15);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   font-family: 'Manrope', sans-serif; font-size: 19px; font-weight: 800; color: #D4AF37;
-  padding: 10px 0; overflow: hidden; }
+  overflow: hidden; }
 
 /* ── Scoreboard strip (portrait top) ── */
 .score-strip { display: flex; background: #08080A; flex-shrink: 0; border-bottom: 1px solid var(--dart-border); }
