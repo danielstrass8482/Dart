@@ -92,7 +92,7 @@
 .lp-player .lp-sub { font-size: 10px; color: var(--dart-text-muted); }
 
 /* Controls bar below players */
-.lp-controls { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+.lp-controls { display: flex; flex-direction: column; gap: 0; flex-shrink: 0; }
 .lp-slots { display: flex; gap: 4px; flex-shrink: 0; }
 .lp-slot { flex: 1; border-radius: 12px; background: #08080A; border: 1px solid rgba(212,175,55,.15);
   display: flex; align-items: center; justify-content: center;
