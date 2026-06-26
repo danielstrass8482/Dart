@@ -57,7 +57,7 @@ export const translations = {
     zaehlen: "ZÄHLEN",
     weiter: "WEITER",
     runde: "Runde",
-    dart_finish: "Dart Finish",
+    dart_finish: "Pfeil Finish",
 
     // Statistiken
     stats_title: "Statistiken",

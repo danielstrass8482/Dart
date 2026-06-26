@@ -176,7 +176,10 @@ export function renderX01(){
     }
   }
   const infoCheckoutEl=document.getElementById("x01-checkout-row");
-  if(infoCheckoutEl) infoCheckoutEl.textContent=co||"";
+  if(infoCheckoutEl){
+    if(co){ const dc=co.split(" ").length; infoCheckoutEl.innerHTML=`<span>${co}</span><span style="font-size:11px;font-weight:600;color:var(--dart-gold-light);margin-top:2px">${dc}-${t('dart_finish')}</span>`; }
+    else infoCheckoutEl.innerHTML="";
+  }
 
   // ── Landscape panel players ───────────────────────────────────
   const lpPlayers=document.getElementById("lp-players");
