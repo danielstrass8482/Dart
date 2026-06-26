@@ -190,10 +190,6 @@ export function renderX01(){
       const playerScore=state.x01.scores[i];
       const lpRemaining=isActive?remaining:playerScore;
       const lpCheckout=lpRemaining<=170&&lpRemaining>1&&!state.x01.bust;
-      const chips=isActive?state.x01.throws.map(t=>{
-        const cls=t.miss?"color:var(--dart-danger)":t.label.startsWith("T")?"color:var(--dart-success)":t.label.startsWith("D")?"color:#6aaada":"color:var(--dart-text-sec)";
-        return `<span style="font-family:'Bebas Neue',sans-serif;font-size:13px;padding:1px 4px;background:var(--dart-border);border-radius:4px;${cls}">${t.label}</span>`;
-      }).join(" "):"";
       const f9=state.x01.first9[i];
       const avgVal=state.x01.turnScores[i].length?Math.round(state.x01.turnScores[i].reduce((a,b)=>a+b,0)/state.x01.turnScores[i].length*10)/10:0;
       const legDots=state.cfg.totalLegs>1?`${"▪".repeat(state.cfg.legWins[i])}${"▫".repeat(Math.max(0,state.cfg.legsToWin-state.cfg.legWins[i]))} `:"";
@@ -201,9 +197,6 @@ export function renderX01(){
       const lpScoreStyle=isActive
         ?`font-family:'Manrope',sans-serif;font-size:3rem;font-weight:800;line-height:1;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#FBFBF8;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 8px;display:inline-block;":""}`
         :`font-family:'Manrope',sans-serif;font-size:2rem;font-weight:800;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 5px;display:inline-block;":""}`;
-      const checkoutHtml=isActive&&co
-        ?`<div style="font-size:10px;color:#F4D77E;font-weight:700;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${co}</div>`
-        :"";
       if(isActive){
         return `<div class="lp-player active">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -217,8 +210,6 @@ export function renderX01(){
             </div>
           </div>
           <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
-          ${checkoutHtml}
-          ${chips?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px">${chips}</div>`:""}
         </div>`;
       } else {
         return `<div class="lp-player">
