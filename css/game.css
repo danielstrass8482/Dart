@@ -19,7 +19,7 @@
   /* game-body: row layout, stretch all children to full height */
   .game-body { flex-direction: row; align-items: stretch; }
   /* board: explicit vh-based square, right panel gets the rest */
-  .board-wrap { flex: 0 0 auto; width: calc(100vh - 48px); padding: 0; margin: 0; justify-content: flex-start; align-items: flex-start; }
+  .board-wrap { flex: 0 0 auto; width: calc(100vh - 48px); padding-left: 12px; margin: 0; justify-content: flex-start; align-items: flex-start; }
   .board-wrap svg { width: calc(100vh - 48px); height: calc(100vh - 48px); max-height: 100%; flex-shrink: 0; margin-left: 0; }
   .score-strip { display: none !important; }
   .bottom-bar { display: none !important; }
