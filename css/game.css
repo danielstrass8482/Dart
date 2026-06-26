@@ -70,7 +70,7 @@
 
 /* ── Landscape panel (right side) ── */
 .landscape-panel { display: none; flex-direction: column; flex: 1; min-width: 140px; max-width: 240px;
-  background: #08080A; overflow: hidden; gap: 0; }
+  background: #08080A; overflow: hidden; gap: 8px; }
 
 /* Upper section: turn-history table */
 .lp-history { flex: 1 1 0; overflow-y: auto; min-height: 0; border-bottom: 1px solid var(--dart-border); }
@@ -92,7 +92,7 @@
 .lp-player .lp-sub { font-size: 10px; color: var(--dart-text-muted); }
 
 /* Controls bar below players */
-.lp-controls { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+.lp-controls { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
 .lp-slots { display: flex; gap: 4px; flex-shrink: 0; }
 .lp-slot { flex: 1; border-radius: 12px; background: #08080A; border: 1px solid rgba(212,175,55,.15);
   display: flex; align-items: center; justify-content: center;
@@ -109,7 +109,7 @@
 .lp-mic.listening { background: var(--dart-danger); animation: pulse-mic 1s infinite; }
 
 /* Bouncer button — volle Breite, ganz unten */
-.lp-bouncer-btn { width: 100%; margin-top: 8px; padding: 11px 14px; border: 1px solid rgba(232,165,58,.35); border-radius: 8px;
+.lp-bouncer-btn { width: 100%; padding: 11px 14px; border: 1px solid rgba(232,165,58,.35); border-radius: 8px;
   cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px;
   background: rgba(232,165,58,.10); color: var(--dart-warning);
   display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
