@@ -201,13 +201,13 @@ export function renderX01(){
         :`font-family:'Manrope',sans-serif;font-size:2rem;font-weight:800;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;color:#9A9AA2;transition:background .25s,color .25s;${lpCheckout?"background:var(--dart-gold);color:#000;border-radius:6px;padding:0 5px;display:inline-block;":""}`;
       if(isActive){
         return `<div class="lp-player active">
-          <div style="width:33%;flex-shrink:0;align-self:stretch;overflow:hidden">
+          <div style="width:40%;flex-shrink:0;align-self:stretch;overflow:hidden">
             ${photoUrl
               ?`<img src="${photoUrl}" style="width:100%;height:100%;min-height:90px;object-fit:cover;border-radius:0;display:block">`
               :`<div style="width:100%;height:100%;min-height:90px;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#0c0b08">${displayName.slice(0,2).toUpperCase()}</div>`
             }
           </div>
-          <div style="width:67%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;min-width:0">
+          <div style="width:60%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;min-width:0">
             <div style="font-size:13px;font-weight:800;color:#D4AF37;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;width:100%">${displayName}</div>
             <div style="font-size:9px;font-weight:700;color:#D4AF37;letter-spacing:.1em">${t('am_zug')}</div>
             <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
@@ -215,13 +215,13 @@ export function renderX01(){
         </div>`;
       } else {
         return `<div class="lp-player">
-          <div style="width:33%;flex-shrink:0;align-self:stretch;overflow:hidden">
+          <div style="width:40%;flex-shrink:0;align-self:stretch;overflow:hidden">
             ${photoUrl
               ?`<img src="${photoUrl}" style="width:100%;height:100%;min-height:90px;object-fit:cover;border-radius:0;display:block">`
               :`<div style="width:100%;height:100%;min-height:90px;background:#1C1C21;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#9A9AA2">${displayName.slice(0,2).toUpperCase()}</div>`
             }
           </div>
-          <div style="width:67%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;min-width:0">
+          <div style="width:60%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;min-width:0">
             <div style="font-size:12px;font-weight:700;color:#9A9AA2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;width:100%">${setDots}${legDots}${displayName}</div>
             <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
             ${avgVal?`<div style="font-size:10px;font-weight:700;color:#6E6E78;margin-top:2px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</div>`:""}

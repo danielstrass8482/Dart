@@ -158,7 +158,4 @@
 .cricket-points.active { color: var(--dart-danger); font-weight: bold; }
 .cricket-legend { font-size: 11px; color: var(--dart-text-sec); line-height: 1.7; }
 
-/* DEBUG: Layout-Diagnose – ENTFERNEN nach Test */
-.landscape-panel { background: red !important; width: 420px !important; min-width: 420px !important; max-width: 420px !important; flex: 0 0 420px !important; }
-#lp-players { background: blue !important; }
-.lp-player { background: green !important; }
+.landscape-panel { width: 420px !important; min-width: 420px !important; max-width: 420px !important; flex: 0 0 420px !important; }
