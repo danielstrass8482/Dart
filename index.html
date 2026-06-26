@@ -488,13 +488,7 @@ window.splashPromise = new Promise(function(resolve) {
           <span id="setting-tts-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
-        <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="mic" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="sprachsteuerung">Sprachsteuerung</span></span>
-        <label style="position:relative;display:inline-block;width:46px;height:27px">
-          <input type="checkbox" id="setting-mic" style="opacity:0;width:0;height:0">
-          <span id="setting-mic-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
-        </label>
-      </div>
+
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
         <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="checkout_highlight">Checkout-Highlight</span></span>
         <label style="position:relative;display:inline-block;width:46px;height:27px">
@@ -710,8 +704,6 @@ window.splashPromise = new Promise(function(resolve) {
           <div class="lp-slot" id="lp-slot-1">—</div>
           <div class="lp-slot" id="lp-slot-2">—</div>
         </div>
-        <div id="voice-feedback" style="color:var(--dart-text-muted);font-size:11px;min-height:14px;padding:2px 0;text-align:center"></div>
-        <button class="lp-mic" id="lp-mic"><i data-lucide="mic" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
       </div>
       <!-- Bouncer-Button: ganz unten, volle Breite -->
       <button class="lp-bouncer-btn" id="lp-bouncer"><i data-lucide="corner-down-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i> Bouncer</button>
@@ -725,7 +717,6 @@ window.splashPromise = new Promise(function(resolve) {
       <div class="bottom-slot" id="bs-1">—</div>
       <div class="bottom-slot" id="bs-2">—</div>
     </div>
-    <button class="bottom-btn mic" id="bottom-mic"><i data-lucide="mic" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
     <button class="bottom-btn mic" id="bottom-bouncer" style="background:var(--dart-bg-chip);color:var(--dart-warning);flex-shrink:0"><i data-lucide="corner-down-left" style="width:18px;height:18px;stroke-width:2;vertical-align:middle"></i></button>
   </div>
 </div>

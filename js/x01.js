@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout, drawMiniBoard } from './board.js?v=2';
 import { speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath } from './audio.js';
-import { startMic, stopMic, maybeRestartMic, setVoiceFeedback, announceRequires, micEnabled, micActive } from './speech.js';
+import { announceRequires } from './speech.js';
 import { runBotTurn } from './bot.js';
 import { t } from './i18n.js?v=3';
 
@@ -478,7 +478,7 @@ export function advanceX01(){
     if(next===0) state.x01.round++;
     clearCheckout(state.boardSVG);
     redrawAllHits(state.boardSVG,state.x01.historicThrows[next],[]);
-    renderX01(); maybeRestartMic();
+    renderX01();
     _scheduleNextPlayerAnnounce(next);
     if(state.cfg.isBot?.[next]) setTimeout(runBotTurn,800);
     return;
@@ -502,7 +502,7 @@ export function advanceX01(){
   state.x01.current=next;
   if(next===0) state.x01.round++;
   redrawAllHits(state.boardSVG,state.x01.historicThrows[next],[]);
-  renderX01(); maybeRestartMic();
+  renderX01();
   _scheduleNextPlayerAnnounce(next);
   if(state.cfg.isBot?.[next]) setTimeout(runBotTurn,800);
 }
