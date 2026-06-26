@@ -103,16 +103,11 @@ Migrierte Collections: dart_games, dart_players, dart_rooms, dart_coach_analyses
 
 ---
 
-## Schritt 8: Cloud Function URLs aktualisieren
+## Schritt 8: Cloud Function URLs aktualisieren ✅ ERLEDIGT
 
-In `js/coach.js` die Konstanten anpassen:
+In `js/coach.js` wurden die URLs auf darttrainer-app aktualisiert:
 
 ```javascript
-// ALT:
-export const COACH_FUNCTION_URL = "https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartCoach";
-export const TTS_FUNCTION_URL   = "https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartTTS";
-
-// NEU:
 export const COACH_FUNCTION_URL = "https://europe-west1-darttrainer-app.cloudfunctions.net/dartCoach";
 export const TTS_FUNCTION_URL   = "https://europe-west1-darttrainer-app.cloudfunctions.net/dartTTS";
 ```
