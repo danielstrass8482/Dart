@@ -115,7 +115,6 @@ export function renderX01(){
   const _prefPathRaw=_coActive?findPreferredCheckout(remaining,_prefDoubles):null;
   const _prefPath=(_prefPathRaw&&_optPath&&_prefPathRaw.split(" ").length===_optPath.split(" ").length)?_prefPathRaw:null;
   const co=_coActive?(_prefPath||_optPath||null):null;
-  const showNext=state.x01.throws.length>0&&!state.x01.winner;
   const isBust=state.x01.bust;
 
   // ── Score strip (portrait top) ───────────────────────────────
@@ -253,13 +252,6 @@ export function renderX01(){
       if(el){ el.textContent=lbl; el.className=(id.startsWith("lp")?"lp-slot":"bottom-slot")+(cls?" "+cls:""); }
     });
   }
-
-  // ── Next button ───────────────────────────────────────────────
-  const nextTxt=state.x01.throws.length<3?t('zaehlen'):t('weiter');
-  ["lp-next","bottom-next"].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){ el.style.display=(showNext&&!isBust)?"":"none"; el.textContent=nextTxt; el.className=(id==="lp-next"?"lp-btn":"bottom-btn")+" ok"; }
-  });
 
   // ── Checkout highlight + title ────────────────────────────────
   const titleEl=document.getElementById("x01-title");
