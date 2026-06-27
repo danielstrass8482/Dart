@@ -13,7 +13,13 @@ initializeApp();
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
 
-const DEFAULT_VOICE_ID = "JBFqnCBsd6RMkjVDRZzb"; // George (default)
+const VOICE_IDS = {
+  george: "JBFqnCBsd6RMkjVDRZzb",
+  haseeb: "dllHSct4GokGc1AH9JwT",
+  jerry:  "zDBYcuJrpuZ6YQ7AgRUw",
+  guy:    "34lPwSZ54D8fWbX1aHzk",
+};
+const DEFAULT_VOICE_ID = VOICE_IDS.george;
 
 const SYSTEM_PROMPT =
   "You are a calm, deep-voiced British darts announcer. " +
