@@ -562,12 +562,13 @@ export async function loadAndRenderStats(){
           console.log("Chart data:", {chartGames: chartGames.length, activeKPI, pid, firstGame: chartGames[0]});
           console.log("canvas element:", document.getElementById("trend-canvas"));
           console.log("Chart library:", typeof Chart);
-          const W=canvas.parentElement.clientWidth-24||500;
-          canvas.width=W*2; canvas.height=360;
           canvas.style.width="100%"; canvas.style.height="180px";
+          const W=canvas.offsetWidth||canvas.parentElement.clientWidth-24||500;
+          const H=Math.max(canvas.offsetHeight||0,300);
+          canvas.width=W; canvas.height=H;
+          canvas.style.height=H+"px";
           const ctx=canvas.getContext("2d");
-          ctx.setTransform(2,0,0,2,0,0);
-          const w=W, h=180, pad={t:24,r:48,b:28,l:38};
+          const w=W, h=H, pad={t:24,r:48,b:28,l:38};
           ctx.clearRect(0,0,w,h);
           ctx.fillStyle='#121216'; ctx.fillRect(0,0,w,h);
           ctx.strokeStyle='#1a1a1f'; ctx.lineWidth=1;
