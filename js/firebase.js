@@ -45,8 +45,13 @@ function initDartDB(){
     async loadStats(){
       const uid = auth.currentUser?.uid;
       if(!uid) return [];
-      const snap = await getDocs(query(collection(db,"dart_games"), where("userId","==",uid), orderBy("ts","desc"), limit(200)));
-      return snap.docs.map(d=>({id:d.id,...d.data()}));
+      const playersSnap = await getDocs(query(collection(db,"dart_players"), where("userId","==",uid)));
+      const myPlayerIds = playersSnap.docs.map(d=>d.id);
+      if(myPlayerIds.length===0) return [];
+      const snap = await getDocs(query(collection(db,"dart_games"), orderBy("ts","desc"), limit(200)));
+      return snap.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .filter(g=>(g.playerIds||[]).some(pid=>myPlayerIds.includes(pid)));
     },
     // Players
     async loadPlayers(){
