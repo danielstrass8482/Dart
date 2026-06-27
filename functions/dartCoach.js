@@ -14,7 +14,7 @@ exports.dartCoach = onRequest(
   {
     secrets: [ANTHROPIC_API_KEY],
     region: "europe-west1",
-    cors: true,
+    cors: ["https://danielstrass8482.github.io", "https://darttrainer.app", "http://localhost"],
     timeoutSeconds: 60,
   },
   async (req, res) => {
