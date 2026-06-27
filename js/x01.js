@@ -400,6 +400,8 @@ export function processX01Hit(hit, svgX=null, svgY=null){
     const _coScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
     state.x01.checkoutScores[state.x01.current].push(_coScore);
     state.x01.turnScores[state.x01.current].push(_coScore);
+    if(state.x01.turnScores[state.x01.current].length>=3&&state.x01.first9[state.x01.current]===null)
+      state.x01.first9[state.x01.current]=Math.round(state.x01.turnScores[state.x01.current].reduce((a,b)=>a+b,0)/3*10)/10;
     if(localStorage.getItem("dart_slang_enabled")==="true"){
       if(hit.label==="D1") queueAudio("Madhouse!","el_slang_madhouse_");
       else if(hit.label==="D20") queueAudio("Double Top! Game Shot!","el_slang_double_top_game_shot_");
