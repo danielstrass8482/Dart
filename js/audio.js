@@ -189,8 +189,8 @@ export function clearAudioQueue(){
   if(window.speechSynthesis) window.speechSynthesis.cancel();
 }
 
-const COACH_FUNCTION_URL="https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartCoach";
-export const TTS_FUNCTION_URL="https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartTTS";
+const COACH_FUNCTION_URL="https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartCoach";
+export const TTS_FUNCTION_URL="https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartTTS";
 
 /** @returns {string} active ElevenLabs voice ID */
 export function getVoiceId(){
