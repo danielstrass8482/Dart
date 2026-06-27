@@ -44,14 +44,18 @@ function initDartDB(){
     },
     async loadStats(){
       const uid = auth.currentUser?.uid;
+      console.log("loadStats uid:", uid);
       if(!uid) return [];
       const playersSnap = await getDocs(query(collection(db,"dart_players"), where("userId","==",uid)));
       const myPlayerIds = playersSnap.docs.map(d=>d.id);
+      console.log("loadStats myPlayerIds:", myPlayerIds);
       if(myPlayerIds.length===0) return [];
       const snap = await getDocs(query(collection(db,"dart_games"), orderBy("ts","desc"), limit(200)));
-      return snap.docs
+      const filtered = snap.docs
         .map(d=>({id:d.id,...d.data()}))
         .filter(g=>(g.playerIds||[]).some(pid=>myPlayerIds.includes(pid)));
+      console.log("loadStats filtered games:", filtered.length);
+      return filtered;
     },
     // Players
     async loadPlayers(){
