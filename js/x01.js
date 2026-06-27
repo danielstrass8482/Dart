@@ -492,7 +492,7 @@ export function advanceX01(){
     turnScores:state.x01.turnScores.map(a=>[...a])});
   state.x01.turnScores[pi].push(spent);
   console.log("turnScores check:", pi, state.x01.turnScores[pi]?.length, state.x01.first9[pi]);
-  if(state.x01.turnScores[pi].length===3&&state.x01.first9[pi]===null)
+  if(state.x01.turnScores[pi].length>=3&&state.x01.first9[pi]===null)
     state.x01.first9[pi]=Math.round(state.x01.turnScores[pi].reduce((a,b)=>a+b,0)/3*10)/10;
   state.x01.scores[pi]-=spent;
   state.x01.lastTurnThrows[pi]=[...state.x01.throws];
