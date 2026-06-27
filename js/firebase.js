@@ -300,11 +300,20 @@ window.upgradeAnonymousAccount = async function(email, password, name){
   return result.user;
 };
 
+function prewarmTTS(){
+  fetch("https://darttts-dxa2kmdyca-ew.a.run.app",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({key:"__prewarm__",text:""}),
+  }).catch(()=>{});
+}
+
 onAuthStateChanged(auth, user=>{
   (window.splashPromise || Promise.resolve()).then(()=>{
     window.currentUser = user;
     if(user){
       initDartDB();
+      prewarmTTS();
       if(window.updateAuthUI) window.updateAuthUI(user);
       if(document.getElementById("setup")){
         const authScreen = document.getElementById("auth-screen");
