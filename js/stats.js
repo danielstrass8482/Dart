@@ -560,6 +560,8 @@ export async function loadAndRenderStats(){
 
         function drawChart(){
           console.log("Chart data:", {chartGames: chartGames.length, activeKPI, pid, firstGame: chartGames[0]});
+          console.log("canvas element:", document.getElementById("trend-canvas"));
+          console.log("Chart library:", typeof Chart);
           const W=canvas.parentElement.clientWidth-24||500;
           canvas.width=W*2; canvas.height=360;
           canvas.style.width="100%"; canvas.style.height="180px";
@@ -582,6 +584,7 @@ export async function loadAndRenderStats(){
           const toY=v=>pad.t+(h-pad.t-pad.b)*(1-(v-minV)/range);
           const points=[];
           vals.forEach((v,i)=>{ if(v!==null) points.push({x:toX(i),y:toY(v)}); });
+          console.log("chart points:", points);
           if(!points.length) return;
           // Gradient fill
           const gradient=ctx.createLinearGradient(0,0,0,h);
