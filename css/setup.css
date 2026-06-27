@@ -191,7 +191,8 @@
 .player-edit-modal input::placeholder { color: var(--dart-text-muted); }
 .add-player-row { display: flex; gap: 8px; }
 .add-player-input { flex: 1; padding: 8px 12px; border: 1px solid var(--dart-border); border-radius: 8px;
-  font-family: 'DM Sans',sans-serif; font-size: 14px; outline: none; background: var(--dart-bg-card); }
+  font-family: 'DM Sans',sans-serif; font-size: 14px; outline: none; background: var(--dart-bg-card); color: #fff; }
+.add-player-input::placeholder { color: #888; }
 .btn-add-player { padding: 8px 14px; background: var(--dart-bg-card); color: var(--dart-gold); border: none;
   border-radius: 8px; font-family: 'Bebas Neue',sans-serif; font-size: 16px; cursor: pointer; }
 .player-sel-hint { font-size: 11px; color: var(--dart-text-sec); text-align: center; margin-bottom: 6px; }
