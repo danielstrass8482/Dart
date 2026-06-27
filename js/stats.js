@@ -559,6 +559,7 @@ export async function loadAndRenderStats(){
         }
 
         function drawChart(){
+          console.log("Chart data:", {chartGames: chartGames.length, activeKPI, pid, firstGame: chartGames[0]});
           const W=canvas.parentElement.clientWidth-24||500;
           canvas.width=W*2; canvas.height=360;
           canvas.style.width="100%"; canvas.style.height="180px";
