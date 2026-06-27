@@ -424,7 +424,7 @@ export async function loadAndRenderStats(){
     }
 
     const chartGames=[...games].reverse();
-    if(chartGames.length>=2){
+    if(chartGames.length>=1){
       html+=`<div class="stats-section-title" id="chart-title">3-Dart Average · ${t('verlauf')}</div>
         <div class="chart-kpi-bar" id="chart-kpi-bar">
           <button class="chart-kpi-btn active" data-kpi="avg">${t('aufnahme_chip')}</button>
@@ -434,8 +434,15 @@ export async function loadAndRenderStats(){
           <button class="chart-kpi-btn" data-kpi="rounds">Darts</button>
           <button class="chart-kpi-btn" data-kpi="crmarks">Cricket ⌀M</button>
         </div>
-        <div class="chart-wrap">
-          <canvas id="trend-canvas" height="180"></canvas>
+        <div id="chart-mode-bar" style="display:flex;gap:6px;margin:0 0 8px">
+          <button class="chart-mode-btn" data-mode="partien">${t('trend_partien')}</button>
+          <button class="chart-mode-btn" data-mode="tage">${t('trend_tage')}</button>
+        </div>
+        <div id="chart-wrap-container" style="position:relative">
+          <div class="chart-wrap">
+            <canvas id="trend-canvas" height="180"></canvas>
+          </div>
+          <div id="chart-min-hint" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;font-size:13px;color:var(--dart-text-sec);padding:16px;pointer-events:none"></div>
         </div>`;
     }
 
@@ -536,7 +543,7 @@ export async function loadAndRenderStats(){
       }
     }
 
-    if(chartGames.length>=2){
+    if(chartGames.length>=1){
       const KPI_DEFS={
         avg:    {label:"3-Dart Average", extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.avg3||null; }},
         f9:     {label:"First 9 Ø",     extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.first9||null; }},
@@ -546,12 +553,36 @@ export async function loadAndRenderStats(){
         crmarks:{label:"Cricket ⌀M",   extract:(g,pid)=>{ const p=(g.players||[]).find(x=>pid?x.id===pid:true); return p?.cricketAvgMarks||null; }}
       };
       let activeKPI="avg";
+      let activeTrendMode="partien";
 
       if(_chartTimeout) clearTimeout(_chartTimeout);
       _chartTimeout = setTimeout(()=>{
         _chartTimeout = null;
         const canvas=document.getElementById("trend-canvas");
         if(!canvas) return;
+
+        function getDailyData(){
+          const dayMap=new Map();
+          chartGames.forEach(g=>{
+            const d=new Date(g.ts);
+            const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            if(!dayMap.has(key)) dayMap.set(key,{ts:g.ts,games:[]});
+            dayMap.get(key).games.push(g);
+          });
+          return [...dayMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([,v])=>v);
+        }
+
+        function updateChartVisibility(){
+          const wrap=document.querySelector(".chart-wrap");
+          const hint=document.getElementById("chart-min-hint");
+          if(!wrap||!hint) return;
+          const met=activeTrendMode==="partien"?chartGames.length>=2:getDailyData().length>=2;
+          const msg=activeTrendMode==="partien"?t('trend_min_partien'):t('trend_min_tage');
+          wrap.style.opacity=met?"":"0.4";
+          wrap.style.pointerEvents=met?"":"none";
+          hint.style.display=met?"none":"flex";
+          if(!met) hint.textContent=msg;
+        }
 
         function updateChartTitle(){
           const titleEl=document.getElementById("chart-title");
@@ -571,15 +602,28 @@ export async function loadAndRenderStats(){
           ctx.fillStyle='#121216'; ctx.fillRect(0,0,w,h);
           ctx.strokeStyle='#1a1a1f'; ctx.lineWidth=1;
           for(let i=0;i<=4;i++){ const y=pad.t+(h-pad.t-pad.b)*i/4; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke(); }
-          const step=Math.max(1,Math.floor(chartGames.length/6));
-          ctx.fillStyle='#6E6E78'; ctx.font="9px 'DM Sans',sans-serif"; ctx.textAlign="center";
-          chartGames.forEach((g,i)=>{ if(i%step!==0&&i!==chartGames.length-1) return; const x=pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1); const d=new Date(g.ts); ctx.fillText(`${d.getDate()}.${d.getMonth()+1}`,x,h-6); });
+
           const kpi=KPI_DEFS[activeKPI];
-          const vals=chartGames.map(g=>kpi.extract(g,pid));
+          let xData, vals;
+          if(activeTrendMode==="partien"){
+            if(chartGames.length<2) return;
+            xData=chartGames;
+            vals=chartGames.map(g=>kpi.extract(g,pid));
+          } else {
+            const dayData=getDailyData();
+            if(dayData.length<2) return;
+            xData=dayData;
+            vals=dayData.map(day=>{ const vs=day.games.map(g=>kpi.extract(g,pid)).filter(v=>v!==null); return vs.length?Math.round(vs.reduce((a,b)=>a+b,0)/vs.length*10)/10:null; });
+          }
+
+          const step=Math.max(1,Math.floor(xData.length/6));
+          ctx.fillStyle='#6E6E78'; ctx.font="9px 'DM Sans',sans-serif"; ctx.textAlign="center";
+          xData.forEach((item,i)=>{ if(i%step!==0&&i!==xData.length-1) return; const x=pad.l+(w-pad.l-pad.r)*i/Math.max(1,xData.length-1); const d=new Date(item.ts); ctx.fillText(`${d.getDate()}.${d.getMonth()+1}`,x,h-6); });
+
           const validVals=vals.filter(v=>v!==null);
           if(!validVals.length) return;
           const minV=Math.min(...validVals), maxV=Math.max(...validVals), range=maxV-minV||1;
-          const toX=i=>pad.l+(w-pad.l-pad.r)*i/Math.max(1,chartGames.length-1);
+          const toX=i=>pad.l+(w-pad.l-pad.r)*i/Math.max(1,xData.length-1);
           const toY=v=>pad.t+(h-pad.t-pad.b)*(1-(v-minV)/range);
           const points=[];
           vals.forEach((v,i)=>{ if(v!==null) points.push({x:toX(i),y:toY(v)}); });
@@ -619,6 +663,16 @@ export async function loadAndRenderStats(){
           }
         }
 
+        document.querySelectorAll(".chart-mode-btn").forEach(btn=>{
+          styleKpiBtn(btn, btn.dataset.mode===activeTrendMode);
+          btn.addEventListener("click",()=>{
+            activeTrendMode=btn.dataset.mode;
+            document.querySelectorAll(".chart-mode-btn").forEach(b=>styleKpiBtn(b, b.dataset.mode===activeTrendMode));
+            updateChartVisibility();
+            drawChart();
+          });
+        });
+
         document.querySelectorAll(".chart-kpi-btn").forEach(btn=>{
           styleKpiBtn(btn, btn.dataset.kpi===activeKPI);
           btn.addEventListener("click",()=>{
@@ -629,10 +683,11 @@ export async function loadAndRenderStats(){
           });
         });
 
+        updateChartVisibility();
         drawChart();
         updateChartTitle();
         if(_chartResizeHandler) window.removeEventListener("resize",_chartResizeHandler);
-        _chartResizeHandler=drawChart;
+        _chartResizeHandler=()=>{ updateChartVisibility(); drawChart(); };
         window.addEventListener("resize",_chartResizeHandler,{passive:true});
       },100);
     }

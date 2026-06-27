@@ -194,6 +194,10 @@ export const translations = {
     alle_legs: "Alle Legs",
     keine_daten: "Keine Daten",
     wuerfe_label: "Würfe",
+    trend_partien: "Partien",
+    trend_tage: "Tage",
+    trend_min_partien: "Spiele mindestens 2 Partien um den Trend zu sehen.",
+    trend_min_tage: "Spiele an mindestens 2 verschiedenen Tagen um den Tagestrend zu sehen.",
 
     // Party-Modi
     fortschritt: "FORTSCHRITT",
@@ -747,6 +751,10 @@ export const translations = {
     alle_legs: "All Legs",
     keine_daten: "No Data",
     wuerfe_label: "Throws",
+    trend_partien: "Games",
+    trend_tage: "Days",
+    trend_min_partien: "Play at least 2 games to see the trend.",
+    trend_min_tage: "Play on at least 2 different days to see the daily trend.",
 
     // Party Modes
     fortschritt: "PROGRESS",
