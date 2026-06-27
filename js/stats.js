@@ -564,11 +564,9 @@ export async function loadAndRenderStats(){
           console.log("Chart library:", typeof Chart);
           canvas.style.width="100%"; canvas.style.height="180px";
           const W=canvas.offsetWidth||canvas.parentElement.clientWidth-24||500;
-          const H=Math.max(canvas.offsetHeight||0,300);
-          canvas.width=W; canvas.height=H;
-          canvas.style.height=H+"px";
+          canvas.width=W; canvas.height=180;
           const ctx=canvas.getContext("2d");
-          const w=W, h=H, pad={t:24,r:48,b:28,l:38};
+          const w=W, h=180, pad={t:24,r:48,b:28,l:38};
           ctx.clearRect(0,0,w,h);
           ctx.fillStyle='#121216'; ctx.fillRect(0,0,w,h);
           ctx.strokeStyle='#1a1a1f'; ctx.lineWidth=1;
