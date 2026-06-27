@@ -36,9 +36,16 @@ localStorage.removeItem("dart_voices");
 function initDartDB(){
   window.dartDB = {
     // Games
-    async saveGame(data){ return addDoc(collection(db,"dart_games"), data); },
+    async saveGame(data){
+      const uid = auth.currentUser?.uid;
+      const isAnon = auth.currentUser?.isAnonymous;
+      if(uid && !isAnon) data.userId = uid;
+      return addDoc(collection(db,"dart_games"), data);
+    },
     async loadStats(){
-      const snap = await getDocs(query(collection(db,"dart_games"), orderBy("ts","desc"), limit(200)));
+      const uid = auth.currentUser?.uid;
+      if(!uid) return [];
+      const snap = await getDocs(query(collection(db,"dart_games"), where("userId","==",uid), orderBy("ts","desc"), limit(200)));
       return snap.docs.map(d=>({id:d.id,...d.data()}));
     },
     // Players
