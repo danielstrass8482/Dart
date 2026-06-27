@@ -542,8 +542,8 @@ export function buildVideoCoachPrompt(numFrames, sessionStats, driftData=null){
 
   const sessionCtx=sessionStats
     ?(de
-      ?`\n\nKontext: Der Spieler hat gerade eine Partie ${typeof sessionStats==='string'?sessionStats:(sessionStats.mode||'')} gespielt${typeof sessionStats==='object'&&sessionStats.players?` mit einem Ø von ${sessionStats.players[0]?.avg3||'unbekannt'} Punkten`:'`}.`
-      :`\n\nContext: The player just played ${typeof sessionStats==='string'?sessionStats:(sessionStats.mode||'')}${typeof sessionStats==='object'&&sessionStats.players?` with an average of ${sessionStats.players[0]?.avg3||'unknown'} points`:'`}.`)
+      ?`\n\nKontext: Der Spieler hat gerade eine Partie ${typeof sessionStats==='string'?sessionStats:(sessionStats.mode||'')} gespielt${typeof sessionStats==='object'&&sessionStats.players?` mit einem Ø von ${sessionStats.players[0]?.avg3||'unbekannt'} Punkten`:''}.`
+      :`\n\nContext: The player just played ${typeof sessionStats==='string'?sessionStats:(sessionStats.mode||'')}${typeof sessionStats==='object'&&sessionStats.players?` with an average of ${sessionStats.players[0]?.avg3||'unknown'} points`:''}.`)
     :'';
 
   const videoHint=de
