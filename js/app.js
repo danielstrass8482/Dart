@@ -1310,9 +1310,9 @@ document.getElementById("btn-video-analyze-analyse-tab").addEventListener("click
 // ── Voice Settings ────────────────────────────────────────────────
 const BUILTIN_VOICES=[
   {id:"JBFqnCBsd6RMkjVDRZzb", name:"George", builtin:true, free:true},
-  {id:null,                    name:"Haseeb", builtin:true, free:true},
-  {id:null,                    name:"Jerry B",builtin:true, free:false},
-  {id:null,                    name:"Guy",    builtin:true, free:false},
+  {id:"dllHSct4GokGc1AH9JwT", name:"Haseeb", builtin:true, free:true},
+  {id:"zDBYcuJrpuZ6YQ7AgRUw", name:"Jerry B",builtin:true, free:false},
+  {id:"34lPwSZ54D8fWbX1aHzk", name:"Guy",    builtin:true, free:false},
 ];
 let voicesCache=null;
 
