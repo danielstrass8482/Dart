@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "875969093013-9lpt9fm2sts0dric7lk2697jqfqonh51.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.danielstrass.darttrainer",
+            "certificate_hash": "a35645e89f1c2346a24a9d515c1ca39daa671746"
+          }
+        },
+        {
           "client_id": "875969093013-7mdonucr4nq4qbjdorc9e18vsg47kik6.apps.googleusercontent.com",
           "client_type": 3
         }
