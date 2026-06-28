@@ -9,7 +9,7 @@ import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateD
          onSnapshot, deleteDoc as fsDeleteDoc, query, orderBy, limit, where }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
-         getRedirectResult, onAuthStateChanged,
+         getRedirectResult, signInWithCredential, onAuthStateChanged,
          createUserWithEmailAndPassword, signInWithEmailAndPassword,
          sendPasswordResetEmail, updateProfile,
          EmailAuthProvider, linkWithCredential }
@@ -275,9 +275,36 @@ function initDartDB(){
   window.dispatchEvent(new Event("dbReady"));
 }
 
+// ── Native Google Login Callback (called from Android via evaluateJavascript) ──
+window._nativeGoogleLoginResult = async function(idToken, accessToken){
+  try{
+    const credential = GoogleAuthProvider.credential(idToken, accessToken);
+    const result = await signInWithCredential(auth, credential);
+    if(window._nativeGoogleLoginResolve) window._nativeGoogleLoginResolve(result.user);
+  }catch(e){
+    if(window._nativeGoogleLoginReject) window._nativeGoogleLoginReject(e);
+  }finally{
+    window._nativeGoogleLoginResolve = null;
+    window._nativeGoogleLoginReject = null;
+  }
+};
+
+window._nativeGoogleLoginError = function(msg){
+  if(window._nativeGoogleLoginReject) window._nativeGoogleLoginReject(new Error(msg));
+  window._nativeGoogleLoginResolve = null;
+  window._nativeGoogleLoginReject = null;
+};
+
 // ── Auth helpers ─────────────────────────────────────────────────
 let _googlePopupOpen = false;
 window.signInWithGoogle = async function(){
+  if(navigator.userAgent.includes('DartTrainerApp') && window.AndroidBridge){
+    return new Promise((resolve, reject) => {
+      window._nativeGoogleLoginResolve = resolve;
+      window._nativeGoogleLoginReject = reject;
+      window.AndroidBridge.startNativeLogin();
+    });
+  }
   if(isNative){
     await signInWithRedirect(auth, gProvider);
     return;
