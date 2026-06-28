@@ -1,4 +1,4 @@
-package com.danielstrass.dartpro;
+package com.danielstrass.darttrainer;
 
 import com.getcapacitor.BridgeActivity;
 
