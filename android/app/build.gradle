@@ -6,12 +6,10 @@ android {
 
     signingConfigs {
         release {
-            if (project.hasProperty('KEYSTORE_FILE')) {
-                storeFile file(KEYSTORE_FILE)
-                storePassword project.property('KEYSTORE_PASSWORD')
-                keyAlias project.property('KEY_ALIAS')
-                keyPassword project.property('KEY_PASSWORD')
-            }
+            storeFile file('darttrainer-release.keystore')
+            storePassword 'darttrainer2026'
+            keyAlias 'darttrainer'
+            keyPassword 'darttrainer2026'
         }
     }
 
@@ -29,11 +27,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            if (project.hasProperty('KEYSTORE_FILE')) {
-                signingConfig signingConfigs.release
-            }
+            signingConfig signingConfigs.release
+            minifyEnabled false
         }
         debug {
         }
