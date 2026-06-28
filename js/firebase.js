@@ -21,6 +21,7 @@ const fbCfg = window.FIREBASE_CONFIG;
 const app     = initializeApp(fbCfg);
 const db      = getFirestore(app);
 const auth    = getAuth(app);
+auth.config.authDomain = "darttrainer-app-fed88.firebaseapp.com";
 const storage = getStorage(app);
 const gProvider = new GoogleAuthProvider();
 const isNative = window.Capacitor?.isNativePlatform() === true;
