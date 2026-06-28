@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.danielstrass.dartpro"
+    namespace "com.danielstrass.darttrainer"
     compileSdk rootProject.ext.compileSdkVersion
 
     signingConfigs {
@@ -16,7 +16,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.danielstrass.dartpro"
+        applicationId "com.danielstrass.darttrainer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

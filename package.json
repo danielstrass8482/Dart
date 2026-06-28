@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Dart Pro – Scoring App mit KI-Coach",
   "scripts": {
-    "sync": "cp dart.html www/index.html && npx cap sync android",
+    "sync": "mkdir -p www/js www/css && cp index.html www/ && cp -r js/. www/js/ && cp -r css/. www/css/ && npx cap sync android",
     "open": "npx cap open android",
-    "build": "cp dart.html www/index.html && npx cap sync android"
+    "build": "mkdir -p www/js www/css && cp index.html www/ && cp -r js/. www/js/ && cp -r css/. www/css/ && npx cap sync android"
   },
   "dependencies": {
     "@capacitor/android": "^7.0.0",
