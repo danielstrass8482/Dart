@@ -1,115 +1,33 @@
 {
   "project_info": {
-    "project_number": "187864668697",
-    "project_id": "fitness-tracker-c6f97",
-    "storage_bucket": "fitness-tracker-c6f97.firebasestorage.app"
+    "project_number": "875969093013",
+    "project_id": "darttrainer-app-fed88",
+    "storage_bucket": "darttrainer-app-fed88.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:187864668697:android:f6b7f50de93e748c482888",
+        "mobilesdk_app_id": "1:875969093013:android:abbe73b627f0cb06cd2a9c",
         "android_client_info": {
-          "package_name": "com.danielstrass.dartpro"
+          "package_name": "com.danielstrass.darttrainer"
         }
       },
       "oauth_client": [
         {
-          "client_id": "187864668697-3ofe6oe5hmqrc8e7g3c5p29o25rigqn3.apps.googleusercontent.com",
+          "client_id": "875969093013-7mdonucr4nq4qbjdorc9e18vsg47kik6.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBw6iTNq2gO-gQNKeRUtD_gTZHZXTbXSts"
+          "current_key": "AIzaSyDbuVhIaL7db8oQUHJy-sgFGiteryR8oow"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "187864668697-3ofe6oe5hmqrc8e7g3c5p29o25rigqn3.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:187864668697:android:c54b57302699d4dd482888",
-        "android_client_info": {
-          "package_name": "com.fuelofit.app"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "187864668697-n4222hfbmr1mvej2oa2phjknp9sdd7hc.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.fuelofit.app",
-            "certificate_hash": "a97b4499e3296f52b3967ca4450365aa735e9135"
-          }
-        },
-        {
-          "client_id": "187864668697-3ofe6oe5hmqrc8e7g3c5p29o25rigqn3.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBw6iTNq2gO-gQNKeRUtD_gTZHZXTbXSts"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "187864668697-3ofe6oe5hmqrc8e7g3c5p29o25rigqn3.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:187864668697:android:b97c70baa79354b3482888",
-        "android_client_info": {
-          "package_name": "com.fuelofit.app2"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "187864668697-aapoqfb6q1054psrdda4mhhg392eni0l.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.fuelofit.app2",
-            "certificate_hash": "939bc038ddab27918362ba85d206dd1120d5eca0"
-          }
-        },
-        {
-          "client_id": "187864668697-eunhhh2lf9e2qbd4cgpi5on2gembpsgi.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.fuelofit.app2",
-            "certificate_hash": "b17a1359187c658c94830aae95b8c63bab0b21b9"
-          }
-        },
-        {
-          "client_id": "187864668697-3ofe6oe5hmqrc8e7g3c5p29o25rigqn3.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBw6iTNq2gO-gQNKeRUtD_gTZHZXTbXSts"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "187864668697-3ofe6oe5hmqrc8e7g3c5p29o25rigqn3.apps.googleusercontent.com",
+              "client_id": "875969093013-7mdonucr4nq4qbjdorc9e18vsg47kik6.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
