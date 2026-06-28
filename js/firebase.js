@@ -8,7 +8,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/fireba
 import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateDoc,
          onSnapshot, deleteDoc as fsDeleteDoc, query, orderBy, limit, where }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, onAuthStateChanged,
+import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+         getRedirectResult, onAuthStateChanged,
          createUserWithEmailAndPassword, signInWithEmailAndPassword,
          sendPasswordResetEmail, updateProfile,
          EmailAuthProvider, linkWithCredential }
@@ -22,10 +23,20 @@ const db      = getFirestore(app);
 const auth    = getAuth(app);
 const storage = getStorage(app);
 const gProvider = new GoogleAuthProvider();
+const isNative = window.Capacitor?.isNativePlatform() === true;
 
 // ── Auth state ────────────────────────────────────────────────────
 window.currentUser = null;
 window.fbAuth = auth;
+
+// On Android: process redirect result after Google Sign-In redirect
+if(isNative){
+  getRedirectResult(auth).catch(e=>{
+    if(e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request"){
+      console.warn("Google redirect result error:", e.message);
+    }
+  });
+}
 
 // Clear stale localStorage voice data so BUILTIN_VOICES in app.js is authoritative
 localStorage.removeItem("dart_voices");
@@ -266,6 +277,10 @@ function initDartDB(){
 // ── Auth helpers ─────────────────────────────────────────────────
 let _googlePopupOpen = false;
 window.signInWithGoogle = async function(){
+  if(isNative){
+    await signInWithRedirect(auth, gProvider);
+    return;
+  }
   if(_googlePopupOpen) return;
   _googlePopupOpen = true;
   try{
