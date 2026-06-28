@@ -182,11 +182,6 @@ async function playAudioQueue(){
 
 export function queueAudio(text,key){
   if(localStorage.getItem("dart_tts_enabled")==="false") return Promise.resolve();
-  console.log("TTS debug:", {
-    enabled: localStorage.getItem("dart_tts_enabled"),
-    voiceEnabled: localStorage.getItem("dart_voice_output"),
-    userAgent: navigator.userAgent.substring(0, 50)
-  });
   return new Promise(resolve=>{
     audioQueue.push({text,key,resolve});
     playAudioQueue();
@@ -224,13 +219,11 @@ export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
     const user=window.fbAuth?.currentUser;
     if(user) authToken=await user.getIdToken();
   }catch(e){}
-  console.log("TTS fetch:", TTS_FUNCTION_URL, {text, key: storageKey, voiceId});
   const resp=await fetch(TTS_FUNCTION_URL,{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+authToken},
     body:JSON.stringify({key:storageKey, text, voiceId})
   });
-  console.log("TTS response:", resp.status, resp.statusText);
   if(resp.status===429){ console.info("TTS limit reached, falling back to browser TTS"); return null; }
   if(resp.status===503){ console.info("TTS unavailable, falling back to browser TTS"); return null; }
   if(!resp.ok) return null;

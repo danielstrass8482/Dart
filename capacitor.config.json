@@ -12,7 +12,11 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 0
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#08080A",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
     },
     "FirebaseAuthentication": {
       "skipNativeAuth": false
