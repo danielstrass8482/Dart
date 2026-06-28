@@ -68,7 +68,7 @@ exports.dartTTS = onRequest(
   {
     secrets: [ELEVENLABS_API_KEY],
     region: "europe-west1",
-    cors: ["https://danielstrass8482.github.io", "https://darttrainer.app", "http://localhost"],
+    cors: ["https://danielstrass8482.github.io", "https://darttrainer.app", "http://localhost", "https://localhost"],
     timeoutSeconds: 30,
   },
   async (req, res) => {

@@ -99,7 +99,13 @@ export function doSpeak(text, lang){
     setTimeout(()=>window.speechSynthesis.speak(utt), 50);
   };
   if(speechSynthesis.getVoices().length>0){ trySpeak(); }
-  else{ speechSynthesis.addEventListener("voiceschanged",trySpeak,{once:true}); }
+  else{
+    let spoken=false;
+    const doOnce=()=>{ if(!spoken){ spoken=true; trySpeak(); } };
+    speechSynthesis.addEventListener("voiceschanged",doOnce,{once:true});
+    // voiceschanged often never fires in Android WebView — force speak after 500ms
+    setTimeout(doOnce, 500);
+  }
 }
 
 // ── Audio unlock for mobile ───────────────────────────────────────
