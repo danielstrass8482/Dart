@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "875969093013-5ock9okrcupa094fho8tsjs99l6d86b4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.danielstrass.darttrainer",
+            "certificate_hash": "9975550685586cd649f08a38658afe76a34e69e0"
+          }
+        },
+        {
           "client_id": "875969093013-7mdonucr4nq4qbjdorc9e18vsg47kik6.apps.googleusercontent.com",
           "client_type": 3
         }
