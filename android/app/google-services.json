@@ -14,19 +14,19 @@
       },
       "oauth_client": [
         {
-          "client_id": "875969093013-5ock9okrcupa094fho8tsjs99l6d86b4.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.danielstrass.darttrainer",
-            "certificate_hash": "9975550685586cd649f08a38658afe76a34e69e0"
-          }
-        },
-        {
           "client_id": "875969093013-9lpt9fm2sts0dric7lk2697jqfqonh51.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.danielstrass.darttrainer",
             "certificate_hash": "a35645e89f1c2346a24a9d515c1ca39daa671746"
+          }
+        },
+        {
+          "client_id": "875969093013-eek6nn2i4mdfje32quv8kfpmg47l2fug.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.danielstrass.darttrainer",
+            "certificate_hash": "0a7de3d1b24e85b6d91ef94ff8a26457d7cb3bdb"
           }
         },
         {
