@@ -1429,11 +1429,40 @@ window.addEventListener("dbReady", ()=>{ loadPlayers().then(()=>renderStatsPlaye
 window.addEventListener("dbReady", ()=>{
   const user = window.currentUser;
   if(user && !user.isAnonymous) registerBetaUser();
-  loadBetaPremiumStatus().then(()=>refreshPremiumUI());
+  loadBetaPremiumStatus().then(()=>{
+    refreshPremiumUI();
+    // Re-render profil tab immediately if it is currently visible so the new
+    // user's name / email / premium status appears without a manual tab click.
+    if(document.getElementById("tab-profil")?.classList.contains("active")){
+      initProfilTab();
+    }
+  });
 });
 
 // ── Lucide icon refresh helper ────────────────────────────────────
 window.refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
+
+// ── Expose profil tab initializer for firebase.js auth handler ───
+window.initProfilTab = initProfilTab;
+
+// ── User state reset — called by firebase.js on every auth change ─
+// Clears all in-memory caches that are scoped to a specific user so that
+// logging out or switching accounts never leaks data from the previous session.
+window._resetUserState = function(){
+  setBetaPremiumActive(false);
+  state.allPlayers = [];
+  state.selectedPlayers = [];
+  setAllGamesCache([]);
+  analyseSelectedPlayer = null;
+  // Clear rendered profil-tab content so it is rebuilt from the new user's
+  // data rather than showing the previous account's name/email/status.
+  const infoEl = document.getElementById("profil-account-info");
+  if(infoEl) infoEl.innerHTML = "";
+  const premEl = document.getElementById("profil-premium-status");
+  if(premEl) premEl.innerHTML = "";
+  const adminEl = document.getElementById("profil-admin-section");
+  if(adminEl) adminEl.style.display = "none";
+};
 
 // ── Expose globals for inline HTML onclick handlers ───────────────
 window.showSpielenSection = showSpielenSection;

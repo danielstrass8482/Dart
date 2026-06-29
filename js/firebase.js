@@ -400,6 +400,11 @@ onAuthStateChanged(auth, user=>{
     return;
   }
   (window.splashPromise || Promise.resolve()).then(()=>{
+    // Clear all user-specific in-memory state before applying the new auth state.
+    // This prevents stale player lists, game caches, and premium flags from
+    // the previous session leaking into the next user's view.
+    if(window._resetUserState) window._resetUserState();
+
     window.currentUser = user;
     if(user){
       initDartDB();
@@ -409,9 +414,12 @@ onAuthStateChanged(auth, user=>{
         const authScreen = document.getElementById("auth-screen");
         if(authScreen && authScreen.classList.contains("active")){
           if(window.showScreen) window.showScreen("setup");
-          if(window.loadPlayers) window.loadPlayers();
         }
       }
+      // Always reload players and re-render profil tab on sign-in regardless
+      // of which screen was active — ensures new user's data is shown.
+      if(window.loadPlayers) window.loadPlayers();
+      if(window.initProfilTab) window.initProfilTab();
     } else {
       const authScreen = document.getElementById("auth-screen");
       if(authScreen && window.showScreen) window.showScreen("auth-screen");
