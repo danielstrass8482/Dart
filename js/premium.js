@@ -35,7 +35,7 @@ export function isAdmin(){
   const user = window.currentUser;
   if(!user || user.isAnonymous) return false;
   if(ADMIN_UIDS.length && ADMIN_UIDS.includes(user.uid)) return true;
-  return user.email === 'daniel.strass@gmx.de';
+  return ['daniel.strass@gmx.de', 'review@darttrainer.app'].includes(user.email);
 }
 
 // betaPremium-Status aus Firebase laden (Vorladen beim App-Start)

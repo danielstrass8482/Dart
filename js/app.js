@@ -715,7 +715,8 @@ document.getElementById("btn-create-tournament")?.addEventListener("click",async
 });
 
 // ── Auth screen ───────────────────────────────────────────────────
-function authError(id, msg){ const el=document.getElementById(id); if(el) el.textContent=msg||""; }
+function authError(id, msg){ const el=document.getElementById(id); if(el){ el.style.color=""; el.textContent=msg||""; } }
+function authSuccess(id, msg){ const el=document.getElementById(id); if(el){ el.style.color="var(--dart-success)"; el.textContent=msg||""; } }
 
 document.querySelectorAll(".auth-tab-btn").forEach(btn=>{
   btn.addEventListener("click",()=>{
@@ -733,7 +734,7 @@ document.getElementById("btn-email-login").addEventListener("click",async()=>{
   authError("login-error","");
   if(!email||!pw){ authError("login-error",t('auth_email_pw')); return; }
   try{ await window.emailSignIn(email, pw); }
-  catch(e){ authError("login-error", e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"?t('auth_invalid_cred'):e.code==="auth/user-not-found"?t('auth_no_account'):e.message); }
+  catch(e){ authError("login-error", e.code==="auth/email-not-verified"?t('auth_not_verified'):e.code==="auth/invalid-credential"||e.code==="auth/wrong-password"?t('auth_invalid_cred'):e.code==="auth/user-not-found"?t('auth_no_account'):e.message); }
 });
 document.getElementById("btn-google-login").addEventListener("click",async()=>{ authError("login-error",""); try{ await window.signInWithGoogle(); }catch(e){ authError("login-error",e.message); } });
 document.getElementById("btn-forgot-password").addEventListener("click",async()=>{
@@ -753,7 +754,7 @@ document.getElementById("btn-email-register").addEventListener("click",async()=>
   if(!email){ authError("reg-error",t('auth_email_only')); return; }
   if(pw.length<6){ authError("reg-error",t('auth_pw_short')); return; }
   if(pw!==pw2){ authError("reg-error",t('auth_pw_mismatch')); return; }
-  try{ await window.emailRegister(email, pw, name); }
+  try{ await window.emailRegister(email, pw, name); authSuccess("reg-error", t('auth_verify_sent')); }
   catch(e){ authError("reg-error", e.code==="auth/email-already-in-use"?t('auth_email_taken'):e.message); }
 });
 document.getElementById("btn-google-register").addEventListener("click",async()=>{ authError("reg-error",""); try{ await window.signInWithGoogle(); }catch(e){ authError("reg-error",e.message); } });
@@ -964,8 +965,12 @@ document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=
   const errEl=document.getElementById("profil-upgrade-error");
   errEl.textContent="";
   if(!name||!email||pw.length<6){errEl.textContent=t('auth_fill_all');return;}
-  try{ await window.upgradeAnonymousAccount(email,pw,name); await showAlert(t('account_erstellt')); initProfilTab(); }
-  catch(e){ errEl.textContent=e.code==="auth/email-already-in-use"?t('auth_email_taken2'):e.message; }
+  try{
+    await window.upgradeAnonymousAccount(email,pw,name);
+    errEl.style.color="var(--dart-success)";
+    errEl.textContent=t('auth_verify_sent');
+  }
+  catch(e){ errEl.style.color=""; errEl.textContent=e.code==="auth/email-already-in-use"?t('auth_email_taken2'):e.message; }
 });
 document.getElementById("btn-profil-google")?.addEventListener("click",async()=>{ try{ await window.signInWithGoogle(); initProfilTab(); }catch(e){} });
 

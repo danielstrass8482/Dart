@@ -11,7 +11,7 @@ import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateD
 import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
          getRedirectResult, signInWithCredential, onAuthStateChanged,
          createUserWithEmailAndPassword, signInWithEmailAndPassword,
-         sendPasswordResetEmail, updateProfile,
+         sendPasswordResetEmail, sendEmailVerification, updateProfile,
          EmailAuthProvider, linkWithCredential }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
@@ -29,6 +29,8 @@ const isNative = window.Capacitor?.isNativePlatform() === true;
 // ── Auth state ────────────────────────────────────────────────────
 window.currentUser = null;
 window.fbAuth = auth;
+// Flag set during registration/linking to suppress the unverified-user sign-out in onAuthStateChanged
+let _registering = false;
 
 // On Android: process redirect result after Google Sign-In redirect
 if(isNative){
@@ -329,20 +331,36 @@ window.signInAsGuest = async function(){
 };
 
 window.emailSignIn = async function(email, password){
-  return signInWithEmailAndPassword(auth, email, password);
+  const result = await signInWithEmailAndPassword(auth, email, password);
+  if(!result.user.emailVerified){
+    await auth.signOut();
+    const err = new Error('email-not-verified');
+    err.code = 'auth/email-not-verified';
+    throw err;
+  }
+  return result;
 };
 
 window.emailRegister = async function(email, password, name){
-  const user = auth.currentUser;
-  if(user && user.isAnonymous){
-    const cred = EmailAuthProvider.credential(email, password);
-    const result = await linkWithCredential(user, cred);
+  _registering = true;
+  try {
+    const user = auth.currentUser;
+    if(user && user.isAnonymous){
+      const cred = EmailAuthProvider.credential(email, password);
+      const result = await linkWithCredential(user, cred);
+      await updateProfile(result.user, {displayName: name});
+      await sendEmailVerification(result.user);
+      await auth.signOut();
+      return null;
+    }
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(result.user);
     await updateProfile(result.user, {displayName: name});
-    return result.user;
+    await auth.signOut();
+    return null;
+  } finally {
+    _registering = false;
   }
-  const result = await createUserWithEmailAndPassword(auth, email, password);
-  await updateProfile(result.user, {displayName: name});
-  return result.user;
 };
 
 window.resetPassword = async function(email){
@@ -350,10 +368,17 @@ window.resetPassword = async function(email){
 };
 
 window.upgradeAnonymousAccount = async function(email, password, name){
-  const cred = EmailAuthProvider.credential(email, password);
-  const result = await linkWithCredential(auth.currentUser, cred);
-  await updateProfile(result.user, {displayName: name});
-  return result.user;
+  _registering = true;
+  try {
+    const cred = EmailAuthProvider.credential(email, password);
+    const result = await linkWithCredential(auth.currentUser, cred);
+    await updateProfile(result.user, {displayName: name});
+    await sendEmailVerification(result.user);
+    await auth.signOut();
+    return null;
+  } finally {
+    _registering = false;
+  }
 };
 
 function prewarmTTS(){
@@ -365,6 +390,15 @@ function prewarmTTS(){
 }
 
 onAuthStateChanged(auth, user=>{
+  // Unverified email/password users are never allowed into the app.
+  // During registration the sign-out is skipped (sendEmailVerification still needs the session);
+  // in all cases the rest of the handler is skipped so window.currentUser is never set to an
+  // unverified user and no accidental navigation to setup occurs.
+  if(user && !user.isAnonymous && !user.emailVerified &&
+     user.providerData.some(p=>p.providerId==='password')){
+    if(!_registering) auth.signOut();
+    return;
+  }
   (window.splashPromise || Promise.resolve()).then(()=>{
     window.currentUser = user;
     if(user){
