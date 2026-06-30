@@ -70,7 +70,7 @@ function showLangSelect(){
         <i data-lucide="target" style="width:36px;height:36px;stroke-width:1.5;color:#D4AF37"></i>
       </div>
       <div style="font-size:24px;font-weight:800;color:var(--dart-text);margin-bottom:8px;
-        font-family:'Bebas Neue',sans-serif;letter-spacing:2px">DartTrainer</div>
+        font-family:'Bebas Neue',sans-serif;letter-spacing:2px">DARTTRAINER</div>
       <div style="font-size:14px;color:var(--dart-text-muted);margin-bottom:32px">
         Choose your language
       </div>
