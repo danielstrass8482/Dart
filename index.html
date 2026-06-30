@@ -41,7 +41,7 @@
   <img src="icons/icon-512.webp" alt="DartTrainer" style="
     width:min(220px,45vw);height:auto;
   ">
-  <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:6px;color:#D4AF37">
+  <div id="splash-title" style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:6px;color:#D4AF37;opacity:0;transition:opacity 0.2s ease">
     DartTrainer
   </div>
 </div>
@@ -49,11 +49,17 @@
 var SPLASH_ENABLED = true;
 window.splashPromise = new Promise(function(resolve) {
   var splash = document.getElementById('splash-screen');
+  var title = document.getElementById('splash-title');
   if (!SPLASH_ENABLED) {
     splash.style.display = 'none';
     resolve();
     return;
   }
+  document.fonts.load("32px 'Bebas Neue'").then(function() {
+    title.style.opacity = '1';
+  }).catch(function() {
+    title.style.opacity = '1';
+  });
   setTimeout(function(){
     splash.style.opacity = '0';
     setTimeout(function(){
