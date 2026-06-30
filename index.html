@@ -526,16 +526,12 @@ window.splashPromise = new Promise(function(resolve) {
           <span id="setting-checkout-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
         </label>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border);opacity:.4;pointer-events:none">
         <div>
           <span style="font-size:14px;color:var(--dart-text-sec)"><i data-lucide="heart-pulse" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="gesundheit">Gesundheitsdaten abfragen</span></span>
-          <button class="help-btn" onclick="showHelp('Gesundheitsdaten','Vor jedem Spiel wirst du nach Schlaf und Befinden gefragt. Verknüpfe Fitness mit deiner Spielleistung und sieh ob du an ausgeruhten Tagen besser spielst.')"><i data-lucide="help-circle" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i></button>
           <div style="font-size:11px;color:var(--dart-text-sec);margin-top:2px" data-i18n="gesundheit_sub">Vor jedem Spiel nach Schlaf und Befinden fragen</div>
         </div>
-        <label style="position:relative;display:inline-block;width:46px;height:27px;flex-shrink:0">
-          <input type="checkbox" id="setting-health" checked style="opacity:0;width:0;height:0">
-          <span id="setting-health-slider" style="position:absolute;cursor:pointer;inset:0;background:#26262C;border-radius:27px;transition:.2s"><div style="position:absolute;width:21px;height:21px;border-radius:50%;top:3px;left:3px;background:#6E6E78;transition:left .2s,right .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none"></div></span>
-        </label>
+        <span class="spielen-coming-soon" style="flex-shrink:0">Coming Soon</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--dart-border)">
         <div>
@@ -569,8 +565,8 @@ window.splashPromise = new Promise(function(resolve) {
     </div>
 
     <!-- Health Connect -->
-    <div class="profil-section">
-      <div class="profil-section-title"><i data-lucide="link" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="health_connect">HEALTH CONNECT</span></div>
+    <div class="profil-section" style="opacity:.4;pointer-events:none">
+      <div class="profil-section-title" style="display:flex;align-items:center;gap:8px"><i data-lucide="link" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="health_connect">HEALTH CONNECT</span> <span class="spielen-coming-soon">Coming Soon</span></div>
       <div data-i18n="health_sub" style="font-size:13px;color:var(--dart-text-muted);margin-bottom:10px;line-height:1.6">
         Verbinde Garmin, Oura, Fitbit und mehr für automatische Gesundheitsdaten.
       </div>
