@@ -16,6 +16,8 @@ import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signIn
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+import { initializeAppCheck, CustomProvider, ReCaptchaV3Provider }
+  from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-check.js";
 
 const fbCfg = window.FIREBASE_CONFIG;
 const app     = initializeApp(fbCfg);
@@ -25,6 +27,37 @@ auth.config.authDomain = "darttrainer-app-fed88.firebaseapp.com";
 const storage = getStorage(app);
 const gProvider = new GoogleAuthProvider();
 const isNative = window.Capacitor?.isNativePlatform() === true;
+
+// ── Firebase App Check ────────────────────────────────────────────────────────
+// Android native (Capacitor): bridged to Play Integrity via AndroidBridge
+// Web (GitHub Pages): set window.FIREBASE_APP_CHECK_RECAPTCHA_KEY in index.html
+// Enable enforcement in Firebase Console → App Check once all clients are updated.
+(function _initAppCheck() {
+  if (isNative && window.AndroidBridge?.getAppCheckToken) {
+    window._appCheckCallbacks = {};
+    initializeAppCheck(app, {
+      provider: new CustomProvider({
+        getToken: () => new Promise((resolve, reject) => {
+          const cbId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+          window._appCheckCallbacks[cbId] = { resolve, reject };
+          window.AndroidBridge.getAppCheckToken(cbId);
+          setTimeout(() => {
+            if (window._appCheckCallbacks[cbId]) {
+              delete window._appCheckCallbacks[cbId];
+              reject(new Error("App Check token timeout"));
+            }
+          }, 10000);
+        })
+      }),
+      isTokenAutoRefreshEnabled: true
+    });
+  } else if (window.FIREBASE_APP_CHECK_RECAPTCHA_KEY) {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(window.FIREBASE_APP_CHECK_RECAPTCHA_KEY),
+      isTokenAutoRefreshEnabled: true
+    });
+  }
+})();
 
 // ── Auth state ────────────────────────────────────────────────────
 window.currentUser = null;
@@ -52,41 +85,41 @@ function initDartDB(){
     // Games
     async saveGame(data){
       const uid = auth.currentUser?.uid;
-      const isAnon = auth.currentUser?.isAnonymous;
-      if(uid && !isAnon) data.userId = uid;
+      if(uid) data.userId = uid;
       return addDoc(collection(db,"dart_games"), data);
     },
     async loadStats(){
       const uid = auth.currentUser?.uid;
       if(!uid) return [];
-      const playersSnap = await getDocs(query(collection(db,"dart_players"), where("userId","==",uid)));
-      const myPlayerIds = playersSnap.docs.map(d=>d.id);
-      if(myPlayerIds.length===0) return [];
-      const snap = await getDocs(query(collection(db,"dart_games"), orderBy("ts","desc"), limit(200)));
-      const filtered = snap.docs
-        .map(d=>({id:d.id,...d.data()}))
-        .filter(g=>(g.playerIds||[]).some(pid=>myPlayerIds.includes(pid)));
-      return filtered;
+      const snap = await getDocs(query(
+        collection(db,"dart_games"),
+        where("userId","==",uid),
+        orderBy("ts","desc"),
+        limit(200)
+      ));
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
     },
     // Players
     async loadPlayers(){
-      const snap = await getDocs(query(collection(db,"dart_players"), orderBy("name")));
       const uid = auth.currentUser?.uid;
-      return snap.docs
-        .map(d=>({id:d.id,...d.data()}))
-        .filter(p=>!p.userId || p.userId===uid);
+      if(!uid) return [];
+      const snap = await getDocs(query(
+        collection(db,"dart_players"),
+        where("userId","==",uid),
+        orderBy("name")
+      ));
+      return snap.docs.map(d=>({id:d.id,...d.data()}));
     },
     async deletePlayer(playerId){
       return fsDeleteDoc(doc(db,"dart_players",playerId));
     },
     async savePlayer(name){
       const uid = auth.currentUser?.uid;
-      const isAnon = auth.currentUser?.isAnonymous;
       const data = {
         name, createdAt:Date.now(),
         stats:{games:0,wins:0,avgPerTurn:0,checkoutPct:0,highscore:0}
       };
-      if(uid && !isAnon) data.userId = uid;
+      if(uid) data.userId = uid;
       return addDoc(collection(db,"dart_players"), data);
     },
     async updatePlayerStats(playerId, stats){
@@ -107,17 +140,28 @@ function initDartDB(){
     },
     // Coach analyses
     async saveCoachAnalysis(data){
-      return addDoc(collection(db,"dart_coach_analyses"), {...data, ts:Date.now()});
+      const uid = auth.currentUser?.uid;
+      return addDoc(collection(db,"dart_coach_analyses"), {
+        ...data,
+        ts: Date.now(),
+        ...(uid ? { userId: uid } : {})
+      });
     },
     async loadCoachAnalyses(playerId){
+      const uid = auth.currentUser?.uid;
+      if(!uid) return [];
       try{
         let snap;
         if(playerId){
           snap=await getDocs(query(collection(db,"dart_coach_analyses"),
-            where("playerId","==",playerId), limit(20)));
+            where("userId","==",uid),
+            where("playerId","==",playerId),
+            limit(20)));
         } else {
           snap=await getDocs(query(collection(db,"dart_coach_analyses"),
-            orderBy("ts","desc"), limit(20)));
+            where("userId","==",uid),
+            orderBy("ts","desc"),
+            limit(20)));
         }
         const results=snap.docs.map(d=>({id:d.id,...d.data()}));
         return results.sort((a,b)=>(b.ts||0)-(a.ts||0));

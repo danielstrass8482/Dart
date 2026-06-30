@@ -1,20 +1,86 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Fuelofit - alle bestehenden Collections
-    // unverändert erlaubt
-    match /{document=**} {
+
+    // ── DartTrainer Collections ──────────────────────────────────────────────
+    // All dart_ collections require userId == request.auth.uid for read/write.
+    // New data always carries userId (set in firebase.js for all auth users).
+    // Legacy anonymous docs without userId are inaccessible — run migration
+    // script (scripts/migrate-data.js) to back-fill userId on existing records.
+
+    // Players: strictly owned by creator
+    match /dart_players/{doc} {
+      allow get: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow list: if request.auth != null
+        && request.query.filters.hasAll([['userId', '==', request.auth.uid]]);
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Games: strictly owned by creator
+    match /dart_games/{doc} {
+      allow get: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow list: if request.auth != null
+        && request.query.filters.hasAll([['userId', '==', request.auth.uid]]);
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Coach analyses: strictly owned by creator
+    match /dart_coach_analyses/{doc} {
+      allow get: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow list: if request.auth != null
+        && request.query.filters.hasAll([['userId', '==', request.auth.uid]]);
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Multiplayer rooms: any authenticated user may read/write
+    // (rooms are ephemeral with unguessable random codes)
+    match /dart_rooms/{doc} {
       allow read, write: if request.auth != null;
     }
-    
-    // DartTrainer - spezifische Einschränkungen
+
+    // Video sessions: any authenticated user (session codes are random UUIDs)
+    match /dart_video_sessions/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Tournaments: any authenticated user (shared between participants)
+    match /dart_tournaments/{doc} {
+      allow read, write: if request.auth != null;
+    }
+
+    // User profiles + subscription: only the matching user
+    match /dart_users/{userId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId;
+      match /{sub=**} {
+        allow read, write: if request.auth != null
+          && request.auth.uid == userId;
+      }
+    }
+
+    // Config: readable by all authenticated users, writable only via Admin SDK
     match /dart_config/{doc} {
       allow read: if request.auth != null;
       allow write: if false;
     }
+
+    // Usage tracking: written by Cloud Functions (Admin SDK, bypasses rules).
+    // Users may read their own daily doc (ID format: {uid}_{YYYY-MM-DD}).
     match /dart_usage/{doc} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null
+        && doc.startsWith(request.auth.uid + '_');
       allow write: if false;
     }
   }

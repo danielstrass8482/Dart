@@ -1,20 +1,33 @@
 // Storage Rules für darttrainer-app
-// In Firebase Console → Storage → Rules eintragen
-// oder via: firebase deploy --only storage
+// Deploy via: firebase deploy --only storage
 
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+
+    // Shared voice samples (Daniel's custom recordings) — read-only for all
+    // authenticated users. Writes go via Admin SDK (Studio tab, when re-enabled).
     match /dart_voice/{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
     }
+
+    // TTS audio cache — read for all authenticated users.
+    // Written exclusively by Cloud Functions via Admin SDK.
     match /dart_voice_el/{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if false;
     }
-    match /dart_video_sessions/{allPaths=**} {
-      allow read, write: if request.auth != null;
-    }
+
+    // Player photos — authenticated users only.
+    // Scoped to userId/{playerId} path once userId is added to player records.
     match /dart_photos/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // Video sessions — authenticated users only (session codes are random UUIDs)
+    match /dart_video_sessions/{allPaths=**} {
       allow read, write: if request.auth != null;
     }
   }
