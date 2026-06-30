@@ -16,7 +16,6 @@ function getScreens(){
       icon: "🎯",
       title: t('ob_title_2'),
       text: t('ob_text_2'),
-      tip: t('ob_tip_2'),
       btn: t('ob_btn_weiter')
     },
     {
@@ -119,7 +118,7 @@ export function showOnboarding(){
         background:var(--dart-bg-chip);border-radius:3px 3px 0 0
       ">
         <div id="onboarding-progress" style="
-          height:100%;background:var(--gold);border-radius:3px;
+          height:100%;background:var(--dart-gold);border-radius:3px;
           transition:width .3s ease
         "></div>
       </div>
@@ -154,7 +153,7 @@ function renderScreen(idx){
   body.innerHTML = `
     <div style="font-size:56px;margin-bottom:16px;line-height:1">${s.icon}</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;
-      color:var(--gold);letter-spacing:2px;margin-bottom:12px;line-height:1.2">
+      color:var(--dart-gold);letter-spacing:2px;margin-bottom:12px;line-height:1.2">
       ${s.title}
     </div>
     <div style="font-size:14px;color:var(--dart-text-sec);line-height:1.65;margin-bottom:16px;white-space:pre-line">
@@ -163,11 +162,11 @@ function renderScreen(idx){
     ${s.tip ? `<div style="background:var(--dart-bg-chip);border:1px solid var(--dart-border);border-radius:8px;
       padding:10px 12px;font-size:12px;color:var(--dart-text-sec);margin-bottom:16px;
       text-align:left;white-space:pre-line">${s.tip}</div>` : ""}
-    ${s.badge ? `<div style="background:rgba(232,196,74,0.12);border:1px solid var(--gold);
+    ${s.badge ? `<div style="background:rgba(232,196,74,0.12);border:1px solid var(--dart-gold);
       border-radius:8px;padding:10px;font-size:13px;color:var(--dart-gold);margin-bottom:16px">
       ${s.badge}</div>` : ""}
     <button id="onboarding-next" style="
-      width:100%;padding:14px;background:var(--gold);border:none;
+      width:100%;padding:14px;background:var(--dart-gold);border:none;
       border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:20px;
       letter-spacing:2px;color:#000;cursor:pointer
     ">${s.btn}</button>
@@ -175,7 +174,7 @@ function renderScreen(idx){
 
   dots.innerHTML = getScreens().map((_, i) => `
     <div style="width:${i===idx?18:7}px;height:7px;border-radius:4px;
-      background:${i===idx?"var(--gold)":"#333"};transition:all .25s"></div>
+      background:${i===idx?"var(--dart-gold)":"#333"};transition:all .25s"></div>
   `).join("");
 
   requestAnimationFrame(()=>{
@@ -220,11 +219,11 @@ export function showHelp(titleKey, textKey){
   `;
   overlay.innerHTML = `
     <div style="
-      background:var(--dart-bg-card);border:1px solid var(--gold);border-radius:14px;
+      background:var(--dart-bg-card);border:1px solid var(--dart-gold);border-radius:14px;
       padding:20px 18px;max-width:280px;width:100%;
     ">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;
-        color:var(--gold);letter-spacing:1px;margin-bottom:8px">
+        color:var(--dart-gold);letter-spacing:1px;margin-bottom:8px">
         ${title}
       </div>
       <div style="font-size:13px;color:var(--dart-text-sec);line-height:1.6">${text}</div>
