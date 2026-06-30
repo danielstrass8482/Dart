@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Dart Pro</string>
-    <string name="title_activity_main">Dart Pro</string>
+    <string name="app_name">DartTrainer</string>
+    <string name="title_activity_main">DartTrainer</string>
     <string name="package_name">com.danielstrass.dartpro</string>
     <string name="custom_url_scheme">com.danielstrass.dartpro</string>
 </resources>

@@ -12,7 +12,7 @@ import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signIn
          getRedirectResult, signInWithCredential, onAuthStateChanged,
          createUserWithEmailAndPassword, signInWithEmailAndPassword,
          sendPasswordResetEmail, sendEmailVerification, updateProfile,
-         EmailAuthProvider, linkWithCredential }
+         EmailAuthProvider, linkWithCredential, deleteUser }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
@@ -368,6 +368,27 @@ window.signInWithGoogle = async function(){
 
 window.signOutUser = async function(){
   await auth.signOut();
+};
+
+window.deleteUserAccount = async function(){
+  const user = auth.currentUser;
+  if(!user) throw new Error('not-authenticated');
+  const uid = user.uid;
+  const batches = [
+    getDocs(query(collection(db,"dart_games"), where("userId","==",uid))),
+    getDocs(query(collection(db,"dart_players"), where("userId","==",uid))),
+    getDocs(query(collection(db,"dart_coach_analyses"), where("userId","==",uid))),
+  ];
+  const [games, players, analyses] = await Promise.all(batches);
+  const dels = [];
+  games.forEach(d => dels.push(fsDeleteDoc(d.ref)));
+  players.forEach(d => dels.push(fsDeleteDoc(d.ref)));
+  analyses.forEach(d => dels.push(fsDeleteDoc(d.ref)));
+  dels.push(fsDeleteDoc(doc(db,"dart_users",uid,"subscription","current")).catch(()=>{}));
+  dels.push(fsDeleteDoc(doc(db,"dart_users",uid)).catch(()=>{}));
+  dels.push(fsDeleteDoc(doc(db,"dart_config",`userprefs_${uid}`)).catch(()=>{}));
+  await Promise.all(dels);
+  await deleteUser(user);
 };
 
 window.signInAsGuest = async function(){

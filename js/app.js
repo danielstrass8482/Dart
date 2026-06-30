@@ -964,6 +964,31 @@ async function refreshPremiumUI(){
 }
 
 document.getElementById("btn-profil-signout")?.addEventListener("click",()=>window.signOutUser());
+
+document.getElementById("btn-profil-delete-account")?.addEventListener("click",()=>{
+  const modal = document.getElementById("delete-account-modal");
+  if(modal){ modal.style.display="flex"; document.getElementById("delete-account-error").textContent=""; }
+});
+document.getElementById("btn-delete-cancel")?.addEventListener("click",()=>{
+  document.getElementById("delete-account-modal").style.display="none";
+});
+document.getElementById("btn-delete-confirm")?.addEventListener("click",async()=>{
+  const errEl = document.getElementById("delete-account-error");
+  const btn = document.getElementById("btn-delete-confirm");
+  btn.disabled = true;
+  btn.textContent = "...";
+  try{
+    await window.deleteUserAccount();
+    document.getElementById("delete-account-modal").style.display="none";
+  } catch(e){
+    btn.disabled = false;
+    const confirmSpan = btn.querySelector("[data-i18n='loeschen']");
+    if(confirmSpan) confirmSpan.textContent = t('loeschen');
+    errEl.textContent = e.code === "auth/requires-recent-login"
+      ? t('konto_loeschen_reauth')
+      : (e.message || t('fehler_loeschen'));
+  }
+});
 document.getElementById("btn-profil-upgrade")?.addEventListener("click",async()=>{
   const name=document.getElementById("profil-upgrade-name").value.trim();
   const email=document.getElementById("profil-upgrade-email").value.trim();
