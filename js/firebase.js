@@ -451,6 +451,7 @@ onAuthStateChanged(auth, user=>{
 
     window.currentUser = user;
     if(user){
+      localStorage.setItem('dart_was_logged_in', '1');
       initDartDB();
       prewarmTTS();
       if(window.updateAuthUI) window.updateAuthUI(user);
@@ -465,6 +466,7 @@ onAuthStateChanged(auth, user=>{
       if(window.loadPlayers) window.loadPlayers();
       if(window.initProfilTab) window.initProfilTab();
     } else {
+      localStorage.removeItem('dart_was_logged_in');
       const authScreen = document.getElementById("auth-screen");
       if(authScreen && window.showScreen) window.showScreen("auth-screen");
     }
