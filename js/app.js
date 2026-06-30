@@ -23,6 +23,12 @@ if(!localStorage.getItem('dart_lang')){
 applyTranslations();
 // Nochmal nach DOM-Ready, falls Elemente noch nicht existierten
 document.addEventListener('DOMContentLoaded', () => {
+  // Pre-navigate to setup if user was logged in last session, so auth-screen
+  // never flashes. Firebase will redirect to auth-screen if the session is invalid.
+  if(localStorage.getItem('dart_was_logged_in')){
+    document.getElementById('auth-screen')?.classList.remove('active');
+    document.getElementById('setup')?.classList.add('active');
+  }
   setTimeout(() => applyTranslations(), 100);
 });
 
