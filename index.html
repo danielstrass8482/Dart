@@ -32,13 +32,16 @@
 <div id="splash-screen" style="
   position:fixed;inset:0;z-index:99999;
   background:#08080A;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;
   transition:opacity 0.5s ease;
 ">
-  <img src="assets/02_feature_graphic_1024x500.png" alt="DartTrainer" style="
-    width:100vw;height:100vh;
-    object-fit:cover;object-position:center center;
+  <img src="icons/icon-512.webp" alt="DartTrainer" style="
+    width:min(220px,45vw);height:auto;
   ">
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:6px;color:#D4AF37">
+    DartTrainer
+  </div>
 </div>
 <script>
 var SPLASH_ENABLED = true;
