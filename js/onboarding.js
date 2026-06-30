@@ -7,32 +7,32 @@ import { t, SUPPORTED_LANGS, setLang } from './i18n.js?v=3';
 function getScreens(){
   return [
     {
-      icon: "🎯",
+      lucide: "target",
       title: t('ob_title_1'),
       text: t('ob_text_1'),
       btn: t('ob_btn_start')
     },
     {
-      icon: "🎯",
+      lucide: "crosshair",
       title: t('ob_title_2'),
       text: t('ob_text_2'),
       btn: t('ob_btn_weiter')
     },
     {
-      icon: "👥",
+      lucide: "users",
       title: t('ob_title_3'),
       text: t('ob_text_3'),
       btn: t('ob_btn_weiter')
     },
     {
-      icon: "🧠",
+      lucide: "brain",
       title: t('ob_title_4'),
       text: t('ob_text_4'),
       badge: t('ob_badge_4'),
       btn: t('ob_btn_weiter')
     },
     {
-      icon: "🏆",
+      lucide: "trophy",
       title: t('ob_title_5'),
       text: t('ob_text_5'),
       btn: t('ob_btn_play')
@@ -64,7 +64,11 @@ function showLangSelect(){
   overlay.innerHTML = `
     <div style="background:var(--dart-bg-card);border:1px solid var(--dart-border);border-radius:18px;
       padding:40px 24px;max-width:320px;width:100%;text-align:center">
-      <div style="font-size:32px;margin-bottom:8px">🎯</div>
+      <div style="width:64px;height:64px;border-radius:50%;
+        background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);
+        display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <i data-lucide="target" style="width:36px;height:36px;stroke-width:1.5;color:#D4AF37"></i>
+      </div>
       <div style="font-size:24px;font-weight:800;color:var(--dart-text);margin-bottom:8px;
         font-family:'Bebas Neue',sans-serif;letter-spacing:2px">DartTrainer</div>
       <div style="font-size:14px;color:var(--dart-text-muted);margin-bottom:32px">
@@ -75,7 +79,7 @@ function showLangSelect(){
           <button class="lang-select-btn" data-lang="${l.code}"
             style="padding:14px;border-radius:12px;
             border:2px solid ${l.code===browserLang?'var(--dart-gold)':'var(--dart-border)'};
-            background:${l.code===browserLang?'rgba(232,196,74,0.1)':'var(--dart-bg-chip)'};
+            background:${l.code===browserLang?'rgba(212,175,55,0.1)':'var(--dart-bg-chip)'};
             color:${l.code===browserLang?'var(--dart-gold)':'var(--dart-text)'};font-size:15px;
             font-weight:600;cursor:pointer;
             display:flex;align-items:center;gap:12px">
@@ -88,6 +92,7 @@ function showLangSelect(){
     </div>
   `;
   document.body.appendChild(overlay);
+  window.refreshIcons?.();
   overlay.querySelectorAll('.lang-select-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       setLang(btn.dataset.lang);
@@ -151,7 +156,12 @@ function renderScreen(idx){
   body.style.transition = "none";
 
   body.innerHTML = `
-    <div style="font-size:56px;margin-bottom:16px;line-height:1">${s.icon}</div>
+    <div style="width:80px;height:80px;border-radius:50%;
+      background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 20px">
+      <i data-lucide="${s.lucide}" style="width:44px;height:44px;stroke-width:1.5;color:#D4AF37"></i>
+    </div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;
       color:var(--dart-gold);letter-spacing:2px;margin-bottom:12px;line-height:1.2">
       ${s.title}
@@ -159,10 +169,7 @@ function renderScreen(idx){
     <div style="font-size:14px;color:var(--dart-text-sec);line-height:1.65;margin-bottom:16px;white-space:pre-line">
       ${s.text}
     </div>
-    ${s.tip ? `<div style="background:var(--dart-bg-chip);border:1px solid var(--dart-border);border-radius:8px;
-      padding:10px 12px;font-size:12px;color:var(--dart-text-sec);margin-bottom:16px;
-      text-align:left;white-space:pre-line">${s.tip}</div>` : ""}
-    ${s.badge ? `<div style="background:rgba(232,196,74,0.12);border:1px solid var(--dart-gold);
+    ${s.badge ? `<div style="background:rgba(212,175,55,0.1);border:1px solid var(--dart-gold);
       border-radius:8px;padding:10px;font-size:13px;color:var(--dart-gold);margin-bottom:16px">
       ${s.badge}</div>` : ""}
     <button id="onboarding-next" style="
@@ -176,6 +183,8 @@ function renderScreen(idx){
     <div style="width:${i===idx?18:7}px;height:7px;border-radius:4px;
       background:${i===idx?"var(--dart-gold)":"#333"};transition:all .25s"></div>
   `).join("");
+
+  window.refreshIcons?.();
 
   requestAnimationFrame(()=>{
     body.style.transition = "opacity .25s ease, transform .25s ease";
