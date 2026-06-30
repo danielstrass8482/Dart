@@ -7,7 +7,11 @@ const { initializeApp } = require("firebase-admin/app");
 const { getStorage } = require("firebase-admin/storage");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAuth } = require("firebase-admin/auth");
+const { getAppCheck } = require("firebase-admin/app-check");
 const { randomUUID } = require("crypto");
+
+// Set to true to hard-enforce App Check (after all clients carry tokens).
+const ENFORCE_APP_CHECK = false;
 
 initializeApp();
 
@@ -74,6 +78,23 @@ exports.dartTTS = onRequest(
   async (req, res) => {
     if (req.method !== "POST") {
       res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    // ── App Check verification ────────────────────────────────────
+    const appCheckToken = req.headers["x-firebase-appcheck"];
+    if (appCheckToken) {
+      try {
+        await getAppCheck().verifyToken(appCheckToken);
+      } catch (e) {
+        if (ENFORCE_APP_CHECK) {
+          res.status(401).json({ error: "App Check verification failed" });
+          return;
+        }
+        console.warn("App Check token invalid:", e.message);
+      }
+    } else if (ENFORCE_APP_CHECK) {
+      res.status(401).json({ error: "App Check token required" });
       return;
     }
 

@@ -52,6 +52,9 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
+    // Firebase App Check — Play Integrity (only valid for apps distributed via Play Store)
+    implementation 'com.google.firebase:firebase-appcheck-playintegrity:18.0.0'
+    implementation 'com.google.firebase:firebase-appcheck-debug:18.0.0'
 }
 
 apply from: 'capacitor.build.gradle'
