@@ -478,6 +478,20 @@ window.splashPromise = new Promise(function(resolve) {
       </div>
       <button onclick="window.showOnboarding&&window.showOnboarding()" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-text-muted);font-size:14px;cursor:pointer;margin-bottom:8px"><i data-lucide="book-open" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="tutorial">Tutorial wiederholen</span></button>
       <button id="btn-profil-signout" style="width:100%;padding:10px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-danger);font-size:14px;cursor:pointer"><i data-lucide="log-out" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="abmelden">Abmelden</span></button>
+      <button id="btn-profil-delete-account" style="width:100%;padding:10px;border:1px solid #7f1d1d;border-radius:8px;background:rgba(127,29,29,0.15);color:#f87171;font-size:14px;cursor:pointer;margin-top:8px"><i data-lucide="trash-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="konto_loeschen">Konto löschen</span></button>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div id="delete-account-modal" style="display:none;position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:24px">
+      <div style="background:#141416;border:1px solid #7f1d1d;border-radius:16px;padding:24px;max-width:360px;width:100%">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#f87171;letter-spacing:2px;margin-bottom:10px" data-i18n="konto_loeschen_titel">Konto löschen?</div>
+        <div style="font-size:14px;color:var(--dart-text-sec);line-height:1.5;margin-bottom:20px" data-i18n="konto_loeschen_text">Diese Aktion ist unwiderruflich. Alle Spieldaten, Spielerprofile und das Konto werden dauerhaft gelöscht.</div>
+        <div style="display:flex;gap:10px">
+          <button id="btn-delete-cancel" style="flex:1;padding:11px;border:1px solid var(--dart-border);border-radius:8px;background:none;color:var(--dart-text);font-size:15px;cursor:pointer"><span data-i18n="abbrechen">Abbrechen</span></button>
+          <button id="btn-delete-confirm" style="flex:1;padding:11px;border:none;border-radius:8px;background:#dc2626;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;cursor:pointer"><span data-i18n="loeschen">LÖSCHEN</span></button>
+        </div>
+        <div id="delete-account-error" style="color:#f87171;font-size:13px;margin-top:10px;text-align:center"></div>
+      </div>
     </div>
 
     <!-- Premium Status -->
