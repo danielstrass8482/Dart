@@ -542,7 +542,7 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
   if(state.selectedPlayers.length<1){ await showAlert(t('min_1_spieler')); return; }
   if(selectedMode==="Killer"&&state.selectedPlayers.length<2&&selectedBot==="none"){ await showAlert(t('killer_min_2')); return; }
 
-  const healthData = localStorage.getItem("dart_health_enabled") !== "false" ? await collectHealthData() : null;
+  const healthData = null; // Health Connect — Coming Soon
 
   const players=[...state.selectedPlayers.map(p=>p.name)];
   const playerIds=[...state.selectedPlayers.map(p=>p.id)];
@@ -1011,8 +1011,8 @@ document.getElementById("btn-profil-google")?.addEventListener("click",async()=>
 // raced with that and made the switch flip back on alternating clicks.
 // Fix: rely solely on the checkbox's own "change" event, and clone+replace
 // it on every init so re-opening the Profil tab can't stack listeners.
-const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", health:"dart_health_enabled", checkout_announce:"dart_checkout_announce", slang:"dart_slang_enabled" };
-const SETTING_DEFAULTS = { tts:true, mic:true, checkout:true, health:true, checkout_announce:true, slang:false };
+const SETTING_KEYS = { tts:"dart_tts_enabled", mic:"dart_mic_enabled", checkout:"dart_checkout_highlight", checkout_announce:"dart_checkout_announce", slang:"dart_slang_enabled" };
+const SETTING_DEFAULTS = { tts:true, mic:true, checkout:true, checkout_announce:true, slang:false };
 
 function updateToggleVisual(checkbox){
   const isOn=checkbox.checked;
