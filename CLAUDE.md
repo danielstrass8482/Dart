@@ -67,6 +67,11 @@ storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
 - **`dartTTS`** — Google Cloud TTS Proxy (British voice, caching in Firebase Storage)
   - URL: `https://darttts-64z7naltva-ew.a.run.app`
   - Auth: Application Default Credentials (kein separater API Key)
+- **`sendFeedback`** — Feedback-Formular Mailversand an support@darttrainer.app
+  - URL: `https://europe-west1-darttrainer-app.cloudfunctions.net/sendFeedback` (nach Deploy prüfen/in `js/feedback.js` aktualisieren)
+  - Secrets: `FEEDBACK_SMTP_USER`, `FEEDBACK_SMTP_PASS` (Firebase Secret Manager, noch einzurichten — Gmail SMTP via `smtp.gmail.com:465`)
+  - Speichert zusätzlich in Firestore `dart_feedback` als Fallback
+  - File: `functions/feedback.js`
   - Voice: `en-GB-Neural2-B` (männlich, britisch)
   - Cache: `dart_voice_el/<key>.mp3` in Firebase Storage
   - File: `functions/index.js`
