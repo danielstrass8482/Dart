@@ -3,8 +3,7 @@
  */
 import { t } from './i18n.js?v=3';
 
-// Nach erfolgreichem Deploy von functions:sendFeedback prüfen/aktualisieren.
-export const FEEDBACK_FUNCTION_URL = "https://europe-west1-darttrainer-app.cloudfunctions.net/sendFeedback";
+export const FEEDBACK_FUNCTION_URL = "https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/sendFeedback";
 
 const BANNER_DISMISSED_KEY = "dart_beta_banner_dismissed";
 

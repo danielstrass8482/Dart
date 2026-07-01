@@ -68,8 +68,8 @@ storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
   - URL: `https://darttts-64z7naltva-ew.a.run.app`
   - Auth: Application Default Credentials (kein separater API Key)
 - **`sendFeedback`** — Feedback-Formular Mailversand an support@darttrainer.app
-  - URL: `https://europe-west1-darttrainer-app.cloudfunctions.net/sendFeedback` (nach Deploy prüfen/in `js/feedback.js` aktualisieren)
-  - Secrets: `FEEDBACK_SMTP_USER`, `FEEDBACK_SMTP_PASS` (Firebase Secret Manager, noch einzurichten — Gmail SMTP via `smtp.gmail.com:465`)
+  - URL: `https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/sendFeedback`
+  - Secrets: `FEEDBACK_SMTP_HOST`, `FEEDBACK_SMTP_USER`, `FEEDBACK_SMTP_PASS` (Firebase Secret Manager — Dogado Mail-Hosting, Port 465/SSL)
   - Speichert zusätzlich in Firestore `dart_feedback` als Fallback
   - File: `functions/feedback.js`
   - Voice: `en-GB-Neural2-B` (männlich, britisch)
