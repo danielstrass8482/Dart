@@ -7,7 +7,8 @@ const nodemailer = require("nodemailer");
 
 if (!getApps().length) initializeApp();
 
-// Firebase Secret Manager: SMTP-Zugangsdaten für den Feedback-Versand.
+// Firebase Secret Manager: SMTP-Zugangsdaten für den Feedback-Versand (Dogado Mail-Hosting).
+const FEEDBACK_SMTP_HOST = defineSecret("FEEDBACK_SMTP_HOST");
 const FEEDBACK_SMTP_USER = defineSecret("FEEDBACK_SMTP_USER");
 const FEEDBACK_SMTP_PASS = defineSecret("FEEDBACK_SMTP_PASS");
 
@@ -17,7 +18,7 @@ const MAX_MESSAGE_LENGTH = 2000;
 
 exports.sendFeedback = onRequest(
   {
-    secrets: [FEEDBACK_SMTP_USER, FEEDBACK_SMTP_PASS],
+    secrets: [FEEDBACK_SMTP_HOST, FEEDBACK_SMTP_USER, FEEDBACK_SMTP_PASS],
     region: "europe-west1",
     cors: ["https://danielstrass8482.github.io", "https://darttrainer.app", "http://localhost"],
     timeoutSeconds: 30,
@@ -90,7 +91,7 @@ exports.sendFeedback = onRequest(
 
     try {
       const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
+        host: FEEDBACK_SMTP_HOST.value(),
         port: 465,
         secure: true,
         auth: { user: FEEDBACK_SMTP_USER.value(), pass: FEEDBACK_SMTP_PASS.value() },
