@@ -431,6 +431,18 @@ export const translations = {
     legal_datenschutz_text: "Daten werden in Firebase (Google) gespeichert, keine Weitergabe an Dritte",
     legal_entwickelt: "Entwickelt von Daniel Straß 2026",
 
+    // Feedback & Beta-Banner
+    feedback_titel: "FEEDBACK",
+    feedback_geben: "Feedback geben",
+    feedback_untertitel: "Was können wir besser machen? Dein Feedback geht direkt an das Entwicklerteam.",
+    feedback_placeholder: "Dein Feedback…",
+    feedback_senden: "SENDEN",
+    feedback_leer: "Bitte gib ein Feedback ein.",
+    feedback_erfolg: "Danke!",
+    feedback_fehler: "Senden fehlgeschlagen. Bitte später erneut versuchen.",
+    beta_banner_text: "Die App befindet sich in der Beta-Phase — dein Feedback ist herzlich willkommen.",
+    beta_banner_link: "Feedback geben →",
+
     // Checkout Ansagen
     checkout_ansagen_label: "Checkout Ansagen",
     checkout_ansagen_sub: "Checkout-Pfad vor jedem Wurf ansagen",
@@ -992,6 +1004,18 @@ export const translations = {
     app_version: "DARTTRAINER · Personal Dart Scoring & Tracking",
     legal_datenschutz_text: "Data is stored in Firebase (Google), no sharing with third parties",
     legal_entwickelt: "Developed by Daniel Straß 2026",
+
+    // Feedback & Beta banner
+    feedback_titel: "FEEDBACK",
+    feedback_geben: "Give feedback",
+    feedback_untertitel: "What can we do better? Your feedback goes straight to the development team.",
+    feedback_placeholder: "Your feedback…",
+    feedback_senden: "SEND",
+    feedback_leer: "Please enter your feedback.",
+    feedback_erfolg: "Thanks!",
+    feedback_fehler: "Sending failed. Please try again later.",
+    beta_banner_text: "The app is currently in beta — your feedback is very welcome.",
+    beta_banner_link: "Give feedback →",
 
     // Checkout Announcements
     checkout_ansagen_label: "Checkout Announcements",

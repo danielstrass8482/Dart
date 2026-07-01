@@ -472,9 +472,11 @@ onAuthStateChanged(auth, user=>{
 
     window.currentUser = user;
     if(user){
+      const isFirstLogin = !localStorage.getItem('dart_was_logged_in');
       localStorage.setItem('dart_was_logged_in', '1');
       initDartDB();
       prewarmTTS();
+      if(isFirstLogin) window.maybeShowBetaBanner?.();
       if(window.updateAuthUI) window.updateAuthUI(user);
       if(document.getElementById("setup")){
         const authScreen = document.getElementById("auth-screen");

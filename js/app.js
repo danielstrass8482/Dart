@@ -41,6 +41,9 @@ import { registerBetaUser, BETA_MODE, canUseFeature, showPremiumOverlay,
 // ── Onboarding & Help ────────────────────────────────────────────
 import { checkOnboarding, showOnboarding, showHelp } from './onboarding.js';
 
+// ── Feedback & Beta-Banner ────────────────────────────────────────
+import { openFeedbackModal, initBetaBanner } from './feedback.js';
+
 // ── State ────────────────────────────────────────────────────────
 import { state } from './state.js';
 
@@ -1504,6 +1507,8 @@ window.loadTournaments = loadTournaments;
 window.showSetup = showSetup;
 window.showOnboarding = showOnboarding;
 window.showHelp = showHelp;
+window.openFeedbackModal = openFeedbackModal;
 
 // ── Onboarding ────────────────────────────────────────────────────
 checkOnboarding();
+initBetaBanner();

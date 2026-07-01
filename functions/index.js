@@ -217,3 +217,4 @@ function buildDownloadURL(bucket, path, token) {
 // Re-export additional functions
 Object.assign(exports, require("./dartCoach"));
 Object.assign(exports, require("./budgetCheck"));
+Object.assign(exports, require("./feedback"));
