@@ -13,7 +13,7 @@ service cloud.firestore {
       allow get: if request.auth != null
         && resource.data.userId == request.auth.uid;
       allow list: if request.auth != null
-        && request.query.filters.hasAll([['userId', '==', request.auth.uid]]);
+        && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null
@@ -25,7 +25,7 @@ service cloud.firestore {
       allow get: if request.auth != null
         && resource.data.userId == request.auth.uid;
       allow list: if request.auth != null
-        && request.query.filters.hasAll([['userId', '==', request.auth.uid]]);
+        && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null
@@ -37,7 +37,7 @@ service cloud.firestore {
       allow get: if request.auth != null
         && resource.data.userId == request.auth.uid;
       allow list: if request.auth != null
-        && request.query.filters.hasAll([['userId', '==', request.auth.uid]]);
+        && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid;
       allow update, delete: if request.auth != null
