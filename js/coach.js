@@ -7,9 +7,12 @@ import { numToWords } from './audio.js';
 import { getDoubleStatsForCoach } from './x01.js?v=2';
 import { t, SUPPORTED_LANGS } from './i18n.js?v=3';
 
-export const COACH_DAILY_LIMIT = 999;
+// Client-Anzeige-Limits. Verbindlich durchgesetzt werden sie serverseitig in
+// functions/dartCoach.js (DAILY_LIMITS = { coach: 10, video: 3 }); diese Werte
+// spiegeln das nur fürs UI. Nicht höher als die Server-Limits setzen.
+export const COACH_DAILY_LIMIT = 10;
 export const COACH_STORAGE_KEY = "dart_coach_usage";
-export const VIDEO_COACH_LIMIT = 999;
+export const VIDEO_COACH_LIMIT = 3;
 export const VIDEO_COACH_KEY = "dart_video_coach_usage";
 
 export const COACH_FUNCTION_URL="https://dartcoach-dxa2kmdyca-ew.a.run.app";

@@ -6,6 +6,7 @@ import { state } from './state.js';
 import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js?v=2';
 import { speak, speakScoreWithCustom } from './audio.js';
 import { t } from './i18n.js?v=3';
+import { escapeHtml } from './util.js';
 
 export let boardSVGparty;
 
@@ -145,7 +146,7 @@ export function renderPartyTabs(){
     else if(state.pg.mode==="Elimination") sub=`${state.pg.elimScores[i]}`;
     else if(state.pg.mode==="Bob27") sub=`${state.pg.bob27Score[i]}pts`;
     else if(state.pg.mode==="CheckoutTraining") sub=`${state.pg.coHits}/${state.pg.coAttempts}`;
-    div.innerHTML=`<div class="tab-name">${name}</div><div class="tab-score" style="font-size:16px">${sub}</div>`;
+    div.innerHTML=`<div class="tab-name">${escapeHtml(name)}</div><div class="tab-score" style="font-size:16px">${sub}</div>`;
     tabs.appendChild(div);
   });
 }
@@ -156,36 +157,36 @@ export function renderPartyScoreboard(){
   if(state.pg.mode==="AtC"){
     box.innerHTML=`<div class="panel-label">${t('fortschritt')}</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:6px">
-        <div style="font-size:11px;color:var(--dart-text-sec)">${p}</div>
+        <div style="font-size:11px;color:var(--dart-text-sec)">${escapeHtml(p)}</div>
         <div style="font-size:20px;font-family:'Bebas Neue',sans-serif;color:${i===state.pg.current?"#e8c44a":"#555"}">
           ${state.pg.atcTarget[i]===21?t('fertig_check'):`${t('ziel')} ${state.pg.atcTarget[i]}`}</div>
       </div>`).join("");
   } else if(state.pg.mode==="Shanghai"){
     box.innerHTML=`<div class="panel-label">${t('runde').toUpperCase()} ${state.pg.shanghaiRound} · ${t('ziel').toUpperCase()} ${state.pg.shanghaiRound}</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
-        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
+        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${escapeHtml(p)}</span>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.shanghaiScores[i]}</span>
       </div>`).join("");
   } else if(state.pg.mode==="Highscore"){
     box.innerHTML=`<div class="panel-label">${t('runde').toUpperCase()} ${state.pg.hsRound}/${state.pg.hsMaxRounds}</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
-        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
+        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${escapeHtml(p)}</span>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.hsScores[i]}</span>
       </div>`).join("");
   } else if(state.pg.mode==="Killer"){
     box.innerHTML=`<div class="panel-label">KILLER</div>`+
       state.cfg.players.map((p,i)=>{
-        if(state.pg.killerEliminated[i]) return `<div style="margin-bottom:4px;color:var(--dart-text-sec);text-decoration:line-through;font-size:13px">${p} — OUT</div>`;
+        if(state.pg.killerEliminated[i]) return `<div style="margin-bottom:4px;color:var(--dart-text-sec);text-decoration:line-through;font-size:13px">${escapeHtml(p)} — OUT</div>`;
         const isK=state.pg.killerIsKiller[i];
         return `<div style="margin-bottom:6px">
-          <div style="font-size:12px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p} · ${t('zahl')}: <strong>${state.pg.killerNumbers[i]}</strong>${isK?" ☠️":""}</div>
+          <div style="font-size:12px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${escapeHtml(p)} · ${t('zahl')}: <strong>${state.pg.killerNumbers[i]}</strong>${isK?" ☠️":""}</div>
           <div style="font-size:18px">❤️</div>
         </div>`;
       }).join("");
   } else if(state.pg.mode==="Elimination"){
     box.innerHTML=`<div class="panel-label">ELIMINATION 501</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
-        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
+        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${escapeHtml(p)}</span>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.elimScores[i]}</span>
       </div>`).join("");
   } else if(state.pg.mode==="Bob27"){
@@ -193,7 +194,7 @@ export function renderPartyScoreboard(){
     const fieldLabel=field===25?"Bull":`D${field}`;
     box.innerHTML=`<div class="panel-label">BOB'S 27 · ${t('ziel').toUpperCase()} ${fieldLabel} (${state.pg.bob27Round+1}/21)</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
-        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${p}</span>
+        <span style="font-size:13px;color:${i===state.pg.current?"#1a1a1a":"#999"}">${escapeHtml(p)}</span>
         <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${i===state.pg.current?"#e8c44a":"#555"}">${state.pg.bob27Score[i]}</span>
       </div>`).join("");
   } else if(state.pg.mode==="CheckoutTraining"){

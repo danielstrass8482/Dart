@@ -8,6 +8,7 @@ import { speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, 
 import { announceRequires } from './speech.js';
 import { runBotTurn } from './bot.js';
 import { t } from './i18n.js?v=3';
+import { escapeHtml } from './util.js';
 
 /**
  * Computes a checkout path ending in one of the preferred doubles.
@@ -123,7 +124,7 @@ export function renderX01(){
     strip.innerHTML=state.cfg.players.map((name,i)=>{
       const isActive=i===state.x01.current&&!state.x01.winner;
       const playerObj=state.allPlayers?.find(pl=>pl.id===state.cfg.playerIds?.[i]);
-      const displayName=playerObj?.nickname||name;
+      const displayName=escapeHtml(playerObj?.nickname||name);
       const photoUrl=playerObj?.photoUrl||null;
       const playerScore=state.x01.scores[i];
       const playerRemaining=isActive?remaining:playerScore;
@@ -187,7 +188,7 @@ export function renderX01(){
     lpPlayers.innerHTML=state.cfg.players.map((name,i)=>{
       const isActive=i===state.x01.current&&!state.x01.winner;
       const playerObj=state.allPlayers?.find(pl=>pl.id===state.cfg.playerIds?.[i]);
-      const displayName=playerObj?.nickname||name;
+      const displayName=escapeHtml(playerObj?.nickname||name);
       const photoUrl=playerObj?.photoUrl||null;
       const playerScore=state.x01.scores[i];
       const lpRemaining=isActive?remaining:playerScore;
@@ -281,7 +282,7 @@ export function renderTurnTableLP(){
   let html=`<table style="width:100%;border-collapse:collapse;font-size:13px">
     <thead><tr style="background:var(--dart-bg-chip)">
       <th style="padding:5px 8px;color:var(--dart-text-muted);font-size:10px;letter-spacing:1px;text-align:left">${t('wurf')}</th>`;
-  state.cfg.players.forEach(p=>{ html+=`<th style="padding:5px 6px;color:var(--dart-text-sec);font-size:10px;letter-spacing:1px" colspan="2">${p}</th>`; });
+  state.cfg.players.forEach(p=>{ html+=`<th style="padding:5px 6px;color:var(--dart-text-sec);font-size:10px;letter-spacing:1px" colspan="2">${escapeHtml(p)}</th>`; });
   html+=`</tr></thead><tbody>`;
   let starts=state.cfg.players.map(()=>state.cfg.startScore);
   for(let r=0;r<maxRounds;r++){
@@ -493,7 +494,6 @@ export function advanceX01(){
     lastTurnThrows:state.x01.lastTurnThrows.map(a=>[...a]),
     turnScores:state.x01.turnScores.map(a=>[...a])});
   state.x01.turnScores[pi].push(spent);
-  console.log("turnScores check:", pi, state.x01.turnScores[pi]?.length, state.x01.first9[pi]);
   if(state.x01.turnScores[pi].length>=3&&state.x01.first9[pi]===null)
     state.x01.first9[pi]=Math.round(state.x01.turnScores[pi].reduce((a,b)=>a+b,0)/3*10)/10;
   state.x01.scores[pi]-=spent;
@@ -631,7 +631,7 @@ export function handleLegWin(winnerIdx){
     document.getElementById("set-label").textContent=`SET ${state.cfg.currentSet} GEWONNEN!`;
     document.getElementById("set-winner-name").textContent=name;
     const setScoreHtml=state.cfg.players.map((p,i)=>
-      `${p}: <strong>${state.cfg.setWins[i]}</strong>`).join(" &nbsp;|&nbsp; ");
+      `${escapeHtml(p)}: <strong>${state.cfg.setWins[i]}</strong>`).join(" &nbsp;|&nbsp; ");
     document.getElementById("set-score-display").innerHTML=setScoreHtml;
     document.getElementById("set-to-win").textContent=
       t('noch_sets_zum_sieg').replace('{n}',state.cfg.setsToWin-state.cfg.setWins[winnerIdx]);
@@ -723,7 +723,7 @@ export function showWinner(name, round, isLeg=false, legLabel=null){
       const highCo=allCheckouts.length?Math.max(...allCheckouts):0;
       const pid=state.cfg.playerIds?.[i];
       const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
-      const displayName=playerObj?.nickname||p;
+      const displayName=escapeHtml(playerObj?.nickname||p);
       const photoUrl=playerObj?.photoUrl||null;
       const isWinner=isLeg?(i===winnerIdx):(i===state.x01.winner);
       let score=null, scoreLabel=null;

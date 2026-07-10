@@ -47,6 +47,7 @@ exports.dartCoach = onRequest(
     const db = getFirestore();
 
     // ── Kill-switch / feature flags ──────────────────────────────
+    let configReadFailed = false;
     try {
       const config = (await db.collection("dart_config").doc("limits").get()).data();
       if (!config || config.emergencyStop) {
@@ -64,7 +65,8 @@ exports.dartCoach = onRequest(
         return;
       }
     } catch (e) {
-      console.warn("Config fetch failed, proceeding:", e.message);
+      console.warn("Config fetch failed:", e.message);
+      configReadFailed = true;
     }
 
     // ── Auth → UID ───────────────────────────────────────────────
@@ -80,6 +82,15 @@ exports.dartCoach = onRequest(
       }
     }
 
+    // Expensive endpoint — require a verified Firebase user (anonymous guests
+    // always carry a token, so they still pass). Reject tokenless/invalid
+    // callers so a single unauthenticated attacker cannot burn the shared
+    // "anonymous" quota or run up API cost.
+    if (uid === "anonymous") {
+      res.status(401).json({ error: "auth_required", message: "Authentifizierung erforderlich." });
+      return;
+    }
+
     // ── Determine call type ──────────────────────────────────────
     const { model, max_tokens, messages } = req.body;
     if (!messages || !Array.isArray(messages)) {
@@ -91,6 +102,16 @@ exports.dartCoach = onRequest(
     );
     const functionType = req.body.type || (hasImages ? "video" : "coach");
     const limit = DAILY_LIMITS[functionType] ?? 10;
+
+    // Fail closed for the expensive video path if the kill-switch config was
+    // unreadable — a Firestore hiccup must not bypass the emergency stop.
+    if (configReadFailed && functionType === "video") {
+      res.status(503).json({
+        error: "service_temporarily_unavailable",
+        message: "Coach ist momentan nicht verfügbar."
+      });
+      return;
+    }
 
     // ── Per-user rate limiting ───────────────────────────────────
     const today = new Date().toISOString().split("T")[0];
