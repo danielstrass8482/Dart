@@ -80,7 +80,7 @@ service cloud.firestore {
     // Users may read their own daily doc (ID format: {uid}_{YYYY-MM-DD}).
     match /dart_usage/{doc} {
       allow read: if request.auth != null
-        && doc.startsWith(request.auth.uid + '_');
+        && doc.matches('^' + request.auth.uid + '_.*');
       allow write: if false;
     }
   }
