@@ -486,17 +486,6 @@ window.upgradeAnonymousAccount = async function(email, password, name){
   }
 };
 
-async function prewarmTTS(){
-  const headers={"Content-Type":"application/json"};
-  const acToken=await fetchAppCheckToken();
-  if(acToken) headers["X-Firebase-AppCheck"]=acToken;
-  fetch("https://darttts-dxa2kmdyca-ew.a.run.app",{
-    method:"POST",
-    headers,
-    body:JSON.stringify({key:"__prewarm__",text:""}),
-  }).catch(()=>{});
-}
-
 onAuthStateChanged(auth, user=>{
   // Unverified email/password users are never allowed into the app.
   // During registration the sign-out is skipped (sendEmailVerification still needs the session);
@@ -518,7 +507,6 @@ onAuthStateChanged(auth, user=>{
       const isFirstLogin = !localStorage.getItem('dart_was_logged_in');
       localStorage.setItem('dart_was_logged_in', '1');
       initDartDB();
-      prewarmTTS();
       if(isFirstLogin) window.maybeShowBetaBanner?.();
       if(window.updateAuthUI) window.updateAuthUI(user);
       if(document.getElementById("setup")){
