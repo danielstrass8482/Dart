@@ -7,3 +7,6 @@ scripts/target-service-account.json
 *.service-account.json
 .env
 .env.local
+
+# Interne Review-Notizen — nicht ins Repo
+CODE_REVIEW_GO_LIVE.txt
