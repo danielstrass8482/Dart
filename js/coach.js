@@ -373,9 +373,12 @@ export function formatCoachText(text){
 export async function callClaudeViaProxy(messages){
   let token="anonymous";
   try{ const user=window.fbAuth?.currentUser; if(user) token=await user.getIdToken(); }catch(e){}
+  const headers={"Content-Type":"application/json","Authorization":"Bearer "+token};
+  const acToken=window.getAppCheckToken?await window.getAppCheckToken():null;
+  if(acToken) headers["X-Firebase-AppCheck"]=acToken;
   const response=await fetch(COACH_FUNCTION_URL,{
     method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+    headers,
     body:JSON.stringify({model:"claude-sonnet-4-5-20250929",max_tokens:1000,messages})
   });
   if(response.status===429){

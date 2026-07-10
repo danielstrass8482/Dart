@@ -71,9 +71,12 @@ export function openFeedbackModal(){
 export async function sendFeedback(message){
   let token = "anonymous";
   try{ const user = window.fbAuth?.currentUser; if(user) token = await user.getIdToken(); }catch(e){}
+  const headers = {"Content-Type":"application/json","Authorization":"Bearer "+token};
+  const acToken = window.getAppCheckToken ? await window.getAppCheckToken() : null;
+  if(acToken) headers["X-Firebase-AppCheck"] = acToken;
   const response = await fetch(FEEDBACK_FUNCTION_URL, {
     method: "POST",
-    headers: {"Content-Type":"application/json","Authorization":"Bearer "+token},
+    headers,
     body: JSON.stringify({ message })
   });
   if(!response.ok){ throw new Error(`Feedback send failed: ${response.status}`); }

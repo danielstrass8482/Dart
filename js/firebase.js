@@ -16,7 +16,7 @@ import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signIn
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
-import { initializeAppCheck, CustomProvider, ReCaptchaV3Provider }
+import { initializeAppCheck, CustomProvider, ReCaptchaV3Provider, getToken }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-check.js";
 
 const fbCfg = window.FIREBASE_CONFIG;
@@ -32,10 +32,11 @@ const isNative = window.Capacitor?.isNativePlatform() === true;
 // Android native (Capacitor): bridged to Play Integrity via AndroidBridge
 // Web (GitHub Pages): set window.FIREBASE_APP_CHECK_RECAPTCHA_KEY in index.html
 // Enable enforcement in Firebase Console → App Check once all clients are updated.
+let _appCheck = null;
 (function _initAppCheck() {
   if (isNative && window.AndroidBridge?.getAppCheckToken) {
     window._appCheckCallbacks = {};
-    initializeAppCheck(app, {
+    _appCheck = initializeAppCheck(app, {
       provider: new CustomProvider({
         getToken: () => new Promise((resolve, reject) => {
           const cbId = Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -52,12 +53,32 @@ const isNative = window.Capacitor?.isNativePlatform() === true;
       isTokenAutoRefreshEnabled: true
     });
   } else if (window.FIREBASE_APP_CHECK_RECAPTCHA_KEY) {
-    initializeAppCheck(app, {
+    _appCheck = initializeAppCheck(app, {
       provider: new ReCaptchaV3Provider(window.FIREBASE_APP_CHECK_RECAPTCHA_KEY),
       isTokenAutoRefreshEnabled: true
     });
   }
 })();
+
+/**
+ * Fetches the current Firebase App Check token, or null if App Check isn't
+ * initialized or the token can't be obtained. Never throws — during the
+ * enforcement transition phase callers attach the "X-Firebase-AppCheck" header
+ * when a token is available and proceed without it otherwise, so a token
+ * hiccup doesn't break the Coach/TTS/feedback endpoints.
+ * @returns {Promise<string|null>}
+ */
+async function fetchAppCheckToken() {
+  if (!_appCheck) return null;
+  try {
+    const { token } = await getToken(_appCheck, /* forceRefresh */ false);
+    return token || null;
+  } catch (e) {
+    console.warn("App Check token fetch failed:", e.message);
+    return null;
+  }
+}
+window.getAppCheckToken = fetchAppCheckToken;
 
 // ── Auth state ────────────────────────────────────────────────────
 window.currentUser = null;
@@ -465,10 +486,13 @@ window.upgradeAnonymousAccount = async function(email, password, name){
   }
 };
 
-function prewarmTTS(){
+async function prewarmTTS(){
+  const headers={"Content-Type":"application/json"};
+  const acToken=await fetchAppCheckToken();
+  if(acToken) headers["X-Firebase-AppCheck"]=acToken;
   fetch("https://darttts-dxa2kmdyca-ew.a.run.app",{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers,
     body:JSON.stringify({key:"__prewarm__",text:""}),
   }).catch(()=>{});
 }
