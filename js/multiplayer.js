@@ -6,6 +6,7 @@ import { state } from './state.js';
 import { startX01, processX01Hit, advanceX01 } from './x01.js?v=2';
 import { t } from './i18n.js?v=3';
 import { showAlert } from './modal.js';
+import { escapeHtml } from './util.js';
 
 export let onlineMode="501", onlineLegs=1, onlineSets=1;
 export let currentRoomCode=null, roomUnsubscribe=null;
@@ -64,7 +65,7 @@ export function showWaitingScreen(code){
     const list=document.getElementById("online-players-list");
     list.innerHTML=`<div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px">${t('online_spieler_header')}</div>`+
       (room.players||[]).map((p,i)=>`<div style="padding:5px 0;font-size:15px;font-weight:${p===myOnlineName?700:400};color:${p===myOnlineName?"#e8c44a":"#333"}">
-        ${i===0?"👑":"👤"} ${p}${p===myOnlineName?" "+t('du_suffix'):""}
+        ${i===0?"👑":"👤"} ${escapeHtml(p)}${p===myOnlineName?" "+t('du_suffix'):""}
       </div>`).join("");
     const startBtn=document.getElementById("btn-start-online");
     const waitStatus=document.getElementById("online-wait-status");

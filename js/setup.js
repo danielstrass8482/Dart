@@ -9,7 +9,8 @@ import { startParty } from './party.js';
 import { collectHealthData } from './coach.js';
 import { BOT_PERSONALITIES } from './bot.js';
 import { t } from './i18n.js?v=3';
-import { showAlert, showConfirm } from './modal.js';
+import { showAlert, showConfirm, showToast } from './modal.js';
+import { escapeHtml } from './util.js';
 
 let _onPlayerSelectionChanged = null;
 export function setPlayerSelectionHook(fn) { _onPlayerSelectionChanged = fn; }
@@ -68,18 +69,18 @@ export function renderPlayerList(){
     const avg=p.stats?.avgPerTurn?.toFixed(1)||"0.0";
     const co=p.stats?.checkoutPct?.toFixed(0)||"0";
     const hi=p.stats?.highscore||0;
-    const displayName=getDisplayName(p);
+    const displayName=escapeHtml(getDisplayName(p));
     const avatarHtml=p.photoUrl
-      ? `<img src="${p.photoUrl}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-      : `<div class="pi-avatar" style="background:${playerColor(p.name)}">${p.name[0].toUpperCase()}</div>`;
+      ? `<img src="${encodeURI(p.photoUrl)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
+      : `<div class="pi-avatar" style="background:${playerColor(p.name)}">${escapeHtml((p.name[0]||"").toUpperCase())}</div>`;
     div.innerHTML=`
       ${avatarHtml}
       <div style="flex:1;min-width:0">
-        <div class="pi-name">${displayName}${p.nickname&&p.nickname!==p.name?`<span style="font-size:11px;color:var(--dart-text-sec);font-weight:400;margin-left:4px">(${p.name})</span>`:""}</div>
+        <div class="pi-name">${displayName}${p.nickname&&p.nickname!==p.name?`<span style="font-size:11px;color:var(--dart-text-sec);font-weight:400;margin-left:4px">(${escapeHtml(p.name)})</span>`:""}</div>
         <div class="pi-stats">Ø ${avg} · CO ${co}% · Best ${hi}${p.dartWeight?` · ${p.dartWeight}g`:""}</div>
       </div>
       <div class="pi-order">${selected?selIdx+1:""}</div>
-      <button class="pi-delete" data-id="${p.id}" data-name="${p.name}" title="${t('spieler_loeschen_tooltip')}"><i data-lucide="x" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i></button>`;
+      <button class="pi-delete" data-id="${p.id}" data-name="${escapeHtml(p.name)}" title="${t('spieler_loeschen_tooltip')}"><i data-lucide="x" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i></button>`;
     div.addEventListener("click",()=>togglePlayer(p));
     const delBtn=div.querySelector(".pi-delete");
     delBtn.addEventListener("click", async (e)=>{
@@ -137,15 +138,15 @@ export function renderProfilPlayerList(){
     return;
   }
   el.innerHTML=state.allPlayers.map(p=>{
-    const displayName=getDisplayName(p);
+    const displayName=escapeHtml(getDisplayName(p));
     const avatarHtml=p.photoUrl
-      ?`<img src="${p.photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--dart-gold)">`
-      :`<div style="width:52px;height:52px;border-radius:50%;background:${playerColor(p.name)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dart-text);flex-shrink:0">${p.name[0].toUpperCase()}</div>`;
-    const infoLine=[
+      ?`<img src="${encodeURI(p.photoUrl)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--dart-gold)">`
+      :`<div style="width:52px;height:52px;border-radius:50%;background:${playerColor(p.name)};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--dart-text);flex-shrink:0">${escapeHtml((p.name[0]||"").toUpperCase())}</div>`;
+    const infoLine=escapeHtml([
       p.nickname&&p.nickname!==p.name?`"${p.nickname}"`:"",
       p.dartBrand||"",
       p.dartWeight?`${p.dartWeight}g`:"",
-    ].filter(Boolean).join(" · ");
+    ].filter(Boolean).join(" · "));
     const avg=p.stats?.avgPerTurn?.toFixed(1)||"0.0";
     const co=p.stats?.checkoutPct?.toFixed(0)||"0";
     return `<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f0f0f0">
@@ -268,7 +269,10 @@ export async function saveGameToFirebase(winnerIdx){
   };
   window.dartDB.saveGame(gameDoc)
     .then(()=>updateAllPlayerStats())
-    .catch(e=>console.warn("Firebase save failed:",e));
+    .catch(e=>{
+      console.warn("Firebase save failed:",e);
+      showToast(t('spiel_speichern_fehler'), "error");
+    });
   if(state.cfg.tournamentId&&state.cfg.matchId && window._updateTournamentMatch){
     window._updateTournamentMatch(state.cfg.tournamentId, state.cfg.matchId, winnerIdx);
   }
@@ -313,7 +317,7 @@ export function updateAuthUI(user){
   const bar=document.getElementById("auth-bar");
   if(bar){
     if(user && !user.isAnonymous){
-      bar.innerHTML=`<span style="font-size:12px;color:var(--dart-text-sec)">${user.displayName||user.email}</span>
+      bar.innerHTML=`<span style="font-size:12px;color:var(--dart-text-sec)">${escapeHtml(user.displayName||user.email)}</span>
         <button onclick="signOutUser()" style="background:none;border:1px solid var(--dart-border);color:var(--dart-text-sec);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">${t('abmelden')}</button>`;
     } else {
       bar.innerHTML=`<button onclick="signInWithGoogle()" style="background:var(--dart-bg-card);border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">

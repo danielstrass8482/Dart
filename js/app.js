@@ -8,6 +8,7 @@ import './firebase.js';
 // ── i18n ─────────────────────────────────────────────────────────
 import { t, setLang, getLang, applyTranslations, SUPPORTED_LANGS } from './i18n.js?v=3';
 import { showAlert } from './modal.js';
+import { escapeHtml } from './util.js';
 
 // Sicherstellen dass window.t gesetzt ist (für inline onclick-Handler in HTML)
 window.t = t;
@@ -233,18 +234,15 @@ document.addEventListener("touchstart", unlockAudio, {once:true, passive:true});
 
 // ── Premium unlock (Paywall "Jetzt Freischalten") ─────────────────
 window.unlockBetaPremium = async function(overlayEl){
-  console.log('[Premium] unlockBetaPremium called, uid:', window.fbAuth?.currentUser?.uid, 'anon:', window.fbAuth?.currentUser?.isAnonymous);
   const user = window.fbAuth?.currentUser;
   if(user && !user.isAnonymous && window.dartDB){
     try{
       await window.dartDB.saveBetaPremium(user.uid);
-      console.log('[Premium] Firebase betaPremium write OK');
     }catch(e){ console.warn('[Premium] saveBetaPremium error:', e); }
   }
   setBetaPremiumActive(true);
   setAdminOverrideNonPremium(false); // clear any admin test-override so isPremium() returns true
   overlayEl?.remove();
-  console.log('[Premium] state updated, calling refreshPremiumUI');
   refreshPremiumUI();
 };
 
@@ -799,12 +797,14 @@ function initProfilTab(){
   const displayName=user.displayName||t('gast_name');
   const email=user.email||"—";
   const isAnon=user.isAnonymous;
+  const dispEsc=escapeHtml(displayName);
+  const emailEsc=escapeHtml(email);
   infoEl.innerHTML=`
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName[0].toUpperCase()}</div>
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#0c0b08;flex-shrink:0">${escapeHtml((displayName[0]||"").toUpperCase())}</div>
       <div>
-        <div style="font-weight:800;font-size:16px;color:#FBFBF8">${displayName}</div>
-        <div style="font-size:12px;color:#9A9AA2">${email}</div>
+        <div style="font-weight:800;font-size:16px;color:#FBFBF8">${dispEsc}</div>
+        <div style="font-size:12px;color:#9A9AA2">${emailEsc}</div>
         <div style="font-size:10px;font-weight:700;color:#6E6E78;letter-spacing:.1em">${isAnon?t('gast_account'):t('registriert')}</div>
       </div>
     </div>`;
@@ -821,6 +821,7 @@ function initProfilTab(){
 function renderPremiumStatus(isAnon, displayName, email){
   const el = document.getElementById("profil-premium-status");
   if(!el) return;
+  email = escapeHtml(email);
   if(isAnon || !displayName || displayName === t('gast_name')){
     el.innerHTML = `
       <div style="background:var(--dart-bg-card);border:1px solid var(--dart-gold);border-radius:12px;padding:16px">
@@ -1071,13 +1072,13 @@ function buildCoachPlayerSelector(){
     const pid=state.cfg.playerIds?.[realIdx]||null;
     const playerObj=pid?state.allPlayers?.find(p=>p.id===pid):null;
     const photoUrl=playerObj?.photoUrl||null;
-    const initials=name.slice(0,2).toUpperCase();
+    const initials=escapeHtml(name.slice(0,2).toUpperCase());
     const avatarHtml=photoUrl
-      ?`<img src="${photoUrl}" style="width:180px;height:180px;border-radius:18px;object-fit:cover;flex-shrink:0">`
+      ?`<img src="${encodeURI(photoUrl)}" style="width:180px;height:180px;border-radius:18px;object-fit:cover;flex-shrink:0">`
       :`<span style="width:180px;height:180px;border-radius:18px;background:#1C1C21;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:64px;color:#9A9AA2;flex-shrink:0">${initials}</span>`;
     const btn=document.createElement("button");
     btn.style.cssText=selectorBtnStyle(hi===0);
-    btn.innerHTML=`${avatarHtml}<span>${name}</span>`;
+    btn.innerHTML=`${avatarHtml}<span>${escapeHtml(name)}</span>`;
     btn.addEventListener("click",()=>{
       coachSelectedPlayerIdx=realIdx;
       btns.querySelectorAll("button").forEach((b,bi)=>{ b.style.cssText=selectorBtnStyle(bi===hi); });

@@ -7,6 +7,7 @@ import { drawMiniBoard } from './board.js?v=2';
 import { loadCoachHistoryStats } from './coach.js';
 import { t } from './i18n.js?v=3';
 import { isPremium } from './premium.js';
+import { escapeHtml } from './util.js';
 
 export let statsSelectedPlayer = null;
 export let statsRange = 'all';
@@ -308,7 +309,7 @@ export function renderStatsPlayerBar(){
     const col=playerColor(p.name);
     const active=statsSelectedPlayer===p.id?" active":"";
     html+=`<button class="stats-player-btn${active}" data-pid="${p.id}">
-      <span class="spb-dot" style="background:${col}"></span>${p.name}</button>`;
+      <span class="spb-dot" style="background:${col}"></span>${escapeHtml(p.name)}</button>`;
   });
   bar.innerHTML=html;
   bar.querySelectorAll(".stats-player-btn").forEach(btn=>{
@@ -364,7 +365,7 @@ export async function loadAndRenderStats(){
     const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
     const wins=x01Games.filter(g=>pid?g.winnerId===pid:true).length;
 
-    const playerName=pid?(state.allPlayers.find(p=>p.id===pid)?.name||"?"):t('alle_kontext');
+    const playerName=escapeHtml(pid?(state.allPlayers.find(p=>p.id===pid)?.name||"?"):t('alle_kontext'));
     let html=`<div class="stats-section-title">${playerName} · ${games.length} ${t('spiele_count')}</div>`;
 
     if(x01Games.length>0){
@@ -416,7 +417,7 @@ export async function loadAndRenderStats(){
         html+=`<div class="history-row" style="grid-template-columns:1fr 45px 45px 45px 45px 45px 55px">
           <span style="display:flex;align-items:center;gap:6px">
             <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block"></span>
-            <strong>${p.name}</strong></span>
+            <strong>${escapeHtml(p.name)}</strong></span>
           <span>${pw}</span><span>${pavg||"—"}</span><span>${pf9||"—"}</span><span>${pb||"—"}</span><span>${pco}%</span><span>${pcrAvg||"—"}</span>
         </div>`;
       });
@@ -455,8 +456,8 @@ export async function loadAndRenderStats(){
       const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}`;
       const isWin=pid?g.winnerId===pid:true;
       html+=`<div class="history-row">
-        <span class="winner-tag" style="color:${isWin&&pid?"var(--dart-success)":"var(--dart-text)"}">${g.winner||"—"}</span>
-        <span class="mode-tag">${g.mode||"—"}</span>
+        <span class="winner-tag" style="color:${isWin&&pid?"var(--dart-success)":"var(--dart-text)"}">${escapeHtml(g.winner||"—")}</span>
+        <span class="mode-tag">${escapeHtml(g.mode||"—")}</span>
         <span>${(g.rounds||0)*3}</span>
         <span style="color:var(--dart-text-sec);font-size:13px">${ds}</span>
       </div>`;

@@ -59,5 +59,33 @@ export function showConfirm(message) {
   });
 }
 
+/**
+ * Non-blocking toast notification (auto-dismiss). For background failures
+ * (e.g. a game save that didn't persist) where a modal would be too intrusive.
+ * @param {string} message
+ * @param {"error"|"info"} [type]
+ */
+export function showToast(message, type = "info") {
+  let toast = document.getElementById("app-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "app-toast";
+    toast.style.cssText =
+      "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:100000;" +
+      "max-width:min(90vw,420px);padding:12px 18px;border-radius:10px;font-size:14px;" +
+      "font-family:'Manrope',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.5);" +
+      "opacity:0;transition:opacity .2s ease;pointer-events:none;text-align:center";
+    document.body.appendChild(toast);
+  }
+  toast.style.background = type === "error" ? "#3a1414" : "#141416";
+  toast.style.border = `1px solid ${type === "error" ? "#7f1d1d" : "rgba(212,175,55,.35)"}`;
+  toast.style.color = type === "error" ? "#f87171" : "#FBFBF8";
+  toast.textContent = message;
+  toast.style.opacity = "1";
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.opacity = "0"; }, 4000);
+}
+
 window.showAlert = showAlert;
 window.showConfirm = showConfirm;
+window.showToast = showToast;

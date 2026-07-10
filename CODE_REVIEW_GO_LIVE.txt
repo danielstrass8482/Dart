@@ -1,0 +1,247 @@
+================================================================================
+DARTTRAINER — CODE-REVIEW VOR GO-LIVE
+Erstellt: 2026-07-06
+Umfang: alle 20 JS-Module, index.html, 4 Cloud Functions,
+        Firestore-/Storage-Rules, Deploy-Konfiguration
+================================================================================
+
+GESAMTBILD
+--------------------------------------------------------------------------------
+Die Grundarchitektur ist solide — die Firestore-Rules fuer dart_players/
+dart_games/dart_coach_analyses sind sauber user-scoped, die Functions
+verifizieren ID-Tokens serverseitig statt dem Body zu vertrauen, und js/ und
+www/ sind synchron. Es gibt aber eine Handvoll Punkte, die vor Go-Live zwingend
+gefixt werden sollten: zwei echte Cross-User-XSS-Luecken, ein Datenkorruptions-
+Bug bei Party-Modi, ein Crash im Undo, unzureichender API-Kostenschutz und ein
+Deploy-Ziel-Problem, das die Rules-Sicherheit selbst in Frage stellt.
+
+
+================================================================================
+KRITISCH — VOR GO-LIVE FIXEN
+================================================================================
+
+K1 — Cross-User-XSS ueber Spielernamen im Online-Multiplayer
+     Dateien: js/multiplayer.js:66, js/x01.js (renderX01)
+--------------------------------------------------------------------------------
+Fremde Nutzereingaben landen ungefiltert in innerHTML: Der Gegner-Name aus dem
+Room-Dokument wird im Warteraum (${p}) und im Spiel (Score-Strip, Panels ueber
+name/displayName) direkt als HTML gerendert. Ein Spieler, der als Namen
+<img src=x onerror=...> waehlt, fuehrt Code im Browser des Gegners aus. Da
+dart_rooms fuer jeden authentifizierten User schreibbar ist, ist das ueber das
+Netzwerk trivial ausnutzbar.
+FIX: Namen vor dem Einsetzen escapen (zentrale escapeHtml-Helper-Funktion) oder
+     textContent nutzen.
+
+
+K2 — Selbst-XSS / gespeichertes XSS ueber eigene Feld-Eingaben
+     Dateien: js/setup.js, js/x01.js, js/stats.js
+--------------------------------------------------------------------------------
+Spielername, Nickname, Dart-Marke etc. werden ueberall via Template-Literal in
+innerHTML interpoliert (z. B. renderPlayerList, renderProfilPlayerList,
+Stats-Tabellen). Weniger brisant als K1 (nur eigene Daten), aber es zerschiesst
+die UI bei < / & in Namen und ist bei geteilten Turnier-/Room-Daten ebenfalls
+ein Vektor.
+FIX: Konsistent mit K1 mit-escapen.
+
+
+K3 — Party-Undo/History korrumpiert historicThrows
+     Dateien: js/party.js:253, app.js:305
+--------------------------------------------------------------------------------
+Der History-Snapshot nutzt JSON.parse(JSON.stringify(...)) und speichert
+historicLens, aber der Undo-Handler in app.js macht Object.assign(state.pg,
+last) — dabei wird historicThrows NICHT wiederhergestellt (ist nicht im
+Snapshot), und direkt danach wird state.pg.historicThrows.map(...slice(
+historicLens)) aufgerufen. Da last kein historicThrows enthaelt, bleibt das
+Live-Array bestehen, wird aber auf alte Laengen zurueckgeschnitten — Scatter-
+Dots und gespeicherte Wurfdaten geraten dauerhaft aus dem Tritt. Beim Killer-
+Modus kann Object.assign ausserdem current auf einen bereits eliminierten
+Spieler zuruecksetzen.
+
+
+K4 — Deploy-Ziel-Mismatch: Rules/Functions gehen ins falsche Projekt
+     Dateien: .firebaserc vs. index.html:21
+--------------------------------------------------------------------------------
+Die App laeuft auf darttrainer-app-fed88 (Firebase-Config in index.html,
+Feedback-URL, getBetaPremium), aber .firebaserc (Root UND functions/) zeigt auf
+darttrainer-app. firebase deploy schiebt damit firestore.rules und storage.rules
+in ein ANDERES Projekt. Wenn die guten neuen Rules nie ins produktive
+-fed88-Projekt deployt wurden, gelten dort evtl. noch offene Alt-Rules — dann
+sind saemtliche Nutzerdaten trotz sauberem Regel-Code ungeschuetzt.
+FIX: Vor Go-Live verifizieren, welche Rules in -fed88 aktiv sind, und .firebaserc
+     korrigieren. (CLAUDE.md dokumentiert -fed88 nur fuer sendFeedback — hier
+     klafft eine Doku-Luecke.)
+
+
+K5 — Coach/Video Rate-Limits praktisch deaktiviert
+     Dateien: js/coach.js:10-13
+--------------------------------------------------------------------------------
+COACH_DAILY_LIMIT = 999 und VIDEO_COACH_LIMIT = 999 (Client). Der Server
+(functions/dartCoach.js:12) begrenzt zwar auf 10 Coach / 3 Video pro Tag — aber
+das ist pro authentifiziertem User, und anonyme Gaeste teilen sich alle die UID
+"anonymous" (siehe K6). Ein einzelner Gast-Account kann via Video-Analyse
+(~0,05 EUR/Call an die Anthropic-Vision-API) echtes Geld verbrennen. CLAUDE.md
+sagt selbst „vor Release auf 3 reduzieren".
+FIX: Client-Limits senken und Server-Limits als verbindlich behandeln.
+
+
+K6 — Alle anonymen Nutzer teilen ein Rate-Limit-Konto
+     Dateien: functions/dartCoach.js:73, index.js:140, feedback.js:43
+--------------------------------------------------------------------------------
+Wenn kein/kein gueltiges Auth-Token kommt, wird uid = "anonymous" gesetzt und
+das Usage-Dokument ist anonymous_<datum>. Zwei Konsequenzen:
+(a) ein Angreifer ohne Login kann das gemeinsame Kontingent fuer alle Gaeste
+    aufbrauchen (DoS auf das Feature);
+(b) da die Firestore-Rule dart_usage nur request.auth != null fuers Lesen des
+    eigenen Docs erlaubt, ist das Tracking selbst ok — aber die Kostenobergrenze
+    pro echtem Angreifer ist faktisch nur durch budgetCheck gedeckt, das nur
+    laeuft, wenn es ein Scheduler aufruft (siehe W3).
+FIX: Erwaegen: anonyme Coach/Video-Calls ganz sperren (Feedback/TTS ok) oder
+     App Check erzwingen.
+
+
+================================================================================
+WICHTIG — KURZFRISTIG
+================================================================================
+
+W1 — App Check ist nicht erzwungen
+     Dateien: functions/index.js:14, dartCoach.js:15
+--------------------------------------------------------------------------------
+ENFORCE_APP_CHECK = false in beiden Functions. Ohne Erzwingung kann jeder mit
+einem gueltigen (leicht zu beschaffenden) Firebase-Anon-Token die teuren
+Endpoints direkt per curl aufrufen — die reCAPTCHA/Play-Integrity-Absicherung
+ist reine Deko. In Kombination mit K5/K6 ist das das eigentliche Kostenrisiko.
+FIX: Sobald alle Clients Tokens senden, auf true stellen.
+
+
+W2 — budgetCheck ist ungeschuetzt und ohne Scheduler wirkungslos
+     Dateien: functions/budgetCheck.js:12
+--------------------------------------------------------------------------------
+cors:false schuetzt nicht vor direkten Aufrufen — die Function hat keinerlei
+Auth und jeder kann sie per POST triggern. Sie schreibt zwar nur emergencyStop,
+aber schlimmer: Es gibt keinen Beleg, dass sie ueberhaupt per Cloud Scheduler
+laeuft. Wenn nicht, greift der „Kill-Switch bei 30 EUR/Tag" nie automatisch.
+FIX: Als Ebene-4-Schutz einrichten (Scheduler) ODER hartes Limit auf UID-Ebene
+     ergaenzen.
+
+
+W3 — Kill-Switch faellt bei Firestore-Fehler auf „offen" zurueck
+     Dateien: dartCoach.js:66, index.js:112
+--------------------------------------------------------------------------------
+Bei einem Fehler beim Laden von dart_config/limits wird console.warn geloggt und
+weitergemacht (proceeding). Das ist bewusst so, heisst aber: Wenn Firestore
+hakt, ist der Notaus wirkungslos. Fuer einen Kostenschutz ist „fail open" die
+riskante Richtung.
+FIX: Zumindest bei Video-Calls „fail closed" erwaegen.
+
+
+W4 — deleteUserAccount kann Nutzer mit halb geloeschten Daten zuruecklassen
+     Dateien: js/firebase.js:373-392
+--------------------------------------------------------------------------------
+deleteUser() wirft bei auth/requires-recent-login — das wird im UI abgefangen
+(app.js:990). Aber die Firestore-Loeschungen (games, players, analyses) laufen
+vorher und sind dann bereits durch. Bricht deleteUser ab, ist der Account noch
+da, aber alle Spieldaten weg.
+FIX: Reihenfolge umdrehen: erst deleteUser (bzw. Reauth erzwingen), dann Daten
+     loeschen — oder dem User klar kommunizieren.
+
+
+W5 — Verwaiste Firestore-Dokumente ohne TTL/Cleanup
+     Dateien: js/firebase.js (createRoom/createVideoSession), js/multiplayer.js
+--------------------------------------------------------------------------------
+dart_rooms und dart_video_sessions werden bei Abbruch teils geloescht, aber bei
+App-Schliessen/Crash/Disconnect bleiben sie liegen. Room-Codes sind nur 6
+Zeichen (Math.random().toString(36)), Video-Codes 4 Zeichen — beides waechst
+unbegrenzt und die Namespace-Kollisionswahrscheinlichkeit steigt.
+FIX: TTL-Policy in Firestore einrichten (z. B. Loeschung nach 24 h ueber
+     createdAt).
+
+
+W6 — applySettings steuert nicht existierende Mic-Buttons
+     Dateien: js/setup.js:475
+--------------------------------------------------------------------------------
+applySettings togglet #lp-mic/#bottom-mic, aber diese Elemente existieren nicht
+im aktuellen index.html (nur #bottom-bouncer). Die Sprachsteuerung (speech.js
+startMic/stopMic) wird nirgends verdrahtet — es gibt keinen Mic-Button und
+keinen Aufruf von initMic/startMic in app.js. Das in CLAUDE.md prominent
+beschriebene Feature „Sprachsteuerung" ist im Web-Build faktisch tot.
+FIX: Entweder Buttons wieder einbauen oder Feature/Docs als deaktiviert
+     markieren.
+
+
+W7 — debug-console.log im Produktions-Hotpath
+     Dateien: js/x01.js:496, js/app.js:236-247
+--------------------------------------------------------------------------------
+console.log("turnScores check:", ...) laeuft bei JEDEM Zug; unlockBetaPremium
+loggt UID und Premium-Status.
+FIX: Vor Release entfernen — Performance-Rauschen und Info-Leak (UID/Premium-Flag
+     in der Konsole).
+
+
+W8 — saveGame-Fehler werden verschluckt, Winner-Overlay erscheint trotzdem
+     Dateien: js/setup.js:269
+--------------------------------------------------------------------------------
+saveGameToFirebase feuert saveGame().then(updateAllPlayerStats).catch(
+console.warn) fire-and-forget. Schlaegt der Save fehl (offline, Rules), sieht
+der Nutzer trotzdem „gewonnen", aber das Spiel ist weg und Stats stimmen nicht.
+Kein Retry, kein Nutzer-Feedback.
+FIX: Zumindest ein dezenter Hinweis bei Fehlschlag.
+
+
+================================================================================
+NICE-TO-HAVE — SPAETER
+================================================================================
+
+N1 — Online-Multiplayer-Race (js/multiplayer.js:130)
+     Wuerfe werden via state.lastThrow (ein einzelnes Feld) synchronisiert.
+     Kommen zwei schnelle Wuerfe, kann einer ueberschrieben werden, bevor der
+     Gegner ihn empfaengt. Fuer robusten Sync eine Wurf-Sequenz/Array statt
+     Einzelfeld. (Bereits in CLAUDE.md als bekannt gelistet.)
+
+N2 — loadStats cappt bei 200 Spielen (js/firebase.js:98)
+     Vielspieler sehen aeltere Spiele nicht mehr in Trends/Coach. Pagination
+     oder hoeheres Limit.
+
+N3 — Video-Frame-Extraktion ohne Timeout (js/coach.js:445)
+     Wenn seeked nie feuert (defektes Video), haengt die Promise ewig, Button
+     bleibt disabled. Timeout ergaenzen.
+
+N4 — Doppelte Konstanten
+     COACH_FUNCTION_URL/TTS_FUNCTION_URL in coach.js und audio.js, playerColor/
+     AVATAR_COLORS in setup.js und stats.js, numToWords-Board-Array mehrfach.
+     Divergenzgefahr bei Aenderungen. In ein Modul zentralisieren.
+
+N5 — Toter Code
+     - prewarmTTS in firebase.js:449 ruft eine hartcodierte alte URL
+       (darttts-dxa2kmdyca...) auf und schickt key:"__prewarm__" — der Server
+       verlangt aber echte key+text, der Call 400t immer.
+     - HEALTH_CONNECT_ENABLED=false macht getHealthDataFromConnect zu totem
+       Code; Health-UI ist bereits „Coming Soon".
+     - budgetCheck emergencyReason wird gesetzt aber nie im Client gelesen.
+
+N6 — emailRegister/upgradeAnonymousAccount bei linkWithCredential-Fehler
+     _registering-Flag wird im finally zurueckgesetzt, aber bei Fehler nach
+     sendEmailVerification bleibt der User evtl. in inkonsistentem
+     Verifizierungs-Zwischenzustand. Randfall, testen.
+
+N7 — ADMIN_UIDS leer, Admin per E-Mail hartcodiert (js/premium.js:38)
+     daniel.strass@gmx.de / review@darttrainer.app sind clientseitig als Admin
+     gelistet — rein UI-Sichtbarkeit, aber E-Mail-basierte Admin-Pruefung ist
+     fragil. Fuer echte Rechte serverseitig ueber Custom Claims.
+
+N8 — Bekannte Bugs aus CLAUDE.md
+     Cricket kein Doppelfeld-Tracking, TTS nach Tablet-Drehung — bleiben offen;
+     unkritisch fuer Go-Live.
+
+
+================================================================================
+EMPFOHLENE REIHENFOLGE
+================================================================================
+K1-K6 sind Blocker.
+1. K4 zuerst klaeren (betrifft ob ueberhaupt die richtigen Rules live sind)
+2. K1/K2 (XSS, ~1 h Arbeit mit einer zentralen escape-Funktion)
+3. K5 (Ein-Zeilen-Aenderung)
+4. K3 (Party-Undo)
+5. K6/W1 gemeinsam (App Check erzwingen + anonyme Teuer-Calls sperren)
+W1-W3 haengen alle am selben Kostenrisiko und sollten zusammen mit K5/K6
+angegangen werden.
+================================================================================

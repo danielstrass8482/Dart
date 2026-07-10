@@ -304,6 +304,7 @@ export const translations = {
     // Setup Tooltip / Fehler
     spieler_loeschen_tooltip: "Spieler löschen",
     fehler_loeschen: "Fehler beim Löschen: ",
+    spiel_speichern_fehler: "Spiel konnte nicht gespeichert werden — Verbindung prüfen.",
 
     // Premium Features
     feat_coach_name: "KI-Coach Analyse",
@@ -878,6 +879,7 @@ export const translations = {
     // Setup tooltip / error
     spieler_loeschen_tooltip: "Delete player",
     fehler_loeschen: "Error deleting: ",
+    spiel_speichern_fehler: "Could not save game — check your connection.",
 
     // Premium features
     feat_coach_name: "AI Coach Analysis",

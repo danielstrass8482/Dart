@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { CRICKET_TARGETS, buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, disableBoard } from './board.js?v=2';
 import { t } from './i18n.js?v=3';
+import { escapeHtml } from './util.js';
 
 // The cricket board SVG is initialized in app.js
 export let boardSVGcr;
@@ -58,7 +59,7 @@ export function renderCricketTable(){
   const table=document.getElementById("cr-table");
   const players=state.cfg.players;
   let html=`<thead><tr><th class="target-col">ZIEL</th>`;
-  players.forEach((p,i)=>{ html+=`<th class="${i===state.cr.current?"active-player":""}">${p}</th>`; });
+  players.forEach((p,i)=>{ html+=`<th class="${i===state.cr.current?"active-player":""}">${escapeHtml(p)}</th>`; });
   html+=`</tr></thead><tbody>`;
   CRICKET_TARGETS.forEach(t=>{
     html+=`<tr><td class="target-cell">${t===25?"BULL":t}</td>`;

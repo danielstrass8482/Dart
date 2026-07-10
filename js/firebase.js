@@ -12,7 +12,7 @@ import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signIn
          getRedirectResult, signInWithCredential, onAuthStateChanged,
          createUserWithEmailAndPassword, signInWithEmailAndPassword,
          sendPasswordResetEmail, sendEmailVerification, updateProfile,
-         EmailAuthProvider, linkWithCredential, deleteUser }
+         EmailAuthProvider, linkWithCredential, deleteUser, reauthenticateWithPopup }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
@@ -374,21 +374,40 @@ window.deleteUserAccount = async function(){
   const user = auth.currentUser;
   if(!user) throw new Error('not-authenticated');
   const uid = user.uid;
-  const batches = [
-    getDocs(query(collection(db,"dart_games"), where("userId","==",uid))),
-    getDocs(query(collection(db,"dart_players"), where("userId","==",uid))),
-    getDocs(query(collection(db,"dart_coach_analyses"), where("userId","==",uid))),
-  ];
-  const [games, players, analyses] = await Promise.all(batches);
-  const dels = [];
-  games.forEach(d => dels.push(fsDeleteDoc(d.ref)));
-  players.forEach(d => dels.push(fsDeleteDoc(d.ref)));
-  analyses.forEach(d => dels.push(fsDeleteDoc(d.ref)));
-  dels.push(fsDeleteDoc(doc(db,"dart_users",uid,"subscription","current")).catch(()=>{}));
-  dels.push(fsDeleteDoc(doc(db,"dart_users",uid)).catch(()=>{}));
-  dels.push(fsDeleteDoc(doc(db,"dart_config",`userprefs_${uid}`)).catch(()=>{}));
-  await Promise.all(dels);
-  await deleteUser(user);
+
+  async function deleteUserData(){
+    const [games, players, analyses] = await Promise.all([
+      getDocs(query(collection(db,"dart_games"), where("userId","==",uid))),
+      getDocs(query(collection(db,"dart_players"), where("userId","==",uid))),
+      getDocs(query(collection(db,"dart_coach_analyses"), where("userId","==",uid))),
+    ]);
+    const dels = [];
+    games.forEach(d => dels.push(fsDeleteDoc(d.ref)));
+    players.forEach(d => dels.push(fsDeleteDoc(d.ref)));
+    analyses.forEach(d => dels.push(fsDeleteDoc(d.ref)));
+    dels.push(fsDeleteDoc(doc(db,"dart_users",uid,"subscription","current")).catch(()=>{}));
+    dels.push(fsDeleteDoc(doc(db,"dart_users",uid)).catch(()=>{}));
+    dels.push(fsDeleteDoc(doc(db,"dart_config",`userprefs_${uid}`)).catch(()=>{}));
+    await Promise.all(dels);
+  }
+
+  // Firestore data must be deleted while still authenticated (rules require the
+  // matching uid). Deletes are idempotent, so a reauth-retry re-runs them harmlessly.
+  await deleteUserData();
+  try{
+    await deleteUser(user);
+  }catch(e){
+    // If the session is too old, reauthenticate and retry so we don't leave an
+    // account behind with its data already gone.
+    if(e.code === 'auth/requires-recent-login' &&
+       user.providerData.some(p => p.providerId === 'google.com')){
+      await reauthenticateWithPopup(user, gProvider);
+      await deleteUserData();
+      await deleteUser(user);
+      return;
+    }
+    throw e; // email/password users fall back to the UI's re-login prompt
+  }
 };
 
 window.signInAsGuest = async function(){
