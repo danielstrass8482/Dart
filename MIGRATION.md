@@ -1,4 +1,4 @@
-# Firebase Migration: fitness-tracker-c6f97 → darttrainer-app
+# Firebase Migration: fitness-tracker-c6f97 → darttrainer-app-fed88
 
 ## Übersicht
 DartTrainer wird vom gemeinsamen Fuelofit-Projekt in ein eigenes Firebase-Projekt getrennt.
@@ -9,7 +9,7 @@ DartTrainer wird vom gemeinsamen Fuelofit-Projekt in ein eigenes Firebase-Projek
 ## Schritt 1: Firebase Console — Neues Projekt anlegen
 
 1. [console.firebase.google.com](https://console.firebase.google.com) öffnen
-2. "Projekt hinzufügen" → Name: **darttrainer-app**
+2. "Projekt hinzufügen" → Name: **darttrainer-app** (Firebase vergibt daraus automatisch die Projekt-ID `darttrainer-app-fed88`)
 3. Google Analytics aktivieren
 4. Im neuen Projekt aktivieren:
    - **Firestore Database** (Region: `europe-west1`, Production mode)
@@ -31,9 +31,9 @@ In `index.html` im `<head>` vor allen anderen `<script>`-Tags einfügen:
 <script>
   window.FIREBASE_CONFIG = {
     apiKey: "HIER_EINTRAGEN",
-    authDomain: "darttrainer-app.firebaseapp.com",
-    projectId: "darttrainer-app",
-    storageBucket: "darttrainer-app.firebasestorage.app",
+    authDomain: "darttrainer-app-fed88.firebaseapp.com",
+    projectId: "darttrainer-app-fed88",
+    storageBucket: "darttrainer-app-fed88.firebasestorage.app",
     messagingSenderId: "HIER_EINTRAGEN",
     appId: "HIER_EINTRAGEN"
   };
@@ -47,7 +47,7 @@ In `index.html` im `<head>` vor allen anderen `<script>`-Tags einfügen:
 ## Schritt 3: Secrets im neuen Projekt setzen
 
 ```bash
-firebase use darttrainer-app
+firebase use darttrainer-app-fed88
 firebase functions:secrets:set ANTHROPIC_API_KEY
 firebase functions:secrets:set ELEVENLABS_API_KEY
 ```
@@ -58,7 +58,7 @@ firebase functions:secrets:set ELEVENLABS_API_KEY
 
 ```bash
 cd /home/daniel_strass/Dart/functions
-firebase use darttrainer-app
+firebase use darttrainer-app-fed88
 firebase deploy --only functions:dartTTS
 firebase deploy --only functions:dartCoach
 ```
@@ -68,7 +68,7 @@ firebase deploy --only functions:dartCoach
 ## Schritt 5: Firestore Rules setzen
 
 ```bash
-firebase use darttrainer-app
+firebase use darttrainer-app-fed88
 firebase deploy --only firestore:rules
 ```
 
@@ -92,7 +92,7 @@ Oder manuell: Firebase Console → Storage → Rules → Inhalt von `storage.rul
 # Service Account Keys aus beiden Firebase-Projekten laden:
 # Firebase Console → Projekteinstellungen → Service Accounts → Neuen Schlüssel generieren
 # fitness-tracker-c6f97 → scripts/source-service-account.json
-# darttrainer-app       → scripts/target-service-account.json
+# darttrainer-app-fed88 → scripts/target-service-account.json
 
 cd /home/daniel_strass/Dart
 npm install firebase-admin   # falls nicht vorhanden
@@ -105,11 +105,11 @@ Migrierte Collections: dart_games, dart_players, dart_rooms, dart_coach_analyses
 
 ## Schritt 8: Cloud Function URLs aktualisieren ✅ ERLEDIGT
 
-In `js/coach.js` wurden die URLs auf darttrainer-app aktualisiert:
+In `js/coach.js` wurden die URLs auf darttrainer-app-fed88 aktualisiert:
 
 ```javascript
-export const COACH_FUNCTION_URL = "https://europe-west1-darttrainer-app.cloudfunctions.net/dartCoach";
-export const TTS_FUNCTION_URL   = "https://europe-west1-darttrainer-app.cloudfunctions.net/dartTTS";
+export const COACH_FUNCTION_URL = "https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartCoach";
+export const TTS_FUNCTION_URL   = "https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartTTS";
 ```
 
 ---
@@ -117,7 +117,7 @@ export const TTS_FUNCTION_URL   = "https://europe-west1-darttrainer-app.cloudfun
 ## Schritt 9: Firebase Hosting konfigurieren + deployen
 
 ```bash
-firebase use darttrainer-app
+firebase use darttrainer-app-fed88
 firebase deploy --only hosting
 ```
 

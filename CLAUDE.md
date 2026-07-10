@@ -8,23 +8,23 @@ Deployed auf GitHub Pages: `https://danielstrass8482.github.io/Dart/`
 
 ## Firebase Projekte
 - **Fuelofit:** `fitness-tracker-c6f97` — NICHT anfassen, anderes Produkt
-- **DartTrainer:** `darttrainer-app` — aktives Projekt (Migration läuft, s. MIGRATION.md)
+- **DartTrainer:** `darttrainer-app-fed88` — aktives Projekt (Migration läuft, s. MIGRATION.md)
 
 ## Migration Status
-- [ ] Neues Firebase-Projekt angelegt (darttrainer-app)
+- [ ] Neues Firebase-Projekt angelegt (darttrainer-app-fed88)
 - [ ] Firebase Config in `index.html` als `window.FIREBASE_CONFIG` eingetragen (Template vorbereitet — apiKey/messagingSenderId/appId noch eintragen, dann Kommentar in index.html entfernen)
 - [ ] Functions neu deployed ins neue Projekt
 - [ ] Firestore Rules gesetzt (firestore.rules)
 - [ ] Storage Rules gesetzt (storage.rules)
 - [ ] Daten migriert via `node scripts/migrate-data.js`
-- [x] Cloud Function URLs in `js/coach.js` aktualisiert → darttrainer-app
-- [x] `.firebaserc` auf darttrainer-app umgestellt (Firebase CLI)
+- [x] Cloud Function URLs in `js/coach.js` aktualisiert → darttrainer-app-fed88
+- [x] `.firebaserc` auf darttrainer-app-fed88 umgestellt (Firebase CLI)
 - [ ] Firebase Hosting konfiguriert + Domain darttrainer.app
 - [ ] GitHub Pages deaktiviert
 
 ## Cloud Function URLs (nach Migration)
-- dartCoach: `https://europe-west1-darttrainer-app.cloudfunctions.net/dartCoach`
-- dartTTS: `https://europe-west1-darttrainer-app.cloudfunctions.net/dartTTS`
+- dartCoach: `https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartCoach`
+- dartTTS: `https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartTTS`
 
 In `js/coach.js` die Konstanten `COACH_FUNCTION_URL` und `TTS_FUNCTION_URL` nach erfolgreichem Deploy aktualisieren.
 
@@ -33,7 +33,7 @@ In `js/coach.js` die Konstanten `COACH_FUNCTION_URL` und `TTS_FUNCTION_URL` nach
 ## Tech Stack
 - **Frontend:** Vanilla HTML/CSS/JS, modular (`index.html` + `js/` + `css/`)
 - **Backend:** Firebase (Firestore, Storage, Auth, Cloud Functions)
-- **Firebase Projekt:** `darttrainer-app` (Ziel) / `fitness-tracker-c6f97` (aktuell noch aktiv)
+- **Firebase Projekt:** `darttrainer-app-fed88` (Ziel) / `fitness-tracker-c6f97` (aktuell noch aktiv)
 - **Cloud Functions:** `europe-west1`, Node 22
 - **Hosting:** GitHub Pages → Firebase Hosting (nach Migration)
 
