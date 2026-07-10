@@ -219,9 +219,12 @@ export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
     const user=window.fbAuth?.currentUser;
     if(user) authToken=await user.getIdToken();
   }catch(e){}
+  const headers={"Content-Type":"application/json","Authorization":"Bearer "+authToken};
+  const acToken=window.getAppCheckToken?await window.getAppCheckToken():null;
+  if(acToken) headers["X-Firebase-AppCheck"]=acToken;
   const resp=await fetch(TTS_FUNCTION_URL,{
     method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+authToken},
+    headers,
     body:JSON.stringify({key:storageKey, text, voiceId})
   });
   if(resp.status===429){ console.info("TTS limit reached, falling back to browser TTS"); return null; }
