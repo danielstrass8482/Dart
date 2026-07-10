@@ -12,7 +12,7 @@ const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 const DAILY_LIMITS = { coach: 10, video: 3 };
 
 // Set to true to hard-enforce App Check (after all clients carry tokens).
-const ENFORCE_APP_CHECK = false;
+const ENFORCE_APP_CHECK = true;
 
 exports.dartCoach = onRequest(
   {
