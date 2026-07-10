@@ -11,7 +11,7 @@ const { getAppCheck } = require("firebase-admin/app-check");
 const { randomUUID } = require("crypto");
 
 // Set to true to hard-enforce App Check (after all clients carry tokens).
-const ENFORCE_APP_CHECK = false;
+const ENFORCE_APP_CHECK = true;
 
 initializeApp();
 
