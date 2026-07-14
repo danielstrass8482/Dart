@@ -20,7 +20,7 @@ exports.sendFeedback = onRequest(
   {
     secrets: [FEEDBACK_SMTP_HOST, FEEDBACK_SMTP_USER, FEEDBACK_SMTP_PASS],
     region: "europe-west1",
-    cors: ["https://danielstrass8482.github.io", "https://darttrainer.app", "http://localhost"],
+    cors: ["https://danielstrass8482.github.io", "https://darttrainer.app", "https://play.darttrainer.app", "http://localhost"],
     timeoutSeconds: 30,
   },
   async (req, res) => {
