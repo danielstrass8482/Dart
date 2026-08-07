@@ -222,11 +222,21 @@ export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
   const headers={"Content-Type":"application/json","Authorization":"Bearer "+authToken};
   const acToken=window.getAppCheckToken?await window.getAppCheckToken():null;
   if(acToken) headers["X-Firebase-AppCheck"]=acToken;
-  const resp=await fetch(TTS_FUNCTION_URL,{
-    method:"POST",
-    headers,
-    body:JSON.stringify({key:storageKey, text, voiceId})
-  });
+  // Bound the request — on flaky WiFi the fetch can otherwise hang far longer than
+  // the queued announcement stays relevant, stalling the whole audio queue.
+  const controller=new AbortController();
+  const timeoutId=setTimeout(()=>controller.abort(),5000);
+  let resp;
+  try{
+    resp=await fetch(TTS_FUNCTION_URL,{
+      method:"POST",
+      headers,
+      body:JSON.stringify({key:storageKey, text, voiceId}),
+      signal:controller.signal
+    });
+  }finally{
+    clearTimeout(timeoutId);
+  }
   if(resp.status===429){ console.info("TTS limit reached, falling back to browser TTS"); return null; }
   if(resp.status===503){ console.info("TTS unavailable, falling back to browser TTS"); return null; }
   if(!resp.ok) return null;
@@ -243,7 +253,10 @@ export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
  */
 export async function speakElevenLabs(text, cacheKey){
   try{
-    const url=await fetchTTSUrl(cacheKey, text);
+    // Retry once before giving up — a single timeout/drop on bad WiFi shouldn't
+    // force an audible fallback to the browser's default voice.
+    let url=await fetchTTSUrl(cacheKey, text);
+    if(!url) url=await fetchTTSUrl(cacheKey, text);
     if(!url) return false;
     if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; }
     currentAudio=new Audio(url);
@@ -289,19 +302,43 @@ export async function prewarmTTS(text, storageKey){
   await fetchTTSUrl(storageKey, text).catch(()=>{});
 }
 
-/** Pre-warms commonly used score TTS entries. */
+/**
+ * Derives the announcement text and cache key for a turn score.
+ * Shared by live announcements (speakScoreWithCustom) and prewarming so the
+ * two can never fall out of sync (a mismatch here previously caused a
+ * mis-cached clip to be served for unrelated scores).
+ * @param {number} score
+ * @param {boolean} hitBull true when turn included a Bull or Bull25 throw
+ * @returns {{text:string, key:string}}
+ */
+function scoreAnnouncement(score, hitBull=false){
+  const text=
+    score===180?"One Hundred and Eighty!":
+    score===100?"One Hundred!":
+    score===50&&hitBull?"Bull's Eye!":
+    numToWords(score)+"!";
+  const key=
+    score===50?`el_score_50_${hitBull?"bull":"norm"}`:
+    score===180?"el_score_180b":
+    `el_score_${score}`;
+  return {text,key};
+}
+
+// 3-dart turn totals that cannot occur with any dart combination — skipped when prewarming.
+const UNREACHABLE_SCORES=new Set([179,178,176,175,173,172,169,166,163]);
+
+/** Pre-warms TTS for every reachable turn score (1-180) so a first-ever hit never has to live-generate audio mid-game. */
 export function prewarmElevenLabs(){
-  const scoreKeys=[
-    [180,"One Hundred and Eighty!","el_score_180b"],[171,"One Hundred and Seventy One!"],
-    [167,"One Hundred and Sixty Seven!"],[160,"One Hundred and Sixty!"],
-    [140,"One Hundred and Forty!"],[121,null],[100,"One Hundred!"],
-    [81,null],[60,null],[45,"Forty Five!"],[41,null],[26,null],
-    [0,"No Score!"]
-  ];
-  for(const [score,override,customKey] of scoreKeys){
-    const key=customKey??`el_score_${score}`;
-    const text=override??(score===50?"Bull's Eye!":numToWords(score)+"!");
-    prewarmTTS(text, key);
+  for(let score=1;score<=180;score++){
+    if(UNREACHABLE_SCORES.has(score)) continue;
+    if(score===50){
+      const bull=scoreAnnouncement(50,true), norm=scoreAnnouncement(50,false);
+      prewarmTTS(bull.text,bull.key);
+      prewarmTTS(norm.text,norm.key);
+      continue;
+    }
+    const {text,key}=scoreAnnouncement(score);
+    prewarmTTS(text,key);
   }
   prewarmTTS("Bust!", "el_bust");
   prewarmTTS("No Score!", "el_no_score");
@@ -360,14 +397,10 @@ function detectDartSlang(score, throws){
 export async function speakScoreWithCustom(score, hitBull=false){
   const slangOn=localStorage.getItem("dart_slang_enabled")==="true";
   const slangText=slangOn?detectDartSlang(score,state.x01?.throws):null;
-  const text=slangText??(
-    score===180?"One Hundred and Eighty!":
-    score===100?"One Hundred!":
-    score===50&&hitBull?"Bull's Eye!":
-    numToWords(score)+"!"
-  );
+  const plain=scoreAnnouncement(score,hitBull);
+  const text=slangText??plain.text;
   const slangKey=slangText?`el_slang_${slangText.replace(/[\s!]/g,"_").toLowerCase()}`:null;
-  const key=slangKey??(score===50?`el_score_50_${hitBull?"bull":"norm"}`:score===180?`el_score_180b`:`el_score_${score}`);
+  const key=slangKey??plain.key;
   await queueAudio(text,key);
 }
 
