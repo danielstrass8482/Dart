@@ -295,7 +295,7 @@ export function prewarmElevenLabs(){
     [180,"One Hundred and Eighty!","el_score_180b"],[171,"One Hundred and Seventy One!"],
     [167,"One Hundred and Sixty Seven!"],[160,"One Hundred and Sixty!"],
     [140,"One Hundred and Forty!"],[121,null],[100,"One Hundred!"],
-    [81,null],[60,null],[45,"Forty Five!"],[41,null],[26,"Bed and Breakfast!"],
+    [81,null],[60,null],[45,"Forty Five!"],[41,null],[26,null],
     [0,"No Score!"]
   ];
   for(const [score,override,customKey] of scoreKeys){
