@@ -60,7 +60,7 @@ import {
   unlockAudio,
   speakScoreWithCustom, speakKeyWithCustom, speakScore, speak, doSpeak,
   numToWords, prewarmElevenLabs, voiceURLCache, elTTSCache, getVoiceId,
-  fetchTTSUrl, testVoice, speakElevenLabs, queueAudio
+  fetchTTSUrl, testVoice, speakElevenLabs, queueAudio, clearAudioQueue
 } from './audio.js';
 
 
@@ -269,6 +269,7 @@ window.matchMedia("(orientation:portrait)").addEventListener("change", updateRot
 document.getElementById("x01-back").addEventListener("click", showSetup);
 document.getElementById("x01-undo").addEventListener("click",()=>{
   if(state.x01.history.length===0) return;
+  clearAudioQueue();
   const last=state.x01.history.pop();
   state.x01.scores=[...last.scores]; state.x01.current=last.current; state.x01.round=last.round;
   state.x01.throws=[...last.throws]; state.x01.bust=last.bust;
@@ -302,6 +303,7 @@ document.getElementById("cr-back").addEventListener("click", showSetup);
 document.getElementById("party-next").addEventListener("click", advanceParty);
 document.getElementById("party-undo").addEventListener("click",()=>{
   if(state.pg.history.length===0) return;
+  clearAudioQueue();
   const last=state.pg.history.pop();
   Object.assign(state.pg,last);
   state.pg.historicThrows=state.pg.historicThrows.map((a,i)=>a.slice(0,last.historicLens[i]||0));

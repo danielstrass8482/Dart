@@ -24,7 +24,7 @@ function findPreferredCheckout(remaining, prefDoubles){
     throws.push({v:n,s:`${n}`},{v:n*2,s:`D${n}`});
     if(n*3<=60) throws.push({v:n*3,s:`T${n}`});
   }
-  throws.push({v:25,s:"25"},{v:50,s:"Bull"});
+  throws.push({v:25,s:"25"});
   for(const pd of prefDoubles){
     const finVal=pd===25?50:2*pd;
     const finStr=pd===25?"Bull":`D${pd}`;
@@ -747,6 +747,10 @@ export function showWinner(name, round, isLeg=false, legLabel=null){
         resizeWinnerBoards(isLeg?'leg-overlay':'winner-overlay');
       });
     }
+  } else if(sumEl){
+    // Cricket (and any other non-X01 mode) has no X01 turnScores to summarize —
+    // hide the panel instead of leaving a previous X01 game's stats on screen.
+    sumEl.style.display='none';
   }
 
   document.getElementById(isLeg?'leg-overlay':'winner-overlay').classList.add("visible");
