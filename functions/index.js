@@ -34,9 +34,9 @@ const SYSTEM_PROMPT =
 const VOICE_SETTINGS_DRAMATIC = { stability: 0.20, similarity_boost: 0.95, style: 0.85, use_speaker_boost: true };
 const VOICE_SETTINGS_NEUTRAL  = { stability: 0.45, similarity_boost: 0.90, style: 0.50, use_speaker_boost: true };
 
-// Keys using eleven_multilingual_v2 (higher quality for dramatic moments)
-const MULTILINGUAL_KEYS = new Set(["score_180", "score_180b", "score_171", "score_167", "score_160", "score_140", "score_121", "game_on"]);
-const DRAMATIC_KEYS = new Set(["score_180", "score_180b", "score_171", "score_167", "score_160", "score_140", "game_on"]);
+// Non-score keys that always get the dramatic treatment (score-based keys are
+// judged by scoreValueFromKey/isDramaticKey below instead).
+const DRAMATIC_EXTRA_KEYS = new Set(["game_on"]);
 
 // Commas/periods create natural pauses for ElevenLabs; no CAPS (causes rushing)
 const SPECIAL_TEXTS = {
@@ -57,13 +57,31 @@ const SPECIAL_TEXTS = {
   bust:      "Bust.",
 };
 
+// Extracts the numeric turn score from a "score_<n>..." cache key (also
+// matches score_50_bull/score_50_norm/score_180b), or null for non-score keys.
+function scoreValueFromKey(baseKey) {
+  const m = /^score_(\d+)/.exec(baseKey);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+// The enthusiasm threshold: turn scores of 100+ (ton and up) are milestone
+// hits and get the dramatic voice; everything below stays businesslike. Keyed
+// off the actual numeric score rather than a hand-picked allowlist, so every
+// 100+ score is covered consistently instead of only the specific values
+// someone remembered to list (previously e.g. 121 got the multilingual model
+// but not the dramatic voice settings, and 100/101-119/122+ etc. got neither).
+function isDramaticKey(baseKey) {
+  const score = scoreValueFromKey(baseKey);
+  if (score !== null) return score >= 100;
+  return DRAMATIC_EXTRA_KEYS.has(baseKey);
+}
+
 function modelForKey(baseKey) {
-  return MULTILINGUAL_KEYS.has(baseKey) ? "eleven_multilingual_v2" : "eleven_turbo_v2_5";
+  return isDramaticKey(baseKey) ? "eleven_multilingual_v2" : "eleven_turbo_v2_5";
 }
 
 function voiceSettingsForKey(baseKey) {
-  if (DRAMATIC_KEYS.has(baseKey)) return VOICE_SETTINGS_DRAMATIC;
-  return VOICE_SETTINGS_NEUTRAL;
+  return isDramaticKey(baseKey) ? VOICE_SETTINGS_DRAMATIC : VOICE_SETTINGS_NEUTRAL;
 }
 
 const TTS_DAILY_LIMIT = 200;

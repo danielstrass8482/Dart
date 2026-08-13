@@ -878,6 +878,8 @@ window.splashPromise = new Promise(function(resolve) {
   <!-- Tab 2: ANALYSIS — Coach & Video -->
   <div class="winner-tab-pane winner-tab-hidden" id="winner-tab-analysis">
     <div class="winner-tab-scroll">
+      <!-- Leg selector (Match / Leg 1 / Leg 2 / ... — only shown for multi-leg matches) -->
+      <div id="coach-leg-selector" style="display:none;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:10px"></div>
       <!-- Player selector -->
       <div id="coach-player-selector" style="display:none;margin-bottom:12px;text-align:center">
         <div style="font-size:11px;color:var(--dart-text-sec);letter-spacing:1px;margin-bottom:8px" data-i18n="analyse_fuer">ANALYSE FÜR</div>
@@ -943,6 +945,8 @@ window.splashPromise = new Promise(function(resolve) {
   <div class="winner-tab-pane" id="leg-tab-match">
     <div class="winner-tab-scroll">
       <div id="leg-stats-summary"></div>
+      <button class="coach-btn" id="btn-coach-leg" style="margin-top:12px"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="leg_analysieren">LEG ANALYSIEREN</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
+      <div id="coach-output-leg" style="margin-top:12px;text-align:left;max-height:220px;overflow-y:auto"></div>
     </div>
     <div class="match-new-game-bar">
       <button class="btn-new-game" id="btn-next-leg" style="width:100%" data-i18n="naechstes_leg">NEXT LEG</button>

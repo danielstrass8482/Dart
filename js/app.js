@@ -178,6 +178,7 @@ window._saveGameToFirebase = saveGameToFirebase;
 window._pushThrowToRoom = pushThrowToRoom;
 window._updateCoachLimitDisplay = updateCoachLimitDisplay;
 window._buildCoachPlayerSelector = buildCoachPlayerSelector;
+window._buildCoachLegSelector = buildCoachLegSelector;
 window._loadCoachHistory = loadCoachHistory;
 window._updateTournamentMatch = updateTournamentMatch;
 window._openTournamentView = openTournamentView;
@@ -372,6 +373,8 @@ document.getElementById("btn-next-leg").addEventListener("click",()=>{
 document.getElementById("btn-coach-leg")?.addEventListener("click",async(e)=>{
   e.preventDefault();
   e.stopPropagation();
+  const access=await canUseFeature("coachAnalysis");
+  if(!access.allowed){ showPremiumOverlay("coachAnalysis"); return; }
   // Overlay bleibt offen — kein close, kein advanceX01
   const btn=document.getElementById("btn-coach-leg");
   const outputEl=document.getElementById("coach-output-leg");
@@ -1057,6 +1060,32 @@ initToggles();
 
 // ── Coach (winner overlay) ────────────────────────────────────────
 let coachSelectedPlayerIdx=0;
+// null = whole match; otherwise an index into state.cfg.legStatsHistory.
+let coachSelectedLegIdx=null;
+
+/** Builds the MATCH/LEG 1/LEG 2/... chip row that scopes the coach analysis
+ * (mirrors the stats-tab leg selector in x01.js's _buildLegSelector, but
+ * drives coachSelectedLegIdx instead of the stats view). Only shown for
+ * matches with more than one leg. */
+function buildCoachLegSelector(){
+  const bar=document.getElementById("coach-leg-selector");
+  if(!bar) return;
+  coachSelectedLegIdx=null;
+  const history=state.cfg.legStatsHistory||[];
+  if(history.length<=1){ bar.style.display="none"; bar.innerHTML=""; return; }
+  const GOLD='#D4AF37';
+  const chipStyle=active=>`padding:6px 14px;border-radius:20px;border:2px solid ${active?GOLD:'var(--dart-border)'};background:${active?'rgba(212,175,55,0.12)':'var(--dart-bg-card)'};cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px;color:${active?GOLD:'var(--dart-text-sec)'}`;
+  const chips=[{leg:'',label:'MATCH'},...history.map((h,i)=>({leg:String(i),label:h.label.toUpperCase()}))];
+  bar.style.display='flex';
+  bar.innerHTML=chips.map((c,ci)=>`<button type="button" class="coach-leg-chip" data-leg="${c.leg}" style="${chipStyle(ci===0)}">${escapeHtml(c.label)}</button>`).join('');
+  bar.querySelectorAll('.coach-leg-chip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      bar.querySelectorAll('.coach-leg-chip').forEach(b=>b.setAttribute('style',chipStyle(false)));
+      btn.setAttribute('style',chipStyle(true));
+      coachSelectedLegIdx=btn.dataset.leg===''?null:parseInt(btn.dataset.leg);
+    });
+  });
+}
 
 function buildCoachPlayerSelector(){
   const humanPlayers=state.cfg.players.filter((_,i)=>!state.cfg.isBot?.[i]);
@@ -1103,16 +1132,23 @@ document.getElementById("btn-coach-winner").addEventListener("click",async()=>{
   let playerStats=null;
   let pid=state.cfg.playerIds?.[i]||null;
   if(window.dartDB&&pid){ const players=await window.dartDB.loadPlayers(); const p=players.find(x=>x.id===pid); if(p) playerStats=p.stats; }
-  const turns=state.x01.turnScores?.[i]||[];
+  // A specific leg from legStatsHistory (chip bar), or the whole accumulated match.
+  const leg=coachSelectedLegIdx!=null?state.cfg.legStatsHistory?.[coachSelectedLegIdx]:null;
+  const turns=leg?(leg.turnScores[i]||[]):(state.x01.turnScores?.[i]||[]);
   const avg=turns.length?Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10:0;
   const best=turns.length?Math.max(...turns):0;
-  const sessionStats={ mode:state.cfg.mode, rounds:state.cfg.mode!=="Cricket"?state.x01.round:state.cr.round, players:[{ name:playerName, id:pid, avg3:avg, best3:best, checkoutAtt:state.x01.checkoutAttempts?.[i]||0, checkoutHit:state.x01.checkoutHits?.[i]||0, first9:state.x01.first9?.[i]||null, winner:state.x01?.winner===i }] };
+  const checkoutAtt=leg?(leg.checkoutAttempts[i]||0):(state.x01.checkoutAttempts?.[i]||0);
+  const checkoutHit=leg?(leg.checkoutHits[i]||0):(state.x01.checkoutHits?.[i]||0);
+  const first9=leg?(turns.length>=3?Math.round(turns.slice(0,3).reduce((a,b)=>a+b,0)/3*10)/10:null):(state.x01.first9?.[i]||null);
+  const rounds=leg?turns.length:(state.cfg.mode!=="Cricket"?state.x01.round:state.cr.round);
+  const winnerFlag=leg?leg.winnerIdx===i:state.x01?.winner===i;
+  const sessionStats={ mode:state.cfg.mode, rounds, legOnly:!!leg, legLabel:leg?.label||null, players:[{ name:playerName, id:pid, avg3:avg, best3:best, checkoutAtt, checkoutHit, first9, winner:winnerFlag }] };
   const prompt=buildCoachPrompt(playerStats, sessionStats, allGamesCache, pid, state.cfg.healthData||null);
   await callCoach(prompt, outputEl, limitEl, btn);
   if(outputEl.querySelector(".coach-box")&&window.dartDB){
     const text=outputEl.querySelector(".coach-box").innerText;
     if(text&&!text.includes("Fehler")&&!text.includes("Error")&&!text.includes("Limit")){
-      await window.dartDB.saveCoachAnalysis({ playerId:pid, playerName, type:"text", text, mode:state.cfg.mode, avgPerTurn:avg });
+      await window.dartDB.saveCoachAnalysis({ playerId:pid, playerName, type:leg?"leg":"text", text, mode:state.cfg.mode, avgPerTurn:avg, ...(leg?{legNumber:leg.legNumber}:{}) });
       loadCoachHistory(pid);
     }
   }

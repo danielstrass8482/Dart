@@ -84,12 +84,24 @@ export function speak(text){
  * @param {string} text
  * @param {string} lang BCP-47 language tag
  */
-// Monotonically increasing token — lets a newer doSpeak() call invalidate an
-// older call's still-pending 50ms scheduling window. Without this, two calls
-// fired in quick succession (very common once ElevenLabs falls back to this
-// path for almost every announcement) can both survive cancel() and end up
-// queued back-to-back in the browser's speech engine, audibly running two
-// unrelated announcements together (e.g. a stale "One" bleeding into "Sixteen!").
+// ── doSpeak() token guard vs. the audioQueue (queueAudio/playAudioQueue below) ──
+// These solve different problems and are meant to coexist, not compete:
+//   - audioQueue is the primary sequencing mechanism for every announcement in
+//     the app. All callers (X01, bot, speech recognition, party modes) now go
+//     through queueAudio(), which awaits full completion (ElevenLabs: real
+//     `onended`; browser-TTS fallback: a duration estimate) before starting the
+//     next item — so announcements are strictly ordered and none is skipped.
+//   - The token guard here is a defensive backstop *inside* doSpeak() itself,
+//     for the case where two doSpeak() calls still land close together (e.g. a
+//     future caller that forgets to route through the queue, or the delayed
+//     "voiceschanged" callback firing after a newer call already superseded
+//     it). It discards a stale call's pending speak() rather than letting two
+//     browser-TTS utterances audibly overlap.
+// Net effect: under normal operation every doSpeak() call is already the only
+// one in flight (queue guarantees that), so the token guard is a no-op safety
+// net, not the thing doing the sequencing. If it starts firing in practice,
+// that's a signal some caller bypassed the queue and should be routed through
+// queueAudio()/speakKeyWithCustom()/speakScoreWithCustom() instead.
 let _speakToken=0;
 
 export function doSpeak(text, lang){
@@ -171,6 +183,14 @@ export const elTTSCache={};
 let currentAudio=null;
 
 // ── Audio Queue ───────────────────────────────────────────────────
+// The single canonical entry point for every spoken announcement in the app.
+// audioPlaying gates strict one-at-a-time playback: the next item only starts
+// once the previous one has fully resolved (see playAudioQueue), so calls
+// fired in quick succession (e.g. typing a score before "Game on!" finished)
+// queue up in order instead of overlapping or getting dropped. Every caller
+// (X01, bot, speech recognition, party modes) must go through queueAudio() —
+// see the doSpeak() token-guard comment above for how that interacts with
+// direct doSpeak() calls.
 const audioQueue=[];
 let audioPlaying=false;
 
