@@ -289,6 +289,7 @@ export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
  * @returns {Promise<boolean>}
  */
 export async function speakElevenLabs(text, cacheKey){
+  const elCacheKey=getVoiceId()+"_"+cacheKey;
   try{
     // Retry once before giving up — a single timeout/drop on bad WiFi shouldn't
     // force an audible fallback to the browser's default voice.
@@ -304,6 +305,15 @@ export async function speakElevenLabs(text, cacheKey){
     });
     return true;
   }catch(e){
+    // elTTSCache never expires — if the underlying Storage file was deleted
+    // and regenerated server-side (e.g. a voice-settings fix + cache purge,
+    // as happened repeatedly while tuning TTS enthusiasm), the cached URL's
+    // download token no longer matches and playback fails here. Without
+    // evicting it, every future announcement for this exact key would keep
+    // reusing the same broken URL and keep silently falling back to
+    // undifferentiated browser TTS for the rest of the page's lifetime —
+    // which reads as "the fix didn't work" even though the backend is fine.
+    delete elTTSCache[elCacheKey];
     console.warn("Google TTS:",e.message);
     return false;
   }
