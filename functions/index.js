@@ -30,20 +30,33 @@ const SYSTEM_PROMPT =
   "Speak slowly and clearly with natural pauses. " +
   "Be enthusiastic for high scores, disappointed for bust.";
 
-// Voice settings by category. Previous values (stability 0.20/0.45, style
-// 0.85/0.50) had been in this narrow range across every prior revision of
-// this file and turned out to be too close together to be reliably audible —
-// confirmed by a live A/B test where a 180 and a low score sounded
-// indistinguishable. Widened stability and style to their practical extremes
-// and added `speed` (ElevenLabs voice_settings field, 0.7-1.2 range) as a
-// third, independent lever — pace is one of the most perceptible cues for
-// excitement vs. composure, on top of the expressiveness/exaggeration knobs.
-const VOICE_SETTINGS_DRAMATIC = { stability: 0.15, similarity_boost: 0.95, style: 1.0, use_speaker_boost: true, speed: 1.1 };
-const VOICE_SETTINGS_NEUTRAL  = { stability: 0.70, similarity_boost: 0.85, style: 0.0, use_speaker_boost: true, speed: 0.95 };
+// Voice settings by enthusiasm tier. Commit 5991b91 pushed the two-tier
+// version to its practical extremes (stability 0.15/0.70, style 1.0/0.0) to
+// fix a "no audible difference" complaint — but a live A/B test afterwards
+// found the result came out sounding REVERSED (a low score sounded
+// enthusiastic, a 180 sounded flat). ElevenLabs' own guidance is that
+// style=1.0 and stability below ~0.20 push into a range where output
+// character/quality can degrade or turn erratic rather than reliably read as
+// "more excited" — the most likely explanation for why the extreme dramatic
+// setting ended up sounding worse than the plain one. Pulled back to a
+// moderate, monotonic three-tier gradient instead of doubling down on more
+// extremes:
+//   BUSINESSLIKE (<30):   stability 0.75 (steadiest),            style 0.00 (none),  speed 0.90 (slowest)
+//   NORMAL       (30-99): stability 0.50 (mid),                  style 0.35 (mid),   speed 1.00 (baseline)
+//   ENTHUSIASTIC (>=100): stability 0.30 (least steady/most expressive), style 0.65 (clear but short of ElevenLabs' risky 1.0 ceiling), speed 1.08 (fastest)
+// Explicit direction check (do not skip this when touching these values):
+//   stability strictly decreases:  0.75 > 0.50 > 0.30  ✓
+//   style strictly increases:      0.00 < 0.35 < 0.65  ✓
+//   speed strictly increases:      0.90 < 1.00 < 1.08  ✓
+// A runtime self-check below throws at cold start if this ever gets
+// scrambled again instead of silently shipping a wrong/reversed mapping.
+const VOICE_SETTINGS_BUSINESSLIKE = { stability: 0.75, similarity_boost: 0.85, style: 0.00, use_speaker_boost: true, speed: 0.90 };
+const VOICE_SETTINGS_NORMAL       = { stability: 0.50, similarity_boost: 0.90, style: 0.35, use_speaker_boost: true, speed: 1.00 };
+const VOICE_SETTINGS_ENTHUSIASTIC = { stability: 0.30, similarity_boost: 0.95, style: 0.65, use_speaker_boost: true, speed: 1.08 };
 
-// Non-score keys that always get the dramatic treatment (score-based keys are
-// judged by scoreValueFromKey/isDramaticKey below instead).
-const DRAMATIC_EXTRA_KEYS = new Set(["game_on"]);
+// Non-score keys that always get the enthusiastic treatment (score-based keys
+// are judged by scoreValueFromKey/enthusiasmTierForKey below instead).
+const ENTHUSIASTIC_EXTRA_KEYS = new Set(["game_on"]);
 
 // Commas/periods create natural pauses for ElevenLabs; no CAPS (causes rushing)
 const SPECIAL_TEXTS = {
@@ -71,24 +84,60 @@ function scoreValueFromKey(baseKey) {
   return m ? parseInt(m[1], 10) : null;
 }
 
-// The enthusiasm threshold: turn scores of 100+ (ton and up) are milestone
-// hits and get the dramatic voice; everything below stays businesslike. Keyed
-// off the actual numeric score rather than a hand-picked allowlist, so every
-// 100+ score is covered consistently instead of only the specific values
-// someone remembered to list (previously e.g. 121 got the multilingual model
-// but not the dramatic voice settings, and 100/101-119/122+ etc. got neither).
-function isDramaticKey(baseKey) {
+// Three-tier enthusiasm classification, keyed off the actual numeric score
+// rather than a hand-picked allowlist: <30 businesslike, 30-99 normal,
+// >=100 enthusiastic. Non-score keys (game_on) count as enthusiastic.
+function enthusiasmTierForKey(baseKey) {
   const score = scoreValueFromKey(baseKey);
-  if (score !== null) return score >= 100;
-  return DRAMATIC_EXTRA_KEYS.has(baseKey);
+  if (score !== null) {
+    if (score >= 100) return "enthusiastic";
+    if (score >= 30) return "normal";
+    return "businesslike";
+  }
+  return ENTHUSIASTIC_EXTRA_KEYS.has(baseKey) ? "enthusiastic" : "normal";
 }
 
 function modelForKey(baseKey) {
-  return isDramaticKey(baseKey) ? "eleven_multilingual_v2" : "eleven_turbo_v2_5";
+  return enthusiasmTierForKey(baseKey) === "enthusiastic" ? "eleven_multilingual_v2" : "eleven_turbo_v2_5";
 }
 
 function voiceSettingsForKey(baseKey) {
-  return isDramaticKey(baseKey) ? VOICE_SETTINGS_DRAMATIC : VOICE_SETTINGS_NEUTRAL;
+  const tier = enthusiasmTierForKey(baseKey);
+  if (tier === "enthusiastic") return VOICE_SETTINGS_ENTHUSIASTIC;
+  if (tier === "normal") return VOICE_SETTINGS_NORMAL;
+  return VOICE_SETTINGS_BUSINESSLIKE;
+}
+
+// ── Cold-start self-check ───────────────────────────────────────────
+// Throws (crashing the instance) rather than silently deploying a scrambled
+// tier mapping — this is exactly the class of bug that shipped in 5991b91
+// undetected until a live listening test caught it.
+function assertTier(baseKey, expected) {
+  const actual = enthusiasmTierForKey(baseKey);
+  if (actual !== expected) {
+    throw new Error(`Enthusiasm tier self-check failed: ${baseKey} => ${actual}, expected ${expected}`);
+  }
+}
+assertTier("score_3", "businesslike");
+assertTier("score_29", "businesslike");
+assertTier("score_30", "normal");
+assertTier("score_60", "normal");
+assertTier("score_99", "normal");
+assertTier("score_100", "enthusiastic");
+assertTier("score_180", "enthusiastic");
+assertTier("score_180b", "enthusiastic");
+assertTier("game_on", "enthusiastic");
+if (!(VOICE_SETTINGS_BUSINESSLIKE.stability > VOICE_SETTINGS_NORMAL.stability &&
+      VOICE_SETTINGS_NORMAL.stability > VOICE_SETTINGS_ENTHUSIASTIC.stability)) {
+  throw new Error("Enthusiasm tier self-check failed: stability must strictly decrease businesslike -> normal -> enthusiastic");
+}
+if (!(VOICE_SETTINGS_BUSINESSLIKE.style < VOICE_SETTINGS_NORMAL.style &&
+      VOICE_SETTINGS_NORMAL.style < VOICE_SETTINGS_ENTHUSIASTIC.style)) {
+  throw new Error("Enthusiasm tier self-check failed: style must strictly increase businesslike -> normal -> enthusiastic");
+}
+if (!(VOICE_SETTINGS_BUSINESSLIKE.speed < VOICE_SETTINGS_NORMAL.speed &&
+      VOICE_SETTINGS_NORMAL.speed < VOICE_SETTINGS_ENTHUSIASTIC.speed)) {
+  throw new Error("Enthusiasm tier self-check failed: speed must strictly increase businesslike -> normal -> enthusiastic");
 }
 
 const TTS_DAILY_LIMIT = 200;
