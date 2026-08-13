@@ -332,6 +332,19 @@ document.getElementById("tab-btn-analysis")?.addEventListener("click",()=>{
   document.getElementById("tab-btn-analysis").classList.add("winner-tab-active");
   document.getElementById("tab-btn-match").classList.remove("winner-tab-active");
 });
+// Same MATCH/ANALYSIS tab pattern on the leg-win overlay, for visual consistency with the match-end overlay.
+document.getElementById("tab-btn-leg-match")?.addEventListener("click",()=>{
+  document.getElementById("leg-tab-match").classList.remove("winner-tab-hidden");
+  document.getElementById("leg-tab-analysis").classList.add("winner-tab-hidden");
+  document.getElementById("tab-btn-leg-match").classList.add("winner-tab-active");
+  document.getElementById("tab-btn-leg-analysis").classList.remove("winner-tab-active");
+});
+document.getElementById("tab-btn-leg-analysis")?.addEventListener("click",()=>{
+  document.getElementById("leg-tab-analysis").classList.remove("winner-tab-hidden");
+  document.getElementById("leg-tab-match").classList.add("winner-tab-hidden");
+  document.getElementById("tab-btn-leg-analysis").classList.add("winner-tab-active");
+  document.getElementById("tab-btn-leg-match").classList.remove("winner-tab-active");
+});
 function _accumulateLegStats(){
   if(!state.cfg?.accumulated||!state.x01) return;
   state.cfg.players.forEach((_,i)=>{
@@ -362,14 +375,16 @@ document.getElementById("btn-next-set").addEventListener("click",()=>{
   state.cfg.nextLegStarter=state.cfg.currentLegStarter;
   startX01(state.cfg.currentLegStarter);
 });
-document.getElementById("btn-next-leg").addEventListener("click",()=>{
+function goToNextLeg(){
   _accumulateLegStats();
   document.getElementById("leg-overlay").classList.remove("visible");
   state.cfg.currentLeg++;
   // PDC: strictly alternate leg starters
   state.cfg.currentLegStarter=state.cfg.nextLegStarter||0;
   startX01(state.cfg.currentLegStarter);
-});
+}
+document.getElementById("btn-next-leg").addEventListener("click", goToNextLeg);
+document.getElementById("btn-next-leg-analysis")?.addEventListener("click", goToNextLeg);
 document.getElementById("btn-coach-leg")?.addEventListener("click",async(e)=>{
   e.preventDefault();
   e.stopPropagation();
