@@ -578,7 +578,8 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
       checkoutHits:players.map(()=>0),
       checkoutScores:players.map(()=>[]),
       first9:players.map(()=>null)
-    }
+    },
+    legStatsHistory:[]
   };
   const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
   if(state.cfg.mode==="Cricket") startCricket();

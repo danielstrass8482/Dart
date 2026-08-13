@@ -90,6 +90,7 @@ export async function startX01(starter=0){
     checkoutAttemptThisTurn: false,
     doubleStats: state.cfg.players.map(()=>({})),
     bouncers: state.cfg.players.map(()=>0),
+    lastAnnouncedCheckout: state.cfg.players.map(()=>null),
     startTime: Date.now()
   };
   clearHits(state.boardSVG);
@@ -97,7 +98,7 @@ export async function startX01(starter=0){
   renderX01();
   window.showScreen("x01");
   prewarmElevenLabs();
-  await queueAudio("Game on!","game_on");
+  await speakKeyWithCustom("game_on","Game on!");
   await new Promise(r=>setTimeout(r,300));
   disableBoard(state.boardSVG, false);
   if(state.cfg.isBot?.[state.x01.current]) setTimeout(runBotTurn,800);
@@ -436,7 +437,6 @@ export function handleBouncer(){
   state.x01.bouncers[pi]++;
   state.x01.history.push({scores:[...state.x01.scores],throws:[...state.x01.throws],bust:state.x01.bust});
   state.x01.throws.push({score:0,label:"↩",bouncer:true,miss:false});
-  speakKeyWithCustom("bouncer","Bouncer!");
   renderX01();
   if(state.x01.throws.length===3){
     setTimeout(advanceX01,800);
@@ -455,7 +455,13 @@ function _scheduleNextPlayerAnnounce(nextIdx){
     const _pl=state.allPlayers?.find(p=>p.id===_pid);
     const _prefRaw=findPreferredCheckout(score,_pl?.prefDoubles||[]);
     const _annPath=(_prefRaw&&_optPath&&_prefRaw.split(" ").length===_optPath.split(" ").length)?_prefRaw:null;
-    setTimeout(()=>announceCheckoutPath(score,_annPath),2500);
+    // Only re-announce when the path actually changed since the last time we told
+    // this player — otherwise every qualifying turn would repeat the same clip.
+    const _pathId=_annPath||_optPath||null;
+    if(_pathId&&state.x01.lastAnnouncedCheckout[nextIdx]!==_pathId){
+      state.x01.lastAnnouncedCheckout[nextIdx]=_pathId;
+      setTimeout(()=>announceCheckoutPath(score,_annPath),2500);
+    }
   }
 }
 
@@ -618,6 +624,25 @@ export function handleLegWin(winnerIdx){
   // PDC: leg starter strictly alternates regardless of winner
   state.cfg.nextLegStarter=((state.cfg.currentLegStarter||0)+1)%state.cfg.players.length;
 
+  // Snapshot this leg's per-player breakdown (independent of accumulated match
+  // totals) so the match-end summary can let the user drill back into any
+  // individual leg later instead of only ever seeing the combined total.
+  if(!state.cfg.legStatsHistory) state.cfg.legStatsHistory=[];
+  state.cfg.legStatsHistory.push({
+    legNumber: state.cfg.currentLeg,
+    setNumber: state.cfg.currentSet||1,
+    label: state.cfg.totalSets>1?`Set ${state.cfg.currentSet} · Leg ${state.cfg.currentLeg}`:`Leg ${state.cfg.currentLeg}`,
+    winnerIdx,
+    turnScores: state.cfg.players.map((_,i)=>[...(state.x01.turnScores[i]||[])]),
+    checkoutAttempts: state.cfg.players.map((_,i)=>state.x01.checkoutAttempts?.[i]||0),
+    checkoutHits: state.cfg.players.map((_,i)=>state.x01.checkoutHits?.[i]||0),
+    checkoutScores: state.cfg.players.map((_,i)=>[...(state.x01.checkoutScores?.[i]||[])]),
+    throws: state.cfg.players.map((_,i)=>[
+      ...state.x01.historicThrows[i].filter(t=>t.svgX!=null),
+      ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null):[])
+    ])
+  });
+
   if(window._saveGameToFirebase) window._saveGameToFirebase(winnerIdx);
 
   if(state.cfg.legWins[winnerIdx]>=state.cfg.legsToWin){
@@ -662,7 +687,9 @@ function resizeWinnerBoards(overlayId='winner-overlay'){
   const headerH=summary?.querySelector('.tv-header')?.offsetHeight||0;
   const statsH=summary?.querySelector('.tv-stats-table')?.offsetHeight||0;
   const legH=summary?.querySelector('.tv-leg-label')?.offsetHeight||0;
-  const availH=scrollH-22-headerH-statsH-legH-50;
+  const selectorEl=overlay.querySelector('#winner-leg-selector');
+  const selectorH=(selectorEl&&selectorEl.style.display!=='none')?selectorEl.offsetHeight:0;
+  const availH=scrollH-22-headerH-statsH-legH-selectorH-50;
   const n=boardsRow.querySelectorAll('.tv-mini-board').length||1;
   const availW=(scrollW-32-20*(n-1))/n;
   const size=Math.max(80,Math.min(Math.floor(availH),Math.floor(availW)));
@@ -673,6 +700,120 @@ window.addEventListener('resize',()=>{
   resizeWinnerBoards('leg-overlay');
 });
 
+const _toMiniDot=t=>({x:t.svgX,y:t.svgY,v:2,miss:t.miss,label:t.label});
+
+/**
+ * Builds the per-player stat objects (avg, 180s, checkout%, scatter dots, ...)
+ * consumed by buildTvStatsHTML, from raw turn/checkout/throw data. Shared by
+ * the live leg overlay, the match-total view, and drilling into any
+ * individual leg's history after the match has ended.
+ * @param {Array<{turns:number[],coAtt:number,coHit:number,allCheckouts:number[],dots:object[]}>} perPlayer
+ * @param {number} winnerIdx
+ * @param {boolean} withMatchScore include SETS/LEGS WON row (match-total view only)
+ */
+function buildPlayerStats(perPlayer, winnerIdx, withMatchScore=false){
+  return state.cfg.players.map((p,i)=>{
+    if(state.cfg.isBot?.[i]) return null;
+    const {turns,coAtt,coHit,allCheckouts,dots}=perPlayer[i];
+    if(!turns.length) return null;
+    const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
+    const s180=turns.filter(v=>v===180).length;
+    const s140=turns.filter(v=>v>=140&&v<180).length;
+    const s100=turns.filter(v=>v>=100&&v<140).length;
+    const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
+    const highCo=allCheckouts.length?Math.max(...allCheckouts):0;
+    const pid=state.cfg.playerIds?.[i];
+    const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
+    const displayName=escapeHtml(playerObj?.nickname||p);
+    const photoUrl=playerObj?.photoUrl||null;
+    const isWinner=i===winnerIdx;
+    let score=null, scoreLabel=null;
+    if(withMatchScore){
+      if(state.cfg.totalSets>1){ score=state.cfg.setWins[i]; scoreLabel='SETS WON'; }
+      else if(state.cfg.totalLegs>1){ score=state.cfg.legWins[i]; scoreLabel='LEGS WON'; }
+    }
+    return {avg,s180,s140,s100,coAtt,coHit,coPct,highCo,displayName,photoUrl,isWinner,idx:i,dots,score,scoreLabel};
+  }).filter(Boolean);
+}
+
+/** Renders a computed humanStats array into the given summary element + mini-boards. */
+function renderStatsSummary(sumEl, pfx, legLabel, humanStats, overlayId){
+  if(!humanStats.length){
+    sumEl.style.display='none';
+    return;
+  }
+  sumEl.innerHTML=buildTvStatsHTML(humanStats,pfx,legLabel,true);
+  sumEl.style.display='block';
+  requestAnimationFrame(()=>{
+    humanStats.forEach((s,si)=>{
+      const svgEl=document.getElementById(`${pfx}-scatter-${si}`);
+      if(svgEl) drawMiniBoard(svgEl,s.dots,12);
+    });
+    resizeWinnerBoards(overlayId);
+  });
+}
+
+/** Builds the {turns,coAtt,coHit,allCheckouts,dots} array for the combined match total (all legs so far). */
+function _matchTotalPerPlayer(){
+  return state.cfg.players.map((_,i)=>({
+    turns: [...(state.cfg.accumulated?.turnScores?.[i]||[]),...(state.x01.turnScores[i]||[])],
+    coAtt: (state.cfg.accumulated?.checkoutAttempts?.[i]||0)+(state.x01.checkoutAttempts?.[i]||0),
+    coHit: (state.cfg.accumulated?.checkoutHits?.[i]||0)+(state.x01.checkoutHits?.[i]||0),
+    allCheckouts: [...(state.cfg.accumulated?.checkoutScores?.[i]||[]),...(state.x01.checkoutScores?.[i]||[])],
+    dots: [
+      ...(state.cfg.accumulated?.historicThrows?.[i]||[]).map(_toMiniDot),
+      ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(_toMiniDot),
+      ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(_toMiniDot):[])
+    ]
+  }));
+}
+
+/**
+ * Re-renders the match-summary panel for either the combined total (legIdx=null)
+ * or one specific leg from state.cfg.legStatsHistory.
+ * @param {number|null} legIdx
+ * @param {number} matchWinnerIdx
+ */
+function _renderWinnerLegView(legIdx, matchWinnerIdx){
+  const sumEl=document.getElementById('winner-summary');
+  if(!sumEl) return;
+  if(legIdx===null){
+    renderStatsSummary(sumEl,'winner',null,buildPlayerStats(_matchTotalPerPlayer(),matchWinnerIdx,true),'winner-overlay');
+    return;
+  }
+  const leg=state.cfg.legStatsHistory?.[legIdx];
+  if(!leg) return;
+  const perPlayer=state.cfg.players.map((_,i)=>({
+    turns: leg.turnScores[i]||[],
+    coAtt: leg.checkoutAttempts[i]||0,
+    coHit: leg.checkoutHits[i]||0,
+    allCheckouts: leg.checkoutScores[i]||[],
+    dots: (leg.throws[i]||[]).map(_toMiniDot)
+  }));
+  renderStatsSummary(sumEl,'winner',leg.label,buildPlayerStats(perPlayer,leg.winnerIdx),'winner-overlay');
+}
+
+/** Builds the TOTAL / LEG 1 / LEG 2 ... chip row on the final match overlay (only when >1 leg was played). */
+function _buildLegSelector(matchWinnerIdx){
+  const bar=document.getElementById("winner-leg-selector");
+  if(!bar) return;
+  const history=state.cfg.legStatsHistory||[];
+  if(history.length<=1){ bar.style.display='none'; bar.innerHTML=''; return; }
+  const GOLD='#D4AF37';
+  const chipStyle=active=>`padding:6px 14px;border-radius:20px;border:2px solid ${active?GOLD:'var(--dart-border)'};background:${active?'rgba(212,175,55,0.12)':'var(--dart-bg-card)'};cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px;color:${active?GOLD:'var(--dart-text-sec)'}`;
+  const chips=[{leg:'',label:'TOTAL'},...history.map((h,i)=>({leg:String(i),label:h.label.toUpperCase()}))];
+  bar.style.display='flex';
+  bar.innerHTML=chips.map((c,ci)=>`<button type="button" class="winner-leg-chip" data-leg="${c.leg}" style="${chipStyle(ci===0)}">${escapeHtml(c.label)}</button>`).join('');
+  bar.querySelectorAll('.winner-leg-chip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      bar.querySelectorAll('.winner-leg-chip').forEach(b=>b.setAttribute('style',chipStyle(false)));
+      btn.setAttribute('style',chipStyle(true));
+      const legIdx=btn.dataset.leg===''?null:parseInt(btn.dataset.leg);
+      _renderWinnerLegView(legIdx, matchWinnerIdx);
+    });
+  });
+}
+
 /**
  * Shows the result overlay — shared by leg wins and the final match win.
  * @param {string} name  winner's display name
@@ -682,75 +823,31 @@ window.addEventListener('resize',()=>{
  */
 export function showWinner(name, round, isLeg=false, legLabel=null){
   const winnerIdx=state.cfg.players.indexOf(name);
-  const pfx=isLeg?'leg':'winner';
   const sumEl=document.getElementById(isLeg?'leg-stats-summary':'winner-summary');
+  const legSelectorBar=document.getElementById("winner-leg-selector");
 
   if(sumEl&&state.cfg.mode!=="Cricket"&&state.x01.turnScores){
-    const toMini=t=>({x:t.svgX,y:t.svgY,v:2,miss:t.miss,label:t.label});
-    const playerStats=state.cfg.players.map((p,i)=>{
-      if(state.cfg.isBot?.[i]) return null;
-      let turns, coAtt, coHit, dots, allCheckouts;
-      if(isLeg){
-        turns=state.x01.turnScores[i]||[];
-        coAtt=state.x01.checkoutAttempts[i]||0;
-        coHit=state.x01.checkoutHits[i]||0;
-        allCheckouts=state.x01.checkoutScores?.[i]||[];
-        dots=[
-          ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
-          ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
-        ];
-      } else {
-        const accTurns=state.cfg.accumulated?.turnScores?.[i]||[];
-        turns=[...accTurns,...(state.x01.turnScores[i]||[])];
-        coAtt=(state.cfg.accumulated?.checkoutAttempts?.[i]||0)+(state.x01.checkoutAttempts?.[i]||0);
-        coHit=(state.cfg.accumulated?.checkoutHits?.[i]||0)+(state.x01.checkoutHits?.[i]||0);
-        allCheckouts=[
-          ...(state.cfg.accumulated?.checkoutScores?.[i]||[]),
-          ...(state.x01.checkoutScores?.[i]||[])
-        ];
-        dots=[
-          ...(state.cfg.accumulated?.historicThrows?.[i]||[]).map(toMini),
-          ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(toMini),
-          ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(toMini):[])
-        ];
-      }
-      if(!turns.length) return null;
-      const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
-      const s180=turns.filter(v=>v===180).length;
-      const s140=turns.filter(v=>v>=140&&v<180).length;
-      const s100=turns.filter(v=>v>=100&&v<140).length;
-      const coPct=coAtt>0?Math.round(coHit/coAtt*100):0;
-      const highCo=allCheckouts.length?Math.max(...allCheckouts):0;
-      const pid=state.cfg.playerIds?.[i];
-      const playerObj=state.allPlayers?.find(pl=>pl.id===pid);
-      const displayName=escapeHtml(playerObj?.nickname||p);
-      const photoUrl=playerObj?.photoUrl||null;
-      const isWinner=isLeg?(i===winnerIdx):(i===state.x01.winner);
-      let score=null, scoreLabel=null;
-      if(!isLeg){
-        if(state.cfg.totalSets>1){ score=state.cfg.setWins[i]; scoreLabel='SETS WON'; }
-        else if(state.cfg.totalLegs>1){ score=state.cfg.legWins[i]; scoreLabel='LEGS WON'; }
-      }
-      return {avg,s180,s140,s100,coAtt,coHit,coPct,highCo,displayName,photoUrl,isWinner,idx:i,dots,score,scoreLabel};
-    });
-    const humanStats=playerStats.filter(Boolean);
-    if(!humanStats.length){
-      sumEl.style.display='none';
+    if(isLeg){
+      const perPlayer=state.cfg.players.map((_,i)=>({
+        turns: state.x01.turnScores[i]||[],
+        coAtt: state.x01.checkoutAttempts[i]||0,
+        coHit: state.x01.checkoutHits[i]||0,
+        allCheckouts: state.x01.checkoutScores?.[i]||[],
+        dots: [
+          ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(_toMiniDot),
+          ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(_toMiniDot):[])
+        ]
+      }));
+      renderStatsSummary(sumEl,'leg',legLabel,buildPlayerStats(perPlayer,winnerIdx),'leg-overlay');
     } else {
-      sumEl.innerHTML=buildTvStatsHTML(humanStats,pfx,isLeg?legLabel:null,true);
-      sumEl.style.display='block';
-      requestAnimationFrame(()=>{
-        humanStats.forEach((s,si)=>{
-          const svgEl=document.getElementById(`${pfx}-scatter-${si}`);
-          if(svgEl) drawMiniBoard(svgEl,s.dots,12);
-        });
-        resizeWinnerBoards(isLeg?'leg-overlay':'winner-overlay');
-      });
+      renderStatsSummary(sumEl,'winner',null,buildPlayerStats(_matchTotalPerPlayer(),state.x01.winner,true),'winner-overlay');
+      _buildLegSelector(state.x01.winner);
     }
   } else if(sumEl){
     // Cricket (and any other non-X01 mode) has no X01 turnScores to summarize —
     // hide the panel instead of leaving a previous X01 game's stats on screen.
     sumEl.style.display='none';
+    if(!isLeg&&legSelectorBar){ legSelectorBar.style.display='none'; legSelectorBar.innerHTML=''; }
   }
 
   document.getElementById(isLeg?'leg-overlay':'winner-overlay').classList.add("visible");
