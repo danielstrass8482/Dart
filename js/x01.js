@@ -439,6 +439,14 @@ export function handleBouncer(){
   state.x01.throws.push({score:0,label:"↩",bouncer:true,miss:false});
   renderX01();
   if(state.x01.throws.length===3){
+    // Bouncer contributes 0 to the sum, so this still announces whatever the
+    // turn's non-bouncer darts scored — only the bouncer itself stays silent.
+    // Without this, a bouncer as the 3rd dart skipped processX01Hit's own
+    // announcement entirely (that path never runs for bouncer throws), so the
+    // whole turn went unannounced instead of just the bouncer.
+    const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
+    const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
+    turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
     setTimeout(advanceX01,800);
   }
 }
@@ -869,6 +877,16 @@ export function showWinner(name, round, isLeg=false, legLabel=null){
     if(window._buildCoachLegSelector) window._buildCoachLegSelector();
     const winnerPid=state.cfg.playerIds?.[winnerIdx]||null;
     if(winnerPid && window._loadCoachHistory) window._loadCoachHistory(winnerPid);
+  } else {
+    // Always reopen a fresh leg-win overlay on its MATCH tab, and clear any
+    // leftover analysis text from a previously-viewed leg so it doesn't look
+    // like it belongs to this one.
+    document.getElementById("leg-tab-match")?.classList.remove("winner-tab-hidden");
+    document.getElementById("leg-tab-analysis")?.classList.add("winner-tab-hidden");
+    document.getElementById("tab-btn-leg-match")?.classList.add("winner-tab-active");
+    document.getElementById("tab-btn-leg-analysis")?.classList.remove("winner-tab-active");
+    const legOutputEl=document.getElementById("coach-output-leg");
+    if(legOutputEl) legOutputEl.innerHTML="";
   }
 }
 

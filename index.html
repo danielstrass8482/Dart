@@ -942,14 +942,28 @@ window.splashPromise = new Promise(function(resolve) {
 
 <!-- ═══════════════════════ LEG WINNER OVERLAY ═══════════════════════ -->
 <div class="winner-overlay" id="leg-overlay">
+  <!-- Tab navigation — mirrors the MATCH-end overlay for a consistent pattern -->
+  <div class="winner-tab-bar">
+    <button class="winner-tab-btn winner-tab-active" id="tab-btn-leg-match">MATCH</button>
+    <button class="winner-tab-btn" id="tab-btn-leg-analysis">ANALYSIS <span class="winner-tab-premium">PREMIUM</span></button>
+  </div>
+
+  <!-- Tab 1: MATCH — this leg's stats -->
   <div class="winner-tab-pane" id="leg-tab-match">
     <div class="winner-tab-scroll">
       <div id="leg-stats-summary"></div>
-      <button class="coach-btn" id="btn-coach-leg" style="margin-top:12px"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="leg_analysieren">LEG ANALYSIEREN</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
-      <div id="coach-output-leg" style="margin-top:12px;text-align:left;max-height:220px;overflow-y:auto"></div>
     </div>
     <div class="match-new-game-bar">
       <button class="btn-new-game" id="btn-next-leg" style="width:100%" data-i18n="naechstes_leg">NEXT LEG</button>
+    </div>
+  </div>
+
+  <!-- Tab 2: ANALYSIS — scoped to the leg just won, no player/video picker (still mid-match) -->
+  <div class="winner-tab-pane winner-tab-hidden" id="leg-tab-analysis">
+    <div class="winner-tab-scroll">
+      <button class="coach-btn" id="btn-coach-leg"><i data-lucide="brain" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="leg_analysieren">LEG ANALYSIEREN</span> <span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle">PREMIUM</span></button>
+      <div id="coach-output-leg" style="margin-top:12px;text-align:left;max-height:220px;overflow-y:auto"></div>
+      <button class="btn-new-game" id="btn-next-leg-analysis" style="width:100%;margin-top:16px" data-i18n="naechstes_leg">NEXT LEG</button>
     </div>
   </div>
 </div>
