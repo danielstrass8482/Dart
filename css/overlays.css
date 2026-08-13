@@ -145,7 +145,15 @@
 @media (orientation: landscape) {
   #winner-tab-match > .winner-tab-scroll,
   #leg-tab-match > .winner-tab-scroll {
-    max-width: min(98vw, 900px);
+    /* Was capped at 900px — tuned for tablet landscape (primary test device),
+       but on a genuinely wide desktop window this caps availW in
+       resizeWinnerBoards() well below what the screen actually offers: two
+       140px-floor boards only ever grow to (900-32-20)/2=424px regardless of
+       how wide the browser window is, leaving large unused margins left and
+       right of the whole panel. Raised so wide screens actually get more
+       room; tablets (~1024-1194px wide) are unaffected since 90vw already
+       exceeds their width before this ceiling would ever apply. */
+    max-width: min(90vw, 1400px);
   }
   /* Avatars in landscape — big enough to read, boards adapt via JS */
   #winner-tab-match .tv-lg .tv-avatar-img,
