@@ -692,7 +692,14 @@ function resizeWinnerBoards(overlayId='winner-overlay'){
   const availH=scrollH-22-headerH-statsH-legH-selectorH-50;
   const n=boardsRow.querySelectorAll('.tv-mini-board').length||1;
   const availW=(scrollW-32-20*(n-1))/n;
-  const size=Math.max(80,Math.min(Math.floor(availH),Math.floor(availW)));
+  // Floor matches the CSS var(--winner-board-size, 140px) fallback — that 140px
+  // was always the accepted baseline size. Boards with lots of stat rows above
+  // them (e.g. MATCH tab with the leg-selector chip bar) can otherwise compute
+  // an availH well under 140, shrinking the board far more than the layout
+  // actually needs while leaving the row's width mostly empty. .winner-tab-scroll
+  // already scrolls (overflow-y:auto), so a modest bit of scroll on cramped
+  // screens is the accepted trade-off for never going below the baseline size.
+  const size=Math.max(140,Math.min(Math.floor(availH),Math.floor(availW)));
   overlay.style.setProperty('--winner-board-size',`${size}px`);
 }
 window.addEventListener('resize',()=>{
@@ -859,6 +866,7 @@ export function showWinner(name, round, isLeg=false, legLabel=null){
     document.getElementById("tab-btn-analysis")?.classList.remove("winner-tab-active");
     if(window._updateCoachLimitDisplay) window._updateCoachLimitDisplay();
     if(window._buildCoachPlayerSelector) window._buildCoachPlayerSelector();
+    if(window._buildCoachLegSelector) window._buildCoachLegSelector();
     const winnerPid=state.cfg.playerIds?.[winnerIdx]||null;
     if(winnerPid && window._loadCoachHistory) window._loadCoachHistory(winnerPid);
   }
