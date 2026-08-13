@@ -464,11 +464,14 @@ function partToReadable(part){
 
 /**
  * Announces the checkout path for the given remaining score.
- * Only fires when dart_checkout_announce setting is enabled.
+ * Setting defaults to enabled (SETTING_DEFAULTS.checkout_announce=true in
+ * app.js) but the toggle only ever writes localStorage on an explicit user
+ * change — so this must default-on (skip only on an explicit "false"), not
+ * default-off, or every user who never touched the toggle gets silence.
  * @param {number} remaining
  */
 export async function announceCheckoutPath(remaining, customPath=null){
-  if(localStorage.getItem("dart_checkout_announce")!=="true") return;
+  if(localStorage.getItem("dart_checkout_announce")==="false") return;
   const co=customPath||window._CHECKOUTS?.[remaining];
   if(!co) return;
   const readable=co.split(" ").map(partToReadable).join(", ");
