@@ -30,9 +30,16 @@ const SYSTEM_PROMPT =
   "Speak slowly and clearly with natural pauses. " +
   "Be enthusiastic for high scores, disappointed for bust.";
 
-// Voice settings by category
-const VOICE_SETTINGS_DRAMATIC = { stability: 0.20, similarity_boost: 0.95, style: 0.85, use_speaker_boost: true };
-const VOICE_SETTINGS_NEUTRAL  = { stability: 0.45, similarity_boost: 0.90, style: 0.50, use_speaker_boost: true };
+// Voice settings by category. Previous values (stability 0.20/0.45, style
+// 0.85/0.50) had been in this narrow range across every prior revision of
+// this file and turned out to be too close together to be reliably audible —
+// confirmed by a live A/B test where a 180 and a low score sounded
+// indistinguishable. Widened stability and style to their practical extremes
+// and added `speed` (ElevenLabs voice_settings field, 0.7-1.2 range) as a
+// third, independent lever — pace is one of the most perceptible cues for
+// excitement vs. composure, on top of the expressiveness/exaggeration knobs.
+const VOICE_SETTINGS_DRAMATIC = { stability: 0.15, similarity_boost: 0.95, style: 1.0, use_speaker_boost: true, speed: 1.1 };
+const VOICE_SETTINGS_NEUTRAL  = { stability: 0.70, similarity_boost: 0.85, style: 0.0, use_speaker_boost: true, speed: 0.95 };
 
 // Non-score keys that always get the dramatic treatment (score-based keys are
 // judged by scoreValueFromKey/isDramaticKey below instead).
