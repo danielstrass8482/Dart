@@ -84,9 +84,19 @@ export function speak(text){
  * @param {string} text
  * @param {string} lang BCP-47 language tag
  */
+// Monotonically increasing token — lets a newer doSpeak() call invalidate an
+// older call's still-pending 50ms scheduling window. Without this, two calls
+// fired in quick succession (very common once ElevenLabs falls back to this
+// path for almost every announcement) can both survive cancel() and end up
+// queued back-to-back in the browser's speech engine, audibly running two
+// unrelated announcements together (e.g. a stale "One" bleeding into "Sixteen!").
+let _speakToken=0;
+
 export function doSpeak(text, lang){
   if(!window.speechSynthesis) return;
+  const myToken=++_speakToken;
   const trySpeak=()=>{
+    if(myToken!==_speakToken) return;
     if(window.speechSynthesis.paused) window.speechSynthesis.resume();
     const utt=new SpeechSynthesisUtterance(text);
     utt.lang=lang; utt.rate=0.95; utt.pitch=1.1; utt.volume=1;
@@ -96,7 +106,7 @@ export function doSpeak(text, lang){
            ||voices.find(v=>v.lang.startsWith("en"));
     if(en) utt.voice=en;
     window.speechSynthesis.cancel();
-    setTimeout(()=>window.speechSynthesis.speak(utt), 50);
+    setTimeout(()=>{ if(myToken===_speakToken) window.speechSynthesis.speak(utt); }, 50);
   };
   if(speechSynthesis.getVoices().length>0){ trySpeak(); }
   else{
@@ -198,6 +208,13 @@ export function clearAudioQueue(){
 const COACH_FUNCTION_URL="https://dartcoach-dxa2kmdyca-ew.a.run.app";
 export const TTS_FUNCTION_URL="https://darttts-dxa2kmdyca-ew.a.run.app";
 
+// Set once the per-user daily TTS quota (429) is hit, so prewarming stops
+// hammering the function for the rest of the day instead of burning through
+// retries that can only ever fail. Live announcements still try (and still
+// fall back to browser TTS on failure) since a single game announcement is
+// cheap compared to the ~180-entry prewarm sweep.
+let ttsQuotaExhausted=false;
+
 /** @returns {string} active ElevenLabs voice ID */
 export function getVoiceId(){
   return localStorage.getItem("dart_active_voice_id")||"JBFqnCBsd6RMkjVDRZzb";
@@ -237,7 +254,7 @@ export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
   }finally{
     clearTimeout(timeoutId);
   }
-  if(resp.status===429){ console.info("TTS limit reached, falling back to browser TTS"); return null; }
+  if(resp.status===429){ console.info("TTS limit reached, falling back to browser TTS"); ttsQuotaExhausted=true; return null; }
   if(resp.status===503){ console.info("TTS unavailable, falling back to browser TTS"); return null; }
   if(!resp.ok) return null;
   const {url}=await resp.json();
@@ -297,9 +314,11 @@ export async function testVoice(voiceId, storageKey, text){
  * Pre-warms TTS cache without playing.
  * @param {string} text
  * @param {string} storageKey
+ * @returns {Promise<boolean>} true if a URL was obtained (cached or freshly generated)
  */
 export async function prewarmTTS(text, storageKey){
-  await fetchTTSUrl(storageKey, text).catch(()=>{});
+  const url=await fetchTTSUrl(storageKey, text).catch(()=>null);
+  return !!url;
 }
 
 /**
@@ -327,22 +346,53 @@ function scoreAnnouncement(score, hitBull=false){
 // 3-dart turn totals that cannot occur with any dart combination — skipped when prewarming.
 const UNREACHABLE_SCORES=new Set([179,178,176,175,173,172,169,166,163]);
 
-/** Pre-warms TTS for every reachable turn score (1-180) so a first-ever hit never has to live-generate audio mid-game. */
+/**
+ * Pre-warms TTS for every reachable turn score (1-180) so a first-ever hit
+ * never has to live-generate audio mid-game.
+ * Runs at most once per calendar day (persisted in localStorage) and
+ * staggers requests with a small delay between each — firing ~180 requests
+ * at once both saturates the connection pool (starving whatever live
+ * announcement triggered this, e.g. the "Game on!" call right after) and can
+ * burn through the entire daily per-user TTS quota in a single game start
+ * while the cache is still cold. Stops early once the quota is confirmed
+ * exhausted so it doesn't keep sending requests that can only fail.
+ */
 export function prewarmElevenLabs(){
+  const today=new Date().toISOString().split("T")[0];
+  if(localStorage.getItem("dart_prewarm_date")===today) return;
+  localStorage.setItem("dart_prewarm_date", today);
+
+  const jobs=[];
   for(let score=1;score<=180;score++){
     if(UNREACHABLE_SCORES.has(score)) continue;
     if(score===50){
-      const bull=scoreAnnouncement(50,true), norm=scoreAnnouncement(50,false);
-      prewarmTTS(bull.text,bull.key);
-      prewarmTTS(norm.text,norm.key);
+      jobs.push(scoreAnnouncement(50,true), scoreAnnouncement(50,false));
       continue;
     }
-    const {text,key}=scoreAnnouncement(score);
-    prewarmTTS(text,key);
+    jobs.push(scoreAnnouncement(score));
   }
-  prewarmTTS("Bust!", "el_bust");
-  prewarmTTS("No Score!", "el_no_score");
-  prewarmTTS("Game On!", "el_game_on");
+  jobs.push({text:"Bust!",key:"el_bust"});
+  jobs.push({text:"No Score!",key:"el_no_score"});
+  jobs.push({text:"Game on!",key:"el_game_on"});
+
+  // Strictly sequential — the next job is only fired after the previous one's
+  // response has fully settled, so at most 1 request to ElevenLabs is ever in
+  // flight from this loop (well under their 6-concurrent-request cap). Each
+  // failed job gets one backed-off retry before moving on, so a transient
+  // 429/502 (e.g. a brief ElevenLabs concurrency spike) doesn't just drop the
+  // clip from the cache for the rest of the day.
+  let i=0;
+  const step=()=>{
+    if(ttsQuotaExhausted||i>=jobs.length) return;
+    const job=jobs[i++];
+    prewarmTTS(job.text,job.key).then(ok=>{
+      if(ok||ttsQuotaExhausted){ setTimeout(step,250); return; }
+      setTimeout(()=>{
+        prewarmTTS(job.text,job.key).finally(()=>{ if(!ttsQuotaExhausted) setTimeout(step,250); });
+      },1000);
+    });
+  };
+  step();
 }
 
 // ── Dart Slang ────────────────────────────────────────────────────
