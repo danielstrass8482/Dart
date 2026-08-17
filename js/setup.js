@@ -195,6 +195,11 @@ export function showScreen(id){
   if(GAME_SCREENS.has(id)) lockLandscape();
   else unlockOrientation();
   updateRotateOverlay();
+  // Push a history marker when entering an active game screen so the browser/
+  // Android back gesture fires a popstate we can intercept with a leave-game
+  // confirmation instead of silently navigating away mid-match (PWA path —
+  // the native Capacitor hardware back button is handled separately in app.js).
+  if(id==="x01"||id==="cricket"||id==="party") history.pushState({dartGame:id}, "", location.href);
 }
 
 /** Shows the setup/home screen. */

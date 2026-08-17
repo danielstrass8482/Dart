@@ -266,8 +266,54 @@ window.addEventListener("orientationchange",()=>{
 window.matchMedia("(orientation:portrait)").addEventListener("change", updateRotateOverlay);
 
 
+// ── Leave-game confirmation (in-app back buttons, browser/gesture back,
+//    Android hardware back button) ──────────────────────────────────
+function isUnfinishedGameActive(){
+  const active = document.querySelector(".screen.active");
+  if(!active) return false;
+  if(active.id==="x01") return !state.x01.winner;
+  if(active.id==="cricket") return !state.cr.winner;
+  if(active.id==="party") return !state.pg.winner;
+  return false;
+}
+function confirmLeaveGame(){
+  return !isUnfinishedGameActive() || window.confirm(t('confirm_leave_game'));
+}
+function guardedShowSetup(){
+  if(confirmLeaveGame()) showSetup();
+}
+
+// PWA / browser back gesture — showScreen() pushes a history marker on
+// entering a game screen, so back navigation away from it fires here first
+// instead of silently leaving the match.
+window.addEventListener("popstate", ()=>{
+  if(!isUnfinishedGameActive()) return;
+  if(window.confirm(t('confirm_leave_game'))){
+    showSetup();
+  } else {
+    // Cancelled — re-push the marker so the next back press asks again
+    // instead of silently succeeding on a now-empty history stack.
+    history.pushState({dartGame:true}, "", location.href);
+  }
+});
+
+// Native Android hardware/gesture back button (Capacitor). Registering a
+// listener suppresses Capacitor's default WebView-back/exit-app handling, so
+// this function is fully responsible for both the leave-game confirmation
+// and the regular back/exit navigation.
+window.Capacitor?.Plugins?.App?.addListener("backButton", ({canGoBack})=>{
+  if(isUnfinishedGameActive()){
+    if(window.confirm(t('confirm_leave_game'))) showSetup();
+    return;
+  }
+  const active = document.querySelector(".screen.active");
+  if(active && active.id!=="setup"){ guardedShowSetup(); return; }
+  if(canGoBack) history.back();
+  else window.Capacitor.Plugins.App.exitApp();
+});
+
 // ── X01 navigation buttons ────────────────────────────────────────
-document.getElementById("x01-back").addEventListener("click", showSetup);
+document.getElementById("x01-back").addEventListener("click", guardedShowSetup);
 document.getElementById("x01-undo").addEventListener("click",()=>{
   if(state.x01.history.length===0) return;
   clearAudioQueue();
@@ -298,7 +344,7 @@ document.getElementById("cr-undo").addEventListener("click",()=>{
   redrawAllHits(boardSVGcr, state.cr.historicThrows[state.cr.current], []);
   renderCricket();
 });
-document.getElementById("cr-back").addEventListener("click", showSetup);
+document.getElementById("cr-back").addEventListener("click", guardedShowSetup);
 
 // ── Party buttons ─────────────────────────────────────────────────
 document.getElementById("party-next").addEventListener("click", advanceParty);
@@ -313,7 +359,7 @@ document.getElementById("party-undo").addEventListener("click",()=>{
   redrawAllHits(boardSVGparty,state.pg.historicThrows[state.pg.current],state.pg.throws);
   renderParty();
 });
-document.getElementById("party-back").addEventListener("click", showSetup);
+document.getElementById("party-back").addEventListener("click", guardedShowSetup);
 
 // ── Winner overlay buttons ────────────────────────────────────────
 document.getElementById("btn-new-game").addEventListener("click", showSetup);
