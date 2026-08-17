@@ -187,7 +187,11 @@ export function announceRequires(){
   const score = state.x01.scores[idx];
   if(score < 2 || score > 170) return;
   const name = state.cfg.players[idx];
-  speakKeyWithCustom("req_"+name+"_"+score, name+" requires "+numToWords(score)+".");
+  // Stale as soon as idx's remaining score no longer matches what this
+  // announcement was built for — i.e. their turn already completed while
+  // this was still queued/playing. See invalidateStaleAnnouncements().
+  const isStale=()=>state.x01?.scores?.[idx]!==score;
+  speakKeyWithCustom("req_"+name+"_"+score, name+" requires "+numToWords(score)+".", isStale);
 }
 
 
