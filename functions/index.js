@@ -11,7 +11,17 @@ const { getAppCheck } = require("firebase-admin/app-check");
 const { randomUUID } = require("crypto");
 
 // Set to true to hard-enforce App Check (after all clients carry tokens).
-const ENFORCE_APP_CHECK = true;
+// 2026-08-17: confirmed via production logs that the real Play Store Android
+// app (versionCode 12) gets a 401 on every single dartTTS call — the native
+// Play Integrity bridge (MainActivity.getAppCheckToken) never produces a
+// token FirebaseAppCheck.verifyToken() accepts, so the request never reaches
+// the enthusiasm-tier code below at all and the app silently falls back to
+// flat browser/Android TTS (which has zero score-based modulation) for every
+// announcement. That's why four rounds of retuning the ElevenLabs voice
+// settings never changed what real users heard: the fixed code path was
+// never executing. Soft-enforcing until the Play Integrity setup is fixed on
+// the Play Console side (needs access this environment doesn't have).
+const ENFORCE_APP_CHECK = false;
 
 initializeApp();
 
@@ -242,6 +252,11 @@ exports.dartTTS = onRequest(
     const baseKey = key.startsWith("el_") ? key.slice(3) : key;
     const text = SPECIAL_TEXTS[baseKey] ?? fallbackText;
     const voiceSettings = voiceSettingsForKey(baseKey);
+
+    console.log("dartTTS request:", JSON.stringify({
+      key, baseKey, score: scoreValueFromKey(baseKey),
+      tier: enthusiasmTierForKey(baseKey), model: modelForKey(baseKey), voiceSettings,
+    }));
 
     const elResp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",

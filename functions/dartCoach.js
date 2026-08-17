@@ -12,7 +12,11 @@ const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 const DAILY_LIMITS = { coach: 10, video: 3 };
 
 // Set to true to hard-enforce App Check (after all clients carry tokens).
-const ENFORCE_APP_CHECK = true;
+// 2026-08-17: same App Check bug class as dartTTS (see functions/index.js) —
+// the production Android app's Play Integrity token never verifies, so this
+// was also silently 401ing every real request. Soft-enforcing until the Play
+// Integrity setup is fixed on the Play Console side.
+const ENFORCE_APP_CHECK = false;
 
 exports.dartCoach = onRequest(
   {
