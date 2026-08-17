@@ -83,20 +83,38 @@ export function speak(text){
  * Low-level speech synthesis with voice fallback and resume logic.
  * @param {string} text
  * @param {string} lang BCP-47 language tag
+ * @returns {Promise<void>} resolves once this utterance has genuinely finished
+ *   (onend/onerror), or — if the browser never fires either (a known Android
+ *   WebView quirk) — after a generous safety-net timeout, so a caller that
+ *   awaits this can never hang forever.
  */
 // ── doSpeak() token guard vs. the audioQueue (queueAudio/playAudioQueue below) ──
 // These solve different problems and are meant to coexist, not compete:
 //   - audioQueue is the primary sequencing mechanism for every announcement in
 //     the app. All callers (X01, bot, speech recognition, party modes) now go
-//     through queueAudio(), which awaits full completion (ElevenLabs: real
-//     `onended`; browser-TTS fallback: a duration estimate) before starting the
+//     through queueAudio(), which awaits full completion before starting the
 //     next item — so announcements are strictly ordered and none is skipped.
+//     Historically the browser-TTS fallback branch only *estimated* that
+//     completion (Math.max(800, text.length*80)ms) instead of listening for
+//     it — long enough to usually work, but on a slower/verbose engine (e.g.
+//     Android WebView TTS) real speech can outlast the estimate, so the queue
+//     advanced and started the *next* item's audio (ElevenLabs `Audio` or
+//     another doSpeak call) while this one was still audibly speaking. Two
+//     unrelated announcements overlapping is exactly the "stale word bleeds
+//     into the next number" failure class doSpeak()'s token guard was built
+//     for — but the token guard only protects doSpeak-vs-doSpeak calls within
+//     itself, not the queue's own estimate racing a slow real utterance. Now
+//     doSpeak() returns a promise tied to the utterance's real onend/onerror,
+//     and playAudioQueue awaits *that* instead of guessing, closing this gap
+//     the same way the ElevenLabs path (real `onended`) already worked.
 //   - The token guard here is a defensive backstop *inside* doSpeak() itself,
 //     for the case where two doSpeak() calls still land close together (e.g. a
 //     future caller that forgets to route through the queue, or the delayed
 //     "voiceschanged" callback firing after a newer call already superseded
 //     it). It discards a stale call's pending speak() rather than letting two
-//     browser-TTS utterances audibly overlap.
+//     browser-TTS utterances audibly overlap, and resolves that call's promise
+//     immediately (rather than leaving it hanging) so a superseded doSpeak()
+//     can never stall whoever awaited it.
 // Net effect: under normal operation every doSpeak() call is already the only
 // one in flight (queue guarantees that), so the token guard is a no-op safety
 // net, not the thing doing the sequencing. If it starts firing in practice,
@@ -105,29 +123,42 @@ export function speak(text){
 let _speakToken=0;
 
 export function doSpeak(text, lang){
-  if(!window.speechSynthesis) return;
+  if(!window.speechSynthesis) return Promise.resolve();
   const myToken=++_speakToken;
-  const trySpeak=()=>{
-    if(myToken!==_speakToken) return;
-    if(window.speechSynthesis.paused) window.speechSynthesis.resume();
-    const utt=new SpeechSynthesisUtterance(text);
-    utt.lang=lang; utt.rate=0.95; utt.pitch=1.1; utt.volume=1;
-    const voices=speechSynthesis.getVoices();
-    const en=voices.find(v=>v.lang.startsWith("en")&&v.name.includes("Google"))
-           ||voices.find(v=>v.lang.startsWith("en-GB"))
-           ||voices.find(v=>v.lang.startsWith("en"));
-    if(en) utt.voice=en;
-    window.speechSynthesis.cancel();
-    setTimeout(()=>{ if(myToken===_speakToken) window.speechSynthesis.speak(utt); }, 50);
-  };
-  if(speechSynthesis.getVoices().length>0){ trySpeak(); }
-  else{
-    let spoken=false;
-    const doOnce=()=>{ if(!spoken){ spoken=true; trySpeak(); } };
-    speechSynthesis.addEventListener("voiceschanged",doOnce,{once:true});
-    // voiceschanged often never fires in Android WebView — force speak after 500ms
-    setTimeout(doOnce, 500);
-  }
+  return new Promise(resolve=>{
+    let settled=false;
+    const finish=()=>{ if(!settled){ settled=true; resolve(); } };
+    const trySpeak=()=>{
+      if(myToken!==_speakToken){ finish(); return; }
+      if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+      const utt=new SpeechSynthesisUtterance(text);
+      utt.lang=lang; utt.rate=0.95; utt.pitch=1.1; utt.volume=1;
+      utt.onend=finish;
+      utt.onerror=finish;
+      const voices=speechSynthesis.getVoices();
+      const en=voices.find(v=>v.lang.startsWith("en")&&v.name.includes("Google"))
+             ||voices.find(v=>v.lang.startsWith("en-GB"))
+             ||voices.find(v=>v.lang.startsWith("en"));
+      if(en) utt.voice=en;
+      window.speechSynthesis.cancel();
+      setTimeout(()=>{
+        if(myToken===_speakToken) window.speechSynthesis.speak(utt);
+        else finish();
+      }, 50);
+      // Safety net: some WebViews silently never fire onend/onerror. Without
+      // this, an await'ing caller (playAudioQueue) would stall the whole
+      // queue forever on a single dropped event.
+      setTimeout(finish, Math.max(3000, text.length*150));
+    };
+    if(speechSynthesis.getVoices().length>0){ trySpeak(); }
+    else{
+      let spoken=false;
+      const doOnce=()=>{ if(!spoken){ spoken=true; trySpeak(); } };
+      speechSynthesis.addEventListener("voiceschanged",doOnce,{once:true});
+      // voiceschanged often never fires in Android WebView — force speak after 500ms
+      setTimeout(doOnce, 500);
+    }
+  });
 }
 
 // ── Audio unlock for mobile ───────────────────────────────────────
@@ -200,10 +231,13 @@ async function playAudioQueue(){
   const {text,key,resolve}=audioQueue.shift();
   try{
     const played=await speakElevenLabs(text,key);
-    if(!played) await new Promise(r=>{
-      doSpeak(text,"en-GB");
-      setTimeout(r,Math.max(800,text.length*80));
-    });
+    // doSpeak() now resolves on the utterance's real onend/onerror (with its
+    // own generous safety-net timeout) instead of this queue guessing a fixed
+    // duration — a guess that could undershoot actual speech length on a
+    // slower TTS engine and let the *next* queued item start audibly on top
+    // of this one still finishing. See the doSpeak() comment for the failure
+    // mode this closes.
+    if(!played) await doSpeak(text,"en-GB");
   }catch(e){}
   audioPlaying=false;
   if(resolve) resolve();
