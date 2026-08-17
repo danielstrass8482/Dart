@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout, drawMiniBoard } from './board.js?v=2';
-import { speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath } from './audio.js';
+import { speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath, invalidateStaleAnnouncements } from './audio.js';
 import { announceRequires } from './speech.js';
 import { runBotTurn } from './bot.js';
 import { t } from './i18n.js?v=3';
@@ -468,7 +468,7 @@ function _scheduleNextPlayerAnnounce(nextIdx){
     const _pathId=_annPath||_optPath||null;
     if(_pathId&&state.x01.lastAnnouncedCheckout[nextIdx]!==_pathId){
       state.x01.lastAnnouncedCheckout[nextIdx]=_pathId;
-      setTimeout(()=>announceCheckoutPath(score,_annPath),2500);
+      setTimeout(()=>announceCheckoutPath(score,nextIdx,_annPath),2500);
     }
   }
 }
@@ -511,6 +511,12 @@ export function advanceX01(){
   if(state.x01.turnScores[pi].length>=3&&state.x01.first9[pi]===null)
     state.x01.first9[pi]=Math.round(state.x01.turnScores[pi].reduce((a,b)=>a+b,0)/3*10)/10;
   state.x01.scores[pi]-=spent;
+  // pi's remaining score just changed — any still-queued/still-playing
+  // "requires N"/checkout-path announcement scheduled for pi's *previous*
+  // turn-start score is now factually wrong (e.g. "Daniel requires one
+  // hundred and fifty one" playing out after a completed turn already moved
+  // him to 81). Cut those off instead of letting them finish.
+  invalidateStaleAnnouncements();
   state.x01.lastTurnThrows[pi]=[...state.x01.throws];
   state.x01.historicThrows[pi].push(...state.x01.throws.filter(t=>t.svgX!=null));
   state.x01.throws=[]; state.x01.bust=false;

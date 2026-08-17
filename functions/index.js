@@ -15,12 +15,10 @@ const { randomUUID } = require("crypto");
 // app (versionCode 12) gets a 401 on every single dartTTS call — the native
 // Play Integrity bridge (MainActivity.getAppCheckToken) never produces a
 // token FirebaseAppCheck.verifyToken() accepts, so the request never reaches
-// the enthusiasm-tier code below at all and the app silently falls back to
-// flat browser/Android TTS (which has zero score-based modulation) for every
-// announcement. That's why four rounds of retuning the ElevenLabs voice
-// settings never changed what real users heard: the fixed code path was
-// never executing. Soft-enforcing until the Play Integrity setup is fixed on
-// the Play Console side (needs access this environment doesn't have).
+// the TTS generation code below at all and the app silently falls back to
+// flat browser/Android TTS for every announcement. Soft-enforcing until the
+// Play Integrity setup is fixed on the Play Console side (needs access this
+// environment doesn't have).
 const ENFORCE_APP_CHECK = false;
 
 initializeApp();
@@ -37,36 +35,21 @@ const DEFAULT_VOICE_ID = VOICE_IDS.george;
 
 const SYSTEM_PROMPT =
   "You are a calm, deep-voiced British darts announcer. " +
-  "Speak slowly and clearly with natural pauses. " +
-  "Be enthusiastic for high scores, disappointed for bust.";
+  "Speak slowly and clearly with natural pauses.";
 
-// Voice settings by enthusiasm tier. Commit 5991b91 pushed the two-tier
-// version to its practical extremes (stability 0.15/0.70, style 1.0/0.0) to
-// fix a "no audible difference" complaint — but a live A/B test afterwards
-// found the result came out sounding REVERSED (a low score sounded
-// enthusiastic, a 180 sounded flat). ElevenLabs' own guidance is that
-// style=1.0 and stability below ~0.20 push into a range where output
-// character/quality can degrade or turn erratic rather than reliably read as
-// "more excited" — the most likely explanation for why the extreme dramatic
-// setting ended up sounding worse than the plain one. Pulled back to a
-// moderate, monotonic three-tier gradient instead of doubling down on more
-// extremes:
-//   BUSINESSLIKE (<30):   stability 0.75 (steadiest),            style 0.00 (none),  speed 0.90 (slowest)
-//   NORMAL       (30-99): stability 0.50 (mid),                  style 0.35 (mid),   speed 1.00 (baseline)
-//   ENTHUSIASTIC (>=100): stability 0.30 (least steady/most expressive), style 0.65 (clear but short of ElevenLabs' risky 1.0 ceiling), speed 1.08 (fastest)
-// Explicit direction check (do not skip this when touching these values):
-//   stability strictly decreases:  0.75 > 0.50 > 0.30  ✓
-//   style strictly increases:      0.00 < 0.35 < 0.65  ✓
-//   speed strictly increases:      0.90 < 1.00 < 1.08  ✓
-// A runtime self-check below throws at cold start if this ever gets
-// scrambled again instead of silently shipping a wrong/reversed mapping.
-const VOICE_SETTINGS_BUSINESSLIKE = { stability: 0.75, similarity_boost: 0.85, style: 0.00, use_speaker_boost: true, speed: 0.90 };
-const VOICE_SETTINGS_NORMAL       = { stability: 0.50, similarity_boost: 0.90, style: 0.35, use_speaker_boost: true, speed: 1.00 };
-const VOICE_SETTINGS_ENTHUSIASTIC = { stability: 0.30, similarity_boost: 0.95, style: 0.65, use_speaker_boost: true, speed: 1.08 };
-
-// Non-score keys that always get the enthusiastic treatment (score-based keys
-// are judged by scoreValueFromKey/enthusiasmTierForKey below instead).
-const ENTHUSIASTIC_EXTRA_KEYS = new Set(["game_on"]);
+// ── Score-based enthusiasm modulation: RETIRED 2026-08-17 ──────────────────
+// Six iterations (swapped tier mapping, too-extreme then too-narrow value
+// spreads, stale cache serving pre-fix audio for the exact test scores,
+// a cache-hit path that never re-ran the tier logic at all) never produced
+// reliably-correct live behavior, and each fix that looked right in isolation
+// kept getting undone by the next layer of the same problem. Daniel decided
+// to drop the feature entirely in favor of stability: every score now gets
+// the same single voice profile, and there is deliberately no score-keyed
+// branch left anywhere in this file for a future change to scramble. If
+// per-score modulation is ever wanted again, treat it as a new feature with
+// its own live-audio verification loop, not a revival of this one.
+const VOICE_SETTINGS = { stability: 0.50, similarity_boost: 0.90, style: 0.35, use_speaker_boost: true, speed: 1.00 };
+const MODEL_ID = "eleven_turbo_v2_5";
 
 // Commas/periods create natural pauses for ElevenLabs; no CAPS (causes rushing)
 const SPECIAL_TEXTS = {
@@ -86,69 +69,6 @@ const SPECIAL_TEXTS = {
   game_on:   "Game on!",
   bust:      "Bust.",
 };
-
-// Extracts the numeric turn score from a "score_<n>..." cache key (also
-// matches score_50_bull/score_50_norm/score_180b), or null for non-score keys.
-function scoreValueFromKey(baseKey) {
-  const m = /^score_(\d+)/.exec(baseKey);
-  return m ? parseInt(m[1], 10) : null;
-}
-
-// Three-tier enthusiasm classification, keyed off the actual numeric score
-// rather than a hand-picked allowlist: <30 businesslike, 30-99 normal,
-// >=100 enthusiastic. Non-score keys (game_on) count as enthusiastic.
-function enthusiasmTierForKey(baseKey) {
-  const score = scoreValueFromKey(baseKey);
-  if (score !== null) {
-    if (score >= 100) return "enthusiastic";
-    if (score >= 30) return "normal";
-    return "businesslike";
-  }
-  return ENTHUSIASTIC_EXTRA_KEYS.has(baseKey) ? "enthusiastic" : "normal";
-}
-
-function modelForKey(baseKey) {
-  return enthusiasmTierForKey(baseKey) === "enthusiastic" ? "eleven_multilingual_v2" : "eleven_turbo_v2_5";
-}
-
-function voiceSettingsForKey(baseKey) {
-  const tier = enthusiasmTierForKey(baseKey);
-  if (tier === "enthusiastic") return VOICE_SETTINGS_ENTHUSIASTIC;
-  if (tier === "normal") return VOICE_SETTINGS_NORMAL;
-  return VOICE_SETTINGS_BUSINESSLIKE;
-}
-
-// ── Cold-start self-check ───────────────────────────────────────────
-// Throws (crashing the instance) rather than silently deploying a scrambled
-// tier mapping — this is exactly the class of bug that shipped in 5991b91
-// undetected until a live listening test caught it.
-function assertTier(baseKey, expected) {
-  const actual = enthusiasmTierForKey(baseKey);
-  if (actual !== expected) {
-    throw new Error(`Enthusiasm tier self-check failed: ${baseKey} => ${actual}, expected ${expected}`);
-  }
-}
-assertTier("score_3", "businesslike");
-assertTier("score_29", "businesslike");
-assertTier("score_30", "normal");
-assertTier("score_60", "normal");
-assertTier("score_99", "normal");
-assertTier("score_100", "enthusiastic");
-assertTier("score_180", "enthusiastic");
-assertTier("score_180b", "enthusiastic");
-assertTier("game_on", "enthusiastic");
-if (!(VOICE_SETTINGS_BUSINESSLIKE.stability > VOICE_SETTINGS_NORMAL.stability &&
-      VOICE_SETTINGS_NORMAL.stability > VOICE_SETTINGS_ENTHUSIASTIC.stability)) {
-  throw new Error("Enthusiasm tier self-check failed: stability must strictly decrease businesslike -> normal -> enthusiastic");
-}
-if (!(VOICE_SETTINGS_BUSINESSLIKE.style < VOICE_SETTINGS_NORMAL.style &&
-      VOICE_SETTINGS_NORMAL.style < VOICE_SETTINGS_ENTHUSIASTIC.style)) {
-  throw new Error("Enthusiasm tier self-check failed: style must strictly increase businesslike -> normal -> enthusiastic");
-}
-if (!(VOICE_SETTINGS_BUSINESSLIKE.speed < VOICE_SETTINGS_NORMAL.speed &&
-      VOICE_SETTINGS_NORMAL.speed < VOICE_SETTINGS_ENTHUSIASTIC.speed)) {
-  throw new Error("Enthusiasm tier self-check failed: speed must strictly increase businesslike -> normal -> enthusiastic");
-}
 
 const TTS_DAILY_LIMIT = 200;
 
@@ -210,14 +130,14 @@ exports.dartTTS = onRequest(
 
     // Return cached URL if the file already exists (no rate limit consumed).
     // NOTE: this returns *whatever audio was baked in when the file was first
-    // generated* — it does NOT re-run enthusiasmTierForKey/voiceSettingsForKey
-    // below, so a voice-settings retune never touches already-cached clips
-    // until they're purged. That silence (no log line at all on a cache hit)
-    // previously hid a real bug: two scores (3 and 180) kept serving
-    // 2026-08-13 audio through 2026-08-17 while every other score got
-    // regenerated under later fixes, and nobody could see it because this
-    // path never logged anything. Logging the cache hit (with the file's own
-    // age) makes that class of staleness visible instead of silent.
+    // generated* — it does NOT re-run any settings computed below, so a future
+    // voice-settings change never touches already-cached clips until they're
+    // purged. That silence (no log line at all on a cache hit) previously hid
+    // a real bug: two scores (3 and 180) kept serving 2026-08-13 audio through
+    // 2026-08-17 while every other score got regenerated under later fixes,
+    // and nobody could see it because this path never logged anything.
+    // Logging the cache hit (with the file's own age) makes that class of
+    // staleness visible instead of silent.
     const baseKeyForLog = key.startsWith("el_") ? key.slice(3) : key;
     const [exists] = await file.exists();
     if (exists) {
@@ -225,8 +145,7 @@ exports.dartTTS = onRequest(
       const token = meta.metadata?.firebaseStorageDownloadTokens;
       if (token) {
         console.log("dartTTS cache hit:", JSON.stringify({
-          key, baseKey: baseKeyForLog, score: scoreValueFromKey(baseKeyForLog),
-          tier: enthusiasmTierForKey(baseKeyForLog), cachedSince: meta.timeCreated,
+          key, baseKey: baseKeyForLog, cachedSince: meta.timeCreated,
         }));
         res.json({ url: buildDownloadURL(bucket.name, filePath, token) });
         return;
@@ -265,12 +184,8 @@ exports.dartTTS = onRequest(
     // Strip el_ prefix to look up special text / voice category
     const baseKey = key.startsWith("el_") ? key.slice(3) : key;
     const text = SPECIAL_TEXTS[baseKey] ?? fallbackText;
-    const voiceSettings = voiceSettingsForKey(baseKey);
 
-    console.log("dartTTS request:", JSON.stringify({
-      key, baseKey, score: scoreValueFromKey(baseKey),
-      tier: enthusiasmTierForKey(baseKey), model: modelForKey(baseKey), voiceSettings,
-    }));
+    console.log("dartTTS request:", JSON.stringify({ key, baseKey, voiceSettings: VOICE_SETTINGS }));
 
     const elResp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: "POST",
@@ -281,8 +196,8 @@ exports.dartTTS = onRequest(
       },
       body: JSON.stringify({
         text,
-        model_id: modelForKey(baseKey),
-        voice_settings: voiceSettings,
+        model_id: MODEL_ID,
+        voice_settings: VOICE_SETTINGS,
         system_prompt: SYSTEM_PROMPT,
         pronunciation_dictionary_locators: [],
         seed: null,

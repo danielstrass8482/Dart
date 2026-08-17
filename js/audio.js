@@ -127,7 +127,16 @@ export function doSpeak(text, lang){
   const myToken=++_speakToken;
   return new Promise(resolve=>{
     let settled=false;
-    const finish=()=>{ if(!settled){ settled=true; resolve(); } };
+    const finish=()=>{
+      if(settled) return;
+      settled=true;
+      if(currentAbortPlayback===abortThis) currentAbortPlayback=null;
+      resolve();
+    };
+    // Lets invalidateStaleAnnouncements() (below) cut this utterance off
+    // mid-sentence instead of only being able to stop *future* queue items —
+    // see that function's comment for the bug this closes.
+    const abortThis=()=>{ try{ window.speechSynthesis.cancel(); }catch(e){} finish(); };
     const trySpeak=()=>{
       if(myToken!==_speakToken){ finish(); return; }
       if(window.speechSynthesis.paused) window.speechSynthesis.resume();
@@ -142,7 +151,7 @@ export function doSpeak(text, lang){
       if(en) utt.voice=en;
       window.speechSynthesis.cancel();
       setTimeout(()=>{
-        if(myToken===_speakToken) window.speechSynthesis.speak(utt);
+        if(myToken===_speakToken){ currentAbortPlayback=abortThis; window.speechSynthesis.speak(utt); }
         else finish();
       }, 50);
       // Safety net: some WebViews silently never fire onend/onerror. Without
@@ -212,6 +221,12 @@ export async function playCustomAudio(key){
 // ── ElevenLabs / Google TTS ───────────────────────────────────────
 export const elTTSCache={};
 let currentAudio=null;
+// Set by whichever of speakElevenLabs()/doSpeak() currently owns playback —
+// calling it resolves that call's own promise immediately (not relying on
+// pause()/cancel() firing onended/onerror, which isn't guaranteed) so an
+// abort never leaves playAudioQueue's await hanging. See
+// invalidateStaleAnnouncements() below.
+let currentAbortPlayback=null;
 
 // ── Audio Queue ───────────────────────────────────────────────────
 // The single canonical entry point for every spoken announcement in the app.
@@ -224,11 +239,21 @@ let currentAudio=null;
 // direct doSpeak() calls.
 const audioQueue=[];
 let audioPlaying=false;
+let currentQueueItem=null;
 
 async function playAudioQueue(){
   if(audioPlaying||audioQueue.length===0) return;
+  // Drop anything that's already stale before ever starting it — no point
+  // spending a TTS call/playback on an announcement invalidateStaleAnnouncements()
+  // already knows is wrong by the time we'd reach it.
+  while(audioQueue.length && audioQueue[0].isStale?.()){
+    audioQueue.shift().resolve?.();
+  }
+  if(audioQueue.length===0) return;
   audioPlaying=true;
-  const {text,key,resolve}=audioQueue.shift();
+  const item=audioQueue.shift();
+  currentQueueItem=item;
+  const {text,key,resolve}=item;
   try{
     const played=await speakElevenLabs(text,key);
     // doSpeak() now resolves on the utterance's real onend/onerror (with its
@@ -239,22 +264,63 @@ async function playAudioQueue(){
     // mode this closes.
     if(!played) await doSpeak(text,"en-GB");
   }catch(e){}
+  currentQueueItem=null;
   audioPlaying=false;
   if(resolve) resolve();
   setTimeout(playAudioQueue,150);
 }
 
-export function queueAudio(text,key){
+/**
+ * Queues a spoken announcement.
+ * @param {string} text
+ * @param {string} key cache key
+ * @param {(()=>boolean)|null} [isStale] optional — checked right before this
+ *   item would start playing (drops it silently if already stale) and again
+ *   by invalidateStaleAnnouncements() while it's queued or actively playing.
+ *   Omit for announcements that are always still accurate once queued (score
+ *   confirmations, bust, game-on) — only state-snapshot announcements like a
+ *   checkout path or "requires N" need this.
+ */
+export function queueAudio(text,key,isStale=null){
   if(localStorage.getItem("dart_tts_enabled")==="false") return Promise.resolve();
   return new Promise(resolve=>{
-    audioQueue.push({text,key,resolve});
+    audioQueue.push({text,key,resolve,isStale});
     playAudioQueue();
   });
+}
+
+/**
+ * Cancels queued/currently-playing announcements whose caller-supplied
+ * isStale() now reports true — e.g. a checkout-path or "requires N"
+ * announcement whose target player's remaining score has since changed
+ * because a later turn already completed while the old announcement was
+ * still queued or speaking. Fixes the "Daniel requires one hundred and
+ * fifty-one" bug: previously such an announcement always played to the end
+ * even after the game state had moved on past it, because the queue only
+ * ever guaranteed *ordering*, never *relevance*. Queued items are dropped
+ * silently; a currently-playing one is aborted mid-utterance via
+ * currentAbortPlayback rather than left to finish.
+ * Call this whenever a player's remaining score actually changes (see
+ * advanceX01() in x01.js) — not on every throw, since state.x01.scores[i]
+ * itself only changes at turn end, which is exactly when a
+ * previously-scheduled announcement for that player can go stale.
+ */
+export function invalidateStaleAnnouncements(){
+  for(let i=audioQueue.length-1;i>=0;i--){
+    if(audioQueue[i].isStale?.()){
+      audioQueue.splice(i,1)[0].resolve?.();
+    }
+  }
+  if(currentQueueItem?.isStale?.() && currentAbortPlayback){
+    currentAbortPlayback();
+  }
 }
 
 export function clearAudioQueue(){
   audioQueue.length=0;
   audioPlaying=false;
+  currentQueueItem=null;
+  if(currentAbortPlayback){ try{ currentAbortPlayback(); }catch(e){} currentAbortPlayback=null; }
   if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; }
   if(window.speechSynthesis) window.speechSynthesis.cancel();
 }
@@ -335,6 +401,12 @@ export async function speakElevenLabs(text, cacheKey){
     await new Promise((res,rej)=>{
       currentAudio.onended=res;
       currentAudio.onerror=rej;
+      // Lets invalidateStaleAnnouncements() cut this clip off mid-playback
+      // instead of only being able to stop *future* queue items — pausing
+      // alone doesn't fire onended/onerror, so without resolving here
+      // directly an abort would leave this promise (and the whole queue)
+      // hanging forever.
+      currentAbortPlayback=()=>{ try{ currentAudio.pause(); }catch(e){} res(); };
       currentAudio.play().catch(rej);
     });
     return true;
@@ -350,6 +422,8 @@ export async function speakElevenLabs(text, cacheKey){
     delete elTTSCache[elCacheKey];
     console.warn("Google TTS:",e.message);
     return false;
+  }finally{
+    currentAbortPlayback=null;
   }
 }
 
@@ -533,21 +607,28 @@ function partToReadable(part){
  * change — so this must default-on (skip only on an explicit "false"), not
  * default-off, or every user who never touched the toggle gets silence.
  * @param {number} remaining
+ * @param {number|null} [playerIdx] state.x01.scores index this path was
+ *   computed for — when given, the announcement is dropped (queued) or cut
+ *   off (already playing) as soon as that player's remaining score no longer
+ *   matches `remaining`, i.e. their turn has since moved on. Omit only for
+ *   callers with no notion of "the current player's turn" (none today).
  */
-export async function announceCheckoutPath(remaining, customPath=null){
+export async function announceCheckoutPath(remaining, playerIdx=null, customPath=null){
   if(localStorage.getItem("dart_checkout_announce")==="false") return;
   const co=customPath||window._CHECKOUTS?.[remaining];
   if(!co) return;
   const readable=co.split(" ").map(partToReadable).join(", ");
   const cacheKey=customPath?`el_co_${customPath.replace(/ /g,"_")}`:`el_co_${remaining}`;
-  await queueAudio("Checkout: "+readable, cacheKey);
+  const isStale=playerIdx==null?null:(()=>state.x01?.scores?.[playerIdx]!==remaining);
+  await queueAudio("Checkout: "+readable, cacheKey, isStale);
 }
 
 /**
  * Speaks a keyed message via the audio queue.
  * @param {string} key
  * @param {string} fallbackText
+ * @param {(()=>boolean)|null} [isStale] see queueAudio()
  */
-export async function speakKeyWithCustom(key, fallbackText){
-  await queueAudio(fallbackText,`el_${key}`);
+export async function speakKeyWithCustom(key, fallbackText, isStale=null){
+  await queueAudio(fallbackText,`el_${key}`,isStale);
 }
