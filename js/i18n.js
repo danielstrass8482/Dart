@@ -431,6 +431,7 @@ export const translations = {
     app_version: "DARTTRAINER · Persönliches Dart Scoring & Tracking",
     legal_datenschutz_text: "Daten werden in Firebase (Google) gespeichert, keine Weitergabe an Dritte",
     legal_entwickelt: "Entwickelt von Daniel Straß 2026",
+    confirm_leave_game: "Spiel wirklich verlassen? Der Fortschritt geht verloren.",
 
     // Feedback & Beta-Banner
     feedback_titel: "FEEDBACK",
@@ -1006,6 +1007,7 @@ export const translations = {
     app_version: "DARTTRAINER · Personal Dart Scoring & Tracking",
     legal_datenschutz_text: "Data is stored in Firebase (Google), no sharing with third parties",
     legal_entwickelt: "Developed by Daniel Straß 2026",
+    confirm_leave_game: "Really leave the game? Progress will be lost.",
 
     // Feedback & Beta banner
     feedback_titel: "FEEDBACK",
