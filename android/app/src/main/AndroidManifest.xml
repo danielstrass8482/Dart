@@ -9,8 +9,12 @@
 
     <!-- Kamera (Video-Coach) -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" android:minSdkVersion="33" />
+    <!-- Profilbild- und Video-Auswahl aus der Galerie laufen ausschließlich über
+         <input type="file">, das WebView an den System-Picker (Photo Picker auf
+         Android 13+) delegiert — dafür ist keine READ_MEDIA_IMAGES/READ_MEDIA_VIDEO/
+         READ_EXTERNAL_STORAGE-Berechtigung nötig, kein Code-Pfad greift direkt auf
+         MediaStore zu. Play-Store-Warnung "Alternative Systemauswahlen verwenden"
+         entfällt dadurch ersatzlos. -->
 
     <!-- Feature-Deklarationen (kein Pflicht-Requirement) -->
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
