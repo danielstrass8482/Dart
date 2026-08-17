@@ -208,12 +208,26 @@ exports.dartTTS = onRequest(
     const filePath = `dart_voice_el/${voiceId}/${key}.mp3`;
     const file = bucket.file(filePath);
 
-    // Return cached URL if the file already exists (no rate limit consumed)
+    // Return cached URL if the file already exists (no rate limit consumed).
+    // NOTE: this returns *whatever audio was baked in when the file was first
+    // generated* — it does NOT re-run enthusiasmTierForKey/voiceSettingsForKey
+    // below, so a voice-settings retune never touches already-cached clips
+    // until they're purged. That silence (no log line at all on a cache hit)
+    // previously hid a real bug: two scores (3 and 180) kept serving
+    // 2026-08-13 audio through 2026-08-17 while every other score got
+    // regenerated under later fixes, and nobody could see it because this
+    // path never logged anything. Logging the cache hit (with the file's own
+    // age) makes that class of staleness visible instead of silent.
+    const baseKeyForLog = key.startsWith("el_") ? key.slice(3) : key;
     const [exists] = await file.exists();
     if (exists) {
       const [meta] = await file.getMetadata();
       const token = meta.metadata?.firebaseStorageDownloadTokens;
       if (token) {
+        console.log("dartTTS cache hit:", JSON.stringify({
+          key, baseKey: baseKeyForLog, score: scoreValueFromKey(baseKeyForLog),
+          tier: enthusiasmTierForKey(baseKeyForLog), cachedSince: meta.timeCreated,
+        }));
         res.json({ url: buildDownloadURL(bucket.name, filePath, token) });
         return;
       }
