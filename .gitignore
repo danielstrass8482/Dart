@@ -10,3 +10,12 @@ scripts/target-service-account.json
 
 # Interne Review-Notizen — nicht ins Repo
 CODE_REVIEW_GO_LIVE.txt
+
+# Android-Signatur — Keystores und Passwörter NIE ins Repo (öffentlich!)
+*.keystore
+*.jks
+*.p12
+*.pem
+android/signing.properties
+signing.properties
+keystore.properties

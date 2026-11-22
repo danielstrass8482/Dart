@@ -1,0 +1,9 @@
+# Vorlage für android/signing.properties (diese Datei ist in .gitignore — NIE committen).
+# Empfohlen: statt Kopie einen Symlink auf die Datei außerhalb des Repos setzen:
+#   ln -sfn ~/secure/darttrainer/signing-old.properties android/signing.properties   # alter Upload-Key
+#   ln -sfn ~/secure/darttrainer/signing-new.properties android/signing.properties   # neuer Upload-Key
+# Alternativ: DT_SIGNING_PROPERTIES=/pfad/zur/datei oder DT_STORE_FILE/DT_STORE_PASSWORD/DT_KEY_ALIAS/DT_KEY_PASSWORD.
+storeFile=/absoluter/pfad/ausserhalb/des/repos/upload.p12
+storePassword=CHANGE_ME
+keyAlias=upload
+keyPassword=CHANGE_ME

@@ -4,12 +4,37 @@ android {
     namespace "com.danielstrass.darttrainer"
     compileSdk rootProject.ext.compileSdkVersion
 
+    // Release-Signatur kommt NIE aus dem Repo. Quellen (erste vorhandene gewinnt):
+    //   1. Umgebungsvariable DT_SIGNING_PROPERTIES = Pfad zu einer Properties-Datei
+    //   2. android/signing.properties (in .gitignore; ueblicherweise Symlink auf
+    //      ~/secure/darttrainer/signing-old.properties bzw. signing-new.properties)
+    //   3. Umgebungsvariablen DT_STORE_FILE, DT_STORE_PASSWORD, DT_KEY_ALIAS, DT_KEY_PASSWORD
+    // Vorlage: android/signing.properties.example
+    def signingProps = new Properties()
+    def signingSource = null
+    def propsPath = System.getenv('DT_SIGNING_PROPERTIES')
+    def propsFile = propsPath ? file(propsPath) : rootProject.file('signing.properties')
+    if (propsFile.exists()) {
+        propsFile.withInputStream { signingProps.load(it) }
+        signingSource = propsFile.canonicalPath
+    } else if (System.getenv('DT_STORE_FILE')) {
+        signingProps.storeFile = System.getenv('DT_STORE_FILE')
+        signingProps.storePassword = System.getenv('DT_STORE_PASSWORD') ?: ''
+        signingProps.keyAlias = System.getenv('DT_KEY_ALIAS') ?: ''
+        signingProps.keyPassword = System.getenv('DT_KEY_PASSWORD') ?: ''
+        signingSource = 'env DT_STORE_FILE'
+    } else if (propsPath) {
+        throw new GradleException("DT_SIGNING_PROPERTIES zeigt auf ${propsPath}, die Datei existiert nicht")
+    }
+
     signingConfigs {
-        release {
-            storeFile file('darttrainer-release.keystore')
-            storePassword '***REMOVED***'
-            keyAlias 'darttrainer'
-            keyPassword '***REMOVED***'
+        if (signingSource) {
+            release {
+                storeFile file(signingProps.storeFile)
+                storePassword signingProps.storePassword
+                keyAlias signingProps.keyAlias
+                keyPassword signingProps.keyPassword
+            }
         }
     }
 
@@ -27,7 +52,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (signingSource) signingConfig signingConfigs.release
             minifyEnabled false
         }
         debug {
@@ -66,4 +91,16 @@ try {
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied.")
+}
+
+// Release-Builds ohne Signaturquelle sofort mit klarer Meldung abbrechen
+// (statt still ein unsigniertes AAB zu erzeugen). Debug/Sync bleiben unberuehrt.
+gradle.taskGraph.whenReady { graph ->
+    def wantsRelease = graph.allTasks.any { it.project == project && it.name ==~ /(bundle|assemble|package|sign)Release.*/ }
+    if (wantsRelease) {
+        if (!android.signingConfigs.findByName('release')) {
+            throw new GradleException("Keine Release-Signatur konfiguriert: android/signing.properties anlegen (Vorlage: signing.properties.example) oder DT_SIGNING_PROPERTIES / DT_STORE_FILE setzen.")
+        }
+        logger.lifecycle("Release-Signatur: alias=${android.signingConfigs.release.keyAlias}, keystore=${android.signingConfigs.release.storeFile}")
+    }
 }

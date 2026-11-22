@@ -213,6 +213,11 @@ Live unter: `https://danielstrass8482.github.io/Dart/`
 - Version in `android/app/build.gradle` (`versionCode`/`versionName`) — aktuell 13 / 1.2.0
 - Android-SDK liegt auf dem flüchtigen Overlay `/var/tmp/android-sdk` (Symlink `~/android-sdk`, s. `android/local.properties`), Gradle-Cache in `/var/tmp/gradle-home` — /home ist nur 4,8 GB groß. Nach Cloud-Shell-Neustart neu installieren: cmdline-tools → `sdkmanager "platforms;android-36" "build-tools;35.0.0" "build-tools;34.0.0" platform-tools`
 - Build: `npm run build && cd android && JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 GRADLE_USER_HOME=/var/tmp/gradle-home ./gradlew --no-daemon bundleRelease` → `android/app/build/outputs/bundle/release/app-release.aab`
+- **Signatur (seit 2026-11-22 NICHT mehr im Repo):** `android/app/build.gradle` liest Keystore/Alias/Passwörter aus `android/signing.properties` (gitignored, Symlink) bzw. `DT_SIGNING_PROPERTIES=<pfad>` bzw. `DT_STORE_FILE`/`DT_STORE_PASSWORD`/`DT_KEY_ALIAS`/`DT_KEY_PASSWORD`. Ohne Quelle bricht `bundleRelease` mit klarer Meldung ab. Vorlage: `android/signing.properties.example`
+  - Keys + Properties: `~/secure/darttrainer/` (Sicherung: `~/backups/signing-darttrainer/`) — zusätzlich offline sichern (Passwortmanager/USB)
+  - **Alter Upload-Key** (kompromittiert, SHA-1 `A3:56:45:E8:…:17:46`, bis Google den Reset freigibt): `ln -sfn ~/secure/darttrainer/signing-old.properties android/signing.properties`
+  - **Neuer Upload-Key** (SHA-1 `B3:FF:85:C2:…:CB:DF`, erst NACH Freigabe des Upload-Key-Resets): `ln -sfn ~/secure/darttrainer/signing-new.properties android/signing.properties`
+  - Kontrolle vor dem Build: `./gradlew -q :app:signingReport` (Variant release → SHA1); der Build loggt `Release-Signatur: alias=…`
 - Prüfen: `java -jar bundletool.jar dump manifest --bundle=… --xpath=/manifest/@android:versionCode`, `jarsigner -verify -certs …`
 
 ### Firebase Auth
