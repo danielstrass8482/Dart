@@ -98,6 +98,7 @@ async function idbPut(key, blob) {
 // In-memory object-URL cache so repeated plays of the same clip within a
 // session don't re-read IndexedDB or re-create blob URLs.
 const objectUrlCache = {}; // `${voiceId}::${key}` -> blob: URL
+const notBundled = new Set(); // `${voiceId}::${key}` the bundle answered 404 for
 
 /**
  * Resolves a playable URL for (voiceId, key), trying local bundle → cached
@@ -124,9 +125,10 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
   // 2) Default voice ships its clips as static files bundled with the app —
   // zero network, works offline by construction (same origin as the app
   // itself / inside the Android package).
-  if (voiceId === DEFAULT_VOICE_ID) {
+  if (voiceId === DEFAULT_VOICE_ID && !notBundled.has(cacheKey)) {
     try {
       const resp = await fetch(`assets/voice/${voiceId}/${key}.mp3`, { cache: "force-cache" });
+      if (resp.status === 404) notBundled.add(cacheKey); // definitively not in the bundle (e.g. a name outside the library) — don't ask again this session
       if (resp.ok) {
         const blob = await resp.blob();
         idbPut(cacheKey, blob);

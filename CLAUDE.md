@@ -127,6 +127,12 @@ service cloud.firestore {
 - **Wrapper:** `speakScoreWithCustom(score)` → Google TTS first, dann Web Speech fallback
 - **Unlock:** beim ersten `pointerdown` wird AudioContext entsperrt (iOS/Android)
 
+### Vorproduzierte Voice-Clips (seit 2026-11-22)
+- 4 auswählbare Stimmen (George=Standard, Haseeb, Jerry B, Guy), je 921 Clips (627 Vokabular + 294 Namen). Quelle der Wahrheit: `data/voices.json` (+ Spiegel in `js/app.js` BUILTIN_VOICES, `js/voiceClips.js`, `functions/index.js`, `functions/voiceName.js`)
+- Format: `data/voice-format.json` — MP3 mono 24 kHz LAME VBR V6 (~1/3 von ElevenLabs' mp3_44100_128). Generierung (`scripts/gen-voice-assets.js`) und `dartVoiceName` (ffmpeg-static) wandeln automatisch um; Bestand: `FFMPEG=… node scripts/transcode-voice-assets.js` (idempotent, schreibt `assets/voice/<v>/index.json` mit `rev`)
+- Storage-Pakete: `node scripts/upload-voice-assets.js --bulk`; Android-Bundle (nur George): `npm run build`
+- Web/PWA: `sw.js` + `js/pwa.js` — Service Worker erst nach App-Start registriert, George-Clips danach im Hintergrund in den SW-Cache (offline nach erstem Besuch). In Capacitor nicht aktiv. Tests: `tests/offline-leg.test.mjs`, `tests/pwa-offline.test.mjs`, Messung: `tests/pwa-load.measure.mjs`
+
 ### Sprachsteuerung
 - `SpeechRecognition` API, `lang="de-DE"`, kontinuierlicher Modus
 - Versteht Deutsch + Englisch: "Triple Zwanzig", "Double sixteen", "Daneben", "Miss"

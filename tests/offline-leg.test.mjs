@@ -12,9 +12,11 @@
  *   python3 -m http.server 8973 &      # serve the repo root
  *   node tests/offline-leg.test.mjs
  *
- * Exit code 0 = passed (no offline network requests beyond a harmless local
- * 404 attempt for the never-generated unknown name, no speechSynthesis
- * calls). Exit code 1 = failed, with the offending requests/calls printed.
+ * Exit code 0 = passed (no offline network requests — responses served from
+ * the web build's service-worker cache count as local — and no
+ * speechSynthesis calls). The unknown name's bundle 404 from the online pass
+ * is remembered per session (js/voiceClips.js notBundled), so it isn't
+ * re-requested offline. Exit code 1 = failed, offending requests printed.
  */
 import { chromium } from "playwright";
 
@@ -67,7 +69,11 @@ async function run() {
 
   let currentPass = "init";
   const requestsByPass = { online: [], offline: [] };
-  page.on("request", (req) => { if (requestsByPass[currentPass]) requestsByPass[currentPass].push(req.url()); });
+  page.on("request", (req) => { if (requestsByPass[currentPass]) requestsByPass[currentPass].push(req); });
+  // Web build: a request answered from the service worker's offline cache
+  // never touches the network — that is local playback, not a network call.
+  const servedBySW = new Set();
+  page.on("requestfinished", async (req) => { try { const r = await req.response(); if (r && r.fromServiceWorker() && r.ok()) servedBySW.add(req); } catch (e) {} });
 
   await page.addInitScript(() => {
     window.__speechCalls = [];
@@ -96,11 +102,14 @@ async function run() {
   const elapsedMs = Date.now() - t0;
 
   const speechCallsOffline = await page.evaluate(() => window.__speechCalls);
-  const offlineNetwork = requestsByPass.offline.filter(u => !u.startsWith("blob:"));
+  await page.waitForTimeout(500); // let requestfinished handlers settle
+  const offlineServedBySW = requestsByPass.offline.filter(r => servedBySW.has(r)).map(r => r.url());
+  const offlineNetwork = requestsByPass.offline.filter(r => !r.url().startsWith("blob:") && !servedBySW.has(r)).map(r => r.url());
 
   console.log(JSON.stringify({
     onlineRequestCount: requestsByPass.online.length,
-    onlineClipUrls: requestsByPass.online.filter(u => u.includes("/assets/voice/")),
+    onlineClipRequests: requestsByPass.online.filter(r => r.url().includes("/assets/voice/")).length,
+    offlineServedFromServiceWorkerCache: offlineServedBySW,
     offlineRealNetworkRequests: offlineNetwork,
     offlineElapsedMs: elapsedMs,
     speechSynthesisCallsOffline: speechCallsOffline,
