@@ -326,3 +326,10 @@ node scripts/init-config.js
 - **Owner:** Daniel Straß, VP Customer Service DACH @ Dogado
 - **Primäres Testgerät:** iPad mit Apple Pencil, Chrome Browser
 - **Sprache:** Deutsche UI, Englische Dart-Ansagen
+
+### Voice-QA (Zwischenstand 2026-11-22, Fortsetzung in ~/Dart-clips)
+- **Ursache (belegt):** Aktuelle Clips (ce8da95, 2026-11-22) = `eleven_turbo_v2_5` für ALLE Keys, stability 0.50 / similarity 0.90 / style 0.35 / speed 1.00 (`data/tts-settings.json`). Vor 409e8a8 (2026-08-17) wählte `modelForKey()` `eleven_multilingual_v2` für Scores ≥100 + game_on (Settings stability 0.30/style 0.65), sonst turbo_v2_5 mit Tier-Settings (seit 2456acd). Experiment: aktuelles Profil (ohne system_prompt) reproduziert Haseeb-Halluzinationen (4/12 Testclips je Durchgang, George 0/12) → system_prompt nicht ursächlich (ist kein dokumentierter TTS-Parameter).
+- ElevenLabs-Key hat KEINE Rechte `speech_to_text`/`user_read` → Prüfung per lokalem Whisper: `scripts/check-voice-clips.js` (+ `voice-stt.py`, `voice-qa-compare.js`), Kosten 0 €. Setup: `python3 -m venv /var/tmp/whisper-venv && /var/tmp/whisper-venv/bin/pip install faster-whisper imageio-ffmpeg`, `HF_HOME=/var/tmp/hf`. Key: `gcloud secrets versions access latest --secret=ELEVENLABS_API_KEY --project=darttrainer-app-fed88` (nur in Scratch-Datei, danach löschen)
+- Ausgangslauf: `node scripts/check-voice-clips.js --report=1-vorher` (schreibt `qa/voice-qa.json`, `docs/voice-qa/report-1-vorher.md`; ~1–2 h CPU) — lief bei Abbruch noch, ggf. neu starten (gecachte Transkripte werden wiederverwendet)
+- Profil-Experiment: `/var/tmp/voice-exp/gen.js`, Profile A (aktuell), B (multilingual_v2, stab 0.75/sim 0.8/style 0), C (turbo_v2_5 + language_code en, stab 0.8/style 0); Prüfung `--dir=/var/tmp/voice-exp/<P>_r<n> --no-save`. B/C-Ergebnis noch auswerten
+- Offen: gen-voice-assets.js (Profil/Seed/--from-qa), repair-Schleife, Regeneration, dartVoiceName + functions/index.js auf stabiles Profil, Upload `dart_voice_pkg/`, QA-Seiten-Filter, Tests (offline-leg, checkout), Deploy. George geändert ⇒ vc13 neu bauen
