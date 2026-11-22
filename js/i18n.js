@@ -83,6 +83,8 @@ export const translations = {
     datum_col: "DATUM",
     erste_9: "erste 9 Darts",
     pro_leg: "pro Leg",
+    darts_exakt: "pro Leg · exakt aus {n} von {m} Legs",
+    darts_geschaetzt: "pro Leg · geschätzt (Runden × 3)",
     quote: "Quote",
 
     // Profil
@@ -659,6 +661,8 @@ export const translations = {
     datum_col: "DATE",
     erste_9: "first 9 darts",
     pro_leg: "per leg",
+    darts_exakt: "per leg · exact from {n} of {m} legs",
+    darts_geschaetzt: "per leg · estimated (rounds × 3)",
     quote: "Rate",
 
     // Profil

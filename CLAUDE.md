@@ -170,8 +170,13 @@ service cloud.firestore {
 - Doppelfeld-Tabelle: Versuche, Treffer, Quote mit Balken
 - Verlaufschart: Canvas-basiert, bis zu 3 KPIs gleichzeitig
 - Trefferbild: Mini-Dartscheibe mit Scatter-Dots
-- **Firestore-Abfrage:** genau eine — `dartDB.loadStats()` = `dart_games` where `userId==uid` orderBy `ts desc` limit 200. Spieler/Zeitraum/Modus (`context`) filtert `js/stats.js` im Browser → keine weiteren Composite-Indexe nötig. `firestore.indexes.json` == Projekt (5 Indexe, alle READY, geprüft 2026-11-22 per `gcloud firestore indexes composite list`). Neue serverseitige Filter (`where("context"…)` o. ä.) brauchen einen neuen Index in der Datei + `firebase deploy --only firestore:indexes`
-- **Achtung limit(200):** „Alles“ zeigt nur die letzten 200 Leg-Dokumente (jedes Leg = eigenes `dart_games`-Dokument)
+- **Laden (seit 2026-11-22, `js/gamesCache.js`):** `dartDB.loadStats()` liefert ALLE Legs des Nutzers (vorher `limit(200)` → „Alles“ zeigte still nur 200). Spieler/Zeitraum/Modus filtert `js/stats.js` im Browser; Verlauf/Sessions, Coach-Prompts und Spielerprofil-Stats brauchen ohnehin die volle Liste.
+  - Lesevorgänge: Erstladen pro Gerät = alle Legs (Seiten à 500) · danach IndexedDB-Kopie (pro uid) + Nachladen `ts ≥ neuestes − 7 Tage` = Legs der letzten 7 Tage (min. 1) · in derselben Sitzung < 30 s und nichts gespeichert = 0 · Voll-Resync wenn Kopie > 30 Tage alt. 7-Tage-Überlappung fängt Uhr-Abweichung/verspätete Offline-Saves anderer Geräte
+  - Gemessen (650 Legs, echte DB): erstes Laden 650 Reads / 1,3 s, neue Sitzung 12 Reads / 0,57 s, Filterwechsel 0 Reads. Offline: Nachladen schlägt fehl → lokale Kopie wird angezeigt
+  - `saveGame` markiert den Cache als veraltet; `signOutUser` und `deleteUserAccount` löschen die Kopie (geteilte Geräte). Spiele werden nie bearbeitet/gelöscht (append-only) — falls das je kommt, muss `gamesCache.js` das berücksichtigen
+  - Index: nur `userId ↑, ts ↓` nötig (Gleichheit + Bereich/Sortierung auf ts). `firestore.indexes.json` == Projekt (5 Indexe, alle READY). Neue serverseitige Filter brauchen einen neuen Index + `firebase deploy --only firestore:indexes`
+- **Ø Darts pro Leg:** exakt aus `players[].darts` über die Legs, die das Feld haben (Untertitel „exakt aus N von M Legs“); nur wenn kein Leg der Auswahl es hat: alte Schätzung Runden × 3 („geschätzt“). Nie gemischt in einer Zahl. Cricket weiter geschätzt
+- Test viele Legs: `node tests/stats-many-legs.live.mjs` (Gast + 650 Legs per Batch, prüft Anzahl/Reads/Ladezeit/Ø Darts, löscht alles; `BASE=http://localhost:8973` für lokal)
 - Live-Nachweis gegen echte DB: `node tests/stats-filters.live.mjs` (Gast-Login, 1 Spieler + 6 Spiele seeden, alle 48 Kombinationen Spieler×Zeitraum×Modus über die echten Buttons, danach `deleteUserAccount()`); `BASE=http://localhost:8973` für lokal
 - Behoben 2026-11-22: Modus-Buttons tragen ebenfalls `.time-btn` → ein Modus-Klick setzte den Zeitraum still auf „Alles“ zurück (Handler jetzt nur `.time-btn[data-range]`)
 
@@ -210,6 +215,15 @@ service cloud.firestore {
 ---
 
 ## Deployment
+
+### Firebase Hosting (NICHT deployt — Cache-Header für einen späteren Umzug, `firebase.json`)
+- `no-cache` für `/`, endungslose Routen (`**/!(*.*)`, SPA-Rewrite) und `html|js|mjs|css|json|webmanifest|txt|map` (deckt `sw.js`, `manifest.webmanifest`, `assets/voice/*/index.json`, `data/*.json` ab): Browser darf cachen, fragt aber jedes Mal per ETag nach → Updates kommen sofort an, unverändert = 304. Die JS-Module haben keine Content-Hashes in den URLs (nur `?v=2`), daher wäre jedes `max-age` ein Risiko
+- `assets/voice/**/*.mp3`: `public, max-age=86400` (1 Tag) — Clips werden bei Neugenerierung unter DERSELBEN URL überschrieben (kein Hash/rev in der URL), daher kein `immutable`. Achtung: `js/voiceClips.js` lädt Clips mit `cache: "force-cache"` → ein HTTP-gecachter alter Clip wird auch nach Ablauf genutzt; der `rev`-Wechsel leert nur den SW-Cache
+- Bilder/Icons (`png|webp|svg|ico|jpg|jpeg|gif|woff2`): `public, max-age=2592000` (30 Tage) — ändern sich praktisch nie, ebenfalls ohne Hash
+- Geprüft mit `firebase emulators:start --only hosting` + curl (2026-11-22)
+
+### Datenschutzseite / Landingpage
+- darttrainer.app (inkl. `privacy.html`, `privacy-en.html`, `impressum.html`, `delete-account*.html`) kommt aus dem separaten öffentlichen Repo `danielstrass8482/darttrainer-landing` (GitHub Pages, Branch main). Abschnitt „6a. Namensansagen / Name Announcements“ am 2026-11-22 ergänzt
 
 ### GitHub Pages (index.html + js/ + css/)
 ```bash

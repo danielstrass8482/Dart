@@ -6,7 +6,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, getDoc, doc, setDoc, updateDoc,
-         onSnapshot, deleteDoc as fsDeleteDoc, query, orderBy, limit, where }
+         onSnapshot, deleteDoc as fsDeleteDoc, query, orderBy, limit, where, startAfter }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
          getRedirectResult, signInWithCredential, onAuthStateChanged,
@@ -18,6 +18,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
 import { initializeAppCheck, CustomProvider, ReCaptchaV3Provider, getToken }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-check.js";
+import { loadAllGames, markGamesDirty, clearGamesCache } from "./gamesCache.js";
 
 const fbCfg = window.FIREBASE_CONFIG;
 const app     = initializeApp(fbCfg);
@@ -107,18 +108,18 @@ function initDartDB(){
     async saveGame(data){
       const uid = auth.currentUser?.uid;
       if(uid) data.userId = uid;
-      return addDoc(collection(db,"dart_games"), data);
+      const r = await addDoc(collection(db,"dart_games"), data);
+      markGamesDirty();
+      return r;
     },
+    /** ALL of the user's games (one doc per leg), newest first — see js/gamesCache.js
+     *  for how this stays cheap (persistent cache + 7-day top-up). */
     async loadStats(){
       const uid = auth.currentUser?.uid;
       if(!uid) return [];
-      const snap = await getDocs(query(
-        collection(db,"dart_games"),
-        where("userId","==",uid),
-        orderBy("ts","desc"),
-        limit(200)
-      ));
-      return snap.docs.map(d=>({id:d.id,...d.data()}));
+      const {games, info} = await loadAllGames({db, collection, query, where, orderBy, limit, startAfter, getDocs}, uid);
+      window.dartDB.lastStatsLoad = info;
+      return games;
     },
     // Players
     async loadPlayers(){
@@ -393,6 +394,8 @@ window.signInWithGoogle = async function(){
 };
 
 window.signOutUser = async function(){
+  // Shared devices: don't leave this account's game list in IndexedDB.
+  await clearGamesCache();
   await auth.signOut();
 };
 
@@ -420,6 +423,7 @@ window.deleteUserAccount = async function(){
   // Firestore data must be deleted while still authenticated (rules require the
   // matching uid). Deletes are idempotent, so a reauth-retry re-runs them harmlessly.
   await deleteUserData();
+  await clearGamesCache(uid);
   try{
     await deleteUser(user);
   }catch(e){

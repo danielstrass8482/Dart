@@ -365,6 +365,19 @@ export async function loadAndRenderStats(){
     const avg=avgs.length?Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length*10)/10:0;
     const wins=x01Games.filter(g=>pid?g.winnerId===pid:true).length;
 
+    // Ø darts per leg: exact (players[].darts, saved since 2026-11-22) wherever
+    // available, averaged over those legs only; the old rounds×3 estimate only
+    // when no leg in the selection has the field. Never mixed into one number —
+    // the sub-label says which one it is and how many legs it covers.
+    const dartEntries=x01Games.map(g=>(g.players||[]).filter(p=>(pid?p.id===pid:true)&&typeof p.darts==="number"));
+    const exactDarts=dartEntries.flat().map(p=>p.darts);
+    const exactLegs=dartEntries.filter(a=>a.length).length;
+    const dartsKpi=exactDarts.length
+      ?{val:Math.round(exactDarts.reduce((a,b)=>a+b,0)/exactDarts.length*10)/10,
+        sub:t('darts_exakt').replace('{n}',exactLegs).replace('{m}',x01Games.length)}
+      :{val:x01Games.length?Math.round(x01Games.reduce((s,g)=>s+(g.rounds||0),0)/x01Games.length*3):0,
+        sub:t('darts_geschaetzt')};
+
     const playerName=escapeHtml(pid?(state.allPlayers.find(p=>p.id===pid)?.name||"?"):t('alle_kontext'));
     let html=`<div class="stats-section-title">${playerName} · ${games.length} ${t('spiele_count')}</div>`;
 
@@ -377,7 +390,7 @@ export async function loadAndRenderStats(){
         <div class="stat-card"><div class="s-label">${t('first9')}</div><div class="s-value">${f9avg||"—"}</div><div class="s-sub">${t('erste_9')}</div></div>
         <div class="stat-card"><div class="s-label">${t('highscore')}</div><div class="s-value">${best||"—"}</div></div>
         <div class="stat-card"><div class="s-label">${t('checkout_quote')}</div><div class="s-value">${coPct}%</div><div class="s-sub">${coHits}/${coAtts}</div></div>
-        <div class="stat-card"><div class="s-label">${t('darts')}</div><div class="s-value">${x01Games.length?Math.round(x01Games.reduce((s,g)=>s+(g.rounds||0),0)/x01Games.length*3):0}</div><div class="s-sub">${t('pro_leg')}</div></div>
+        <div class="stat-card" data-kpi="darts-per-leg"><div class="s-label">${t('darts')}</div><div class="s-value">${dartsKpi.val}</div><div class="s-sub">${dartsKpi.sub}</div></div>
       </div>`;
     }
 
