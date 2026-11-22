@@ -9,6 +9,7 @@ import './firebase.js';
 import { t, setLang, getLang, applyTranslations, SUPPORTED_LANGS } from './i18n.js?v=3';
 import { showAlert } from './modal.js';
 import { escapeHtml } from './util.js';
+import { initPWA } from './pwa.js';
 
 // Sicherstellen dass window.t gesetzt ist (für inline onclick-Handler in HTML)
 window.t = t;
@@ -1584,6 +1585,9 @@ window.showSetup = showSetup;
 window.showOnboarding = showOnboarding;
 window.showHelp = showHelp;
 window.openFeedbackModal = openFeedbackModal;
+
+// ── Web/PWA: service worker + background offline warm-up of the default voice
+initPWA();
 
 // ── Onboarding ────────────────────────────────────────────────────
 checkOnboarding();

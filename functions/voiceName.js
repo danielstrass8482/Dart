@@ -20,6 +20,35 @@ const { getStorage } = require("firebase-admin/storage");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAuth } = require("firebase-admin/auth");
 const { randomUUID } = require("crypto");
+const { spawn } = require("child_process");
+const os = require("os");
+const path = require("path");
+const fs = require("fs");
+const ffmpegPath = require("ffmpeg-static");
+
+// Delivery format for every voice clip — mirrors data/voice-format.json
+// (ffmpegArgs). Keep both in sync: a generated name clip must sound/weigh
+// exactly like the pre-produced library clips it's played next to.
+const CLIP_FFMPEG_ARGS = ["-ac", "1", "-ar", "24000", "-c:a", "libmp3lame", "-q:a", "6", "-map_metadata", "-1", "-id3v2_version", "0", "-write_xing", "1"];
+
+/** ElevenLabs mp3_44100_128 → delivery format. Temp-file output so ffmpeg can write the Xing/LAME header. */
+function transcodeClip(input) {
+  const tmp = path.join(os.tmpdir(), `name-${randomUUID()}.mp3`);
+  return new Promise((resolve, reject) => {
+    const p = spawn(ffmpegPath, ["-v", "error", "-y", "-i", "pipe:0", ...CLIP_FFMPEG_ARGS, "-f", "mp3", tmp]);
+    const err = [];
+    p.stderr.on("data", d => err.push(d));
+    p.on("error", reject);
+    p.on("close", code => {
+      let buf = null;
+      try { buf = fs.readFileSync(tmp); fs.unlinkSync(tmp); } catch (e) {}
+      if (code === 0 && buf && buf.length) resolve(buf);
+      else reject(new Error(`ffmpeg exit ${code}: ${Buffer.concat(err).toString().slice(0, 300)}`));
+    });
+    p.stdin.on("error", () => {});
+    p.stdin.end(input);
+  });
+}
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
 
@@ -127,7 +156,15 @@ exports.dartVoiceName = onRequest(
       return;
     }
 
-    const audioBuffer = Buffer.from(await elResp.arrayBuffer());
+    const sourceBuffer = Buffer.from(await elResp.arrayBuffer());
+    let audioBuffer;
+    try { audioBuffer = await transcodeClip(sourceBuffer); }
+    catch (e) {
+      // Never block a name announcement on the size optimisation — store the
+      // (valid, just larger) original instead.
+      console.error("Name clip transcode failed, storing original:", e.message);
+      audioBuffer = sourceBuffer;
+    }
     const token = randomUUID();
     await file.save(audioBuffer, { metadata: { contentType: "audio/mpeg", metadata: { firebaseStorageDownloadTokens: token } } });
 

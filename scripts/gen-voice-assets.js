@@ -24,11 +24,16 @@
  * assets/voice/<voiceId>/name_<norm>.mp3 (names), plus
  * assets/voice/manifest.json recording what was generated, when, and how
  * many characters each voice actually consumed (for cost auditing).
+ *
+ * Every clip is transcoded right after generation from ElevenLabs'
+ * mp3_44100_128 to the delivery format in data/voice-format.json (mono
+ * 24 kHz VBR MP3, ~1/3 the size) — needs ffmpeg, see scripts/voice-format.js.
  */
 "use strict";
 const fs = require("fs");
 const path = require("path");
 const ROOT = path.join(__dirname, "..");
+const { FORMAT, findFfmpeg, transcode, writeVoiceIndex } = require("./voice-format");
 
 const args = Object.fromEntries(process.argv.slice(2).map(a => {
   const m = a.match(/^--([^=]+)(?:=(.*))?$/);
@@ -114,6 +119,7 @@ function generateOne(voice, job) {
 }
 
 async function main() {
+  const ffmpeg = DRY_RUN ? null : findFfmpeg(); // fail fast, before spending any characters
   const manifestPath = path.join(ROOT, "assets", "voice", "manifest.json");
   const manifest = fs.existsSync(manifestPath) ? JSON.parse(fs.readFileSync(manifestPath, "utf8")) : { voices: {} };
 
@@ -144,8 +150,12 @@ async function main() {
         }
         continue;
       }
-      fs.writeFileSync(outPath, result.buf);
-      vman.files[job.key] = { bytes: result.buf.length, chars: job.text.length, generatedAt: new Date().toISOString() };
+      let clip;
+      try { clip = await transcode(result.buf, ffmpeg); }
+      catch (e) { failed++; console.error(`  FAILED [${job.key}] transcode: ${e.message}`); continue; }
+      fs.writeFileSync(outPath, clip);
+      vman.files[job.key] = { bytes: clip.length, sourceBytes: result.buf.length, chars: job.text.length, generatedAt: new Date().toISOString() };
+      vman.format = FORMAT.id;
       charsSent += job.text.length;
       done++;
       vman.generatedAt = new Date().toISOString();
@@ -159,6 +169,7 @@ async function main() {
       await sleep(120); // stay well under ElevenLabs' concurrent-request cap
     }
 
+    if (done) writeVoiceIndex(dir);
     console.log(`  Voice ${voice.name}: ${done} generated, ${skipped} skipped (already existed), ${failed} failed. Characters sent this run: ${charsSent}.`);
   }
 }

@@ -188,3 +188,112 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
 
   return null;
 }
+
+// ── Web/PWA offline warm-up (never runs in the Capacitor app) ─────────────
+// The default voice is bundled with the app, but on the web "bundled" only
+// means "same origin" — without this, a clip is only available offline once
+// it has actually been played. After the app is usable (js/pwa.js) the
+// default voice's clips are fetched in the background, a couple at a time,
+// through the service worker, which stores them in its clip cache. Nothing
+// here blocks startup or a game: it starts late, runs with low concurrency,
+// stops when the device goes offline, and resumes (skipping cached clips)
+// on the next start.
+
+/** Deletes every IndexedDB clip whose key starts with `${voiceId}::`. */
+async function idbDeleteVoice(voiceId) {
+  try {
+    const db = await openDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      const range = IDBKeyRange.bound(`${voiceId}::`, `${voiceId}::￿`);
+      tx.objectStore(STORE).delete(range);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {}
+  for (const k of Object.keys(objectUrlCache)) if (k.startsWith(`${voiceId}::`)) delete objectUrlCache[k];
+}
+
+function swMessage(msg) {
+  const ctl = navigator.serviceWorker?.controller;
+  if (!ctl) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const ch = new MessageChannel();
+    ch.port1.onmessage = (e) => resolve(e.data);
+    ctl.postMessage(msg, [ch.port2]);
+    setTimeout(() => resolve(null), 30000);
+  });
+}
+
+/**
+ * Compares the voice's published content revision (assets/voice/<v>/index.json
+ * `rev`, written by scripts/transcode-voice-assets.js / gen-voice-assets.js)
+ * with the one this device last saw; on change, drops this voice's stale local
+ * copies (IndexedDB + service-worker clip cache) so re-encoded/regenerated
+ * clips replace them. Returns the index (or null if unavailable).
+ */
+export async function syncVoiceRevision(voiceId) {
+  let index = null;
+  try {
+    const r = await fetch(`assets/voice/${voiceId}/index.json`, { cache: "no-cache" });
+    if (r.ok) index = await r.json();
+  } catch (e) {}
+  if (!index?.rev) return index;
+  const lsKey = `dart_voice_rev_${voiceId}`;
+  let seen = null; try { seen = localStorage.getItem(lsKey); } catch (e) {}
+  // First sighting on this device: just record it — whatever is cached
+  // locally is a valid clip, and purging here could pull clips out from
+  // under a game that's already running.
+  if (seen && seen !== index.rev) {
+    await idbDeleteVoice(voiceId);
+    if (voiceId === DEFAULT_VOICE_ID) await swMessage({ type: "clear-voice" });
+  }
+  if (seen !== index.rev) { try { localStorage.setItem(lsKey, index.rev); } catch (e) {} }
+  return index;
+}
+
+// Announcement-critical clips first, then checkout paths, names last.
+function warmPriority(key) {
+  if (/^el_(score_|game_on|bust|no_score|game_shot|requires)/.test(key)) return 0;
+  if (key.startsWith("name_")) return 2;
+  return 1;
+}
+
+export const warmStatus = { state: "idle", total: 0, cached: 0, fetched: 0, failed: 0, ms: 0 };
+if (typeof window !== "undefined") window.__voiceWarm = warmStatus;
+
+/**
+ * Background-fills the service worker's clip cache with every clip of the
+ * default voice. Requires an active service-worker controller (otherwise
+ * the downloads would only land in the HTTP cache and not survive offline).
+ * @param {{concurrency?:number}} [opts]
+ */
+export async function warmDefaultVoice({ concurrency = 2 } = {}) {
+  if (warmStatus.state === "running") return warmStatus;
+  if (!navigator.serviceWorker?.controller || typeof caches === "undefined") { warmStatus.state = "skipped"; return warmStatus; }
+  if (navigator.connection?.saveData) { warmStatus.state = "skipped-savedata"; return warmStatus; }
+  const t0 = performance.now();
+  Object.assign(warmStatus, { state: "running", total: 0, cached: 0, fetched: 0, failed: 0, ms: 0 });
+  const index = await syncVoiceRevision(DEFAULT_VOICE_ID);
+  if (!index?.keys?.length) { warmStatus.state = "no-index"; return warmStatus; }
+  const urls = index.keys.slice()
+    .sort((a, b) => warmPriority(a) - warmPriority(b))
+    .map(k => new URL(`assets/voice/${DEFAULT_VOICE_ID}/${k}.mp3`, location.href).href);
+  warmStatus.total = urls.length;
+  let i = 0;
+  const worker = async () => {
+    while (i < urls.length) {
+      if (!navigator.onLine) return;
+      const u = urls[i++];
+      try {
+        if (await caches.match(u)) { warmStatus.cached++; continue; }
+        const r = await fetch(u);           // SW (cache-first) stores it
+        if (r.ok) { await r.arrayBuffer(); warmStatus.fetched++; } else warmStatus.failed++;
+      } catch (e) { warmStatus.failed++; }
+    }
+  };
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  warmStatus.ms = Math.round(performance.now() - t0);
+  warmStatus.state = (warmStatus.cached + warmStatus.fetched === warmStatus.total) ? "done" : "partial";
+  return warmStatus;
+}

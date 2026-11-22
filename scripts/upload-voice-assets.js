@@ -20,6 +20,10 @@
  *     --voice=<id>        only this voice (default: all found under assets/voice/)
  *     --force             re-upload even if the object already exists in Storage
  *     --concurrency=<n>   parallel uploads (default 5)
+ *     --bulk              one parallel `gcloud storage cp` per voice (much faster for
+ *                         full re-uploads, e.g. after scripts/transcode-voice-assets.js);
+ *                         always overwrites, and all clips of a voice share one download
+ *                         token (reads are auth-gated by storage.rules regardless).
  */
 "use strict";
 const fs = require("fs");
@@ -36,6 +40,7 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
 const ONLY_VOICE = args.voice || null;
 const FORCE = !!args.force;
 const CONCURRENCY = parseInt(args.concurrency) || 5;
+const BULK = !!args.bulk;
 
 function sh(cmd, cmdArgs) {
   return new Promise((resolve, reject) => {
@@ -90,6 +95,17 @@ async function main() {
     const files = fs.readdirSync(dir).filter(f => f.endsWith(".mp3"));
     console.log(`\n=== ${voiceId}: ${files.length} local files ===`);
 
+    if (BULK) {
+      const token = crypto.randomUUID();
+      const t0 = Date.now();
+      await sh("gcloud", [
+        "storage", "cp", ...files.map(f => path.join(dir, f)), `gs://${BUCKET}/dart_voice_pkg/${voiceId}/`,
+        "--custom-metadata", `firebaseStorageDownloadTokens=${token}`,
+        "--content-type", "audio/mpeg",
+      ]);
+      console.log(`  ${voiceId}: bulk-uploaded ${files.length} files in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+      continue;
+    }
     const jobs = files.map(f => ({ voiceId, key: f.replace(/\.mp3$/, ""), localPath: path.join(dir, f) }));
     let uploaded = 0, skipped = 0, failed = 0;
 

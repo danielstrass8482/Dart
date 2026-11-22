@@ -1,0 +1,8 @@
+{
+  "_comment": "Delivery format for ALL pre-produced voice clips (bundled default voice, dart_voice_pkg/ Storage packages, dart_voice_names/ on-demand names). ElevenLabs is always asked for its default mp3_44100_128 and the result is transcoded to this format. Mirrored as CLIP_FFMPEG_ARGS in functions/voiceName.js (functions/ deploys standalone) — keep both in sync.",
+  "id": "mp3-mono-24k-vbr6",
+  "container": "mp3",
+  "channels": 1,
+  "sampleRate": 24000,
+  "ffmpegArgs": ["-ac", "1", "-ar", "24000", "-c:a", "libmp3lame", "-q:a", "6", "-map_metadata", "-1", "-id3v2_version", "0", "-write_xing", "1"]
+}
