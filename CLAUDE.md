@@ -218,6 +218,15 @@ Live unter: `https://danielstrass8482.github.io/Dart/`
   - **Alter Upload-Key** (kompromittiert, SHA-1 `A3:56:45:E8:…:17:46`, bis Google den Reset freigibt): `ln -sfn ~/secure/darttrainer/signing-old.properties android/signing.properties`
   - **Neuer Upload-Key** (SHA-1 `B3:FF:85:C2:…:CB:DF`, erst NACH Freigabe des Upload-Key-Resets): `ln -sfn ~/secure/darttrainer/signing-new.properties android/signing.properties`
   - Kontrolle vor dem Build: `./gradlew -q :app:signingReport` (Variant release → SHA1); der Build loggt `Release-Signatur: alias=…`
+  - Gradle braucht `node_modules/@capacitor/*` (`capacitor.settings.gradle`) — bei leerem `node_modules` zuerst `npm ci`
+- **Sicherheitsvorfall Keystore (2026-11-22) — Stand:**
+  - [x] Repo-Keystore = Upload-Key (Play App Signing aktiv: Firebase kennt zusätzlich SHA-1 `0A:7D:E3:D1:…:3B:DB` / SHA-256 `63:D1:19:…`, zu keinem lokalen Key passend = Googles App-Signaturschlüssel). In der Play Console gegenprüfen (s. u.)
+  - [x] Neuer Upload-Key `~/secure/darttrainer/darttrainer-upload-2026-11.p12` (+ identische Kopie `~/backups/signing-darttrainer/`), PEM `upload_certificate.pem` — alle SHA-1 `B3:FF:85:C2:…:CB:DF`. Alter Keystore dort als `darttrainer-release-OLD-compromised.keystore`. **Keinen weiteren Key erzeugen.**
+  - [x] Build liest Signatur aus nicht versionierter Quelle (Gradle-Check 2026-11-22 bestanden: ohne Quelle Abbruch, alt → A3:56, neu → B3:FF)
+  - [x] Historie bereinigt (git-filter-repo 10:44, Force-Push); Voll-Backup vorher: `~/backups/dart-repo-2026-11-22/` (Bundle + 2 Mirrors, enthält die alten Secrets!)
+  - [ ] **GitHub hält die alten Commits/Blobs weiter per SHA abrufbar** (z. B. alter Commit `107a555f…`, Keystore-Blob `bf7643d9…` → HTTP 200). Nur GitHub Support kann das löschen: support.github.com → „Remove sensitive data“, Liste: `~/backups/dart-repo-2026-11-22/affected-old-commits.txt`
+  - [ ] Upload-Key-Reset in der Play Console beantragen (PEM hochladen) → nach Freigabe Symlink auf `signing-new.properties`
+  - [ ] Optional: Offline-Kopie von `~/secure/darttrainer/` (Passwortmanager/USB); „Enforce HTTPS“ für Pages aktivieren
 - Prüfen: `java -jar bundletool.jar dump manifest --bundle=… --xpath=/manifest/@android:versionCode`, `jarsigner -verify -certs …`
 
 ### Firebase Auth
