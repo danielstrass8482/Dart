@@ -1,0 +1,1766 @@
+[
+  {
+    "name": "Abbie",
+    "norm": "abbie",
+    "text": "Abbie.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Abigail",
+    "norm": "abigail",
+    "text": "Abigail.",
+    "origin": "en"
+  },
+  {
+    "name": "Adam",
+    "norm": "adam",
+    "text": "Adam.",
+    "origin": "en"
+  },
+  {
+    "name": "Addi",
+    "norm": "addi",
+    "text": "Addi.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Alex",
+    "norm": "alex",
+    "text": "Alex.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Alexa",
+    "norm": "alexa",
+    "text": "Alexa.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Alexander",
+    "norm": "alexander",
+    "text": "Alexander.",
+    "origin": "de"
+  },
+  {
+    "name": "Alexandra",
+    "norm": "alexandra",
+    "text": "Alexandra.",
+    "origin": "de"
+  },
+  {
+    "name": "Amanda",
+    "norm": "amanda",
+    "text": "Amanda.",
+    "origin": "en"
+  },
+  {
+    "name": "Amelia",
+    "norm": "amelia",
+    "text": "Amelia.",
+    "origin": "en"
+  },
+  {
+    "name": "Amelie",
+    "norm": "amelie",
+    "text": "Amelie.",
+    "origin": "de"
+  },
+  {
+    "name": "Amy",
+    "norm": "amy",
+    "text": "Amy.",
+    "origin": "en"
+  },
+  {
+    "name": "Andrea",
+    "norm": "andrea",
+    "text": "Andrea.",
+    "origin": "de"
+  },
+  {
+    "name": "Andreas",
+    "norm": "andreas",
+    "text": "Andreas.",
+    "origin": "de"
+  },
+  {
+    "name": "Andrew",
+    "norm": "andrew",
+    "text": "Andrew.",
+    "origin": "en"
+  },
+  {
+    "name": "Andy",
+    "norm": "andy",
+    "text": "Andy.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Angelika",
+    "norm": "angelika",
+    "text": "Angelika.",
+    "origin": "de"
+  },
+  {
+    "name": "Anja",
+    "norm": "anja",
+    "text": "Anja.",
+    "origin": "de"
+  },
+  {
+    "name": "Anna",
+    "norm": "anna",
+    "text": "Anna.",
+    "origin": "de"
+  },
+  {
+    "name": "Annette",
+    "norm": "annette",
+    "text": "Annette.",
+    "origin": "de"
+  },
+  {
+    "name": "Ashley",
+    "norm": "ashley",
+    "text": "Ashley.",
+    "origin": "en"
+  },
+  {
+    "name": "Ava",
+    "norm": "ava",
+    "text": "Ava.",
+    "origin": "en"
+  },
+  {
+    "name": "Axel",
+    "norm": "axel",
+    "text": "Axel.",
+    "origin": "de"
+  },
+  {
+    "name": "Barbara",
+    "norm": "barbara",
+    "text": "Barbara.",
+    "origin": "en"
+  },
+  {
+    "name": "Basti",
+    "norm": "basti",
+    "text": "Basti.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Becky",
+    "norm": "becky",
+    "text": "Becky.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Ben",
+    "norm": "ben",
+    "text": "Ben.",
+    "origin": "de"
+  },
+  {
+    "name": "Benjamin",
+    "norm": "benjamin",
+    "text": "Benjamin.",
+    "origin": "de"
+  },
+  {
+    "name": "Benny",
+    "norm": "benny",
+    "text": "Benny.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Bernd",
+    "norm": "bernd",
+    "text": "Bernd.",
+    "origin": "de"
+  },
+  {
+    "name": "Beth",
+    "norm": "beth",
+    "text": "Beth.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Bettina",
+    "norm": "bettina",
+    "text": "Bettina.",
+    "origin": "de"
+  },
+  {
+    "name": "Betty",
+    "norm": "betty",
+    "text": "Betty.",
+    "origin": "en"
+  },
+  {
+    "name": "Bill",
+    "norm": "bill",
+    "text": "Bill.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Bine",
+    "norm": "bine",
+    "text": "Bine.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Birgit",
+    "norm": "birgit",
+    "text": "Birgit.",
+    "origin": "de"
+  },
+  {
+    "name": "Bobby",
+    "norm": "bobby",
+    "text": "Bobby.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Brandon",
+    "norm": "brandon",
+    "text": "Brandon.",
+    "origin": "en"
+  },
+  {
+    "name": "Brigitte",
+    "norm": "brigitte",
+    "text": "Brigitte.",
+    "origin": "de"
+  },
+  {
+    "name": "Carina",
+    "norm": "carina",
+    "text": "Carina.",
+    "origin": "de"
+  },
+  {
+    "name": "Carol",
+    "norm": "carol",
+    "text": "Carol.",
+    "origin": "en"
+  },
+  {
+    "name": "Carolin",
+    "norm": "carolin",
+    "text": "Carolin.",
+    "origin": "de"
+  },
+  {
+    "name": "Carsten",
+    "norm": "carsten",
+    "text": "Carsten.",
+    "origin": "de"
+  },
+  {
+    "name": "Charles",
+    "norm": "charles",
+    "text": "Charles.",
+    "origin": "en"
+  },
+  {
+    "name": "Charlie",
+    "norm": "charlie",
+    "text": "Charlie.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Charlotte",
+    "norm": "charlotte",
+    "text": "Charlotte.",
+    "origin": "de"
+  },
+  {
+    "name": "Chloe",
+    "norm": "chloe",
+    "text": "Chloe.",
+    "origin": "en"
+  },
+  {
+    "name": "Chris",
+    "norm": "chris",
+    "text": "Chris.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Chrissi",
+    "norm": "chrissi",
+    "text": "Chrissi.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Christa",
+    "norm": "christa",
+    "text": "Christa.",
+    "origin": "de"
+  },
+  {
+    "name": "Christian",
+    "norm": "christian",
+    "text": "Christian.",
+    "origin": "de"
+  },
+  {
+    "name": "Christiane",
+    "norm": "christiane",
+    "text": "Christiane.",
+    "origin": "de"
+  },
+  {
+    "name": "Christina",
+    "norm": "christina",
+    "text": "Christina.",
+    "origin": "de"
+  },
+  {
+    "name": "Christopher",
+    "norm": "christopher",
+    "text": "Christopher.",
+    "origin": "en"
+  },
+  {
+    "name": "Claire",
+    "norm": "claire",
+    "text": "Claire.",
+    "origin": "en"
+  },
+  {
+    "name": "Clara",
+    "norm": "clara",
+    "text": "Clara.",
+    "origin": "de"
+  },
+  {
+    "name": "Claudia",
+    "norm": "claudia",
+    "text": "Claudia.",
+    "origin": "de"
+  },
+  {
+    "name": "Connor",
+    "norm": "connor",
+    "text": "Connor.",
+    "origin": "en"
+  },
+  {
+    "name": "Cornelia",
+    "norm": "cornelia",
+    "text": "Cornelia.",
+    "origin": "de"
+  },
+  {
+    "name": "Craig",
+    "norm": "craig",
+    "text": "Craig.",
+    "origin": "en"
+  },
+  {
+    "name": "Dan",
+    "norm": "dan",
+    "text": "Dan.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Daniel",
+    "norm": "daniel",
+    "text": "Daniel.",
+    "origin": "de"
+  },
+  {
+    "name": "Daniela",
+    "norm": "daniela",
+    "text": "Daniela.",
+    "origin": "de"
+  },
+  {
+    "name": "Dave",
+    "norm": "dave",
+    "text": "Dave.",
+    "origin": "nickname"
+  },
+  {
+    "name": "David",
+    "norm": "david",
+    "text": "David.",
+    "origin": "de"
+  },
+  {
+    "name": "Debbie",
+    "norm": "debbie",
+    "text": "Debbie.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Deborah",
+    "norm": "deborah",
+    "text": "Deborah.",
+    "origin": "en"
+  },
+  {
+    "name": "Dennis",
+    "norm": "dennis",
+    "text": "Dennis.",
+    "origin": "de"
+  },
+  {
+    "name": "Diana",
+    "norm": "diana",
+    "text": "Diana.",
+    "origin": "de"
+  },
+  {
+    "name": "Didi",
+    "norm": "didi",
+    "text": "Didi.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Dieter",
+    "norm": "dieter",
+    "text": "Dieter.",
+    "origin": "de"
+  },
+  {
+    "name": "Dirk",
+    "norm": "dirk",
+    "text": "Dirk.",
+    "origin": "de"
+  },
+  {
+    "name": "Donna",
+    "norm": "donna",
+    "text": "Donna.",
+    "origin": "en"
+  },
+  {
+    "name": "Doris",
+    "norm": "doris",
+    "text": "Doris.",
+    "origin": "de"
+  },
+  {
+    "name": "Dylan",
+    "norm": "dylan",
+    "text": "Dylan.",
+    "origin": "en"
+  },
+  {
+    "name": "Elena",
+    "norm": "elena",
+    "text": "Elena.",
+    "origin": "de"
+  },
+  {
+    "name": "Elias",
+    "norm": "elias",
+    "text": "Elias.",
+    "origin": "de"
+  },
+  {
+    "name": "Elizabeth",
+    "norm": "elizabeth",
+    "text": "Elizabeth.",
+    "origin": "en"
+  },
+  {
+    "name": "Elke",
+    "norm": "elke",
+    "text": "Elke.",
+    "origin": "de"
+  },
+  {
+    "name": "Ella",
+    "norm": "ella",
+    "text": "Ella.",
+    "origin": "de"
+  },
+  {
+    "name": "Emilia",
+    "norm": "emilia",
+    "text": "Emilia.",
+    "origin": "de"
+  },
+  {
+    "name": "Emily",
+    "norm": "emily",
+    "text": "Emily.",
+    "origin": "en"
+  },
+  {
+    "name": "Emma",
+    "norm": "emma",
+    "text": "Emma.",
+    "origin": "de"
+  },
+  {
+    "name": "Erik",
+    "norm": "erik",
+    "text": "Erik.",
+    "origin": "de"
+  },
+  {
+    "name": "Ethan",
+    "norm": "ethan",
+    "text": "Ethan.",
+    "origin": "en"
+  },
+  {
+    "name": "Fabian",
+    "norm": "fabian",
+    "text": "Fabian.",
+    "origin": "de"
+  },
+  {
+    "name": "Felix",
+    "norm": "felix",
+    "text": "Felix.",
+    "origin": "de"
+  },
+  {
+    "name": "Finn",
+    "norm": "finn",
+    "text": "Finn.",
+    "origin": "de"
+  },
+  {
+    "name": "Flo",
+    "norm": "flo",
+    "text": "Flo.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Florian",
+    "norm": "florian",
+    "text": "Florian.",
+    "origin": "de"
+  },
+  {
+    "name": "Frank",
+    "norm": "frank",
+    "text": "Frank.",
+    "origin": "de"
+  },
+  {
+    "name": "Franziska",
+    "norm": "franziska",
+    "text": "Franziska.",
+    "origin": "de"
+  },
+  {
+    "name": "Frieda",
+    "norm": "frieda",
+    "text": "Frieda.",
+    "origin": "de"
+  },
+  {
+    "name": "Gabi",
+    "norm": "gabi",
+    "text": "Gabi.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Gabriele",
+    "norm": "gabriele",
+    "text": "Gabriele.",
+    "origin": "de"
+  },
+  {
+    "name": "Gary",
+    "norm": "gary",
+    "text": "Gary.",
+    "origin": "en"
+  },
+  {
+    "name": "George",
+    "norm": "george",
+    "text": "George.",
+    "origin": "en"
+  },
+  {
+    "name": "Gerhard",
+    "norm": "gerhard",
+    "text": "Gerhard.",
+    "origin": "de"
+  },
+  {
+    "name": "Gisela",
+    "norm": "gisela",
+    "text": "Gisela.",
+    "origin": "de"
+  },
+  {
+    "name": "Grace",
+    "norm": "grace",
+    "text": "Grace.",
+    "origin": "en"
+  },
+  {
+    "name": "Günter",
+    "norm": "guenter",
+    "text": "Günter.",
+    "origin": "de"
+  },
+  {
+    "name": "Hannah",
+    "norm": "hannah",
+    "text": "Hannah.",
+    "origin": "de"
+  },
+  {
+    "name": "Hans",
+    "norm": "hans",
+    "text": "Hans.",
+    "origin": "de"
+  },
+  {
+    "name": "Harry",
+    "norm": "harry",
+    "text": "Harry.",
+    "origin": "en"
+  },
+  {
+    "name": "Heike",
+    "norm": "heike",
+    "text": "Heike.",
+    "origin": "de"
+  },
+  {
+    "name": "Heinz",
+    "norm": "heinz",
+    "text": "Heinz.",
+    "origin": "de"
+  },
+  {
+    "name": "Helen",
+    "norm": "helen",
+    "text": "Helen.",
+    "origin": "en"
+  },
+  {
+    "name": "Helene",
+    "norm": "helene",
+    "text": "Helene.",
+    "origin": "de"
+  },
+  {
+    "name": "Helmut",
+    "norm": "helmut",
+    "text": "Helmut.",
+    "origin": "de"
+  },
+  {
+    "name": "Henry",
+    "norm": "henry",
+    "text": "Henry.",
+    "origin": "en"
+  },
+  {
+    "name": "Holger",
+    "norm": "holger",
+    "text": "Holger.",
+    "origin": "de"
+  },
+  {
+    "name": "Horst",
+    "norm": "horst",
+    "text": "Horst.",
+    "origin": "de"
+  },
+  {
+    "name": "Ian",
+    "norm": "ian",
+    "text": "Ian.",
+    "origin": "en"
+  },
+  {
+    "name": "Ingrid",
+    "norm": "ingrid",
+    "text": "Ingrid.",
+    "origin": "de"
+  },
+  {
+    "name": "Isabella",
+    "norm": "isabella",
+    "text": "Isabella.",
+    "origin": "en"
+  },
+  {
+    "name": "Jack",
+    "norm": "jack",
+    "text": "Jack.",
+    "origin": "en"
+  },
+  {
+    "name": "Jacob",
+    "norm": "jacob",
+    "text": "Jacob.",
+    "origin": "en"
+  },
+  {
+    "name": "Jacqueline",
+    "norm": "jacqueline",
+    "text": "Jacqueline.",
+    "origin": "de"
+  },
+  {
+    "name": "Jake",
+    "norm": "jake",
+    "text": "Jake.",
+    "origin": "en"
+  },
+  {
+    "name": "Jakob",
+    "norm": "jakob",
+    "text": "Jakob.",
+    "origin": "de"
+  },
+  {
+    "name": "James",
+    "norm": "james",
+    "text": "James.",
+    "origin": "en"
+  },
+  {
+    "name": "Jan",
+    "norm": "jan",
+    "text": "Jan.",
+    "origin": "de"
+  },
+  {
+    "name": "Jannik",
+    "norm": "jannik",
+    "text": "Jannik.",
+    "origin": "de"
+  },
+  {
+    "name": "Jen",
+    "norm": "jen",
+    "text": "Jen.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Jennifer",
+    "norm": "jennifer",
+    "text": "Jennifer.",
+    "origin": "de"
+  },
+  {
+    "name": "Jessica",
+    "norm": "jessica",
+    "text": "Jessica.",
+    "origin": "de"
+  },
+  {
+    "name": "Jim",
+    "norm": "jim",
+    "text": "Jim.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Joe",
+    "norm": "joe",
+    "text": "Joe.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Johanna",
+    "norm": "johanna",
+    "text": "Johanna.",
+    "origin": "de"
+  },
+  {
+    "name": "John",
+    "norm": "john",
+    "text": "John.",
+    "origin": "en"
+  },
+  {
+    "name": "Jonas",
+    "norm": "jonas",
+    "text": "Jonas.",
+    "origin": "de"
+  },
+  {
+    "name": "Jörg",
+    "norm": "joerg",
+    "text": "Jörg.",
+    "origin": "de"
+  },
+  {
+    "name": "Joseph",
+    "norm": "joseph",
+    "text": "Joseph.",
+    "origin": "en"
+  },
+  {
+    "name": "Josh",
+    "norm": "josh",
+    "text": "Josh.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Joshua",
+    "norm": "joshua",
+    "text": "Joshua.",
+    "origin": "en"
+  },
+  {
+    "name": "Jules",
+    "norm": "jules",
+    "text": "Jules.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Julia",
+    "norm": "julia",
+    "text": "Julia.",
+    "origin": "de"
+  },
+  {
+    "name": "Julian",
+    "norm": "julian",
+    "text": "Julian.",
+    "origin": "de"
+  },
+  {
+    "name": "Julie",
+    "norm": "julie",
+    "text": "Julie.",
+    "origin": "en"
+  },
+  {
+    "name": "Jürgen",
+    "norm": "juergen",
+    "text": "Jürgen.",
+    "origin": "de"
+  },
+  {
+    "name": "Karen",
+    "norm": "karen",
+    "text": "Karen.",
+    "origin": "en"
+  },
+  {
+    "name": "Karin",
+    "norm": "karin",
+    "text": "Karin.",
+    "origin": "de"
+  },
+  {
+    "name": "Karl",
+    "norm": "karl",
+    "text": "Karl.",
+    "origin": "de"
+  },
+  {
+    "name": "Kate",
+    "norm": "kate",
+    "text": "Kate.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Katha",
+    "norm": "katha",
+    "text": "Katha.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Katharina",
+    "norm": "katharina",
+    "text": "Katharina.",
+    "origin": "de"
+  },
+  {
+    "name": "Katherine",
+    "norm": "katherine",
+    "text": "Katherine.",
+    "origin": "en"
+  },
+  {
+    "name": "Kathrin",
+    "norm": "kathrin",
+    "text": "Kathrin.",
+    "origin": "de"
+  },
+  {
+    "name": "Katie",
+    "norm": "katie",
+    "text": "Katie.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Katrin",
+    "norm": "katrin",
+    "text": "Katrin.",
+    "origin": "de"
+  },
+  {
+    "name": "Keith",
+    "norm": "keith",
+    "text": "Keith.",
+    "origin": "en"
+  },
+  {
+    "name": "Kerstin",
+    "norm": "kerstin",
+    "text": "Kerstin.",
+    "origin": "de"
+  },
+  {
+    "name": "Kevin",
+    "norm": "kevin",
+    "text": "Kevin.",
+    "origin": "de"
+  },
+  {
+    "name": "Kimberly",
+    "norm": "kimberly",
+    "text": "Kimberly.",
+    "origin": "en"
+  },
+  {
+    "name": "Klaus",
+    "norm": "klaus",
+    "text": "Klaus.",
+    "origin": "de"
+  },
+  {
+    "name": "Kyle",
+    "norm": "kyle",
+    "text": "Kyle.",
+    "origin": "en"
+  },
+  {
+    "name": "Lara",
+    "norm": "lara",
+    "text": "Lara.",
+    "origin": "de"
+  },
+  {
+    "name": "Laura",
+    "norm": "laura",
+    "text": "Laura.",
+    "origin": "de"
+  },
+  {
+    "name": "Lea",
+    "norm": "lea",
+    "text": "Lea.",
+    "origin": "de"
+  },
+  {
+    "name": "Lena",
+    "norm": "lena",
+    "text": "Lena.",
+    "origin": "de"
+  },
+  {
+    "name": "Lennard",
+    "norm": "lennard",
+    "text": "Lennard.",
+    "origin": "de"
+  },
+  {
+    "name": "Leon",
+    "norm": "leon",
+    "text": "Leon.",
+    "origin": "de"
+  },
+  {
+    "name": "Leonie",
+    "norm": "leonie",
+    "text": "Leonie.",
+    "origin": "de"
+  },
+  {
+    "name": "Lia",
+    "norm": "lia",
+    "text": "Lia.",
+    "origin": "de"
+  },
+  {
+    "name": "Liam",
+    "norm": "liam",
+    "text": "Liam.",
+    "origin": "en"
+  },
+  {
+    "name": "Linda",
+    "norm": "linda",
+    "text": "Linda.",
+    "origin": "en"
+  },
+  {
+    "name": "Lisa",
+    "norm": "lisa",
+    "text": "Lisa.",
+    "origin": "de"
+  },
+  {
+    "name": "Lissi",
+    "norm": "lissi",
+    "text": "Lissi.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Liz",
+    "norm": "liz",
+    "text": "Liz.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Luca",
+    "norm": "luca",
+    "text": "Luca.",
+    "origin": "de"
+  },
+  {
+    "name": "Lucas",
+    "norm": "lucas",
+    "text": "Lucas.",
+    "origin": "en"
+  },
+  {
+    "name": "Lucy",
+    "norm": "lucy",
+    "text": "Lucy.",
+    "origin": "en"
+  },
+  {
+    "name": "Luisa",
+    "norm": "luisa",
+    "text": "Luisa.",
+    "origin": "de"
+  },
+  {
+    "name": "Lukas",
+    "norm": "lukas",
+    "text": "Lukas.",
+    "origin": "de"
+  },
+  {
+    "name": "Luke",
+    "norm": "luke",
+    "text": "Luke.",
+    "origin": "en"
+  },
+  {
+    "name": "Maggie",
+    "norm": "maggie",
+    "text": "Maggie.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Maja",
+    "norm": "maja",
+    "text": "Maja.",
+    "origin": "de"
+  },
+  {
+    "name": "Manfred",
+    "norm": "manfred",
+    "text": "Manfred.",
+    "origin": "de"
+  },
+  {
+    "name": "Manni",
+    "norm": "manni",
+    "text": "Manni.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Manuela",
+    "norm": "manuela",
+    "text": "Manuela.",
+    "origin": "de"
+  },
+  {
+    "name": "Marcel",
+    "norm": "marcel",
+    "text": "Marcel.",
+    "origin": "de"
+  },
+  {
+    "name": "Marco",
+    "norm": "marco",
+    "text": "Marco.",
+    "origin": "de"
+  },
+  {
+    "name": "Margaret",
+    "norm": "margaret",
+    "text": "Margaret.",
+    "origin": "en"
+  },
+  {
+    "name": "Marie",
+    "norm": "marie",
+    "text": "Marie.",
+    "origin": "de"
+  },
+  {
+    "name": "Marion",
+    "norm": "marion",
+    "text": "Marion.",
+    "origin": "de"
+  },
+  {
+    "name": "Mark",
+    "norm": "mark",
+    "text": "Mark.",
+    "origin": "en"
+  },
+  {
+    "name": "Markus",
+    "norm": "markus",
+    "text": "Markus.",
+    "origin": "de"
+  },
+  {
+    "name": "Marlene",
+    "norm": "marlene",
+    "text": "Marlene.",
+    "origin": "de"
+  },
+  {
+    "name": "Martin",
+    "norm": "martin",
+    "text": "Martin.",
+    "origin": "de"
+  },
+  {
+    "name": "Martina",
+    "norm": "martina",
+    "text": "Martina.",
+    "origin": "de"
+  },
+  {
+    "name": "Mary",
+    "norm": "mary",
+    "text": "Mary.",
+    "origin": "en"
+  },
+  {
+    "name": "Mason",
+    "norm": "mason",
+    "text": "Mason.",
+    "origin": "en"
+  },
+  {
+    "name": "Matt",
+    "norm": "matt",
+    "text": "Matt.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Matthew",
+    "norm": "matthew",
+    "text": "Matthew.",
+    "origin": "en"
+  },
+  {
+    "name": "Matthias",
+    "norm": "matthias",
+    "text": "Matthias.",
+    "origin": "de"
+  },
+  {
+    "name": "Max",
+    "norm": "max",
+    "text": "Max.",
+    "origin": "de"
+  },
+  {
+    "name": "Maximilian",
+    "norm": "maximilian",
+    "text": "Maximilian.",
+    "origin": "de"
+  },
+  {
+    "name": "Megan",
+    "norm": "megan",
+    "text": "Megan.",
+    "origin": "en"
+  },
+  {
+    "name": "Melanie",
+    "norm": "melanie",
+    "text": "Melanie.",
+    "origin": "de"
+  },
+  {
+    "name": "Mia",
+    "norm": "mia",
+    "text": "Mia.",
+    "origin": "de"
+  },
+  {
+    "name": "Michael",
+    "norm": "michael",
+    "text": "Michael.",
+    "origin": "de"
+  },
+  {
+    "name": "Michelle",
+    "norm": "michelle",
+    "text": "Michelle.",
+    "origin": "de"
+  },
+  {
+    "name": "Mike",
+    "norm": "mike",
+    "text": "Mike.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Mila",
+    "norm": "mila",
+    "text": "Mila.",
+    "origin": "de"
+  },
+  {
+    "name": "Monika",
+    "norm": "monika",
+    "text": "Monika.",
+    "origin": "de"
+  },
+  {
+    "name": "Moritz",
+    "norm": "moritz",
+    "text": "Moritz.",
+    "origin": "de"
+  },
+  {
+    "name": "Nadine",
+    "norm": "nadine",
+    "text": "Nadine.",
+    "origin": "de"
+  },
+  {
+    "name": "Nancy",
+    "norm": "nancy",
+    "text": "Nancy.",
+    "origin": "en"
+  },
+  {
+    "name": "Natalie",
+    "norm": "natalie",
+    "text": "Natalie.",
+    "origin": "en"
+  },
+  {
+    "name": "Nathan",
+    "norm": "nathan",
+    "text": "Nathan.",
+    "origin": "en"
+  },
+  {
+    "name": "Nele",
+    "norm": "nele",
+    "text": "Nele.",
+    "origin": "de"
+  },
+  {
+    "name": "Nicholas",
+    "norm": "nicholas",
+    "text": "Nicholas.",
+    "origin": "en"
+  },
+  {
+    "name": "Nici",
+    "norm": "nici",
+    "text": "Nici.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Nick",
+    "norm": "nick",
+    "text": "Nick.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Niclas",
+    "norm": "niclas",
+    "text": "Niclas.",
+    "origin": "de"
+  },
+  {
+    "name": "Nico",
+    "norm": "nico",
+    "text": "Nico.",
+    "origin": "de"
+  },
+  {
+    "name": "Nicole",
+    "norm": "nicole",
+    "text": "Nicole.",
+    "origin": "de"
+  },
+  {
+    "name": "Niklas",
+    "norm": "niklas",
+    "text": "Niklas.",
+    "origin": "de"
+  },
+  {
+    "name": "Nina",
+    "norm": "nina",
+    "text": "Nina.",
+    "origin": "de"
+  },
+  {
+    "name": "Noah",
+    "norm": "noah",
+    "text": "Noah.",
+    "origin": "de"
+  },
+  {
+    "name": "Norbert",
+    "norm": "norbert",
+    "text": "Norbert.",
+    "origin": "de"
+  },
+  {
+    "name": "Oliver",
+    "norm": "oliver",
+    "text": "Oliver.",
+    "origin": "de"
+  },
+  {
+    "name": "Olivia",
+    "norm": "olivia",
+    "text": "Olivia.",
+    "origin": "en"
+  },
+  {
+    "name": "Patricia",
+    "norm": "patricia",
+    "text": "Patricia.",
+    "origin": "en"
+  },
+  {
+    "name": "Patrick",
+    "norm": "patrick",
+    "text": "Patrick.",
+    "origin": "de"
+  },
+  {
+    "name": "Patty",
+    "norm": "patty",
+    "text": "Patty.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Paul",
+    "norm": "paul",
+    "text": "Paul.",
+    "origin": "de"
+  },
+  {
+    "name": "Paula",
+    "norm": "paula",
+    "text": "Paula.",
+    "origin": "de"
+  },
+  {
+    "name": "Peter",
+    "norm": "peter",
+    "text": "Peter.",
+    "origin": "de"
+  },
+  {
+    "name": "Petra",
+    "norm": "petra",
+    "text": "Petra.",
+    "origin": "de"
+  },
+  {
+    "name": "Philipp",
+    "norm": "philipp",
+    "text": "Philipp.",
+    "origin": "de"
+  },
+  {
+    "name": "Rachel",
+    "norm": "rachel",
+    "text": "Rachel.",
+    "origin": "en"
+  },
+  {
+    "name": "Rainer",
+    "norm": "rainer",
+    "text": "Rainer.",
+    "origin": "de"
+  },
+  {
+    "name": "Ralf",
+    "norm": "ralf",
+    "text": "Ralf.",
+    "origin": "de"
+  },
+  {
+    "name": "Rebecca",
+    "norm": "rebecca",
+    "text": "Rebecca.",
+    "origin": "en"
+  },
+  {
+    "name": "Renate",
+    "norm": "renate",
+    "text": "Renate.",
+    "origin": "de"
+  },
+  {
+    "name": "René",
+    "norm": "rené",
+    "text": "René.",
+    "origin": "de"
+  },
+  {
+    "name": "Richard",
+    "norm": "richard",
+    "text": "Richard.",
+    "origin": "en"
+  },
+  {
+    "name": "Rick",
+    "norm": "rick",
+    "text": "Rick.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Rob",
+    "norm": "rob",
+    "text": "Rob.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Robert",
+    "norm": "robert",
+    "text": "Robert.",
+    "origin": "en"
+  },
+  {
+    "name": "Rolf",
+    "norm": "rolf",
+    "text": "Rolf.",
+    "origin": "de"
+  },
+  {
+    "name": "Ryan",
+    "norm": "ryan",
+    "text": "Ryan.",
+    "origin": "en"
+  },
+  {
+    "name": "Sabine",
+    "norm": "sabine",
+    "text": "Sabine.",
+    "origin": "de"
+  },
+  {
+    "name": "Sabrina",
+    "norm": "sabrina",
+    "text": "Sabrina.",
+    "origin": "de"
+  },
+  {
+    "name": "Sam",
+    "norm": "sam",
+    "text": "Sam.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Samantha",
+    "norm": "samantha",
+    "text": "Samantha.",
+    "origin": "en"
+  },
+  {
+    "name": "Samuel",
+    "norm": "samuel",
+    "text": "Samuel.",
+    "origin": "en"
+  },
+  {
+    "name": "Sandra",
+    "norm": "sandra",
+    "text": "Sandra.",
+    "origin": "de"
+  },
+  {
+    "name": "Sarah",
+    "norm": "sarah",
+    "text": "Sarah.",
+    "origin": "de"
+  },
+  {
+    "name": "Scott",
+    "norm": "scott",
+    "text": "Scott.",
+    "origin": "en"
+  },
+  {
+    "name": "Sean",
+    "norm": "sean",
+    "text": "Sean.",
+    "origin": "en"
+  },
+  {
+    "name": "Seb",
+    "norm": "seb",
+    "text": "Seb.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Sebastian",
+    "norm": "sebastian",
+    "text": "Sebastian.",
+    "origin": "de"
+  },
+  {
+    "name": "Shane",
+    "norm": "shane",
+    "text": "Shane.",
+    "origin": "en"
+  },
+  {
+    "name": "Silke",
+    "norm": "silke",
+    "text": "Silke.",
+    "origin": "de"
+  },
+  {
+    "name": "Simon",
+    "norm": "simon",
+    "text": "Simon.",
+    "origin": "de"
+  },
+  {
+    "name": "Simone",
+    "norm": "simone",
+    "text": "Simone.",
+    "origin": "de"
+  },
+  {
+    "name": "Sonja",
+    "norm": "sonja",
+    "text": "Sonja.",
+    "origin": "de"
+  },
+  {
+    "name": "Sophia",
+    "norm": "sophia",
+    "text": "Sophia.",
+    "origin": "en"
+  },
+  {
+    "name": "Sophie",
+    "norm": "sophie",
+    "text": "Sophie.",
+    "origin": "de"
+  },
+  {
+    "name": "Stefan",
+    "norm": "stefan",
+    "text": "Stefan.",
+    "origin": "de"
+  },
+  {
+    "name": "Stefanie",
+    "norm": "stefanie",
+    "text": "Stefanie.",
+    "origin": "de"
+  },
+  {
+    "name": "Steff",
+    "norm": "steff",
+    "text": "Steff.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Steffi",
+    "norm": "steffi",
+    "text": "Steffi.",
+    "origin": "de"
+  },
+  {
+    "name": "Steve",
+    "norm": "steve",
+    "text": "Steve.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Steven",
+    "norm": "steven",
+    "text": "Steven.",
+    "origin": "en"
+  },
+  {
+    "name": "Sue",
+    "norm": "sue",
+    "text": "Sue.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Susan",
+    "norm": "susan",
+    "text": "Susan.",
+    "origin": "en"
+  },
+  {
+    "name": "Susanne",
+    "norm": "susanne",
+    "text": "Susanne.",
+    "origin": "de"
+  },
+  {
+    "name": "Susi",
+    "norm": "susi",
+    "text": "Susi.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Sven",
+    "norm": "sven",
+    "text": "Sven.",
+    "origin": "de"
+  },
+  {
+    "name": "Tanja",
+    "norm": "tanja",
+    "text": "Tanja.",
+    "origin": "de"
+  },
+  {
+    "name": "Thomas",
+    "norm": "thomas",
+    "text": "Thomas.",
+    "origin": "de"
+  },
+  {
+    "name": "Tim",
+    "norm": "tim",
+    "text": "Tim.",
+    "origin": "de"
+  },
+  {
+    "name": "Tobias",
+    "norm": "tobias",
+    "text": "Tobias.",
+    "origin": "de"
+  },
+  {
+    "name": "Tom",
+    "norm": "tom",
+    "text": "Tom.",
+    "origin": "de"
+  },
+  {
+    "name": "Tommy",
+    "norm": "tommy",
+    "text": "Tommy.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Toni",
+    "norm": "toni",
+    "text": "Toni.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Torsten",
+    "norm": "torsten",
+    "text": "Torsten.",
+    "origin": "de"
+  },
+  {
+    "name": "Tracy",
+    "norm": "tracy",
+    "text": "Tracy.",
+    "origin": "en"
+  },
+  {
+    "name": "Tyler",
+    "norm": "tyler",
+    "text": "Tyler.",
+    "origin": "en"
+  },
+  {
+    "name": "Ursula",
+    "norm": "ursula",
+    "text": "Ursula.",
+    "origin": "de"
+  },
+  {
+    "name": "Ute",
+    "norm": "ute",
+    "text": "Ute.",
+    "origin": "de"
+  },
+  {
+    "name": "Uwe",
+    "norm": "uwe",
+    "text": "Uwe.",
+    "origin": "de"
+  },
+  {
+    "name": "Vanessa",
+    "norm": "vanessa",
+    "text": "Vanessa.",
+    "origin": "de"
+  },
+  {
+    "name": "Vicky",
+    "norm": "vicky",
+    "text": "Vicky.",
+    "origin": "nickname"
+  },
+  {
+    "name": "Victoria",
+    "norm": "victoria",
+    "text": "Victoria.",
+    "origin": "en"
+  },
+  {
+    "name": "Werner",
+    "norm": "werner",
+    "text": "Werner.",
+    "origin": "de"
+  },
+  {
+    "name": "Wilhelm",
+    "norm": "wilhelm",
+    "text": "Wilhelm.",
+    "origin": "de"
+  },
+  {
+    "name": "Will",
+    "norm": "will",
+    "text": "Will.",
+    "origin": "nickname"
+  },
+  {
+    "name": "William",
+    "norm": "william",
+    "text": "William.",
+    "origin": "en"
+  },
+  {
+    "name": "Wolfgang",
+    "norm": "wolfgang",
+    "text": "Wolfgang.",
+    "origin": "de"
+  },
+  {
+    "name": "Yvonne",
+    "norm": "yvonne",
+    "text": "Yvonne.",
+    "origin": "de"
+  }
+]

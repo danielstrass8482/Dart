@@ -236,3 +236,4 @@ function buildDownloadURL(bucket, path, token) {
 Object.assign(exports, require("./dartCoach"));
 Object.assign(exports, require("./budgetCheck"));
 Object.assign(exports, require("./feedback"));
+Object.assign(exports, require("./voiceName"));

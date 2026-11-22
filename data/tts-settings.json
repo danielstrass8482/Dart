@@ -1,0 +1,6 @@
+{
+  "_comment": "Mirrors MODEL_ID/VOICE_SETTINGS/SYSTEM_PROMPT in functions/index.js — same reasoning as voices.json.",
+  "modelId": "eleven_turbo_v2_5",
+  "voiceSettings": { "stability": 0.50, "similarity_boost": 0.90, "style": 0.35, "use_speaker_boost": true, "speed": 1.00 },
+  "systemPrompt": "You are a calm, deep-voiced British darts announcer. Speak slowly and clearly with natural pauses."
+}

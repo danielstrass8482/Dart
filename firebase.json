@@ -8,6 +8,8 @@
       "functions/**",
       "dart.html",
       "scripts/**",
+      "qa/**",
+      "tests/**",
       "MIGRATION.md"
     ],
     "rewrites": [

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DartTrainer — Voice QA Review</title>
+<style>
+  :root{color-scheme:dark light;}
+  body{font-family:-apple-system,system-ui,sans-serif;background:#111;color:#eee;margin:0;padding:1rem;max-width:900px;margin-inline:auto;}
+  h1{font-size:1.2rem;}
+  .bar{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;position:sticky;top:0;background:#111;padding:.5rem 0;border-bottom:1px solid #333;}
+  select,button{background:#222;color:#eee;border:1px solid #444;border-radius:6px;padding:.4rem .7rem;font-size:.9rem;}
+  button:hover{background:#333;cursor:pointer;}
+  .row{display:grid;grid-template-columns:3.5rem 1fr 11rem 3.5rem;gap:.6rem;align-items:center;padding:.4rem .3rem;border-bottom:1px solid #222;font-size:.85rem;}
+  .row.playing{background:#1d2b1d;}
+  .row.missing{opacity:.5;}
+  .key{color:#888;font-family:monospace;font-size:.78rem;}
+  .text{word-break:break-word;}
+  .cmd{font-family:monospace;font-size:.72rem;background:#1a1a1a;padding:.2rem .4rem;border-radius:4px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .status{text-align:center;}
+  .status.ok{color:#5c5;}
+  .status.bad{color:#c55;}
+  audio{height:28px;}
+  #progress{color:#999;font-size:.85rem;}
+</style>
+</head>
+<body>
+<h1>DartTrainer — Voice QA Review</h1>
+<p style="color:#999;font-size:.85rem">
+  Spielt alle Clips einer Stimme (feste Ansagen + Namen) in Reihenfolge ab. Klingt ein Clip falsch,
+  Terminal-Befehl anklicken (wird kopiert) und im Projektordner ausführen — regeneriert nur diesen einen Key.
+</p>
+<div class="bar">
+  <label>Stimme: <select id="voiceSel"></select></label>
+  <button id="playAllBtn">▶ Alle abspielen</button>
+  <button id="stopBtn">■ Stop</button>
+  <span id="progress"></span>
+</div>
+<div id="list"></div>
+
+<script>
+let vocabulary = [], names = [], voices = [], currentVoice = null;
+let playQueue = [], playIdx = -1, playing = false;
+
+async function loadData(){
+  [vocabulary, names, voices] = await Promise.all([
+    fetch('../data/vocabulary.json').then(r=>r.json()),
+    fetch('../data/names.json').then(r=>r.json()),
+    fetch('../data/voices.json').then(r=>r.json().then(d=>d.voices)),
+  ]);
+  const sel = document.getElementById('voiceSel');
+  sel.innerHTML = voices.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+  sel.addEventListener('change', ()=>renderList(sel.value));
+  currentVoice = voices[0].id;
+  renderList(currentVoice);
+}
+
+function allEntries(){
+  const vocab = vocabulary.map(v=>({key:v.key, text:v.text, file:`${v.key}.mp3`}));
+  const nameEntries = names.map(n=>({key:`name_${n.norm}`, text:n.text, file:`name_${n.norm}.mp3`}));
+  return vocab.concat(nameEntries);
+}
+
+async function renderList(voiceId){
+  currentVoice = voiceId;
+  const list = document.getElementById('list');
+  list.innerHTML = '<p style="color:#888">Prüfe Dateien…</p>';
+  const entries = allEntries();
+  const rows = await Promise.all(entries.map(async (e)=>{
+    const url = `../assets/voice/${voiceId}/${e.file}`;
+    let exists = false;
+    try { const r = await fetch(url, {method:'HEAD'}); exists = r.ok; } catch(_){}
+    return {...e, url, exists};
+  }));
+  list.innerHTML = '';
+  rows.forEach((row, i)=>{
+    const div = document.createElement('div');
+    div.className = 'row' + (row.exists ? '' : ' missing');
+    div.id = `row-${i}`;
+    const cmd = `node scripts/gen-voice-assets.js --voice=${voiceId} --only=${row.key} --force`;
+    div.innerHTML = `
+      <div class="status ${row.exists?'ok':'bad'}">${row.exists?'✓':'✗'}</div>
+      <div><div class="key">${row.key}</div><div class="text">${row.text}</div></div>
+      <div class="cmd" title="Klicken zum Kopieren">${cmd}</div>
+      <div>${row.exists ? `<audio controls preload="none" src="${row.url}"></audio>` : '–'}</div>
+    `;
+    div.querySelector('.cmd').addEventListener('click', (ev)=>{
+      navigator.clipboard?.writeText(cmd).catch(()=>{});
+      ev.target.textContent = 'kopiert!';
+      setTimeout(()=>{ ev.target.textContent = cmd; }, 1200);
+    });
+    list.appendChild(div);
+  });
+  playQueue = rows.filter(r=>r.exists);
+}
+
+function stopPlayback(){
+  playing = false;
+  document.querySelectorAll('.row.playing').forEach(r=>r.classList.remove('playing'));
+  document.getElementById('progress').textContent = '';
+}
+
+async function playAll(){
+  stopPlayback();
+  playing = true;
+  for (let i=0; i<playQueue.length && playing; i++){
+    const entry = playQueue[i];
+    document.querySelectorAll('.row.playing').forEach(r=>r.classList.remove('playing'));
+    const rowIdx = allEntries().findIndex(e=>e.key===entry.key);
+    const rowEl = document.getElementById(`row-${rowIdx}`);
+    rowEl?.classList.add('playing');
+    rowEl?.scrollIntoView({block:'center', behavior:'smooth'});
+    document.getElementById('progress').textContent = `${i+1}/${playQueue.length} — ${entry.key}`;
+    await new Promise((resolve)=>{
+      const audio = new Audio(entry.url);
+      audio.addEventListener('ended', resolve);
+      audio.addEventListener('error', resolve);
+      audio.play().catch(resolve);
+      const checkStop = setInterval(()=>{ if(!playing){ audio.pause(); clearInterval(checkStop); resolve(); } }, 200);
+    });
+  }
+  stopPlayback();
+}
+
+document.getElementById('playAllBtn').addEventListener('click', playAll);
+document.getElementById('stopBtn').addEventListener('click', stopPlayback);
+
+loadData();
+</script>
+</body>
+</html>

@@ -201,6 +201,11 @@ function initDartDB(){
     async deleteVoiceSample(key){
       try{ await deleteObject(ref(storage,`dart_voice/${key}.webm`)); }catch(e){}
     },
+    // Pre-produced voice packages (fixed vocabulary + name library) — see js/voiceClips.js
+    async getVoicePkgURL(voiceId, key){
+      try{ return await getDownloadURL(ref(storage,`dart_voice_pkg/${voiceId}/${key}.mp3`)); }
+      catch(e){ return null; }
+    },
     async listVoiceSamples(){
       try{
         const list=await listAll(ref(storage,"dart_voice"));

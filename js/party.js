@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js?v=2';
 import { speakScoreWithCustom, queueAudio } from './audio.js';
+import { getCheckoutPath } from './checkout.js';
 import { t } from './i18n.js?v=3';
 import { escapeHtml } from './util.js';
 
@@ -99,12 +100,12 @@ export function partyTargetHighlight(){
   } else if(state.pg.mode==="CheckoutTraining"){
     const target=state.pg.coTargets[state.pg.coRound];
     if(target&&window._CHECKOUTS?.[target]){
-      const parts=window._CHECKOUTS[target].split(" ");
       const coSpent=state.pg.throws.reduce((s,t)=>s+t.score,0);
       const remaining=target-coSpent;
-      const CHECKOUTS=window._CHECKOUTS;
-      if(remaining>0&&remaining<=170&&CHECKOUTS[remaining]){
-        const nextPart=CHECKOUTS[remaining].split(" ")[0];
+      const dartsLeft=3-state.pg.throws.length;
+      const path=getCheckoutPath(remaining,dartsLeft);
+      if(remaining>0&&remaining<=170&&path){
+        const nextPart=path.split(" ")[0];
         const isT=nextPart.startsWith("T"); const isD=nextPart.startsWith("D");
         const isBull=nextPart==="Bull"||nextPart==="D25";
         const num=isBull?25:parseInt(nextPart.replace(/[TDS]/,""))||0;

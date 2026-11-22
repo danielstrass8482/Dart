@@ -246,6 +246,7 @@ export function runBotTurn(){
         const spent=state.x01.throws.reduce((s,t2)=>s+t2.score,0);
         const prevRem=state.x01.scores[botIdx];
         const newRem=prevRem-spent;
+        const hitBull=state.x01.throws.some(t2=>t2.label==="Bull");
 
         setTimeout(()=>{
           if(newRem===0){
@@ -253,11 +254,11 @@ export function runBotTurn(){
             state.x01.winner=botIdx;
             state.x01.checkoutHits[botIdx]++;
             state.x01.turnScores[botIdx].push(spent);
-            speakScoreWithCustom(spent);
+            speakScoreWithCustom(spent,hitBull);
             if(window._handleLegWin) window._handleLegWin(botIdx);
             if(window._renderX01) window._renderX01();
           } else if(newRem>0){
-            speakScoreWithCustom(spent);
+            speakScoreWithCustom(spent,hitBull);
             if(window._advanceX01) window._advanceX01();
           } else {
             state.x01.bust=true;

@@ -4,9 +4,10 @@
 
 import { state } from './state.js';
 import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout, drawMiniBoard } from './board.js?v=2';
-import { speakKeyWithCustom, speakScoreWithCustom, prewarmElevenLabs, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath, invalidateStaleAnnouncements } from './audio.js';
+import { speakKeyWithCustom, speakScoreWithCustom, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath, invalidateStaleAnnouncements } from './audio.js';
 import { announceRequires } from './speech.js';
 import { runBotTurn } from './bot.js';
+import { getCheckoutPath } from './checkout.js';
 import { t } from './i18n.js?v=3';
 import { escapeHtml } from './util.js';
 
@@ -97,7 +98,6 @@ export async function startX01(starter=0){
   disableBoard(state.boardSVG, true);
   renderX01();
   window.showScreen("x01");
-  prewarmElevenLabs();
   await speakKeyWithCustom("game_on","Game on!");
   await new Promise(r=>setTimeout(r,300));
   disableBoard(state.boardSVG, false);
@@ -108,12 +108,12 @@ export async function startX01(starter=0){
  * Renders the full X01 UI (score strip, landscape panel, throw slots, etc.)
  */
 export function renderX01(){
-  const CHECKOUTS = window._CHECKOUTS;
   const spent=state.x01.throws.reduce((s,t)=>s+t.score,0);
   const remaining=Math.max(0, state.x01.scores[state.x01.current]-spent);
+  const dartsLeft=3-state.x01.throws.length;
   const _coActive=remaining<=170&&remaining>1&&!state.x01.bust;
   const _prefDoubles=(()=>{ if(!_coActive) return []; const pid=state.cfg.playerIds?.[state.x01.current]; const pl=state.allPlayers?.find(p=>p.id===pid); return pl?.prefDoubles||[]; })();
-  const _optPath=_coActive?(CHECKOUTS[remaining]||""):"";
+  const _optPath=_coActive?(getCheckoutPath(remaining,dartsLeft)||""):"";
   const _prefPathRaw=_coActive?findPreferredCheckout(remaining,_prefDoubles):null;
   const _prefPath=(_prefPathRaw&&_optPath&&_prefPathRaw.split(" ").length===_optPath.split(" ").length)?_prefPathRaw:null;
   const co=_coActive?(_prefPath||_optPath||null):null;
@@ -364,7 +364,7 @@ export function processX01Hit(hit, svgX=null, svgY=null){
     renderX01();
     if(state.x01.throws.length===3){
       const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
-      const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
+      const hitBull=state.x01.throws.some(t=>t.label==="Bull");
       if(turnScore===0){ speakKeyWithCustom("no_score","No Score!"); }
       else { speakScoreWithCustom(turnScore, hitBull); }
       setTimeout(advanceX01, 800);
@@ -416,7 +416,7 @@ export function processX01Hit(hit, svgX=null, svgY=null){
 
   const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
   if(state.x01.throws.length===3){
-    const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
+    const hitBull=state.x01.throws.some(t=>t.label==="Bull");
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
   }
 
@@ -445,7 +445,7 @@ export function handleBouncer(){
     // announcement entirely (that path never runs for bouncer throws), so the
     // whole turn went unannounced instead of just the bouncer.
     const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
-    const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
+    const hitBull=state.x01.throws.some(t=>t.label==="Bull");
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
     setTimeout(advanceX01,800);
   }
@@ -458,17 +458,15 @@ function _scheduleNextPlayerAnnounce(nextIdx){
   const score=state.x01.scores[nextIdx];
   if(score >= 2 && score <= 170){
     setTimeout(announceRequires, 1500);
-    const _optPath=window._CHECKOUTS?.[score]||"";
-    const _pid=state.cfg.playerIds?.[nextIdx];
-    const _pl=state.allPlayers?.find(p=>p.id===_pid);
-    const _prefRaw=findPreferredCheckout(score,_pl?.prefDoubles||[]);
-    const _annPath=(_prefRaw&&_optPath&&_prefRaw.split(" ").length===_optPath.split(" ").length)?_prefRaw:null;
+    // Voice always uses the standard table path — only those 162 sentences
+    // are pre-produced as local clips. A per-player preferred-doubles path
+    // (if any) stays visual-only (board highlight in renderX01()).
+    const _optPath=getCheckoutPath(score,3)||null;
     // Only re-announce when the path actually changed since the last time we told
     // this player — otherwise every qualifying turn would repeat the same clip.
-    const _pathId=_annPath||_optPath||null;
-    if(_pathId&&state.x01.lastAnnouncedCheckout[nextIdx]!==_pathId){
-      state.x01.lastAnnouncedCheckout[nextIdx]=_pathId;
-      setTimeout(()=>announceCheckoutPath(score,nextIdx,_annPath),2500);
+    if(_optPath&&state.x01.lastAnnouncedCheckout[nextIdx]!==_optPath){
+      state.x01.lastAnnouncedCheckout[nextIdx]=_optPath;
+      setTimeout(()=>announceCheckoutPath(score,nextIdx),2500);
     }
   }
 }

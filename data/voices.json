@@ -1,0 +1,10 @@
+{
+  "_comment": "Mirrors VOICE_IDS/DEFAULT_VOICE_ID in functions/index.js — kept here as a separate copy (not imported) because Cloud Functions deploys only the functions/ directory, so functions/index.js must stay self-contained. If you add/change a voice in functions/index.js, update this file too.",
+  "default": "george",
+  "voices": [
+    { "id": "george", "elevenLabsId": "JBFqnCBsd6RMkjVDRZzb", "name": "George", "free": true },
+    { "id": "haseeb", "elevenLabsId": "dllHSct4GokGc1AH9JwT", "name": "Haseeb", "free": true },
+    { "id": "jerry", "elevenLabsId": "zDBYcuJrpuZ6YQ7AgRUw", "name": "Jerry B", "free": false },
+    { "id": "guy", "elevenLabsId": "34lPwSZ54D8fWbX1aHzk", "name": "Guy", "free": false }
+  ]
+}

@@ -3,6 +3,7 @@
  */
 
 import { state } from './state.js';
+import { getCheckoutPath } from './checkout.js';
 
 // ── Geometry constants ────────────────────────────────────────────
 export const SECTORS = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
@@ -206,13 +207,13 @@ export function highlightCheckout(svgEl, remaining, customPath=null){
   const g=svgEl.querySelector("#"+svgEl.id+"-checkout");
   if(!g){ return; }
   g.innerHTML="";
-  const CHECKOUTS = window._CHECKOUTS;
-  const co=customPath||(CHECKOUTS?.[remaining]);
+  const throwsArr = (svgEl.id==="board-svg" ? state.x01.throws : state.cr.throws) || [];
+  const dartsLeft=3-throwsArr.length;
+  const co=customPath||getCheckoutPath(remaining,dartsLeft);
   if(!co||remaining>170||remaining<=1) return;
 
   const ns="http://www.w3.org/2000/svg";
-  const throwsArr = (svgEl.id==="board-svg" ? state.x01.throws : state.cr.throws) || [];
-  const parts=co.split(" ").slice(0, 3-throwsArr.length);
+  const parts=co.split(" ");
 
   parts.forEach((part, partIdx)=>{
     const isNext=partIdx===0;

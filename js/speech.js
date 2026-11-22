@@ -3,7 +3,8 @@
  */
 
 import { state } from './state.js';
-import { numToWords, speakKeyWithCustom, speakScoreWithCustom, speak } from './audio.js';
+import { numToWords, speakKeyWithCustom, speakScoreWithCustom, queueAudio } from './audio.js';
+import { nameClipKey } from './voiceClips.js';
 import { flashSegment } from './board.js?v=2';
 import { requiresDelay } from './x01.js?v=2';
 import { t } from './i18n.js?v=3';
@@ -179,6 +180,14 @@ export function setVoiceFeedback(text){
  * Announces what the current player requires.
  * Called after advanceX01 so state.x01.current is already the next player.
  * Only announces in multi-player games and when remaining ≤170.
+ *
+ * Composed from three pre-produced local clips played back-to-back through
+ * the audio queue — [player name] → "requires" → [number] — rather than one
+ * clip per name, since names can't all be known in advance (see Part B of
+ * the voice-clip migration). If the name clip isn't available (never seen
+ * before, and offline, or central generation fails), that one clip is
+ * skipped and only "requires {number}." plays — never a browser-voice
+ * fallback. See queueAudio()'s nameHint param / js/voiceClips.js.
  */
 export function announceRequires(){
   if(!state.x01||!state.cfg||!state.cfg.players) return;
@@ -191,7 +200,9 @@ export function announceRequires(){
   // announcement was built for — i.e. their turn already completed while
   // this was still queued/playing. See invalidateStaleAnnouncements().
   const isStale=()=>state.x01?.scores?.[idx]!==score;
-  speakKeyWithCustom("req_"+name+"_"+score, name+" requires "+numToWords(score)+".", isStale);
+  queueAudio(name, nameClipKey(name), isStale, name);
+  queueAudio("requires", "el_requires", isStale);
+  queueAudio(numToWords(score)+".", `el_num_${score}`, isStale);
 }
 
 
@@ -239,7 +250,7 @@ export function handleVoiceHit(hit){
     if(window._renderX01) window._renderX01();
     if(state.x01.throws.length===3){
       const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
-      const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
+      const hitBull=state.x01.throws.some(t=>t.label==="Bull");
       if(turnScore===0){ speakKeyWithCustom("no_score","No Score!"); }
       else { speakScoreWithCustom(turnScore, hitBull); }
       setTimeout(()=>window._advanceX01&&window._advanceX01(),350);
@@ -274,7 +285,7 @@ export function handleVoiceHit(hit){
 
   const turnScore=state.x01.throws.reduce((s,t)=>s+t.score,0);
   if(state.x01.throws.length===3){
-    const hitBull=state.x01.throws.some(t=>t.label==="Bull"||t.label==="Bull 25");
+    const hitBull=state.x01.throws.some(t=>t.label==="Bull");
     turnScore===0?speakKeyWithCustom("no_score","No Score!"):speakScoreWithCustom(turnScore,hitBull);
   }
 

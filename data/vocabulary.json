@@ -1,0 +1,3137 @@
+[
+  {
+    "key": "el_co_10",
+    "text": "Checkout: Double Five.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_100",
+    "text": "Checkout: Triple Twenty, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_101",
+    "text": "Checkout: Triple Seventeen, Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_102",
+    "text": "Checkout: Triple Twenty, Double One, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_103",
+    "text": "Checkout: Triple Twenty, Triple One, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_104",
+    "text": "Checkout: Triple Eighteen, Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_105",
+    "text": "Checkout: Triple Twenty, Five, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_106",
+    "text": "Checkout: Triple Twenty, Triple Two, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_107",
+    "text": "Checkout: Triple Nineteen, Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_108",
+    "text": "Checkout: Triple Twenty, Double Four, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_109",
+    "text": "Checkout: Triple Twenty, Triple Three, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_11",
+    "text": "Checkout: Triple One, Double Four.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_110",
+    "text": "Checkout: Triple Twenty, Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_111",
+    "text": "Checkout: Triple Twenty, Eleven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_112",
+    "text": "Checkout: Triple Twenty, Triple Four, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_113",
+    "text": "Checkout: Triple Twenty, Thirteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_114",
+    "text": "Checkout: Triple Twenty, Double Seven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_115",
+    "text": "Checkout: Triple Twenty, Triple Five, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_116",
+    "text": "Checkout: Triple Twenty, Double Eight, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_117",
+    "text": "Checkout: Triple Twenty, Seventeen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_118",
+    "text": "Checkout: Triple Twenty, Triple Six, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_119",
+    "text": "Checkout: Triple Twenty, Nineteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_12",
+    "text": "Checkout: Double Six.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_120",
+    "text": "Checkout: Triple Twenty, Double Ten, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_121",
+    "text": "Checkout: Triple Twenty, Triple Seven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_122",
+    "text": "Checkout: Triple Twenty, Double Eleven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_123",
+    "text": "Checkout: Triple Nineteen, Double Thirteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_124",
+    "text": "Checkout: Triple Twenty, Triple Eight, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_125",
+    "text": "Checkout: Triple Twenty, Twenty Five, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_126",
+    "text": "Checkout: Triple Twenty, Double Thirteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_127",
+    "text": "Checkout: Triple Twenty, Triple Nine, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_128",
+    "text": "Checkout: Triple Twenty, Double Fourteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_129",
+    "text": "Checkout: Triple Nineteen, Double Sixteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_13",
+    "text": "Checkout: Five, Double Four.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_130",
+    "text": "Checkout: Triple Twenty, Triple Ten, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_131",
+    "text": "Checkout: Triple Nineteen, Double Seventeen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_132",
+    "text": "Checkout: Triple Twenty, Double Sixteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_133",
+    "text": "Checkout: Triple Twenty, Triple Eleven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_134",
+    "text": "Checkout: Triple Twenty, Double Seventeen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_135",
+    "text": "Checkout: Triple Nineteen, Double Nineteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_136",
+    "text": "Checkout: Triple Twenty, Triple Twelve, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_137",
+    "text": "Checkout: Triple Nineteen, Double Twenty, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_138",
+    "text": "Checkout: Triple Twenty, Double Nineteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_139",
+    "text": "Checkout: Triple Twenty, Triple Thirteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_14",
+    "text": "Checkout: Double Seven.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_140",
+    "text": "Checkout: Triple Twenty, Double Twenty, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_141",
+    "text": "Checkout: Triple Twenty, Triple Nineteen, Double Twelve.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_142",
+    "text": "Checkout: Triple Twenty, Triple Fourteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_143",
+    "text": "Checkout: Triple Twenty, Triple Seventeen, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_144",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Double Twelve.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_145",
+    "text": "Checkout: Triple Twenty, Triple Fifteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_146",
+    "text": "Checkout: Triple Twenty, Triple Eighteen, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_147",
+    "text": "Checkout: Triple Twenty, Triple Seventeen, Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_148",
+    "text": "Checkout: Triple Twenty, Triple Sixteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_149",
+    "text": "Checkout: Triple Twenty, Triple Nineteen, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_15",
+    "text": "Checkout: Seven, Double Four.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_150",
+    "text": "Checkout: Triple Twenty, Triple Eighteen, Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_151",
+    "text": "Checkout: Triple Twenty, Triple Seventeen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_152",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_153",
+    "text": "Checkout: Triple Twenty, Triple Nineteen, Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_154",
+    "text": "Checkout: Triple Twenty, Triple Eighteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_155",
+    "text": "Checkout: Triple Twenty, Triple Nineteen, Double Nineteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_156",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_157",
+    "text": "Checkout: Triple Twenty, Triple Nineteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_158",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Double Nineteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_16",
+    "text": "Checkout: Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_160",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_161",
+    "text": "Checkout: Triple Twenty, Triple Seventeen, Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_164",
+    "text": "Checkout: Triple Twenty, Triple Eighteen, Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_167",
+    "text": "Checkout: Triple Twenty, Triple Nineteen, Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_17",
+    "text": "Checkout: One, Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_170",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_18",
+    "text": "Checkout: Double Nine.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_19",
+    "text": "Checkout: Triple One, Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_2",
+    "text": "Checkout: Double One.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_20",
+    "text": "Checkout: Double Ten.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_21",
+    "text": "Checkout: Five, Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_22",
+    "text": "Checkout: Double Eleven.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_23",
+    "text": "Checkout: Seven, Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_24",
+    "text": "Checkout: Double Twelve.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_25",
+    "text": "Checkout: Triple Three, Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_26",
+    "text": "Checkout: Double Thirteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_27",
+    "text": "Checkout: Eleven, Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_28",
+    "text": "Checkout: Double Fourteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_29",
+    "text": "Checkout: Thirteen, Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_3",
+    "text": "Checkout: One, Double One.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_30",
+    "text": "Checkout: Double Fifteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_31",
+    "text": "Checkout: Triple Five, Double Eight.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_32",
+    "text": "Checkout: Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_33",
+    "text": "Checkout: One, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_34",
+    "text": "Checkout: Double Seventeen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_35",
+    "text": "Checkout: Triple One, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_36",
+    "text": "Checkout: Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_37",
+    "text": "Checkout: Five, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_38",
+    "text": "Checkout: Double Nineteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_39",
+    "text": "Checkout: Seven, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_4",
+    "text": "Checkout: Double Two.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_40",
+    "text": "Checkout: Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_41",
+    "text": "Checkout: One, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_42",
+    "text": "Checkout: Double One, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_43",
+    "text": "Checkout: Triple One, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_44",
+    "text": "Checkout: Double Two, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_45",
+    "text": "Checkout: Five, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_46",
+    "text": "Checkout: Triple Two, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_47",
+    "text": "Checkout: Seven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_48",
+    "text": "Checkout: Double Four, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_49",
+    "text": "Checkout: Triple Three, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_5",
+    "text": "Checkout: One, Double Two.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_50",
+    "text": "Checkout: Bullseye.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_51",
+    "text": "Checkout: Eleven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_52",
+    "text": "Checkout: Triple Four, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_53",
+    "text": "Checkout: Thirteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_54",
+    "text": "Checkout: Double Seven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_55",
+    "text": "Checkout: Triple Five, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_56",
+    "text": "Checkout: Double Eight, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_57",
+    "text": "Checkout: Seventeen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_58",
+    "text": "Checkout: Triple Six, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_59",
+    "text": "Checkout: Nineteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_6",
+    "text": "Checkout: Double Three.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_60",
+    "text": "Checkout: Double Ten, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_61",
+    "text": "Checkout: Triple Seven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_62",
+    "text": "Checkout: Double Eleven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_63",
+    "text": "Checkout: Triple Thirteen, Double Twelve.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_64",
+    "text": "Checkout: Triple Eight, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_65",
+    "text": "Checkout: Twenty Five, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_66",
+    "text": "Checkout: Double Thirteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_67",
+    "text": "Checkout: Triple Nine, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_68",
+    "text": "Checkout: Double Fourteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_69",
+    "text": "Checkout: Triple Fifteen, Double Twelve.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_7",
+    "text": "Checkout: Triple One, Double Two.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_70",
+    "text": "Checkout: Triple Ten, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_71",
+    "text": "Checkout: Triple Thirteen, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_72",
+    "text": "Checkout: Double Sixteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_73",
+    "text": "Checkout: Triple Eleven, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_74",
+    "text": "Checkout: Double Seventeen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_75",
+    "text": "Checkout: Triple Seventeen, Double Twelve.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_76",
+    "text": "Checkout: Triple Twelve, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_77",
+    "text": "Checkout: Triple Fifteen, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_78",
+    "text": "Checkout: Double Nineteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_79",
+    "text": "Checkout: Triple Thirteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_8",
+    "text": "Checkout: Double Four.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_80",
+    "text": "Checkout: Double Twenty, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_81",
+    "text": "Checkout: Triple Nineteen, Double Twelve.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_82",
+    "text": "Checkout: Triple Fourteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_83",
+    "text": "Checkout: Triple Seventeen, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_84",
+    "text": "Checkout: Triple Twenty, Double Twelve.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_85",
+    "text": "Checkout: Triple Fifteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_86",
+    "text": "Checkout: Triple Eighteen, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_87",
+    "text": "Checkout: Triple Seventeen, Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_88",
+    "text": "Checkout: Triple Sixteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_89",
+    "text": "Checkout: Triple Nineteen, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_9",
+    "text": "Checkout: One, Double Four.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_90",
+    "text": "Checkout: Triple Eighteen, Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_91",
+    "text": "Checkout: Triple Seventeen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_92",
+    "text": "Checkout: Triple Twenty, Double Sixteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_93",
+    "text": "Checkout: Triple Nineteen, Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_94",
+    "text": "Checkout: Triple Eighteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_95",
+    "text": "Checkout: Triple Nineteen, Double Nineteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_96",
+    "text": "Checkout: Triple Twenty, Double Eighteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_97",
+    "text": "Checkout: Triple Nineteen, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_98",
+    "text": "Checkout: Triple Twenty, Double Nineteen.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_co_99",
+    "text": "Checkout: Triple Nineteen, Double One, Double Twenty.",
+    "category": "checkout_path"
+  },
+  {
+    "key": "el_bust",
+    "text": "Bust.",
+    "category": "fixed"
+  },
+  {
+    "key": "el_game_on",
+    "text": "Game on!",
+    "category": "fixed"
+  },
+  {
+    "key": "el_no_score",
+    "text": "No score.",
+    "category": "fixed"
+  },
+  {
+    "key": "el_bob27_over",
+    "text": "Game Over!",
+    "category": "party"
+  },
+  {
+    "key": "el_eliminated",
+    "text": "Eliminated!",
+    "category": "party"
+  },
+  {
+    "key": "el_killer",
+    "text": "Killer!",
+    "category": "party"
+  },
+  {
+    "key": "el_out",
+    "text": "Out!",
+    "category": "party"
+  },
+  {
+    "key": "el_party_checkout",
+    "text": "Checkout!",
+    "category": "party"
+  },
+  {
+    "key": "el_shanghai_win",
+    "text": "Shanghai!",
+    "category": "party"
+  },
+  {
+    "key": "el_num_10",
+    "text": "Ten.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_100",
+    "text": "One Hundred.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_101",
+    "text": "One Hundred and One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_102",
+    "text": "One Hundred and Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_103",
+    "text": "One Hundred and Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_104",
+    "text": "One Hundred and Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_105",
+    "text": "One Hundred and Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_106",
+    "text": "One Hundred and Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_107",
+    "text": "One Hundred and Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_108",
+    "text": "One Hundred and Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_109",
+    "text": "One Hundred and Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_11",
+    "text": "Eleven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_110",
+    "text": "One Hundred and Ten.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_111",
+    "text": "One Hundred and Eleven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_112",
+    "text": "One Hundred and Twelve.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_113",
+    "text": "One Hundred and Thirteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_114",
+    "text": "One Hundred and Fourteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_115",
+    "text": "One Hundred and Fifteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_116",
+    "text": "One Hundred and Sixteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_117",
+    "text": "One Hundred and Seventeen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_118",
+    "text": "One Hundred and Eighteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_119",
+    "text": "One Hundred and Nineteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_12",
+    "text": "Twelve.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_120",
+    "text": "One Hundred and Twenty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_121",
+    "text": "One Hundred and Twenty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_122",
+    "text": "One Hundred and Twenty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_123",
+    "text": "One Hundred and Twenty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_124",
+    "text": "One Hundred and Twenty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_125",
+    "text": "One Hundred and Twenty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_126",
+    "text": "One Hundred and Twenty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_127",
+    "text": "One Hundred and Twenty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_128",
+    "text": "One Hundred and Twenty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_129",
+    "text": "One Hundred and Twenty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_13",
+    "text": "Thirteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_130",
+    "text": "One Hundred and Thirty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_131",
+    "text": "One Hundred and Thirty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_132",
+    "text": "One Hundred and Thirty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_133",
+    "text": "One Hundred and Thirty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_134",
+    "text": "One Hundred and Thirty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_135",
+    "text": "One Hundred and Thirty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_136",
+    "text": "One Hundred and Thirty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_137",
+    "text": "One Hundred and Thirty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_138",
+    "text": "One Hundred and Thirty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_139",
+    "text": "One Hundred and Thirty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_14",
+    "text": "Fourteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_140",
+    "text": "One Hundred and Forty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_141",
+    "text": "One Hundred and Forty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_142",
+    "text": "One Hundred and Forty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_143",
+    "text": "One Hundred and Forty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_144",
+    "text": "One Hundred and Forty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_145",
+    "text": "One Hundred and Forty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_146",
+    "text": "One Hundred and Forty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_147",
+    "text": "One Hundred and Forty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_148",
+    "text": "One Hundred and Forty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_149",
+    "text": "One Hundred and Forty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_15",
+    "text": "Fifteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_150",
+    "text": "One Hundred and Fifty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_151",
+    "text": "One Hundred and Fifty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_152",
+    "text": "One Hundred and Fifty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_153",
+    "text": "One Hundred and Fifty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_154",
+    "text": "One Hundred and Fifty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_155",
+    "text": "One Hundred and Fifty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_156",
+    "text": "One Hundred and Fifty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_157",
+    "text": "One Hundred and Fifty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_158",
+    "text": "One Hundred and Fifty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_159",
+    "text": "One Hundred and Fifty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_16",
+    "text": "Sixteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_160",
+    "text": "One Hundred and Sixty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_161",
+    "text": "One Hundred and Sixty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_162",
+    "text": "One Hundred and Sixty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_163",
+    "text": "One Hundred and Sixty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_164",
+    "text": "One Hundred and Sixty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_165",
+    "text": "One Hundred and Sixty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_166",
+    "text": "One Hundred and Sixty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_167",
+    "text": "One Hundred and Sixty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_168",
+    "text": "One Hundred and Sixty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_169",
+    "text": "One Hundred and Sixty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_17",
+    "text": "Seventeen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_170",
+    "text": "One Hundred and Seventy.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_18",
+    "text": "Eighteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_19",
+    "text": "Nineteen.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_2",
+    "text": "Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_20",
+    "text": "Twenty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_21",
+    "text": "Twenty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_22",
+    "text": "Twenty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_23",
+    "text": "Twenty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_24",
+    "text": "Twenty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_25",
+    "text": "Twenty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_26",
+    "text": "Twenty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_27",
+    "text": "Twenty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_28",
+    "text": "Twenty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_29",
+    "text": "Twenty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_3",
+    "text": "Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_30",
+    "text": "Thirty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_31",
+    "text": "Thirty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_32",
+    "text": "Thirty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_33",
+    "text": "Thirty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_34",
+    "text": "Thirty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_35",
+    "text": "Thirty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_36",
+    "text": "Thirty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_37",
+    "text": "Thirty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_38",
+    "text": "Thirty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_39",
+    "text": "Thirty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_4",
+    "text": "Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_40",
+    "text": "Forty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_41",
+    "text": "Forty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_42",
+    "text": "Forty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_43",
+    "text": "Forty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_44",
+    "text": "Forty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_45",
+    "text": "Forty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_46",
+    "text": "Forty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_47",
+    "text": "Forty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_48",
+    "text": "Forty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_49",
+    "text": "Forty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_5",
+    "text": "Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_50",
+    "text": "Fifty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_51",
+    "text": "Fifty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_52",
+    "text": "Fifty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_53",
+    "text": "Fifty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_54",
+    "text": "Fifty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_55",
+    "text": "Fifty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_56",
+    "text": "Fifty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_57",
+    "text": "Fifty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_58",
+    "text": "Fifty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_59",
+    "text": "Fifty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_6",
+    "text": "Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_60",
+    "text": "Sixty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_61",
+    "text": "Sixty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_62",
+    "text": "Sixty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_63",
+    "text": "Sixty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_64",
+    "text": "Sixty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_65",
+    "text": "Sixty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_66",
+    "text": "Sixty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_67",
+    "text": "Sixty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_68",
+    "text": "Sixty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_69",
+    "text": "Sixty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_7",
+    "text": "Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_70",
+    "text": "Seventy.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_71",
+    "text": "Seventy One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_72",
+    "text": "Seventy Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_73",
+    "text": "Seventy Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_74",
+    "text": "Seventy Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_75",
+    "text": "Seventy Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_76",
+    "text": "Seventy Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_77",
+    "text": "Seventy Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_78",
+    "text": "Seventy Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_79",
+    "text": "Seventy Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_8",
+    "text": "Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_80",
+    "text": "Eighty.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_81",
+    "text": "Eighty One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_82",
+    "text": "Eighty Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_83",
+    "text": "Eighty Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_84",
+    "text": "Eighty Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_85",
+    "text": "Eighty Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_86",
+    "text": "Eighty Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_87",
+    "text": "Eighty Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_88",
+    "text": "Eighty Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_89",
+    "text": "Eighty Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_9",
+    "text": "Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_90",
+    "text": "Ninety.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_91",
+    "text": "Ninety One.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_92",
+    "text": "Ninety Two.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_93",
+    "text": "Ninety Three.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_94",
+    "text": "Ninety Four.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_95",
+    "text": "Ninety Five.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_96",
+    "text": "Ninety Six.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_97",
+    "text": "Ninety Seven.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_98",
+    "text": "Ninety Eight.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_num_99",
+    "text": "Ninety Nine.",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_requires",
+    "text": "Requires",
+    "category": "requires_number"
+  },
+  {
+    "key": "el_score_1",
+    "text": "One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_10",
+    "text": "Ten!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_100",
+    "text": "One hundred!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_101",
+    "text": "One Hundred and One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_102",
+    "text": "One Hundred and Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_103",
+    "text": "One Hundred and Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_104",
+    "text": "One Hundred and Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_105",
+    "text": "One Hundred and Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_106",
+    "text": "One Hundred and Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_107",
+    "text": "One Hundred and Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_108",
+    "text": "One Hundred and Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_109",
+    "text": "One Hundred and Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_11",
+    "text": "Eleven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_110",
+    "text": "One Hundred and Ten!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_111",
+    "text": "One Hundred and Eleven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_112",
+    "text": "One Hundred and Twelve!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_113",
+    "text": "One Hundred and Thirteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_114",
+    "text": "One Hundred and Fourteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_115",
+    "text": "One Hundred and Fifteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_116",
+    "text": "One Hundred and Sixteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_117",
+    "text": "One Hundred and Seventeen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_118",
+    "text": "One Hundred and Eighteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_119",
+    "text": "One Hundred and Nineteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_12",
+    "text": "Twelve!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_120",
+    "text": "One Hundred and Twenty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_121",
+    "text": "One hundred, and twenty one!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_122",
+    "text": "One Hundred and Twenty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_123",
+    "text": "One Hundred and Twenty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_124",
+    "text": "One Hundred and Twenty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_125",
+    "text": "One Hundred and Twenty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_126",
+    "text": "One Hundred and Twenty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_127",
+    "text": "One Hundred and Twenty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_128",
+    "text": "One Hundred and Twenty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_129",
+    "text": "One Hundred and Twenty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_13",
+    "text": "Thirteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_130",
+    "text": "One Hundred and Thirty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_131",
+    "text": "One Hundred and Thirty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_132",
+    "text": "One Hundred and Thirty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_133",
+    "text": "One Hundred and Thirty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_134",
+    "text": "One Hundred and Thirty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_135",
+    "text": "One Hundred and Thirty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_136",
+    "text": "One Hundred and Thirty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_137",
+    "text": "One Hundred and Thirty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_138",
+    "text": "One Hundred and Thirty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_139",
+    "text": "One Hundred and Thirty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_14",
+    "text": "Fourteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_140",
+    "text": "One hundred, and forty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_141",
+    "text": "One Hundred and Forty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_142",
+    "text": "One Hundred and Forty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_143",
+    "text": "One Hundred and Forty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_144",
+    "text": "One Hundred and Forty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_145",
+    "text": "One Hundred and Forty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_146",
+    "text": "One Hundred and Forty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_147",
+    "text": "One Hundred and Forty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_148",
+    "text": "One Hundred and Forty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_149",
+    "text": "One Hundred and Forty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_15",
+    "text": "Fifteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_150",
+    "text": "One Hundred and Fifty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_151",
+    "text": "One Hundred and Fifty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_152",
+    "text": "One Hundred and Fifty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_153",
+    "text": "One Hundred and Fifty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_154",
+    "text": "One Hundred and Fifty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_155",
+    "text": "One Hundred and Fifty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_156",
+    "text": "One Hundred and Fifty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_157",
+    "text": "One Hundred and Fifty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_158",
+    "text": "One Hundred and Fifty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_159",
+    "text": "One Hundred and Fifty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_16",
+    "text": "Sixteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_160",
+    "text": "One hundred, and sixty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_161",
+    "text": "One Hundred and Sixty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_162",
+    "text": "One Hundred and Sixty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_164",
+    "text": "One Hundred and Sixty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_165",
+    "text": "One Hundred and Sixty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_167",
+    "text": "One hundred, and sixty seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_168",
+    "text": "One Hundred and Sixty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_17",
+    "text": "Seventeen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_170",
+    "text": "One Hundred and Seventy!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_171",
+    "text": "One hundred, and seventy one!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_174",
+    "text": "One Hundred and Seventy Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_177",
+    "text": "One Hundred and Seventy Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_18",
+    "text": "Eighteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_180b",
+    "text": "One hundred and eighty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_19",
+    "text": "Nineteen!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_2",
+    "text": "Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_20",
+    "text": "Twenty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_21",
+    "text": "Twenty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_22",
+    "text": "Twenty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_23",
+    "text": "Twenty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_24",
+    "text": "Twenty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_25",
+    "text": "Twenty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_26",
+    "text": "Twenty, six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_27",
+    "text": "Twenty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_28",
+    "text": "Twenty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_29",
+    "text": "Twenty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_3",
+    "text": "Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_30",
+    "text": "Thirty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_31",
+    "text": "Thirty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_32",
+    "text": "Thirty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_33",
+    "text": "Thirty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_34",
+    "text": "Thirty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_35",
+    "text": "Thirty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_36",
+    "text": "Thirty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_37",
+    "text": "Thirty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_38",
+    "text": "Thirty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_39",
+    "text": "Thirty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_4",
+    "text": "Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_40",
+    "text": "Forty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_41",
+    "text": "Forty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_42",
+    "text": "Forty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_43",
+    "text": "Forty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_44",
+    "text": "Forty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_45",
+    "text": "Forty five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_46",
+    "text": "Forty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_47",
+    "text": "Forty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_48",
+    "text": "Forty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_49",
+    "text": "Forty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_5",
+    "text": "Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_50_bull",
+    "text": "Bull's Eye!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_50_norm",
+    "text": "Fifty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_51",
+    "text": "Fifty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_52",
+    "text": "Fifty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_53",
+    "text": "Fifty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_54",
+    "text": "Fifty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_55",
+    "text": "Fifty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_56",
+    "text": "Fifty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_57",
+    "text": "Fifty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_58",
+    "text": "Fifty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_59",
+    "text": "Fifty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_6",
+    "text": "Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_60",
+    "text": "Sixty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_61",
+    "text": "Sixty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_62",
+    "text": "Sixty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_63",
+    "text": "Sixty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_64",
+    "text": "Sixty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_65",
+    "text": "Sixty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_66",
+    "text": "Sixty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_67",
+    "text": "Sixty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_68",
+    "text": "Sixty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_69",
+    "text": "Sixty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_7",
+    "text": "Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_70",
+    "text": "Seventy!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_71",
+    "text": "Seventy One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_72",
+    "text": "Seventy Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_73",
+    "text": "Seventy Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_74",
+    "text": "Seventy Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_75",
+    "text": "Seventy Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_76",
+    "text": "Seventy Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_77",
+    "text": "Seventy Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_78",
+    "text": "Seventy Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_79",
+    "text": "Seventy Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_8",
+    "text": "Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_80",
+    "text": "Eighty!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_81",
+    "text": "Eighty One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_82",
+    "text": "Eighty Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_83",
+    "text": "Eighty Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_84",
+    "text": "Eighty Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_85",
+    "text": "Eighty Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_86",
+    "text": "Eighty Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_87",
+    "text": "Eighty Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_88",
+    "text": "Eighty Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_89",
+    "text": "Eighty Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_9",
+    "text": "Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_90",
+    "text": "Ninety!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_91",
+    "text": "Ninety One!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_92",
+    "text": "Ninety Two!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_93",
+    "text": "Ninety Three!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_94",
+    "text": "Ninety Four!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_95",
+    "text": "Ninety Five!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_96",
+    "text": "Ninety Six!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_97",
+    "text": "Ninety Seven!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_98",
+    "text": "Ninety Eight!",
+    "category": "score"
+  },
+  {
+    "key": "el_score_99",
+    "text": "Ninety Nine!",
+    "category": "score"
+  },
+  {
+    "key": "el_slang_bed_and_breakfast_",
+    "text": "Bed and Breakfast!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_double_top_game_shot_",
+    "text": "Double Top! Game Shot!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_fish_and_chips_",
+    "text": "Fish and Chips!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_game_shot_",
+    "text": "Game Shot!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_good_darts_",
+    "text": "Good Darts!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_madhouse_",
+    "text": "Madhouse!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_richmond_",
+    "text": "Richmond!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_shanghai_",
+    "text": "Shanghai!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_slightly_more_than_breakfast_",
+    "text": "Slightly more than breakfast!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_three_in_a_bed_",
+    "text": "Three in a Bed!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_ton_",
+    "text": "Ton!",
+    "category": "slang"
+  },
+  {
+    "key": "el_slang_ton_forty_",
+    "text": "Ton Forty!",
+    "category": "slang"
+  },
+  {
+    "key": "el_pct_0",
+    "text": "Zero percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_1",
+    "text": "One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_10",
+    "text": "Ten percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_100",
+    "text": "One Hundred percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_11",
+    "text": "Eleven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_12",
+    "text": "Twelve percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_13",
+    "text": "Thirteen percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_14",
+    "text": "Fourteen percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_15",
+    "text": "Fifteen percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_16",
+    "text": "Sixteen percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_17",
+    "text": "Seventeen percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_18",
+    "text": "Eighteen percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_19",
+    "text": "Nineteen percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_2",
+    "text": "Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_20",
+    "text": "Twenty percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_21",
+    "text": "Twenty One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_22",
+    "text": "Twenty Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_23",
+    "text": "Twenty Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_24",
+    "text": "Twenty Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_25",
+    "text": "Twenty Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_26",
+    "text": "Twenty Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_27",
+    "text": "Twenty Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_28",
+    "text": "Twenty Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_29",
+    "text": "Twenty Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_3",
+    "text": "Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_30",
+    "text": "Thirty percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_31",
+    "text": "Thirty One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_32",
+    "text": "Thirty Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_33",
+    "text": "Thirty Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_34",
+    "text": "Thirty Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_35",
+    "text": "Thirty Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_36",
+    "text": "Thirty Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_37",
+    "text": "Thirty Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_38",
+    "text": "Thirty Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_39",
+    "text": "Thirty Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_4",
+    "text": "Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_40",
+    "text": "Forty percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_41",
+    "text": "Forty One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_42",
+    "text": "Forty Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_43",
+    "text": "Forty Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_44",
+    "text": "Forty Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_45",
+    "text": "Forty Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_46",
+    "text": "Forty Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_47",
+    "text": "Forty Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_48",
+    "text": "Forty Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_49",
+    "text": "Forty Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_5",
+    "text": "Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_50",
+    "text": "Fifty percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_51",
+    "text": "Fifty One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_52",
+    "text": "Fifty Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_53",
+    "text": "Fifty Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_54",
+    "text": "Fifty Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_55",
+    "text": "Fifty Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_56",
+    "text": "Fifty Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_57",
+    "text": "Fifty Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_58",
+    "text": "Fifty Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_59",
+    "text": "Fifty Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_6",
+    "text": "Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_60",
+    "text": "Sixty percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_61",
+    "text": "Sixty One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_62",
+    "text": "Sixty Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_63",
+    "text": "Sixty Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_64",
+    "text": "Sixty Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_65",
+    "text": "Sixty Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_66",
+    "text": "Sixty Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_67",
+    "text": "Sixty Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_68",
+    "text": "Sixty Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_69",
+    "text": "Sixty Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_7",
+    "text": "Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_70",
+    "text": "Seventy percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_71",
+    "text": "Seventy One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_72",
+    "text": "Seventy Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_73",
+    "text": "Seventy Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_74",
+    "text": "Seventy Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_75",
+    "text": "Seventy Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_76",
+    "text": "Seventy Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_77",
+    "text": "Seventy Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_78",
+    "text": "Seventy Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_79",
+    "text": "Seventy Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_8",
+    "text": "Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_80",
+    "text": "Eighty percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_81",
+    "text": "Eighty One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_82",
+    "text": "Eighty Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_83",
+    "text": "Eighty Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_84",
+    "text": "Eighty Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_85",
+    "text": "Eighty Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_86",
+    "text": "Eighty Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_87",
+    "text": "Eighty Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_88",
+    "text": "Eighty Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_89",
+    "text": "Eighty Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_9",
+    "text": "Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_90",
+    "text": "Ninety percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_91",
+    "text": "Ninety One percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_92",
+    "text": "Ninety Two percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_93",
+    "text": "Ninety Three percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_94",
+    "text": "Ninety Four percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_95",
+    "text": "Ninety Five percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_96",
+    "text": "Ninety Six percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_97",
+    "text": "Ninety Seven percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_98",
+    "text": "Ninety Eight percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_pct_99",
+    "text": "Ninety Nine percent.",
+    "category": "training_pct"
+  },
+  {
+    "key": "el_training_complete",
+    "text": "Training complete.",
+    "category": "training_pct"
+  }
+]
