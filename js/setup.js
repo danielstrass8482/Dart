@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { startX01 } from './x01.js?v=2';
+import { startX01, legDarts } from './x01.js?v=2';
 import { startCricket } from './cricket.js';
 import { startParty } from './party.js';
 import { collectHealthData } from './coach.js';
@@ -243,6 +243,10 @@ export async function saveGameToFirebase(winnerIdx){
       return {name, id:state.cfg.playerIds?.[i]||null, avg3:avg, best3:best,
         checkoutAtt:state.x01.checkoutAttempts[i], checkoutHit:state.x01.checkoutHits[i],
         first9:state.x01.first9?.[i]||null,
+        // Darts thrown in this leg (each leg is saved as its own game doc).
+        // Only present in games saved from 2026-11-22 on — older docs can't
+        // reconstruct it (scatter holds board taps only, no misses/bouncers).
+        darts:legDarts(i),
         doubleStats:state.x01.doubleStats?.[i]||{},
         scatter, winner:i===winnerIdx};
     } else {

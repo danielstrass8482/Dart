@@ -6,7 +6,7 @@ import { state } from './state.js';
 import { numToWords, speakKeyWithCustom, speakScoreWithCustom, queueAudio } from './audio.js';
 import { nameClipKey } from './voiceClips.js';
 import { flashSegment } from './board.js?v=2';
-import { requiresDelay } from './x01.js?v=2';
+import { requiresDelay, x01Snapshot } from './x01.js?v=2';
 import { t } from './i18n.js?v=3';
 
 // ── Voice parser vocabulary ───────────────────────────────────────
@@ -223,13 +223,7 @@ export function maybeRestartMic(){
 export function handleVoiceHit(hit){
   if(state.x01.winner||state.x01.bust||state.x01.throws.length>=3) return;
 
-  state.x01.history.push({
-    scores:[...state.x01.scores], current:state.x01.current, round:state.x01.round,
-    throws:[...state.x01.throws], bust:state.x01.bust,
-    historicLens:state.x01.historicThrows.map(a=>a.length),
-    lastTurnThrows:state.x01.lastTurnThrows.map(a=>[...a]),
-    turnScores:state.x01.turnScores.map(a=>[...a])
-  });
+  state.x01.history.push(x01Snapshot());
 
   // PDC checkout attempt: count once per turn at turn start when score ≤170
   if(state.x01.throws.length===0&&

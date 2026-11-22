@@ -170,6 +170,14 @@ service cloud.firestore {
 - Doppelfeld-Tabelle: Versuche, Treffer, Quote mit Balken
 - Verlaufschart: Canvas-basiert, bis zu 3 KPIs gleichzeitig
 - Trefferbild: Mini-Dartscheibe mit Scatter-Dots
+- **Firestore-Abfrage:** genau eine — `dartDB.loadStats()` = `dart_games` where `userId==uid` orderBy `ts desc` limit 200. Spieler/Zeitraum/Modus (`context`) filtert `js/stats.js` im Browser → keine weiteren Composite-Indexe nötig. `firestore.indexes.json` == Projekt (5 Indexe, alle READY, geprüft 2026-11-22 per `gcloud firestore indexes composite list`). Neue serverseitige Filter (`where("context"…)` o. ä.) brauchen einen neuen Index in der Datei + `firebase deploy --only firestore:indexes`
+- **Achtung limit(200):** „Alles“ zeigt nur die letzten 200 Leg-Dokumente (jedes Leg = eigenes `dart_games`-Dokument)
+
+### Darts pro Leg (seit 2026-11-22)
+- `state.x01.turnDarts[i]` = Darts je abgeschlossener Aufnahme (Bust: tatsächlich geworfene), `legDarts(i)` = Summe + laufende Aufnahme. Bouncer zählen (sind in `throws`), per Undo zurückgenommene Würfe nicht: alle Undo-Snapshots kommen aus `x01Snapshot()` (x01/Bouncer/Sprache/Bot)
+- Anzeige: 2 Spieler → Mittelspalte unter dem Leg-Stand („4:3 DARTS“, TOTAL zusätzlich „Ø/LEG“); Solo → Badge neben WINNER. Bewusst keine Tabellenzeile — so bleiben Board-Größe/-Position, Tabs und Chip-Leiste pixelgleich
+- Gespeichert als `players[].darts` im Leg-Dokument — erst ab 2026-11-22; ältere Spiele haben keine Angabe (aus `scatter`/`rounds` nicht rekonstruierbar: Fehlwürfe per Button, Bouncer und Darts der letzten Aufnahme fehlen dort)
+- Test: `node tests/leg-darts.test.mjs [--layout]` (normal / Bouncer / Undo / Bust / Solo, 3 Viewports; `BASE=https://play.darttrainer.app` für live)
 
 ---
 

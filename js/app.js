@@ -299,6 +299,8 @@ document.getElementById("x01-undo").addEventListener("click",()=>{
   last.historicLens.forEach((len,i)=>{ state.x01.historicThrows[i]=state.x01.historicThrows[i].slice(0,len); });
   state.x01.lastTurnThrows=last.lastTurnThrows.map(a=>[...a]);
   state.x01.turnScores=last.turnScores.map(a=>[...a]);
+  if(last.turnDarts) state.x01.turnDarts=last.turnDarts.map(a=>[...a]);
+  if(last.bouncers) state.x01.bouncers=[...last.bouncers];
   state.x01.winner=null;
   document.getElementById("winner-overlay").classList.remove("visible");
   redrawAllHits(state.boardSVG,state.x01.historicThrows[state.x01.current],state.x01.throws);

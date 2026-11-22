@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { speakKeyWithCustom, speakScoreWithCustom } from './audio.js';
 import { SECTORS, R, clearCheckout, disableBoard, redrawAllHits } from './board.js?v=2';
+import { x01Snapshot, recordTurnDarts } from './x01.js?v=2';
 
 export const BOT_ACCURACY={ easy:0.22, medium:0.52, pro:0.82 };
 
@@ -230,13 +231,7 @@ export function runBotTurn(){
 
   turns.forEach((t,i)=>{
     setTimeout(()=>{
-      state.x01.history.push({
-        scores:[...state.x01.scores],current:state.x01.current,round:state.x01.round,
-        throws:[...state.x01.throws],bust:state.x01.bust,
-        historicLens:state.x01.historicThrows.map(a=>a.length),
-        lastTurnThrows:state.x01.lastTurnThrows.map(a=>[...a]),
-        turnScores:state.x01.turnScores.map(a=>[...a])
-      });
+      state.x01.history.push(x01Snapshot());
 
       state.x01.throws.push(t);
       state.x01.allThrows[botIdx].push(t);
@@ -265,11 +260,8 @@ export function runBotTurn(){
             speakKeyWithCustom("bust","Bust!");
             if(window._renderX01) window._renderX01();
             setTimeout(()=>{
-              state.x01.history.push({scores:[...state.x01.scores],current:state.x01.current,round:state.x01.round,
-                throws:[...state.x01.throws],bust:true,
-                historicLens:state.x01.historicThrows.map(a=>a.length),
-                lastTurnThrows:state.x01.lastTurnThrows.map(a=>[...a]),
-                turnScores:state.x01.turnScores.map(a=>[...a])});
+              state.x01.history.push(x01Snapshot());
+              recordTurnDarts(botIdx);
               state.x01.lastTurnThrows[botIdx]=[...state.x01.throws];
               state.x01.historicThrows[botIdx].push(...state.x01.throws.filter(t2=>t2.svgX!=null));
               state.x01.throws=[]; state.x01.bust=false;

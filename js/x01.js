@@ -91,6 +91,9 @@ export async function startX01(starter=0){
     checkoutAttemptThisTurn: false,
     doubleStats: state.cfg.players.map(()=>({})),
     bouncers: state.cfg.players.map(()=>0),
+    // Darts thrown per completed turn (1-3; busts end early). Undo restores it
+    // from x01Snapshot(), so retracted darts never count. See legDarts().
+    turnDarts: state.cfg.players.map(()=>[]),
     lastAnnouncedCheckout: state.cfg.players.map(()=>null),
     startTime: Date.now()
   };
@@ -332,16 +335,7 @@ export function handleX01Click(e){
 export function processX01Hit(hit, svgX=null, svgY=null){
   if(state.x01.winner||state.x01.bust||state.x01.throws.length>=3) return;
 
-  state.x01.history.push({
-    scores:[...state.x01.scores],
-    current:state.x01.current,
-    round:state.x01.round,
-    throws:[...state.x01.throws],
-    bust:state.x01.bust,
-    historicLens:state.x01.historicThrows.map(a=>a.length),
-    lastTurnThrows:state.x01.lastTurnThrows.map(a=>[...a]),
-    turnScores:state.x01.turnScores.map(a=>[...a])
-  });
+  state.x01.history.push(x01Snapshot());
 
   const throwObj={...hit,svgX,svgY,leg:state.cfg.currentLeg||1};
 
@@ -432,10 +426,12 @@ export function handleBouncer(){
   const pi=state.x01.current;
   const spent=state.x01.throws.reduce((s,t)=>s+t.score,0);
   const remaining=state.x01.scores[pi]-spent;
+  // Full snapshot first: the old {scores,throws,bust}-only entry made Undo
+  // right after a bouncer throw (historicLens undefined) and corrupt the turn.
+  state.x01.history.push(x01Snapshot());
   if(remaining<=40&&remaining%2===0&&remaining>1)
     trackDoubleAttempt(pi, remaining, {label:"↩",bouncer:true});
   state.x01.bouncers[pi]++;
-  state.x01.history.push({scores:[...state.x01.scores],throws:[...state.x01.throws],bust:state.x01.bust});
   state.x01.throws.push({score:0,label:"↩",bouncer:true,miss:false});
   renderX01();
   if(state.x01.throws.length===3){
@@ -472,6 +468,41 @@ function _scheduleNextPlayerAnnounce(nextIdx){
 }
 
 /**
+ * Undo snapshot of the X01 turn state. Every code path that changes throws or
+ * ends a turn (board/keypad, bouncer, voice, bot, advance) pushes this, so the
+ * Undo button restores all of it consistently — including the dart counts.
+ */
+export function x01Snapshot(){
+  const x=state.x01;
+  return {
+    scores:[...x.scores], current:x.current, round:x.round,
+    throws:[...x.throws], bust:x.bust,
+    historicLens:x.historicThrows.map(a=>a.length),
+    lastTurnThrows:x.lastTurnThrows.map(a=>[...a]),
+    turnScores:x.turnScores.map(a=>[...a]),
+    turnDarts:(x.turnDarts||[]).map(a=>[...a]),
+    bouncers:[...(x.bouncers||[])]
+  };
+}
+
+/** Records how many darts player pi threw in the turn that is ending now. */
+export function recordTurnDarts(pi){
+  if(state.x01.turnDarts?.[pi]) state.x01.turnDarts[pi].push(state.x01.throws.length);
+}
+
+/**
+ * Darts player i has thrown in the current leg: completed turns + the turn in
+ * progress (the checkout turn stays in throws until the next leg starts).
+ * Misses, bouncers and bust darts count; undone darts don't. null if the leg
+ * predates turnDarts tracking.
+ */
+export function legDarts(i){
+  const x=state.x01;
+  if(!x?.turnDarts?.[i]) return null;
+  return x.turnDarts[i].reduce((a,b)=>a+b,0)+(x.current===i?x.throws.length:0);
+}
+
+/**
  * Advances to the next player after a turn.
  */
 export function advanceX01(){
@@ -480,11 +511,8 @@ export function advanceX01(){
   state.x01.checkoutAttemptThisTurn=false;
 
   if(state.x01.bust){
-    state.x01.history.push({scores:[...state.x01.scores],current:pi,round:state.x01.round,
-      throws:[...state.x01.throws],bust:true,
-      historicLens:state.x01.historicThrows.map(a=>a.length),
-      lastTurnThrows:state.x01.lastTurnThrows.map(a=>[...a]),
-      turnScores:state.x01.turnScores.map(a=>[...a])});
+    state.x01.history.push(x01Snapshot());
+    recordTurnDarts(pi);
     state.x01.lastTurnThrows[pi]=[...state.x01.throws];
     state.x01.historicThrows[pi].push(...state.x01.throws.filter(t=>t.svgX!=null));
     state.x01.throws=[]; state.x01.bust=false;
@@ -500,11 +528,8 @@ export function advanceX01(){
   }
 
   const spent=state.x01.throws.reduce((s,t)=>s+t.score,0);
-  state.x01.history.push({scores:[...state.x01.scores],current:pi,round:state.x01.round,
-    throws:[...state.x01.throws],bust:false,
-    historicLens:state.x01.historicThrows.map(a=>a.length),
-    lastTurnThrows:state.x01.lastTurnThrows.map(a=>[...a]),
-    turnScores:state.x01.turnScores.map(a=>[...a])});
+  state.x01.history.push(x01Snapshot());
+  recordTurnDarts(pi);
   state.x01.turnScores[pi].push(spent);
   if(state.x01.turnScores[pi].length>=3&&state.x01.first9[pi]===null)
     state.x01.first9[pi]=Math.round(state.x01.turnScores[pi].reduce((a,b)=>a+b,0)/3*10)/10;
@@ -571,10 +596,15 @@ function buildTvStatsHTML(players, mode, legLabel, big=false) {
   if (players.length === 1) {
     const s = players[0];
     const coPct = s.coAtt>0 ? `${s.coHit}/${s.coAtt} (${s.coPct}%)` : '—';
+    // Solo: darts go next to the WINNER badge (same badge height, same line),
+    // so the header and everything below it keep their exact position.
+    const dartsBadge = s.darts!=null
+      ? `<div class="tv-winner-badge tv-darts-badge" data-darts="${s.dartsDisp}">${s.darts} DARTS${s.dartsAvg!=null?` · Ø ${s.dartsAvg}/LEG`:''}</div>`
+      : '';
     return `<div class="${wrapCls}">${hdr}
       <div class="tv-header"><div class="tv-player tv-player-center">
         ${avatar(s)}<div class="tv-pname">${s.displayName}</div>
-        ${s.isWinner?'<div class="tv-winner-badge">WINNER</div>':''}
+        ${s.isWinner||dartsBadge?`<div class="tv-badge-row">${s.isWinner?'<div class="tv-winner-badge">WINNER</div>':''}${dartsBadge}</div>`:''}
       </div></div>
       <div class="tv-stats-table">
         <div class="tv-single-row"><span class="tv-single-label">THREE-DART AVERAGE</span><span class="tv-single-val">${s.avg}</span></div>
@@ -597,6 +627,16 @@ function buildTvStatsHTML(players, mode, legLabel, big=false) {
   const headerScore = p1.score!=null
     ? `<div class="tv-result-score">${p1.score}<span class="tv-result-sep">:</span>${p2.score}</div><div class="tv-result-label">${p1.scoreLabel||''}</div>`
     : `<div class="tv-result-score">${state.cfg.legWins[p1.idx]}<span class="tv-result-sep">:</span>${state.cfg.legWins[p2.idx]}</div><div class="tv-result-label">LEGS</div>`;
+  // Darts thrown sit in the centre column under the score: that column is far
+  // shorter than the avatar columns beside it, so the header — and with it the
+  // stat table, mini-boards, tabs and leg chips — keeps its exact height.
+  const dartsBlock = p1.darts!=null&&p2.darts!=null
+    ? `<div class="tv-result-darts" data-left="${p1.dartsDisp}" data-right="${p2.dartsDisp}">
+        <div class="tv-result-darts-val">${p1.darts}<span class="tv-result-darts-sep">:</span>${p2.darts}</div>
+        <div class="tv-result-label">DARTS</div>
+        ${p1.dartsAvg!=null&&p2.dartsAvg!=null?`<div class="tv-result-label tv-result-darts-avg">Ø/LEG ${p1.dartsAvg} : ${p2.dartsAvg}</div>`:''}
+      </div>`
+    : '';
 
   return `<div class="${wrapCls}">${hdr}
     <div class="tv-header">
@@ -604,7 +644,7 @@ function buildTvStatsHTML(players, mode, legLabel, big=false) {
         ${avatar(p1)}<div class="tv-pname">${p1.displayName}</div>
         ${p1.isWinner?'<div class="tv-winner-badge">WINNER</div>':'<div class="tv-winner-badge-ph"></div>'}
       </div>
-      <div class="tv-result">${headerScore}</div>
+      <div class="tv-result">${headerScore}${dartsBlock}</div>
       <div class="tv-player tv-player-r">
         ${avatar(p2)}<div class="tv-pname">${p2.displayName}</div>
         ${p2.isWinner?'<div class="tv-winner-badge">WINNER</div>':'<div class="tv-winner-badge-ph"></div>'}
@@ -649,6 +689,7 @@ export function handleLegWin(winnerIdx){
     checkoutAttempts: state.cfg.players.map((_,i)=>state.x01.checkoutAttempts?.[i]||0),
     checkoutHits: state.cfg.players.map((_,i)=>state.x01.checkoutHits?.[i]||0),
     checkoutScores: state.cfg.players.map((_,i)=>[...(state.x01.checkoutScores?.[i]||[])]),
+    darts: state.cfg.players.map((_,i)=>legDarts(i)),
     throws: state.cfg.players.map((_,i)=>[
       ...state.x01.historicThrows[i].filter(t=>t.svgX!=null),
       ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null):[])
@@ -733,7 +774,7 @@ const _toMiniDot=t=>({x:t.svgX,y:t.svgY,v:2,miss:t.miss,label:t.label});
 function buildPlayerStats(perPlayer, winnerIdx, withMatchScore=false){
   return state.cfg.players.map((p,i)=>{
     if(state.cfg.isBot?.[i]) return null;
-    const {turns,coAtt,coHit,allCheckouts,dots}=perPlayer[i];
+    const {turns,coAtt,coHit,allCheckouts,dots,darts=null,dartsLegs=1}=perPlayer[i];
     if(!turns.length) return null;
     const avg=Math.round(turns.reduce((a,b)=>a+b,0)/turns.length*10)/10;
     const s180=turns.filter(v=>v===180).length;
@@ -751,7 +792,10 @@ function buildPlayerStats(perPlayer, winnerIdx, withMatchScore=false){
       if(state.cfg.totalSets>1){ score=state.cfg.setWins[i]; scoreLabel='SETS WON'; }
       else if(state.cfg.totalLegs>1){ score=state.cfg.legWins[i]; scoreLabel='LEGS WON'; }
     }
-    return {avg,s180,s140,s100,coAtt,coHit,coPct,highCo,displayName,photoUrl,isWinner,idx:i,dots,score,scoreLabel};
+    // Match total over >1 leg: "total (Ø per leg)"; a single leg: just the count.
+    const dartsAvg=darts!=null&&dartsLegs>1?Math.round(darts/dartsLegs*10)/10:null;
+    const dartsDisp=darts==null?null:dartsAvg!=null?`${darts} (Ø ${dartsAvg})`:`${darts}`;
+    return {avg,s180,s140,s100,coAtt,coHit,coPct,highCo,displayName,photoUrl,isWinner,idx:i,dots,score,scoreLabel,darts,dartsAvg,dartsDisp};
   }).filter(Boolean);
 }
 
@@ -772,6 +816,13 @@ function renderStatsSummary(sumEl, pfx, legLabel, humanStats, overlayId){
   });
 }
 
+/** Total darts over all finished legs (legStatsHistory) + Ø per leg; {} if any leg lacks the count. */
+function _matchDarts(i){
+  const legs=state.cfg.legStatsHistory||[];
+  if(!legs.length||legs.some(l=>l.darts?.[i]==null)) return {};
+  return {darts:legs.reduce((a,l)=>a+l.darts[i],0), dartsLegs:legs.length};
+}
+
 /** Builds the {turns,coAtt,coHit,allCheckouts,dots} array for the combined match total (all legs so far). */
 function _matchTotalPerPlayer(){
   return state.cfg.players.map((_,i)=>({
@@ -779,6 +830,7 @@ function _matchTotalPerPlayer(){
     coAtt: (state.cfg.accumulated?.checkoutAttempts?.[i]||0)+(state.x01.checkoutAttempts?.[i]||0),
     coHit: (state.cfg.accumulated?.checkoutHits?.[i]||0)+(state.x01.checkoutHits?.[i]||0),
     allCheckouts: [...(state.cfg.accumulated?.checkoutScores?.[i]||[]),...(state.x01.checkoutScores?.[i]||[])],
+    ..._matchDarts(i),
     dots: [
       ...(state.cfg.accumulated?.historicThrows?.[i]||[]).map(_toMiniDot),
       ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(_toMiniDot),
@@ -807,6 +859,7 @@ function _renderWinnerLegView(legIdx, matchWinnerIdx){
     coAtt: leg.checkoutAttempts[i]||0,
     coHit: leg.checkoutHits[i]||0,
     allCheckouts: leg.checkoutScores[i]||[],
+    darts: leg.darts?.[i]??null,
     dots: (leg.throws[i]||[]).map(_toMiniDot)
   }));
   renderStatsSummary(sumEl,'winner',leg.label,buildPlayerStats(perPlayer,leg.winnerIdx),'winner-overlay');
@@ -852,6 +905,7 @@ export function showWinner(name, round, isLeg=false, legLabel=null){
         coAtt: state.x01.checkoutAttempts[i]||0,
         coHit: state.x01.checkoutHits[i]||0,
         allCheckouts: state.x01.checkoutScores?.[i]||[],
+        darts: legDarts(i),
         dots: [
           ...state.x01.historicThrows[i].filter(t=>t.svgX!=null).map(_toMiniDot),
           ...(state.x01.current===i?state.x01.throws.filter(t=>t.svgX!=null).map(_toMiniDot):[])

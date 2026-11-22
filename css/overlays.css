@@ -59,6 +59,12 @@
 .tv-result-score { font-family:'Bebas Neue',sans-serif; font-size:44px; color:var(--dart-text); line-height:1; }
 .tv-result-sep { color:var(--dart-text-sec); margin:0 3px; font-size:32px; vertical-align:middle; }
 .tv-result-label { font-size:9px; letter-spacing:3px; color:var(--dart-text-sec); margin-top:2px; }
+.tv-result-darts { margin-top:10px; display:flex; flex-direction:column; align-items:center; }
+.tv-result-darts-val { font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--dart-text); line-height:1; white-space:nowrap; }
+.tv-result-darts-sep { color:var(--dart-text-sec); margin:0 3px; font-size:20px; vertical-align:middle; }
+.tv-result-darts-avg { letter-spacing:1px; white-space:nowrap; }
+.tv-badge-row { display:flex; gap:6px; justify-content:center; align-items:center; }
+.tv-darts-badge { color:var(--dart-text-sec); background:var(--dart-bg-chip); border-color:var(--dart-border); }
 .tv-stats-table { border-top:1px solid rgba(255,255,255,0.08); padding:4px 0 6px; margin-bottom:14px; }
 .tv-stat-row { display:grid; grid-template-columns:1fr 44% 1fr; align-items:center; gap:0; padding:5px 0 3px; border-bottom:1px solid rgba(255,255,255,0.05); }
 .tv-stat-row:last-child { border-bottom:none; }
