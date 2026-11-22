@@ -132,6 +132,7 @@ service cloud.firestore {
 - Format: `data/voice-format.json` — MP3 mono 24 kHz LAME VBR V6 (~1/3 von ElevenLabs' mp3_44100_128). Generierung (`scripts/gen-voice-assets.js`) und `dartVoiceName` (ffmpeg-static) wandeln automatisch um; Bestand: `FFMPEG=… node scripts/transcode-voice-assets.js` (idempotent, schreibt `assets/voice/<v>/index.json` mit `rev`)
 - Storage-Pakete: `node scripts/upload-voice-assets.js --bulk`; Android-Bundle (nur George): `npm run build`
 - Web/PWA: `sw.js` + `js/pwa.js` — Service Worker erst nach App-Start registriert, George-Clips danach im Hintergrund in den SW-Cache (offline nach erstem Besuch). In Capacitor nicht aktiv. Tests: `tests/offline-leg.test.mjs`, `tests/pwa-offline.test.mjs`, Messung: `tests/pwa-load.measure.mjs`
+- Installierbar via `manifest.webmanifest` (Icons `icons/icon-192.png`, `icon-512.png` = any+maskable, `apple-touch-icon.png`; Theme `#08080A`). Playwright ist devDependency (1.65.1 ↔ chromium-1255); Tests brauchen `python3 -m http.server 8973` im Repo-Root
 
 ### Sprachsteuerung
 - `SpeechRecognition` API, `lang="de-DE"`, kontinuierlicher Modus
@@ -207,6 +208,15 @@ git commit -m "feat: ..."
 git push
 ```
 Live unter: `https://danielstrass8482.github.io/Dart/`
+
+### Android Release (AAB)
+- Version in `android/app/build.gradle` (`versionCode`/`versionName`) — aktuell 13 / 1.2.0
+- Android-SDK liegt auf dem flüchtigen Overlay `/var/tmp/android-sdk` (Symlink `~/android-sdk`, s. `android/local.properties`), Gradle-Cache in `/var/tmp/gradle-home` — /home ist nur 4,8 GB groß. Nach Cloud-Shell-Neustart neu installieren: cmdline-tools → `sdkmanager "platforms;android-36" "build-tools;35.0.0" "build-tools;34.0.0" platform-tools`
+- Build: `npm run build && cd android && JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 GRADLE_USER_HOME=/var/tmp/gradle-home ./gradlew --no-daemon bundleRelease` → `android/app/build/outputs/bundle/release/app-release.aab`
+- Prüfen: `java -jar bundletool.jar dump manifest --bundle=… --xpath=/manifest/@android:versionCode`, `jarsigner -verify -certs …`
+
+### Firebase Auth
+- Gast-Flow braucht **anonyme Anmeldung** in darttrainer-app-fed88 — war seit Anlage der Auth-Config (2026-06-27) nie aktiv, am 2026-11-22 aktiviert. Prüfen: `bash scripts/check-auth-providers.sh` (`--fix` aktiviert sie)
 
 ### Cloud Functions
 ```bash
