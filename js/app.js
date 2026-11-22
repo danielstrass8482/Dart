@@ -672,9 +672,12 @@ document.querySelectorAll(".sub-tab").forEach(btn=>{
 });
 
 // ── Stats time range buttons ──────────────────────────────────────
-document.querySelectorAll(".time-btn").forEach(btn=>{
+// Only the [data-range] buttons: the context filter (Training/Casual/Turnier)
+// reuses the .time-btn class, and matching it here reset the period to "all"
+// (statsRange=undefined) and un-highlighted it whenever a context was picked.
+document.querySelectorAll(".time-btn[data-range]").forEach(btn=>{
   btn.addEventListener("click",()=>{
-    document.querySelectorAll(".time-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".time-btn[data-range]").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     setStatsRange(btn.dataset.range);
     const customRow=document.getElementById("custom-date-row");

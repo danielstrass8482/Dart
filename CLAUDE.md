@@ -172,6 +172,8 @@ service cloud.firestore {
 - Trefferbild: Mini-Dartscheibe mit Scatter-Dots
 - **Firestore-Abfrage:** genau eine — `dartDB.loadStats()` = `dart_games` where `userId==uid` orderBy `ts desc` limit 200. Spieler/Zeitraum/Modus (`context`) filtert `js/stats.js` im Browser → keine weiteren Composite-Indexe nötig. `firestore.indexes.json` == Projekt (5 Indexe, alle READY, geprüft 2026-11-22 per `gcloud firestore indexes composite list`). Neue serverseitige Filter (`where("context"…)` o. ä.) brauchen einen neuen Index in der Datei + `firebase deploy --only firestore:indexes`
 - **Achtung limit(200):** „Alles“ zeigt nur die letzten 200 Leg-Dokumente (jedes Leg = eigenes `dart_games`-Dokument)
+- Live-Nachweis gegen echte DB: `node tests/stats-filters.live.mjs` (Gast-Login, 1 Spieler + 6 Spiele seeden, alle 48 Kombinationen Spieler×Zeitraum×Modus über die echten Buttons, danach `deleteUserAccount()`); `BASE=http://localhost:8973` für lokal
+- Behoben 2026-11-22: Modus-Buttons tragen ebenfalls `.time-btn` → ein Modus-Klick setzte den Zeitraum still auf „Alles“ zurück (Handler jetzt nur `.time-btn[data-range]`)
 
 ### Darts pro Leg (seit 2026-11-22)
 - `state.x01.turnDarts[i]` = Darts je abgeschlossener Aufnahme (Bust: tatsächlich geworfene), `legDarts(i)` = Summe + laufende Aufnahme. Bouncer zählen (sind in `throws`), per Undo zurückgenommene Würfe nicht: alle Undo-Snapshots kommen aus `x01Snapshot()` (x01/Bouncer/Sprache/Bot)
