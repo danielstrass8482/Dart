@@ -38,6 +38,25 @@ const { compare, RANK } = require("./voice-qa-compare");
 const ROOT = path.join(__dirname, "..");
 const RESULTS_PATH = path.join(ROOT, "qa", "voice-qa.json");
 const REPORT_DIR = path.join(ROOT, "docs", "voice-qa");
+// Append-only transcript cache: one line per finished transcription, written
+// immediately — a killed run (session limit, Cloud Shell restart) resumes at
+// the next untranscribed clip. Keyed by clip SHA-1 + model, so a regenerated
+// clip is never confused with its old take. Lives in the repo dir (/var/tmp
+// is wiped on Cloud Shell restarts), gitignored — qa/voice-qa.json is the
+// committed result.
+const STT_CACHE_PATH = path.join(ROOT, "qa", ".stt-cache.jsonl");
+
+function loadSttCache() {
+  const m = new Map();
+  let raw = "";
+  try { raw = fs.readFileSync(STT_CACHE_PATH, "utf8"); } catch (e) { return m; }
+  for (const line of raw.split("\n")) {
+    if (!line.trim()) continue;
+    try { const r = JSON.parse(line); m.set(`${r.sha1}|${r.model}`, r); } catch (e) { /* torn last line after a kill */ }
+  }
+  return m;
+}
+function appendSttCache(entry) { fs.appendFileSync(STT_CACHE_PATH, JSON.stringify(entry) + "\n"); }
 
 function parseArgs(argv) {
   return Object.fromEntries(argv.map(a => { const m = a.match(/^--([^=]+)(?:=(.*))?$/); return m ? [m[1], m[2] ?? true] : [a, true]; }));
@@ -60,7 +79,7 @@ function sttPython() {
 }
 
 /** Runs voice-stt.py over jobs [{id,path}] with N parallel workers → Map id → {text,duration,error}. */
-async function transcribe(jobs, model, workers, onProgress) {
+async function transcribe(jobs, model, workers, onProgress, onResult) {
   const results = new Map();
   if (!jobs.length) return results;
   workers = Math.max(1, Math.min(workers, jobs.length));
@@ -79,6 +98,7 @@ async function transcribe(jobs, model, workers, onProgress) {
         const line = buf.slice(0, nl); buf = buf.slice(nl + 1);
         if (!line.trim()) continue;
         const r = JSON.parse(line); results.set(r.id, r); done++;
+        if (onResult) onResult(r);
         if (onProgress) onProgress(done, jobs.length);
       }
     });
@@ -134,7 +154,7 @@ async function runCheck(opts = {}) {
   const dir = path.resolve(ROOT, opts.dir || path.join("assets", "voice"));
   const model = opts.model || "small.en";
   const second = opts.second === undefined ? "medium.en" : opts.second;
-  const workers = +(opts.workers || 2);
+  const workers = +(opts.workers || 4);
   const onlyKeys = opts.only ? new Set(String(opts.only).split(",").map(s => s.trim())) : null;
   let voices = voicesCfg.voices;
   if (opts.voice) voices = voices.filter(v => String(opts.voice).split(",").includes(v.id));
@@ -159,19 +179,28 @@ async function runCheck(opts = {}) {
     }
   }
   const present = toCheck.filter(r => !r.missing);
+  const sttCache = loadSttCache();
+  const fromCache = m => { for (const r of present) if (r.stt[m] === undefined) { const c = sttCache.get(`${r.sha1}|${m}`); if (c) { r.stt[m] = c.text; if (c.duration) r.duration = c.duration; } } };
+  const persist = m => o => {
+    if (o.error) return; // errors are retried next run, not cached
+    const r = present.find(x => `${x.voice}/${x.key}` === o.id);
+    if (r) appendSttCache({ sha1: r.sha1, model: m, voice: r.voice, key: r.key, text: o.text, duration: o.duration });
+  };
+  fromCache(model);
   const progress = label => (d, n) => { if (d === n || d % 50 === 0) process.stderr.write(`  ${label}: ${d}/${n}\r${d === n ? "\n" : ""}`); };
 
   // Stage 1 — primary model on every clip without a cached transcript.
   const need1 = present.filter(r => r.stt[model] === undefined);
   console.error(`STT ${model}: ${need1.length} of ${present.length} clips need transcription (rest cached by SHA-1)`);
-  const r1 = await transcribe(need1.map(r => ({ id: `${r.voice}/${r.key}`, path: r.file })), model, workers, progress(model));
+  const r1 = await transcribe(need1.map(r => ({ id: `${r.voice}/${r.key}`, path: r.file })), model, workers, progress(model), persist(model));
   for (const r of need1) { const o = r1.get(`${r.voice}/${r.key}`); if (o) { r.stt[model] = o.error ? "" : o.text; if (o.duration) r.duration = o.duration; } }
 
   // Stage 2 — second opinion for whatever stage 1 didn't accept.
   if (second && second !== "none") {
+    fromCache(second);
     const need2 = present.filter(r => r.stt[second] === undefined && compare(r.text, r.stt[model] || "", r.kind).verdict !== "ok");
     console.error(`STT ${second} (second opinion): ${need2.length} clips`);
-    const r2 = await transcribe(need2.map(r => ({ id: `${r.voice}/${r.key}`, path: r.file })), second, workers, progress(second));
+    const r2 = await transcribe(need2.map(r => ({ id: `${r.voice}/${r.key}`, path: r.file })), second, workers, progress(second), persist(second));
     for (const r of need2) { const o = r2.get(`${r.voice}/${r.key}`); if (o) r.stt[second] = o.error ? "" : o.text; }
   }
 

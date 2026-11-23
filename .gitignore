@@ -19,3 +19,4 @@ CODE_REVIEW_GO_LIVE.txt
 android/signing.properties
 signing.properties
 keystore.properties
+qa/.stt-cache.jsonl
