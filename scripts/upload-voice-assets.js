@@ -20,6 +20,9 @@
  *     --voice=<id>        only this voice (default: all found under assets/voice/)
  *     --force             re-upload even if the object already exists in Storage
  *     --concurrency=<n>   parallel uploads (default 5)
+ *     --only=<k1,k2>      only these clip keys (e.g. the few clips a repair run
+ *                         regenerated: `git diff --name-only -- assets/voice/<v>/`); always
+ *                         overwrites, each with a NEW download token (new URL → no stale HTTP cache)
  *     --bulk              one parallel `gcloud storage cp` per voice (much faster for
  *                         full re-uploads, e.g. after scripts/transcode-voice-assets.js);
  *                         always overwrites, and all clips of a voice share one download
@@ -41,6 +44,7 @@ const ONLY_VOICE = args.voice || null;
 const FORCE = !!args.force;
 const CONCURRENCY = parseInt(args.concurrency) || 5;
 const BULK = !!args.bulk;
+const ONLY = args.only ? new Set(String(args.only).split(",").map(s => s.trim()).filter(Boolean)) : null;
 
 function sh(cmd, cmdArgs) {
   return new Promise((resolve, reject) => {
@@ -92,7 +96,7 @@ async function main() {
 
   for (const voiceId of voiceDirs) {
     const dir = path.join(ROOT, "assets", "voice", voiceId);
-    const files = fs.readdirSync(dir).filter(f => f.endsWith(".mp3"));
+    const files = fs.readdirSync(dir).filter(f => f.endsWith(".mp3") && (!ONLY || ONLY.has(f.slice(0, -4))));
     console.log(`\n=== ${voiceId}: ${files.length} local files ===`);
 
     if (BULK) {
@@ -110,7 +114,7 @@ async function main() {
     let uploaded = 0, skipped = 0, failed = 0;
 
     await runPool(jobs, async (job) => {
-      if (!FORCE) {
+      if (!FORCE && !ONLY) {
         const exists = await remoteExists(job.voiceId, job.key);
         if (exists) { skipped++; return; }
       }
