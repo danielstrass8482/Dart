@@ -33,9 +33,6 @@ const VOICE_IDS = {
 };
 const DEFAULT_VOICE_ID = VOICE_IDS.george;
 
-const SYSTEM_PROMPT =
-  "You are a calm, deep-voiced British darts announcer. " +
-  "Speak slowly and clearly with natural pauses.";
 
 // ── Score-based enthusiasm modulation: RETIRED 2026-08-17 ──────────────────
 // Six iterations (swapped tier mapping, too-extreme then too-narrow value
@@ -48,8 +45,13 @@ const SYSTEM_PROMPT =
 // branch left anywhere in this file for a future change to scramble. If
 // per-score modulation is ever wanted again, treat it as a new feature with
 // its own live-audio verification loop, not a revival of this one.
-const VOICE_SETTINGS = { stability: 0.50, similarity_boost: 0.90, style: 0.35, use_speaker_boost: true, speed: 1.00 };
-const MODEL_ID = "eleven_turbo_v2_5";
+// Stable short-text profile (2026-11-23) — mirrors data/tts-settings.json and
+// functions/voiceName.js. eleven_turbo_v2_5 (stability 0.50, style 0.35)
+// hallucinated extra words/sentences on short announcements; evidence in
+// docs/voice-qa/README.md. The former system_prompt field was dropped: it is
+// not an ElevenLabs TTS parameter and had no effect.
+const VOICE_SETTINGS = { stability: 0.75, similarity_boost: 0.80, style: 0.00, use_speaker_boost: true, speed: 1.00 };
+const MODEL_ID = "eleven_multilingual_v2";
 
 // Commas/periods create natural pauses for ElevenLabs; no CAPS (causes rushing)
 const SPECIAL_TEXTS = {
@@ -198,7 +200,6 @@ exports.dartTTS = onRequest(
         text,
         model_id: MODEL_ID,
         voice_settings: VOICE_SETTINGS,
-        system_prompt: SYSTEM_PROMPT,
         pronunciation_dictionary_locators: [],
         seed: null,
         previous_text: null,

@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 www/
 
 # Service Account Keys — NIEMALS ins Repo

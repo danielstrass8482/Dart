@@ -21,6 +21,12 @@
   .status.ok{color:#5c5;}
   .status.bad{color:#c55;}
   audio{height:28px;}
+  .qa{font-size:.75rem;margin-top:.2rem;}
+  .qa .badge{display:inline-block;padding:0 .35rem;border-radius:4px;margin-right:.35rem;font-weight:600;}
+  .qa .badge.error{background:#5a1d1d;color:#fbb;}
+  .qa .badge.doubtful{background:#4d401a;color:#fe9;}
+  .qa .heard{color:#aaa;}
+  #qaInfo{color:#999;font-size:.8rem;}
   #progress{color:#999;font-size:.85rem;}
 </style>
 </head>
@@ -28,18 +34,25 @@
 <h1>DartTrainer — Voice QA Review</h1>
 <p style="color:#999;font-size:.85rem">
   Spielt alle Clips einer Stimme (feste Ansagen + Namen) in Reihenfolge ab. Klingt ein Clip falsch,
-  Terminal-Befehl anklicken (wird kopiert) und im Projektordner ausführen — regeneriert nur diesen einen Key.
+  Terminal-Befehl anklicken (wird kopiert) und im Projektordner ausführen — regeneriert nur diesen einen Key; danach <code>node scripts/check-voice-clips.js --voice=…</code>. Filter „Nur auffällige“ zeigt die Clips, die die automatische Prüfung (Whisper-Transkript vs. Soll-Text) als fehlerhaft oder zweifelhaft markiert hat — direkt verlinkbar mit <code>?filter=flagged</code>.
 </p>
 <div class="bar">
   <label>Stimme: <select id="voiceSel"></select></label>
+  <label>Filter: <select id="filterSel">
+    <option value="all">Alle Clips</option>
+    <option value="flagged">Nur auffällige (fehlerhaft + zweifelhaft)</option>
+    <option value="error">Nur fehlerhaft</option>
+    <option value="doubtful">Nur zweifelhaft</option>
+  </select></label>
   <button id="playAllBtn">▶ Alle abspielen</button>
   <button id="stopBtn">■ Stop</button>
   <span id="progress"></span>
 </div>
+<div id="qaInfo"></div>
 <div id="list"></div>
 
 <script>
-let vocabulary = [], names = [], voices = [], currentVoice = null;
+let vocabulary = [], names = [], voices = [], currentVoice = null, qa = null;
 let playQueue = [], playIdx = -1, playing = false;
 
 async function loadData(){
@@ -48,6 +61,12 @@ async function loadData(){
     fetch('../data/names.json').then(r=>r.json()),
     fetch('../data/voices.json').then(r=>r.json().then(d=>d.voices)),
   ]);
+  // Result of scripts/check-voice-clips.js (Whisper transcript vs. target text).
+  try { qa = await fetch('voice-qa.json', {cache:'no-cache'}).then(r=>r.ok?r.json():null); } catch(_) { qa = null; }
+  const filterSel = document.getElementById('filterSel');
+  const wanted = new URLSearchParams(location.search).get('filter');
+  if (wanted && [...filterSel.options].some(o=>o.value===wanted)) filterSel.value = wanted;
+  filterSel.addEventListener('change', ()=>renderList(currentVoice));
   const sel = document.getElementById('voiceSel');
   sel.innerHTML = voices.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   sel.addEventListener('change', ()=>renderList(sel.value));
@@ -65,7 +84,18 @@ async function renderList(voiceId){
   currentVoice = voiceId;
   const list = document.getElementById('list');
   list.innerHTML = '<p style="color:#888">Prüfe Dateien…</p>';
-  const entries = allEntries();
+  const clipsQA = qa?.voices?.[voiceId]?.clips || {};
+  const filter = document.getElementById('filterSel').value;
+  const s = qa?.voices?.[voiceId]?.summary;
+  document.getElementById('qaInfo').textContent = !qa ? 'Kein Prüfergebnis (qa/voice-qa.json) gefunden — Filter ohne Wirkung.'
+    : s ? `Automatische Prüfung (${qa.voices[voiceId].checkedAt?.slice(0,16).replace('T',' ')}): ${s.ok} korrekt · ${s.doubtful} zweifelhaft · ${s.error} fehlerhaft von ${s.total}` : 'Diese Stimme wurde noch nicht geprüft.';
+  const entries = allEntries().filter(e=>{
+    const st = clipsQA[e.key]?.status;
+    if (filter === 'all') return true;
+    if (filter === 'flagged') return st === 'error' || st === 'doubtful';
+    return st === filter;
+  });
+  window._entries = entries;
   const rows = await Promise.all(entries.map(async (e)=>{
     const url = `../assets/voice/${voiceId}/${e.file}`;
     let exists = false;
@@ -77,10 +107,13 @@ async function renderList(voiceId){
     const div = document.createElement('div');
     div.className = 'row' + (row.exists ? '' : ' missing');
     div.id = `row-${i}`;
-    const cmd = `node scripts/gen-voice-assets.js --voice=${voiceId} --only=${row.key} --force`;
+    const cmd = `node scripts/gen-voice-assets.js --voice=${voiceId} --only=${row.key} --force --attempt=${(clipsQA[row.key]?.attempts||0)+1}`;
+    const q = clipsQA[row.key];
+    const esc = t => String(t??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const qaHtml = q && q.status !== 'ok' ? `<div class="qa"><span class="badge ${q.status}">${q.status==='error'?'fehlerhaft':'zweifelhaft'}</span>${esc((q.reasons||[]).join('; '))}<div class="heard">erkannt: ${esc(Object.values(q.stt||{}).join(' / ')||'–')}</div></div>` : '';
     div.innerHTML = `
       <div class="status ${row.exists?'ok':'bad'}">${row.exists?'✓':'✗'}</div>
-      <div><div class="key">${row.key}</div><div class="text">${row.text}</div></div>
+      <div><div class="key">${row.key}</div><div class="text">${row.text}</div>${qaHtml}</div>
       <div class="cmd" title="Klicken zum Kopieren">${cmd}</div>
       <div>${row.exists ? `<audio controls preload="none" src="${row.url}"></audio>` : '–'}</div>
     `;
@@ -106,7 +139,7 @@ async function playAll(){
   for (let i=0; i<playQueue.length && playing; i++){
     const entry = playQueue[i];
     document.querySelectorAll('.row.playing').forEach(r=>r.classList.remove('playing'));
-    const rowIdx = allEntries().findIndex(e=>e.key===entry.key);
+    const rowIdx = window._entries.findIndex(e=>e.key===entry.key);
     const rowEl = document.getElementById(`row-${rowIdx}`);
     rowEl?.classList.add('playing');
     rowEl?.scrollIntoView({block:'center', behavior:'smooth'});

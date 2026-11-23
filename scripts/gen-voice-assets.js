@@ -15,6 +15,18 @@
  *     --only=<key1,key2>    only these vocabulary/name keys (QA single-clip regen)
  *     --force               regenerate even if the local file already exists
  *     --kind=<vocab|name>   restrict to one source (default: both)
+ *     --from-qa[=error,doubtful]  only keys the last QA run (qa/voice-qa.json,
+ *                          scripts/check-voice-clips.js) marked with these statuses
+ *                          (default: error) — implies --force
+ *     --attempt=<n>        regeneration attempt number → different ElevenLabs seed
+ *                          (attempt 0 = first generation); scripts/repair-voice-clips.js
+ *                          passes this so a retry never reproduces the same bad take
+ *
+ * Model + voice settings: data/tts-settings.json (stable short-text profile,
+ * see docs/voice-qa/README.md). Every generated clip records model, profile,
+ * seed and attempt in assets/voice/manifest.json.
+ *
+ * After any (re)generation run: node scripts/check-voice-clips.js --voice=<id>
  *
  * Numbers are always sent to ElevenLabs as written-out words (via
  * numToWords()/numToWords in data/vocabulary.json and data/names.json),
@@ -45,6 +57,8 @@ const ONLY_VOICE = args.voice || null;
 const ONLY_KEYS = args.only ? String(args.only).split(",").map(s => s.trim()) : null;
 const FORCE = !!args.force;
 const ONLY_KIND = args.kind || null;
+const FROM_QA = args["from-qa"] ? (args["from-qa"] === true ? ["error"] : String(args["from-qa"]).split(",")) : null;
+const ATTEMPT = parseInt(args.attempt || "0", 10) || 0;
 
 const voicesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "voices.json"), "utf8"));
 const ttsCfg = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "tts-settings.json"), "utf8"));
@@ -65,6 +79,21 @@ function buildJobs() {
   return jobs;
 }
 const jobs = buildJobs();
+
+/** Keys a voice needs regenerated according to the last QA run. */
+function qaKeysFor(voiceId) {
+  if (!FROM_QA) return null;
+  const qa = JSON.parse(fs.readFileSync(path.join(ROOT, "qa", "voice-qa.json"), "utf8"));
+  const clips = (qa.voices[voiceId] && qa.voices[voiceId].clips) || {};
+  return new Set(Object.entries(clips).filter(([, c]) => FROM_QA.includes(c.status)).map(([k]) => k));
+}
+
+/** Deterministic per key + attempt (reproducible, but every retry is a new take). */
+function seedFor(key, attempt) {
+  let h = 2166136261;
+  for (const ch of key) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+  return (h + attempt * 7919) % 4294967295;
+}
 
 // ── Character budget (printed before any network call, per task spec) ──
 const totalCharsPerVoice = jobs.reduce((s, j) => s + j.text.length, 0);
@@ -88,14 +117,15 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 // like undici connection-pool/keep-alive misbehavior rather than an actual
 // ElevenLabs-side slowdown), but curl is simply reliable here, so use it.
 const { execFile } = require("child_process");
-function generateOne(voice, job) {
+function generateOne(voice, job, seed) {
   return new Promise((resolve) => {
     const body = JSON.stringify({
       text: job.text,
       model_id: ttsCfg.modelId,
       voice_settings: ttsCfg.voiceSettings,
-      system_prompt: ttsCfg.systemPrompt,
+      seed,
       apply_text_normalization: "auto",
+      ...(ttsCfg.languageCode ? { language_code: ttsCfg.languageCode } : {}),
     });
     execFile("curl", [
       "-sS", "--max-time", "30",
@@ -133,14 +163,18 @@ async function main() {
     const t0 = Date.now();
     console.log(`\n=== Voice: ${voice.name} (${voice.id}) ===`);
 
-    for (const job of jobs) {
+    const qaKeys = qaKeysFor(voice.id);
+    const voiceJobs = qaKeys ? jobs.filter(j => qaKeys.has(j.key)) : jobs;
+    if (qaKeys) console.log(`  --from-qa=${FROM_QA.join(",")}: ${voiceJobs.length} keys, ${voiceJobs.reduce((s, j) => s + j.text.length, 0)} characters`);
+    for (const job of voiceJobs) {
       const outPath = path.join(dir, job.file);
       // Idempotent resume: skip anything already generated (and non-empty —
       // a 0-byte file means a previous run was killed mid-write, so that one
       // key gets regenerated instead of silently shipping silence).
-      if (!FORCE && fs.existsSync(outPath) && fs.statSync(outPath).size > 0) { skipped++; continue; }
+      if (!FORCE && !qaKeys && fs.existsSync(outPath) && fs.statSync(outPath).size > 0) { skipped++; continue; }
 
-      const result = await generateOne(voice, job);
+      const seed = seedFor(job.key, ATTEMPT);
+      const result = await generateOne(voice, job, seed);
       if (!result.ok) {
         failed++;
         console.error(`  FAILED [${job.key}] status=${result.status}: ${result.body.slice(0, 300)}`);
@@ -154,7 +188,8 @@ async function main() {
       try { clip = await transcode(result.buf, ffmpeg); }
       catch (e) { failed++; console.error(`  FAILED [${job.key}] transcode: ${e.message}`); continue; }
       fs.writeFileSync(outPath, clip);
-      vman.files[job.key] = { bytes: clip.length, sourceBytes: result.buf.length, chars: job.text.length, generatedAt: new Date().toISOString() };
+      vman.files[job.key] = { bytes: clip.length, sourceBytes: result.buf.length, chars: job.text.length, generatedAt: new Date().toISOString(),
+        model: ttsCfg.modelId, profile: ttsCfg.profile, seed, attempt: ATTEMPT };
       vman.format = FORMAT.id;
       charsSent += job.text.length;
       done++;
@@ -165,7 +200,7 @@ async function main() {
       // audit trail and nothing is lost — resuming just re-runs this script.
       fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
       const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
-      console.log(`  [${done + skipped + failed}/${jobs.length}] done=${done} skipped=${skipped} failed=${failed} elapsed=${elapsed}s key=${job.key}`);
+      console.log(`  [${done + skipped + failed}/${voiceJobs.length}] done=${done} skipped=${skipped} failed=${failed} elapsed=${elapsed}s key=${job.key}`);
       await sleep(120); // stay well under ElevenLabs' concurrent-request cap
     }
 

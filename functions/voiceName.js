@@ -60,9 +60,12 @@ const VOICE_IDS = {
   guy:    "34lPwSZ54D8fWbX1aHzk",
 };
 const DEFAULT_VOICE = "george";
-const MODEL_ID = "eleven_turbo_v2_5";
-const VOICE_SETTINGS = { stability: 0.50, similarity_boost: 0.90, style: 0.35, use_speaker_boost: true, speed: 1.00 };
-const SYSTEM_PROMPT = "You are a calm, deep-voiced British darts announcer. Speak slowly and clearly with natural pauses.";
+// Same stable short-text profile as the pre-produced library — mirrors
+// data/tts-settings.json (keep in sync). A one-word name is the shortest text
+// we ever send; the former turbo_v2_5/stability 0.50/style 0.35 profile is
+// what made short texts hallucinate extra words (docs/voice-qa/README.md).
+const MODEL_ID = "eleven_multilingual_v2";
+const VOICE_SETTINGS = { stability: 0.75, similarity_boost: 0.80, style: 0.00, use_speaker_boost: true, speed: 1.00 };
 
 const NAME_GEN_DAILY_LIMIT = 20; // per uid/device per day — independent of TTS_DAILY_LIMIT
 
@@ -147,7 +150,7 @@ exports.dartVoiceName = onRequest(
     const elResp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${elevenLabsVoiceId}`, {
       method: "POST",
       headers: { "xi-api-key": ELEVENLABS_API_KEY.value(), "Content-Type": "application/json", Accept: "audio/mpeg" },
-      body: JSON.stringify({ text, model_id: MODEL_ID, voice_settings: VOICE_SETTINGS, system_prompt: SYSTEM_PROMPT, apply_text_normalization: "auto" }),
+      body: JSON.stringify({ text, model_id: MODEL_ID, voice_settings: VOICE_SETTINGS, apply_text_normalization: "auto" }),
     });
     if (!elResp.ok) {
       const errBody = await elResp.text();

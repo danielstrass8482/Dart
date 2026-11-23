@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+/**
+ * repair-voice-clips.js — check → regenerate failing clips → re-check, until
+ * a voice is clean or a clip has used up its attempts.
+ *
+ *   ELEVENLABS_API_KEY=… node scripts/repair-voice-clips.js --voice=haseeb
+ *        [--max-attempts=4] [--include-doubtful] [--dry-run]
+ *
+ * Per round: scripts/check-voice-clips.js (cached by SHA-1 → only changed
+ * clips are transcribed again), then every clip with status "error" (and with
+ * --include-doubtful also "doubtful", except names whose ONLY finding is
+ * that Whisper spelled the name differently — regenerating can't fix STT
+ * spelling) is regenerated via scripts/gen-voice-assets.js with the next
+ * attempt number (= new seed). Attempts + the transcript of each replaced
+ * take are kept per clip in qa/voice-qa.json (`attempts`, `history`), so the
+ * loop is idempotent: re-running continues where it stopped, and a clip
+ * that already used --max-attempts is reported as stuck instead of being
+ * regenerated again.
+ */
+"use strict";
+const path = require("path");
+const { spawnSync } = require("child_process");
+const { runCheck, writeResults, summarize, loadJSON, RESULTS_PATH } = require("./check-voice-clips");
+
+const args = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--([^=]+)(?:=(.*))?$/); return m ? [m[1], m[2] ?? true] : [a, true]; }));
+const MAX = parseInt(args["max-attempts"] || "4", 10);
+const INCLUDE_DOUBTFUL = !!args["include-doubtful"];
+const DRY = !!args["dry-run"];
+const voices = String(args.voice || "").split(",").filter(Boolean);
+if (!voices.length) { console.error("--voice=<id>[,<id>] required"); process.exit(1); }
+
+function needsRegen(c) {
+  if (c.status === "error") return true;
+  if (!INCLUDE_DOUBTFUL || c.status !== "doubtful") return false;
+  const onlyNameSpelling = c.kind === "name" && (c.reasons || []).every(r => r.startsWith("Name abweichend"));
+  return !onlyNameSpelling;
+}
+
+async function main() {
+  for (const voice of voices) {
+    for (let round = 1; ; round++) {
+      await runCheck({ voice });
+      const results = loadJSON(RESULTS_PATH, { voices: {} });
+      const clips = results.voices[voice].clips;
+      const failing = Object.entries(clips).filter(([, c]) => needsRegen(c));
+      const stuck = failing.filter(([, c]) => (c.attempts || 0) >= MAX).map(([k]) => k);
+      const todo = failing.filter(([, c]) => (c.attempts || 0) < MAX);
+      const s = summarize(Object.values(clips));
+      console.log(`[${voice}] Runde ${round}: ok ${s.ok}, zweifelhaft ${s.doubtful}, fehlerhaft ${s.error} — neu erzeugen: ${todo.length}, ausgeschöpft: ${stuck.length}`);
+      if (!todo.length) { if (stuck.length) console.log(`[${voice}] nach ${MAX} Versuchen weiter auffällig: ${stuck.join(", ")}`); break; }
+      if (DRY) { console.log(todo.map(([k, c]) => `  ${k} (${c.status}, Versuch ${(c.attempts || 0) + 1}): ${c.reasons.join("; ")}`).join("\n")); break; }
+
+      // Remember what the replaced take sounded like, then bump the attempt.
+      const byAttempt = new Map();
+      for (const [k, c] of todo) {
+        const next = (c.attempts || 0) + 1;
+        c.history = (c.history || []).concat([{ attempt: next - 1, sha1: c.sha1, status: c.status, stt: c.stt, reasons: c.reasons }]);
+        c.attempts = next;
+        if (!byAttempt.has(next)) byAttempt.set(next, []);
+        byAttempt.get(next).push(k);
+      }
+      writeResults(results);
+      for (const [attempt, keys] of byAttempt) {
+        const r = spawnSync(process.execPath, [path.join(__dirname, "gen-voice-assets.js"), `--voice=${voice}`, `--only=${keys.join(",")}`, "--force", `--attempt=${attempt}`], { stdio: ["ignore", "inherit", "inherit"] });
+        if (r.status !== 0) { console.error(`gen-voice-assets.js exit ${r.status} — stopping`); process.exit(2); }
+      }
+    }
+  }
+}
+
+main().catch(e => { console.error(e.stack || e.message); process.exit(2); });

@@ -139,12 +139,13 @@ async function runCheck(opts = {}) {
   let voices = voicesCfg.voices;
   if (opts.voice) voices = voices.filter(v => String(opts.voice).split(",").includes(v.id));
   const results = loadJSON(RESULTS_PATH, { voices: {} });
-  const allEntries = entriesFor(opts.kind).filter(e => !onlyKeys || onlyKeys.has(e.key));
+  const baseEntries = entriesFor(opts.kind).filter(e => !onlyKeys || onlyKeys.has(e.key));
+  const entriesOf = vid => (opts.entries ? opts.entries(vid) : baseEntries);
 
   const toCheck = []; // per-voice clip records (fresh objects, cached STT reused by sha1)
   for (const v of voices) {
     const prev = (results.voices[v.id] && results.voices[v.id].clips) || {};
-    for (const e of allEntries) {
+    for (const e of entriesOf(v.id)) {
       const file = path.join(dir, v.id, `${e.key}.mp3`);
       const rec = { voice: v.id, key: e.key, text: e.text, kind: e.kind, category: e.category, file };
       if (!fs.existsSync(file)) { rec.missing = true; toCheck.push(rec); continue; }
@@ -238,16 +239,26 @@ function esc(s) { return String(s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " 
 function writeReport(label, results, voiceIds, extraNote) {
   fs.mkdirSync(REPORT_DIR, { recursive: true });
   const voicesCfg = loadJSON(path.join(ROOT, "data", "voices.json"), { voices: [] });
-  const tts = loadJSON(path.join(ROOT, "data", "tts-settings.json"), {});
+  const manifest = loadJSON(path.join(ROOT, "assets", "voice", "manifest.json"), { voices: {} });
+  // Clips generated before the stable profile carry no model in the manifest.
+  const modelsOf = vid => {
+    const counts = {};
+    const files = (manifest.voices[vid] && manifest.voices[vid].files) || {};
+    for (const k of Object.keys(results.voices[vid]?.clips || {})) {
+      const m = files[k]?.model || "eleven_turbo_v2_5*";
+      counts[m] = (counts[m] || 0) + 1;
+    }
+    return Object.entries(counts).map(([m, n]) => `${m}: ${n}`).join(", ");
+  };
   const L = [`# Voice-QA-Bericht: ${label}`, "", `Stand: ${results.updatedAt}  `,
     `Verfahren: ${results.method.stt}, Erstmodell \`${results.method.primary}\`, Zweitmeinung \`${results.method.second}\` bei Abweichung; Vergleich \`scripts/voice-qa-compare.js\`.  `,
-    `Generierungsprofil laut data/tts-settings.json zum Berichtszeitpunkt: \`${tts.modelId}\` ${JSON.stringify(tts.voiceSettings)}`, ""];
+    "Spalte „Modelle“: mit welchem ElevenLabs-Modell die geprüften Clips erzeugt wurden (assets/voice/manifest.json). `*` = altes Profil bis 2026-11-22 (turbo_v2_5, stability 0.50, similarity 0.90, style 0.35), im Manifest noch ohne Modellangabe.", ""];
   if (extraNote) L.push(extraNote, "");
-  L.push("| Stimme | Clips | korrekt | zweifelhaft | fehlerhaft |", "|---|---:|---:|---:|---:|");
+  L.push("| Stimme | Clips | korrekt | zweifelhaft | fehlerhaft | Modelle |", "|---|---:|---:|---:|---:|---|");
   for (const vid of voiceIds) {
     const s = results.voices[vid]?.summary; if (!s) continue;
     const name = voicesCfg.voices.find(v => v.id === vid)?.name || vid;
-    L.push(`| ${name} | ${s.total} | ${s.ok} | ${s.doubtful} | ${s.error} |`);
+    L.push(`| ${name} | ${s.total} | ${s.ok} | ${s.doubtful} | ${s.error} | ${modelsOf(vid)} |`);
   }
   L.push("", "**fehlerhaft** = andere/fehlende/zusätzliche Zahl oder ≥ 2 zusätzliche/fehlende Wörter (Ansage sagt inhaltlich etwas anderes). **zweifelhaft** = ein Wort abweichend, Name nicht eindeutig erkannt oder Dauer stark abweichend — nachhören (qa/voice-review.html, Filter „nur auffällige“).", "");
   for (const vid of voiceIds) {
@@ -268,7 +279,7 @@ function writeReport(label, results, voiceIds, extraNote) {
   return out;
 }
 
-module.exports = { runCheck, writeReport, summarize, RESULTS_PATH };
+module.exports = { runCheck, writeReport, writeResults, summarize, loadJSON, RESULTS_PATH };
 
 if (require.main === module) {
   const args = parseArgs(process.argv.slice(2));

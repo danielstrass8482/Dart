@@ -1,6 +1,8 @@
 {
-  "_comment": "Mirrors MODEL_ID/VOICE_SETTINGS/SYSTEM_PROMPT in functions/index.js — same reasoning as voices.json.",
-  "modelId": "eleven_turbo_v2_5",
-  "voiceSettings": { "stability": 0.50, "similarity_boost": 0.90, "style": 0.35, "use_speaker_boost": true, "speed": 1.00 },
-  "systemPrompt": "You are a calm, deep-voiced British darts announcer. Speak slowly and clearly with natural pauses."
+  "_comment": "Generation profile for ALL pre-produced voice clips (scripts/gen-voice-assets.js) and on-demand name clips (functions/voiceName.js MODEL_ID/VOICE_SETTINGS, mirrored there + in functions/index.js because functions/ deploys standalone — keep all three in sync). History + evidence: docs/voice-qa/README.md.",
+  "profile": "stable-short-v1",
+  "modelId": "eleven_multilingual_v2",
+  "voiceSettings": { "stability": 0.75, "similarity_boost": 0.80, "style": 0.00, "use_speaker_boost": true, "speed": 1.00 },
+  "_why": "Short announcements ('Checkout: Double Twenty.') made eleven_turbo_v2_5 with stability 0.50/style 0.35 hallucinate extra words/sentences and drift accent (Haseeb: 9 of 24 test clips). Same texts with this profile: 0 of 24 (Haseeb) / 0 of 24 (George). turbo_v2_5 with stability 0.80/style 0/language_code=en was still 5 of 24 — the model, not just the settings, is what makes short texts stable. style=0 removes the extra style-exaggeration pass ElevenLabs says increases instability; stability 0.75 keeps delivery consistent across 921 clips.",
+  "_previous": { "until": "2026-11-23", "modelId": "eleven_turbo_v2_5", "voiceSettings": { "stability": 0.50, "similarity_boost": 0.90, "style": 0.35, "use_speaker_boost": true, "speed": 1.00 }, "systemPrompt": "sent as system_prompt — not a documented ElevenLabs TTS parameter; leaving it out did not change the hallucinations" }
 }
