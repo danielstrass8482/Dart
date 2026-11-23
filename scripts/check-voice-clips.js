@@ -113,26 +113,57 @@ async function transcribe(jobs, model, workers, onProgress, onResult) {
 function median(a) { if (!a.length) return NaN; const s = [...a].sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
 
 /**
- * Duration outliers per (voice, category): seconds per target character for
- * vocabulary (texts differ in length), plain seconds for names. Long = more
- * than 1.6× (names 1.8×) the category median — the typical signature of
- * inserted words; short = below 0.55× — swallowed words.
+ * Duration outliers per (voice, category). Vocabulary: robust linear model
+ * duration ≈ a + b·letters (least squares, then refit without the worst 10 %)
+ * — a flat seconds-per-letter ratio wrongly flagged every one-word number,
+ * because every clip has a fixed lead-in/out. Names: category median.
+ * Flag only if BOTH the ratio (long > 1.6×, names 1.8×; short < 0.55×) and
+ * the absolute gap (> 0.5 s) are exceeded — inserted words add ≥ 0.5 s.
  */
+function letters(t) { return t.replace(/[^A-Za-z]/g, "").length; }
+function fitLine(pts) {
+  const n = pts.length, mx = pts.reduce((s, p) => s + p[0], 0) / n, my = pts.reduce((s, p) => s + p[1], 0) / n;
+  let sxy = 0, sxx = 0;
+  for (const [x, y] of pts) { sxy += (x - mx) * (y - my); sxx += (x - mx) ** 2; }
+  const b = sxx ? sxy / sxx : 0;
+  return [my - b * mx, b];
+}
 function durationFlags(clips) {
   const byCat = {};
   for (const c of clips) if (c.duration) (byCat[c.category] = byCat[c.category] || []).push(c);
   for (const [cat, list] of Object.entries(byCat)) {
-    const metric = c => cat === "name" ? c.duration : c.duration / Math.max(4, c.text.replace(/[^A-Za-z]/g, "").length);
-    const med = median(list.map(metric));
+    let predict;
+    if (cat === "name" || list.length < 10) {
+      const med = median(list.map(c => c.duration));
+      predict = () => med;
+    } else {
+      let pts = list.map(c => [letters(c.text), c.duration]);
+      let [a, b] = fitLine(pts);
+      pts = pts.map(p => [p, Math.abs(p[1] - (a + b * p[0]))]).sort((x, y) => x[1] - y[1]).slice(0, Math.ceil(pts.length * 0.9)).map(x => x[0]);
+      [a, b] = fitLine(pts);
+      predict = c => Math.max(0.3, a + b * letters(c.text));
+    }
     const hi = cat === "name" ? 1.8 : 1.6;
     for (const c of list) {
-      const r = metric(c) / med;
-      c.expectedDuration = +(cat === "name" ? med : med * Math.max(4, c.text.replace(/[^A-Za-z]/g, "").length)).toFixed(2);
-      if (r > hi) c.durationFlag = `Dauer ${c.duration.toFixed(1)} s statt ~${c.expectedDuration.toFixed(1)} s (×${r.toFixed(1)})`;
-      else if (r < 0.55) c.durationFlag = `Dauer nur ${c.duration.toFixed(1)} s statt ~${c.expectedDuration.toFixed(1)} s (×${r.toFixed(2)})`;
+      const exp = predict(c), r = c.duration / exp;
+      c.expectedDuration = +exp.toFixed(2);
+      if (r > hi && c.duration - exp > 0.5) c.durationFlag = `Dauer ${c.duration.toFixed(1)} s statt ~${exp.toFixed(1)} s (×${r.toFixed(1)})`;
+      else if (r < 0.55 && exp - c.duration > 0.5) c.durationFlag = `Dauer nur ${c.duration.toFixed(1)} s statt ~${exp.toFixed(1)} s (×${r.toFixed(2)})`;
       else delete c.durationFlag;
     }
   }
+}
+
+/** Re-judges a results file from its stored transcripts (no STT) — after a comparator change. */
+function reevaluateFile(p) {
+  const res = loadJSON(p, null);
+  for (const vr of Object.values(res.voices)) {
+    const all = Object.values(vr.clips).filter(c => c.duration);
+    durationFlags(all);
+    for (const c of all) evaluate(c);
+    vr.summary = summarize(Object.values(vr.clips));
+  }
+  return res;
 }
 
 function evaluate(c) {
@@ -219,9 +250,14 @@ async function runCheck(opts = {}) {
     evaluate(r);
   }
 
+  let saved = results;
   if (!opts["no-save"]) {
+    // Re-read right before writing and replace only the voices THIS run
+    // checked: a concurrent run for another voice (e.g. a repair while a
+    // baseline is still going) must not be overwritten by our stale copy.
+    saved = loadJSON(RESULTS_PATH, { voices: {} });
     for (const v of voices) {
-      const vr = results.voices[v.id] = results.voices[v.id] || { clips: {} };
+      const vr = saved.voices[v.id] = saved.voices[v.id] || { clips: {} };
       for (const r of toCheck.filter(x => x.voice === v.id)) {
         const { voice, file, missing, key, ...keep } = r;
         vr.clips[r.key] = missing ? { text: r.text, kind: r.kind, category: r.category, status: "error", reasons: r.reasons } : keep;
@@ -233,11 +269,11 @@ async function runCheck(opts = {}) {
       vr.summary = summarize(Object.values(vr.clips));
       vr.checkedAt = new Date().toISOString();
     }
-    results.method = { stt: "faster-whisper (local, int8 CPU)", primary: model, second, compare: "scripts/voice-qa-compare.js" };
-    results.updatedAt = new Date().toISOString();
-    writeResults(results);
+    saved.method = { stt: "faster-whisper (local, int8 CPU)", primary: model, second, compare: "scripts/voice-qa-compare.js" };
+    saved.updatedAt = new Date().toISOString();
+    writeResults(saved);
   }
-  return { results, checked: toCheck };
+  return { results: saved, checked: toCheck };
 }
 
 function summarize(clips) {
@@ -308,7 +344,7 @@ function writeReport(label, results, voiceIds, extraNote) {
   return out;
 }
 
-module.exports = { runCheck, writeReport, writeResults, summarize, loadJSON, RESULTS_PATH };
+module.exports = { runCheck, writeReport, writeResults, reevaluateFile, summarize, loadJSON, RESULTS_PATH };
 
 if (require.main === module) {
   const args = parseArgs(process.argv.slice(2));

@@ -126,10 +126,40 @@ function compareName(expectedText, transcript) {
   return { verdict: "doubtful", reasons };
 }
 
+/**
+ * Whisper writes "double eight" as "88" and "triple one" as "111" (phone-
+ * number style), and drops separators: "Seven, Double Eight" → "788",
+ * "Triple One, Double Eight" → "111E88". Compare such transcripts on their
+ * digit string: expected "double N" may appear as N or NN, "triple N" as N,
+ * NN or NNN. Returns "ok" (digits match, no foreign words), "ambiguous"
+ * (digit garble without foreign words — needs an ear, not an error), or null.
+ */
+function digitForm(exp, got) {
+  const gotDigits = got.join(" ").replace(/[^0-9]/g, "");
+  if (!gotDigits || !exp.some(isNum)) return null;
+  let re = "";
+  for (let i = 0; i < exp.length; i++) {
+    if (!isNum(exp[i])) continue;
+    const n = exp[i].replace(/[.*+?^${}()|[\]\\]/g, ""), prev = exp[i - 1];
+    re += prev === "double" ? `(?:${n}){1,2}` : prev === "triple" ? `(?:${n}){1,3}` : n;
+  }
+  const allowed = new Set(exp.filter(t => !isNum(t)).concat(["and", "d", "t", "e"]));
+  const foreign = got.filter(t => !/\d/.test(t) && !allowed.has(t));
+  if (foreign.length) return null;
+  if (new RegExp(`^${re}$`).test(gotDigits)) return "ok";
+  // Only a MERGED digit run is ambiguous; more/equal separate numbers than
+  // expected means a number was actually said differently → normal check.
+  const gotNums = got.filter(t => /\d/.test(t)).length, expNums = exp.filter(isNum).length;
+  return gotNums < expNums ? "ambiguous" : null;
+}
+
 function compareText(expectedText, transcript) {
   const exp = normalizeTokens(expectedText), got = normalizeTokens(transcript);
   if (!got.length) return { verdict: "error", reasons: ["kein Wort erkannt"] };
   if (exp.join(" ") === got.join(" ") || exp.join("") === got.join("")) return { verdict: "ok", reasons: [] };
+  const df = digitForm(exp, got);
+  if (df === "ok") return { verdict: "ok", reasons: [] };
+  if (df === "ambiguous") return { verdict: "doubtful", reasons: [`Zahlen nur als Ziffernfolge erkannt („${got.join(" ")}“) — nachhören`] };
   const { subs, ins, del } = align(exp, got);
   const reasons = [];
   let verdict = "doubtful";

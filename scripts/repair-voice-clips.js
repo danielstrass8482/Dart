@@ -8,9 +8,9 @@
  *
  * Per round: scripts/check-voice-clips.js (cached by SHA-1 → only changed
  * clips are transcribed again), then every clip with status "error" (and with
- * --include-doubtful also "doubtful", except names whose ONLY finding is
- * that Whisper spelled the name differently — regenerating can't fix STT
- * spelling) is regenerated via scripts/gen-voice-assets.js with the next
+ * --include-doubtful also "doubtful", except clips whose ONLY findings are
+ * STT limits — a name Whisper spells differently, or numbers it merged into
+ * a digit run — which a new take can't resolve) is regenerated via scripts/gen-voice-assets.js with the next
  * attempt number (= new seed). Attempts + the transcript of each replaced
  * take are kept per clip in qa/voice-qa.json (`attempts`, `history`), so the
  * loop is idempotent: re-running continues where it stopped, and a clip
@@ -32,8 +32,10 @@ if (!voices.length) { console.error("--voice=<id>[,<id>] required"); process.exi
 function needsRegen(c) {
   if (c.status === "error") return true;
   if (!INCLUDE_DOUBTFUL || c.status !== "doubtful") return false;
-  const onlyNameSpelling = c.kind === "name" && (c.reasons || []).every(r => r.startsWith("Name abweichend"));
-  return !onlyNameSpelling;
+  // Findings a new take can't resolve for the STT (it can't spell unusual
+  // names; it writes "seven double eight" as "788") → human ear, not credits.
+  const sttLimit = (c.reasons || []).every(r => r.startsWith("Name abweichend") || r.startsWith("Zahlen nur als Ziffernfolge"));
+  return !sttLimit;
 }
 
 async function main() {
