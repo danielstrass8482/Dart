@@ -10,6 +10,7 @@ import { runBotTurn } from './bot.js';
 import { getCheckoutPath } from './checkout.js';
 import { t } from './i18n.js?v=3';
 import { escapeHtml } from './util.js';
+import { createCoopState, coopOnCheckout, renderCoop, hideCoopUI, hideCoopResult } from './coop.js';
 
 /**
  * Computes a checkout path ending in one of the preferred doubles.
@@ -71,8 +72,11 @@ export async function startX01(starter=0){
   if(ac&&ac.state==="suspended") ac.resume().catch(()=>{});
   if(window.speechSynthesis?.paused) window.speechSynthesis.resume();
   clearAudioQueue();
+  // Co-op Checkout (js/coop.js): all players share one rest, starting at the
+  // first value of the ladder.
+  const _coop=state.cfg.coop?createCoopState(state.cfg):null;
   state.x01={
-    scores: state.cfg.players.map(()=>state.cfg.startScore),
+    scores: state.cfg.players.map(()=>_coop?_coop.values[0]:state.cfg.startScore),
     current: starter,
     round: 1,
     throws: [],
@@ -95,8 +99,10 @@ export async function startX01(starter=0){
     // from x01Snapshot(), so retracted darts never count. See legDarts().
     turnDarts: state.cfg.players.map(()=>[]),
     lastAnnouncedCheckout: state.cfg.players.map(()=>null),
-    startTime: Date.now()
+    startTime: Date.now(),
+    ...(_coop?{coop:_coop}:{})
   };
+  hideCoopResult();
   clearHits(state.boardSVG);
   disableBoard(state.boardSVG, true);
   renderX01();
@@ -104,6 +110,7 @@ export async function startX01(starter=0){
   await speakKeyWithCustom("game_on","Game on!");
   await new Promise(r=>setTimeout(r,300));
   disableBoard(state.boardSVG, false);
+  if(_coop) scheduleNextPlayerAnnounce(state.x01.current);
   if(state.cfg.isBot?.[state.x01.current]) setTimeout(runBotTurn,800);
 }
 
@@ -276,6 +283,10 @@ export function renderX01(){
 
   // ── History table (landscape) ─────────────────────────────────
   renderTurnTableLP();
+
+  // Co-op: shared rest / target / progress replace the per-player X01 parts.
+  if(state.cfg.coop&&state.x01.coop) renderCoop(remaining);
+  else hideCoopUI();
 }
 
 /** Renders the landscape history table. */
@@ -448,7 +459,7 @@ export function handleBouncer(){
 }
 
 /** Schedules requires + checkout-path announcement for the next player. */
-function _scheduleNextPlayerAnnounce(nextIdx){
+export function scheduleNextPlayerAnnounce(nextIdx){
   if(state.x01.winner) return;
   if(state.cfg.isBot?.[nextIdx]) return;
   const score=state.x01.scores[nextIdx];
@@ -481,7 +492,10 @@ export function x01Snapshot(){
     lastTurnThrows:x.lastTurnThrows.map(a=>[...a]),
     turnScores:x.turnScores.map(a=>[...a]),
     turnDarts:(x.turnDarts||[]).map(a=>[...a]),
-    bouncers:[...(x.bouncers||[])]
+    bouncers:[...(x.bouncers||[])],
+    // Co-op: value ladder position, per-value results, checkouts — so Undo
+    // also works across a checkout (back to the previous value).
+    ...(x.coop?{coop:JSON.parse(JSON.stringify(x.coop))}:{})
   };
 }
 
@@ -522,7 +536,7 @@ export function advanceX01(){
     clearCheckout(state.boardSVG);
     redrawAllHits(state.boardSVG,state.x01.historicThrows[next],[]);
     renderX01();
-    _scheduleNextPlayerAnnounce(next);
+    scheduleNextPlayerAnnounce(next);
     if(state.cfg.isBot?.[next]) setTimeout(runBotTurn,800);
     return;
   }
@@ -534,6 +548,8 @@ export function advanceX01(){
   if(state.x01.turnScores[pi].length>=3&&state.x01.first9[pi]===null)
     state.x01.first9[pi]=Math.round(state.x01.turnScores[pi].reduce((a,b)=>a+b,0)/3*10)/10;
   state.x01.scores[pi]-=spent;
+  // Co-op: the rest is shared — every player continues from the new value.
+  if(state.cfg.coop) state.x01.scores.fill(state.x01.scores[pi]);
   // pi's remaining score just changed — any still-queued/still-playing
   // "requires N"/checkout-path announcement scheduled for pi's *previous*
   // turn-start score is now factually wrong (e.g. "Daniel requires one
@@ -549,7 +565,7 @@ export function advanceX01(){
   if(next===0) state.x01.round++;
   redrawAllHits(state.boardSVG,state.x01.historicThrows[next],[]);
   renderX01();
-  _scheduleNextPlayerAnnounce(next);
+  scheduleNextPlayerAnnounce(next);
   if(state.cfg.isBot?.[next]) setTimeout(runBotTurn,800);
 }
 
@@ -671,6 +687,8 @@ function buildTvStatsHTML(players, mode, legLabel, big=false) {
  * @param {number} winnerIdx
  */
 export function handleLegWin(winnerIdx){
+  // Co-op: a checkout ends the current VALUE, not a leg (no X01 save/overlay).
+  if(state.cfg.coop&&state.x01.coop){ coopOnCheckout(winnerIdx); return; }
   state.cfg.legWins[winnerIdx]++;
   const name=state.cfg.players[winnerIdx];
   // PDC: leg starter strictly alternates regardless of winner

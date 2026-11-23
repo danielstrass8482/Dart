@@ -32,6 +32,19 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid;
     }
 
+    // Co-op Checkout games (js/coop.js): strictly owned by creator. Separate
+    // from dart_games so they never enter X01 statistics.
+    match /dart_coop_games/{doc} {
+      allow get: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow list: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
     // Coach analyses: strictly owned by creator
     match /dart_coach_analyses/{doc} {
       allow get: if request.auth != null

@@ -72,6 +72,7 @@ import { CHECKOUT_TABLE } from './checkout.js';
 import { runBotTurn, BOT_PERSONALITIES } from './bot.js';
 
 // ── X01 ──────────────────────────────────────────────────────────
+import { COOP_DEFAULT, snapCheckoutable, coopLadder, coopSkipped, coopRangeError, hideCoopResult } from './coop.js';
 import { startX01, renderX01, handleX01Click, processX01Hit, advanceX01, handleLegWin, showWinner, handleBouncer, trackDoubleAttempt, getDoubleStatsForCoach, showTargetOverlay, showTargetFeedback, calcTargetDistance } from './x01.js?v=2';
 
 // ── Cricket ──────────────────────────────────────────────────────
@@ -301,7 +302,9 @@ document.getElementById("x01-undo").addEventListener("click",()=>{
   state.x01.turnScores=last.turnScores.map(a=>[...a]);
   if(last.turnDarts) state.x01.turnDarts=last.turnDarts.map(a=>[...a]);
   if(last.bouncers) state.x01.bouncers=[...last.bouncers];
+  if(last.coop) state.x01.coop=JSON.parse(JSON.stringify(last.coop));
   state.x01.winner=null;
+  hideCoopResult();
   document.getElementById("winner-overlay").classList.remove("visible");
   redrawAllHits(state.boardSVG,state.x01.historicThrows[state.x01.current],state.x01.throws);
   renderX01();
@@ -455,6 +458,7 @@ modeGroup.addEventListener("click",e=>{
   document.querySelectorAll("#extra-mode-group .btn-toggle").forEach(b=>b.classList.remove("active"));
   modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
   document.getElementById("rounds-selector").style.display="none";
+  updateCoopSetup();
 });
 
 document.getElementById("btn-extra-modes").addEventListener("click",()=>{
@@ -471,7 +475,53 @@ document.getElementById("extra-mode-group").addEventListener("click",e=>{
   modeGroup.querySelectorAll(".btn-toggle").forEach(b=>b.classList.remove("active"));
   document.querySelectorAll("#extra-mode-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value===selectedMode));
   document.getElementById("rounds-selector").style.display=selectedMode==="Highscore"?"block":"none";
+  updateCoopSetup();
 });
+
+// ── Co-op Checkout setup: start/end value (js/coop.js) ─────────────
+let coopFrom=COOP_DEFAULT.from, coopTo=COOP_DEFAULT.to;
+/** Shows/hides the co-op range UI and the X01-only options; renders the range hint. */
+function updateCoopSetup(){
+  const on=selectedMode==="Coop";
+  document.getElementById("coop-selector").style.display=on?"block":"none";
+  document.querySelector("#spielen-lokal .setup-card")?.classList.toggle("coop-mode",on);
+  if(on&&selectedBot!=="none"){
+    selectedBot="none";
+    document.querySelectorAll("#bot-group .btn-toggle").forEach(b=>b.classList.toggle("active",b.dataset.value==="none"));
+    document.getElementById("bot-personality-section").style.display="none";
+  }
+  document.getElementById("coop-from").value=coopFrom;
+  document.getElementById("coop-to").value=coopTo;
+  const hint=document.getElementById("coop-range-hint");
+  const err=coopRangeError(coopFrom,coopTo);
+  hint.classList.toggle("err",!!err);
+  if(err){ hint.textContent=t(err); return; }
+  const n=coopLadder(coopFrom,coopTo).length, skipped=coopSkipped(coopFrom,coopTo);
+  hint.textContent=t('coop_hint_werte').replace('{n}',n)+(skipped.length?" · "+t('coop_hint_skip').replace('{list}',skipped.join(", ")):"");
+}
+/** Sets start or end; snaps to a checkoutable value and keeps start ≤ end. */
+function setCoopValue(which, v, dir){
+  v=snapCheckoutable(v,dir||1);
+  if(which==="from"){ coopFrom=v; if(coopTo<coopFrom) coopTo=coopFrom; }
+  else { coopTo=v; if(coopFrom>coopTo) coopFrom=coopTo; }
+  updateCoopSetup();
+}
+document.querySelectorAll(".coop-step").forEach(btn=>btn.addEventListener("click",()=>{
+  const which=btn.dataset.coopStep, dir=+btn.dataset.dir;
+  setCoopValue(which,(which==="from"?coopFrom:coopTo)+dir,dir);
+}));
+["from","to"].forEach(which=>{
+  const el=document.getElementById(`coop-${which}`);
+  el.addEventListener("change",()=>{
+    const cur=which==="from"?coopFrom:coopTo, v=parseInt(el.value,10);
+    setCoopValue(which, Number.isFinite(v)?v:cur, Number.isFinite(v)&&v<cur?-1:1);
+  });
+});
+document.getElementById("btn-coop-again").addEventListener("click",()=>{
+  hideCoopResult();
+  startX01(0);
+});
+document.getElementById("btn-coop-new").addEventListener("click",()=>{ hideCoopResult(); showSetup(); });
 
 document.getElementById("sets-group").addEventListener("click",e=>{
   const v=togVal(e); if(!v) return;
@@ -586,6 +636,11 @@ document.getElementById("profil-new-player-input")?.addEventListener("keydown",e
 document.getElementById("btn-start").addEventListener("click",async()=>{
   if(state.selectedPlayers.length<1){ await showAlert(t('min_1_spieler')); return; }
   if(selectedMode==="Killer"&&state.selectedPlayers.length<2&&selectedBot==="none"){ await showAlert(t('killer_min_2')); return; }
+  if(selectedMode==="Coop"){
+    if(state.selectedPlayers.length<2){ await showAlert(t('coop_min_2')); return; }
+    const err=coopRangeError(coopFrom,coopTo);
+    if(err){ await showAlert(t(err)); return; }
+  }
 
   const healthData = null; // Health Connect — Coming Soon
 
@@ -623,6 +678,12 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
     },
     legStatsHistory:[]
   };
+  if(selectedMode==="Coop"){
+    // Co-op runs on the X01 engine (js/coop.js); one "leg", no bot, double-out.
+    state.cfg.coop={from:coopFrom,to:coopTo};
+    state.cfg.isBot=state.cfg.players.map(()=>false);
+    state.cfg.totalSets=1; state.cfg.setsToWin=1; state.cfg.totalLegs=1; state.cfg.legsToWin=1;
+  }
   const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
   if(state.cfg.mode==="Cricket") startCricket();
   else if(partyModes.includes(state.cfg.mode)) startParty();

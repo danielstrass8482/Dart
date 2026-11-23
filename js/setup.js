@@ -177,9 +177,13 @@ function unlockOrientation(){ try{ screen.orientation.unlock(); }catch(e){} }
 function requestFullscreen(){ const el=document.documentElement; try{ (el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen)?.call(el); }catch(e){} }
 function exitFullscreen(){ try{ (document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen)?.call(document); }catch(e){} }
 
+/** Co-op Checkout (js/coop.js) is the one game that is also played in
+ *  portrait (iPad upright, phone): no landscape lock, no rotate overlay. */
+function isPortraitAllowed(id){ return id==="x01" && !!state.cfg?.coop; }
+
 export function updateRotateOverlay(){
   const active = document.querySelector(".screen.active");
-  const isGame = active && GAME_SCREENS.has(active.id);
+  const isGame = active && GAME_SCREENS.has(active.id) && !isPortraitAllowed(active.id);
   const isPortrait = window.matchMedia("(orientation:portrait)").matches;
   const ov = document.getElementById("rotate-overlay");
   if(ov) ov.style.display = (isGame && isPortrait) ? "flex" : "none";
@@ -192,7 +196,7 @@ export function updateRotateOverlay(){
 export function showScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
-  if(GAME_SCREENS.has(id)) lockLandscape();
+  if(GAME_SCREENS.has(id) && !isPortraitAllowed(id)) lockLandscape();
   else unlockOrientation();
   updateRotateOverlay();
   // Push a history marker when entering an active game screen so the browser/
@@ -207,6 +211,7 @@ export function showSetup(){
   document.getElementById("winner-overlay").classList.remove("visible");
   document.getElementById("set-overlay").classList.remove("visible");
   document.getElementById("leg-overlay").classList.remove("visible");
+  document.getElementById("coop-overlay")?.classList.remove("visible");
   showScreen("setup");
   loadPlayers();
 }

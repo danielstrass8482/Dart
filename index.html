@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="css/game.css" />
 <link rel="stylesheet" href="css/stats.css" />
 <link rel="stylesheet" href="css/overlays.css" />
+<link rel="stylesheet" href="css/coop.css" />
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>
   const firebaseConfig = {
@@ -253,6 +254,7 @@ window.splashPromise = new Promise(function(resolve) {
           <button class="btn-toggle" data-value="Elimination">Elimination</button>
           <button class="btn-toggle" data-value="Bob27"><i data-lucide="target" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Bob's 27</button>
           <button class="btn-toggle" data-value="CheckoutTraining"><i data-lucide="check" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Checkout</button>
+          <button class="btn-toggle" data-value="Coop" id="btn-mode-coop"><i data-lucide="users" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> Co-op Checkout</button>
         </div>
       </div>
     </div>
@@ -266,6 +268,30 @@ window.splashPromise = new Promise(function(resolve) {
       </div>
     </div>
 
+    <!-- Co-op Checkout: value range -->
+    <div id="coop-selector" style="display:none">
+      <div class="coop-setup-info" data-i18n="coop_info">Gemeinsam eine Leiter von Checkout-Werten abarbeiten. Der Rest geht an den nächsten Spieler.</div>
+      <div class="coop-range">
+        <div class="coop-range-col">
+          <label class="field-label" data-i18n="coop_startwert">STARTWERT</label>
+          <div class="coop-stepper">
+            <button type="button" class="coop-step" data-coop-step="from" data-dir="-1" aria-label="-">−</button>
+            <input type="number" inputmode="numeric" id="coop-from" min="2" max="170" value="80">
+            <button type="button" class="coop-step" data-coop-step="from" data-dir="1" aria-label="+">+</button>
+          </div>
+        </div>
+        <div class="coop-range-col">
+          <label class="field-label" data-i18n="coop_endwert">ENDWERT</label>
+          <div class="coop-stepper">
+            <button type="button" class="coop-step" data-coop-step="to" data-dir="-1" aria-label="-">−</button>
+            <input type="number" inputmode="numeric" id="coop-to" min="2" max="170" value="90">
+            <button type="button" class="coop-step" data-coop-step="to" data-dir="1" aria-label="+">+</button>
+          </div>
+        </div>
+      </div>
+      <div id="coop-range-hint" class="coop-range-hint"></div>
+    </div>
+
     <label class="field-label" data-i18n="spieler_auswaehlen">SPIELER AUSWÄHLEN</label>
     <div class="player-sel-hint" id="sel-hint" data-i18n="spieler_hint">Tippe Spieler an um sie auszuwählen (Reihenfolge = Startreihenfolge)</div>
     <div class="player-list" id="player-list">
@@ -276,31 +302,31 @@ window.splashPromise = new Promise(function(resolve) {
       <button class="btn-add-player" id="btn-add-player">+ ADD</button>
     </div>
 
-    <label class="field-label" style="margin-top:16px" data-i18n="sets">SETS (Best of)</label>
-    <div class="btn-group" id="sets-group">
+    <label class="field-label coop-hide" style="margin-top:16px" data-i18n="sets">SETS (Best of)</label>
+    <div class="btn-group coop-hide" id="sets-group">
       <button class="btn-toggle active" data-value="1">1 Set</button>
       <button class="btn-toggle" data-value="3">3 Sets</button>
       <button class="btn-toggle" data-value="5">5 Sets</button>
       <button class="btn-toggle" data-value="7">7 Sets</button>
     </div>
 
-    <label class="field-label" style="margin-top:4px" data-i18n="legs">LEGS PRO SET (Best of)</label>
-    <div class="btn-group" id="legs-group">
+    <label class="field-label coop-hide" style="margin-top:4px" data-i18n="legs">LEGS PRO SET (Best of)</label>
+    <div class="btn-group coop-hide" id="legs-group">
       <button class="btn-toggle active" data-value="1">1</button>
       <button class="btn-toggle" data-value="3">3</button>
       <button class="btn-toggle" data-value="5">5</button>
       <button class="btn-toggle" data-value="7">7</button>
     </div>
 
-    <label class="field-label" style="margin-top:4px" data-i18n="bot_gegner">BOT-GEGNER</label>
-    <div class="btn-group" id="bot-group">
+    <label class="field-label coop-hide" style="margin-top:4px" data-i18n="bot_gegner">BOT-GEGNER</label>
+    <div class="btn-group coop-hide" id="bot-group">
       <button class="btn-toggle active" data-value="none" data-i18n="kein_bot">Kein Bot</button>
       <button class="btn-toggle" data-value="easy"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="bot_anfaenger">Anfänger</span></button>
       <button class="btn-toggle" data-value="medium"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="bot_mittel">Mittel</span></button>
       <button class="btn-toggle" data-value="pro"><i data-lucide="bot" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="bot_profi">Profi</span></button>
     </div>
 
-    <div id="bot-personality-section" style="display:none">
+    <div id="bot-personality-section" class="coop-hide" style="display:none">
       <label class="field-label" style="margin-top:8px" data-i18n="bot_persoenlichkeit">PERSÖNLICHKEIT</label>
       <div class="btn-group" id="bot-personality-group" style="flex-wrap:wrap">
         <button class="btn-toggle active" data-value="methodisch"><i data-lucide="target" style="width:12px;height:12px;stroke-width:2;vertical-align:middle"></i> <span data-i18n="bot_methodisch">Methodisch</span></button>
@@ -742,6 +768,10 @@ window.splashPromise = new Promise(function(resolve) {
   </div>
   <div id="target-feedback-toast" style="display:none;position:absolute;top:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:var(--dart-text);padding:8px 16px;border-radius:8px;font-size:14px;z-index:500;pointer-events:none;white-space:nowrap"></div>
 
+  <!-- Co-op Checkout: target / progress (portrait; landscape shows it in the panel) -->
+  <div id="coop-bar" style="display:none"></div>
+  <div id="coop-toast"></div>
+
   <!-- Score strip (portrait: top, landscape: hidden) -->
   <div class="score-strip" id="score-strip"></div>
 
@@ -870,6 +900,17 @@ window.splashPromise = new Promise(function(resolve) {
       <button class="vr-btn vr-btn-send" id="btn-vr-send" style="display:none"><i data-lucide="send" style="width:16px;height:16px;stroke-width:2;vertical-align:middle"></i> AN TABLET SENDEN</button>
       <div class="vr-status" id="vr-status">Bereit — Handy seitlich, Hüfthöhe</div>
     </div>
+  </div>
+</div>
+
+<!-- Co-op Checkout result -->
+<div class="winner-overlay" id="coop-overlay">
+  <div class="winner-tab-pane">
+    <div class="winner-tab-scroll" id="coop-summary"></div>
+  </div>
+  <div class="match-new-game-bar coop-res-btns">
+    <button class="btn-new-game coop-btn-again" id="btn-coop-again" data-i18n="coop_nochmal">NOCHMAL</button>
+    <button class="btn-new-game" id="btn-coop-new" data-i18n="neues_spiel">NEUES SPIEL</button>
   </div>
 </div>
 

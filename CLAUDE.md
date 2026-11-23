@@ -54,6 +54,7 @@ storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
 | `dart_players` | Spielerprofile mit stats-Objekt |
 | `dart_rooms` | Online-Multiplayer Räume |
 | `dart_coach_analyses` | Gespeicherte KI-Coach-Analysen pro Spieler |
+| `dart_coop_games` | Co-op-Checkout-Spiele (bewusst NICHT in `dart_games`, s. „Co-op Checkout“) |
 
 ## Firebase Storage
 - `dart_voice/score_0.webm` bis `dart_voice/score_180.webm` — Custom Voice Samples (Daniel's Stimme)
@@ -152,6 +153,17 @@ service cloud.firestore {
 | Highscore | X Runden, höchste Punktzahl |
 | Killer | Eigene Zahl per Double, dann andere eliminieren |
 | Elimination | 501 + Eliminierung bei gleichem Score |
+| Co-op Checkout | 2+ Spieler spielen gemeinsam eine Leiter von Checkout-Werten (z. B. 80–90), Rest wird weitergereicht |
+
+### Co-op Checkout (seit 2026-11-23) — `js/coop.js`, `css/coop.css`
+- Setup: „Weitere Modi“ → „Co-op Checkout“; Start-/Endwert per Stepper (2–170). Nicht auscheckbare Werte (159, 162, 163, 165, 166, 168, 169) sind als Start/Ende nicht wählbar (Stepper/Eingabe springen weiter) und werden in der Leiter übersprungen (Hinweis im Setup) — ohne 3-Dart-Finish wären sie keine Checkout-Werte. Mind. 2 Spieler, kein Bot; Sets/Legs/Bot im Setup ausgeblendet
+- Läuft auf der X01-Engine/dem `#x01`-Screen (`state.cfg.coop`, `state.x01.coop`): Board, Spracheingabe, Bouncer, Undo, Darts-Zählung (`turnDarts`), requires-/Checkout-Weg-Ansagen sind die von X01. Hooks in `x01.js`: `startX01` (Rest = erster Wert), `advanceX01` (Rest für alle gleich), `handleLegWin` → `coopOnCheckout()` (nächster Wert, Spieler nach dem Finisher beginnt), `x01Snapshot` enthält `coop` → Undo funktioniert auch über einen Checkout-Wechsel. Double-Out wie X01 (X01 hat keine Single-Out-Einstellung)
+- Hochformat erlaubt: einziger Spielmodus ohne Querformat-Zwang/„Gerät drehen“ (`isPortraitAllowed` in `setup.js`) — Anforderung iPad hoch + Telefon. Anzeige: Ziel, Fortschritt („Wert 4 von 11 · 80–90“), Rest, Spieler am Zug, Darts/Checkouts pro Spieler; quer im rechten Panel inkl. Wert-Tabelle
+- Ansagen nur aus vorhandenen Clips (alle 4 Stimmen vorhanden, keine Neugenerierung, 0 Credits): Game on → „<Name> requires <Wert>“ + Checkout-Weg; nach Checkout „Checkout!“ (`el_party_checkout`) + requires/Weg für den nächsten Wert; Spielende „Game Shot!“ (`el_slang_game_shot_`; bei Slang an kommt es schon aus dem X01-Pfad)
+- Auswertung (Overlay): Darts pro Wert, Darts gesamt, Ø Darts/Wert, Spielzeit, pro Spieler Darts + Checkouts; „Nochmal“ startet dieselbe Leiter
+- Speichern: `dartDB.saveCoopGame` → Collection `dart_coop_games` (Rules + Index `userId ↑, ts ↓` deployt 2026-11-23). Grund: alles, was `dart_games` liest (stats.js, gamesCache.js, Coach, Spielerprofil, ältere App-Versionen im Feld) behandelt Nicht-Cricket-Docs als X01-Leg. Statistik zeigt Co-op in „Letzte Spiele“ + eigenem Abschnitt (`loadCoopGames`, max. 100, Sitzungs-Cache bis zum nächsten Save). `deleteUserAccount` löscht `dart_coop_games` mit
+- Tests: `node tests/coop.test.mjs` (Setup-UI, Durchlauf 80–82, Rest-Übergabe 80→73→7, Bust ×3, Undo im Wert + über Checkout, Bouncer, Zurück-Bestätigung, 3 Spieler, Ansage-Reihenfolge, Layout iPad quer/hoch + Telefon hoch/quer × DE/EN; `SHOTS=<dir>` für Screenshots) · Live: `node tests/coop-stats.live.mjs` (Gast, echte DB: Co-op nicht in `loadStats()`/IndexedDB-Cache/X01-KPIs, aber in Historie; räumt auf)
+- Android: kommt erst mit dem nächsten Build (vc13, neuer Key, s. „Android Release“) — nicht von Claude gebaut
 
 ---
 

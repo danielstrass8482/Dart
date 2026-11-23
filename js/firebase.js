@@ -102,6 +102,7 @@ localStorage.removeItem("dart_voices");
 /**
  * Initializes window.dartDB with all Firestore/Storage operations.
  */
+let _coopCache = null;
 function initDartDB(){
   window.dartDB = {
     // Games
@@ -111,6 +112,26 @@ function initDartDB(){
       const r = await addDoc(collection(db,"dart_games"), data);
       markGamesDirty();
       return r;
+    },
+    /** Co-op Checkout games (js/coop.js) — own collection, deliberately NOT
+     *  dart_games: everything that reads dart_games (stats, gamesCache, coach,
+     *  player stats, older app versions) treats non-Cricket docs as X01 legs. */
+    async saveCoopGame(data){
+      const uid = auth.currentUser?.uid;
+      if(uid) data.userId = uid;
+      const r = await addDoc(collection(db,"dart_coop_games"), data);
+      _coopCache = null;
+      return r;
+    },
+    /** Newest co-op games (max. 100), cached for the session until the next save. */
+    async loadCoopGames(){
+      const uid = auth.currentUser?.uid;
+      if(!uid) return [];
+      if(_coopCache && _coopCache.uid===uid) return _coopCache.games;
+      const snap = await getDocs(query(collection(db,"dart_coop_games"), where("userId","==",uid), orderBy("ts","desc"), limit(100)));
+      const games = snap.docs.map(d=>({id:d.id,...d.data()}));
+      _coopCache = {uid, games};
+      return games;
     },
     /** ALL of the user's games (one doc per leg), newest first — see js/gamesCache.js
      *  for how this stays cheap (persistent cache + 7-day top-up). */
@@ -405,12 +426,14 @@ window.deleteUserAccount = async function(){
   const uid = user.uid;
 
   async function deleteUserData(){
-    const [games, players, analyses] = await Promise.all([
+    const [games, players, analyses, coop] = await Promise.all([
       getDocs(query(collection(db,"dart_games"), where("userId","==",uid))),
       getDocs(query(collection(db,"dart_players"), where("userId","==",uid))),
       getDocs(query(collection(db,"dart_coach_analyses"), where("userId","==",uid))),
+      getDocs(query(collection(db,"dart_coop_games"), where("userId","==",uid))).catch(()=>({forEach(){}})),
     ]);
     const dels = [];
+    coop.forEach(d => dels.push(fsDeleteDoc(d.ref)));
     games.forEach(d => dels.push(fsDeleteDoc(d.ref)));
     players.forEach(d => dels.push(fsDeleteDoc(d.ref)));
     analyses.forEach(d => dels.push(fsDeleteDoc(d.ref)));

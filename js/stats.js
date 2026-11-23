@@ -299,6 +299,35 @@ function setupAdvancedUI(pid){
   });
 }
 
+/**
+ * Co-op Checkout section: own KPIs + list. Kept apart from the X01 numbers on
+ * purpose (team darts per checkout value are not comparable to X01 legs).
+ */
+function buildCoopStatsHTML(coopGames, pid){
+  const n=coopGames.length;
+  const vals=coopGames.flatMap(g=>g.values||[]);
+  const avg=vals.length?Math.round(vals.reduce((s,v)=>s+(v.darts||0),0)/vals.length*10)/10:0;
+  const mine=pid?coopGames.flatMap(g=>(g.players||[]).filter(p=>p.id===pid)):[];
+  const myCo=mine.reduce((s,p)=>s+(p.checkouts||0),0);
+  const myDarts=mine.reduce((s,p)=>s+(p.darts||0),0);
+  const fmt=sec=>{ sec=Math.round(sec||0); return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`; };
+  let html=`<div class="stats-section-title" style="font-size:13px;color:var(--dart-text-sec)" data-coop-stats="${n}">${t('coop_letzte')}</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="s-label">${t('spiele')}</div><div class="s-value">${n}</div></div>
+      <div class="stat-card"><div class="s-label">${t('coop_darts_pro_wert')}</div><div class="s-value">${avg||"—"}</div><div class="s-sub">${vals.length} ${t('coop_werte')}</div></div>
+      ${pid?`<div class="stat-card"><div class="s-label">${t('coop_checkouts')}</div><div class="s-value">${myCo}</div><div class="s-sub">${myDarts} ${t('darts_kurz')}</div></div>`:""}
+    </div>
+    <div class="history-list" style="margin-bottom:14px">
+      <div class="history-header" style="grid-template-columns:1fr 70px 50px 50px 60px"><span>${t('coop_spieler')}</span><span>${t('coop_wert')}</span><span>${t('coop_darts')}</span><span>Ø</span><span>${t('coop_spielzeit')}</span></div>`;
+  coopGames.slice(0,10).forEach(g=>{
+    html+=`<div class="history-row" style="grid-template-columns:1fr 70px 50px 50px 60px">
+      <span class="winner-tag">${escapeHtml((g.players||[]).map(p=>p.name).join(" + "))}</span>
+      <span>${g.from}–${g.to}</span><span>${g.totalDarts??"—"}</span><span>${g.avgDarts??"—"}</span><span>${fmt(g.durationSec)}</span>
+    </div>`;
+  });
+  return html+`</div>`;
+}
+
 /** Renders the player selector bar for stats. */
 export function renderStatsPlayerBar(){
   const bar=document.getElementById("stats-player-bar");
@@ -331,14 +360,28 @@ export async function loadAndRenderStats(){
   renderStatsPlayerBar();
 
   try{
-    allGamesCache=await window.dartDB.loadStats();
+    // Co-op Checkout games live in their own collection (js/coop.js) and only
+    // appear in the game history + their own section — never in X01 KPIs.
+    const [_all,_coopAll]=await Promise.all([
+      window.dartDB.loadStats(),
+      (window.dartDB.loadCoopGames?.()||Promise.resolve([])).catch(e=>{ console.warn("loadCoopGames:",e); return []; })
+    ]);
+    allGamesCache=_all;
     const {from,to}=getTimeRange();
-    let games=allGamesCache.filter(g=>g.ts>=from&&g.ts<=to);
-    if(statsSelectedPlayer){ games=games.filter(g=>(g.playerIds||[]).includes(statsSelectedPlayer)); }
-    if(statsContext!=="all"){ games=games.filter(g=>g.context===statsContext||(statsContext==="casual"&&!g.context)); }
+    const _filt=list=>{
+      let l=list.filter(g=>g.ts>=from&&g.ts<=to);
+      if(statsSelectedPlayer){ l=l.filter(g=>(g.playerIds||[]).includes(statsSelectedPlayer)); }
+      if(statsContext!=="all"){ l=l.filter(g=>g.context===statsContext||(statsContext==="casual"&&!g.context)); }
+      return l;
+    };
+    let games=_filt(allGamesCache);
+    const coopGames=_filt(_coopAll||[]);
 
     if(!games.length){
-      box.innerHTML=`<div class="stats-loading">${t('keine_spiele')}</div>`; return;
+      box.innerHTML=coopGames.length
+        ?`<div class="stats-section-title">${t('alle_kontext')}</div>${buildCoopStatsHTML(coopGames,statsSelectedPlayer)}`
+        :`<div class="stats-loading">${t('keine_spiele')}</div>`;
+      return;
     }
 
     const getPlayerData=(pid)=>games.flatMap(g=>(g.players||[]).filter(p=>pid?p.id===pid:true));
@@ -404,6 +447,8 @@ export async function loadAndRenderStats(){
       </div>`;
     }
 
+    if(coopGames.length) html+=buildCoopStatsHTML(coopGames,pid);
+
     if(!pid && state.allPlayers.length>1){
       html+=`<div class="stats-section-title">${t('spieler_vergleich')}</div>
         <div class="history-list">
@@ -464,8 +509,19 @@ export async function loadAndRenderStats(){
     html+=`<div class="stats-section-title">${t('letzte_spiele')}</div>
       <div class="history-list">
       <div class="history-header"><span>${t('gewinner_col')}</span><span>${t('modus_col')}</span><span>${t('darts')}</span><span>${t('datum_col')}</span></div>`;
-    games.slice(0,15).forEach(g=>{
+    const _hist=[...games,...coopGames].sort((a,b)=>b.ts-a.ts).slice(0,15);
+    _hist.forEach(g=>{
       const d=new Date(g.ts);
+      if(g.mode==="Coop"){
+        const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}`;
+        html+=`<div class="history-row" data-coop-history="${g.id||""}">
+          <span class="winner-tag">${escapeHtml((g.players||[]).map(p=>p.name).join(" + "))}</span>
+          <span class="mode-tag">Co-op ${g.from}–${g.to}</span>
+          <span>${g.totalDarts??"—"}</span>
+          <span style="color:var(--dart-text-sec);font-size:13px">${ds}</span>
+        </div>`;
+        return;
+      }
       const ds=`${d.getDate()}.${d.getMonth()+1}.${String(d.getFullYear()).slice(2)}`;
       const isWin=pid?g.winnerId===pid:true;
       html+=`<div class="history-row">
