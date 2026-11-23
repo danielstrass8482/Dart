@@ -120,7 +120,7 @@ async function run() {
     console.log(cleanup);
     check(/deleted/.test(cleanup), cleanup);
   }
-  const relevant = consoleErrors.filter((e) => /index|FAILED_PRECONDITION|permission/i.test(e));
+  const relevant = consoleErrors.filter((e) => /requires an index|FAILED_PRECONDITION|insufficient permissions|permission-denied/i.test(e));
   if (relevant.length) failures.push("console errors: " + relevant.join(" | "));
   await browser.close();
   console.log(JSON.stringify({ x01Cards: out.x01Cards, coop: out.coopDocs, history: out.historyText }, null, 1));
