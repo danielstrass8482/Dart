@@ -18,6 +18,9 @@
  *     --from-qa[=error,doubtful]  only keys the last QA run (qa/voice-qa.json,
  *                          scripts/check-voice-clips.js) marked with these statuses
  *                          (default: error) — implies --force
+ *     --upgrade-profile    regenerate every clip whose manifest entry was NOT made with the
+ *                          current data/tts-settings.json profile (full re-generation of a
+ *                          voice that is resumable: already-upgraded clips are skipped)
  *     --attempt=<n>        regeneration attempt number → different ElevenLabs seed
  *                          (attempt 0 = first generation); scripts/repair-voice-clips.js
  *                          passes this so a retry never reproduces the same bad take
@@ -59,6 +62,7 @@ const FORCE = !!args.force;
 const ONLY_KIND = args.kind || null;
 const FROM_QA = args["from-qa"] ? (args["from-qa"] === true ? ["error"] : String(args["from-qa"]).split(",")) : null;
 const ATTEMPT = parseInt(args.attempt || "0", 10) || 0;
+const UPGRADE = !!args["upgrade-profile"];
 
 const voicesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "voices.json"), "utf8"));
 const ttsCfg = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "tts-settings.json"), "utf8"));
@@ -164,14 +168,18 @@ async function main() {
     console.log(`\n=== Voice: ${voice.name} (${voice.id}) ===`);
 
     const qaKeys = qaKeysFor(voice.id);
-    const voiceJobs = qaKeys ? jobs.filter(j => qaKeys.has(j.key)) : jobs;
+    let voiceJobs = qaKeys ? jobs.filter(j => qaKeys.has(j.key)) : jobs;
+    if (UPGRADE) {
+      voiceJobs = voiceJobs.filter(j => (vman.files[j.key] || {}).profile !== ttsCfg.profile);
+      console.log(`  --upgrade-profile: ${voiceJobs.length} clips not yet on profile ${ttsCfg.profile}, ${voiceJobs.reduce((s, j) => s + j.text.length, 0)} characters`);
+    }
     if (qaKeys) console.log(`  --from-qa=${FROM_QA.join(",")}: ${voiceJobs.length} keys, ${voiceJobs.reduce((s, j) => s + j.text.length, 0)} characters`);
     for (const job of voiceJobs) {
       const outPath = path.join(dir, job.file);
       // Idempotent resume: skip anything already generated (and non-empty —
       // a 0-byte file means a previous run was killed mid-write, so that one
       // key gets regenerated instead of silently shipping silence).
-      if (!FORCE && !qaKeys && fs.existsSync(outPath) && fs.statSync(outPath).size > 0) { skipped++; continue; }
+      if (!FORCE && !qaKeys && !UPGRADE && fs.existsSync(outPath) && fs.statSync(outPath).size > 0) { skipped++; continue; }
 
       const seed = seedFor(job.key, ATTEMPT);
       const result = await generateOne(voice, job, seed);

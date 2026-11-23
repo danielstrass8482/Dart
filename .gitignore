@@ -20,3 +20,4 @@ android/signing.properties
 signing.properties
 keystore.properties
 qa/.stt-cache.jsonl
+qa/.*.log
