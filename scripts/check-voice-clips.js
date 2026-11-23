@@ -301,12 +301,14 @@ function writeResults(results) {
 
 function esc(s) { return String(s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " "); }
 
-function writeReport(label, results, voiceIds, extraNote) {
+/** opts.before: results are a snapshot of the ORIGINAL clips (all old profile) — don't read models from today's manifest. */
+function writeReport(label, results, voiceIds, extraNote, opts = {}) {
   fs.mkdirSync(REPORT_DIR, { recursive: true });
   const voicesCfg = loadJSON(path.join(ROOT, "data", "voices.json"), { voices: [] });
   const manifest = loadJSON(path.join(ROOT, "assets", "voice", "manifest.json"), { voices: {} });
   // Clips generated before the stable profile carry no model in the manifest.
   const modelsOf = vid => {
+    if (opts.before) return `eleven_turbo_v2_5*: ${Object.keys(results.voices[vid]?.clips || {}).length}`;
     const counts = {};
     const files = (manifest.voices[vid] && manifest.voices[vid].files) || {};
     for (const k of Object.keys(results.voices[vid]?.clips || {})) {
