@@ -87,9 +87,15 @@ async function main() {
   const slang = [
     "Bed and Breakfast!", "Fish and Chips!", "Richmond!",
     "Slightly more than breakfast!", "Three in a Bed!", "Shanghai!",
-    "Ton!", "Ton Forty!", "Good Darts!",
+    "Ton!", "Good Darts!",
   ];
   for (const s of slang) add(`el_slang_${s.replace(/[\s!]/g, "_").toLowerCase()}`, s, "slang");
+  // 140 with slang on: spoken like the plain 140 score announcement (the old
+  // slang phrase was misheard/mispronounced, 2026-11-24). The key keeps its
+  // historic name so cached copies are replaced via the content hash and
+  // older app versions fetching this key from Storage get the new take too.
+  // Must match SLANG_KEY_OVERRIDE in js/audio.js.
+  add("el_slang_ton_forty_", "One hundred, and forty!", "slang");
   add("el_slang_madhouse_", "Madhouse!", "slang");
   add("el_slang_double_top_game_shot_", "Double Top! Game Shot!", "slang");
   add("el_slang_game_shot_", "Game Shot!", "slang");

@@ -2,8 +2,8 @@
   "voices": {
     "george": {
       "name": "George",
-      "generatedAt": "2026-11-23T14:45:16.315Z",
-      "charsSent": 11693,
+      "generatedAt": "2026-11-24T16:07:16.615Z",
+      "charsSent": 11749,
       "files": {
         "el_co_57": {
           "bytes": 14160,
@@ -114,10 +114,14 @@
           "sourceBytes": 17597
         },
         "el_co_7": {
-          "bytes": 15864,
+          "bytes": 12480,
+          "sourceBytes": 38913,
           "chars": 33,
-          "generatedAt": "2026-11-22T05:49:58.646Z",
-          "sourceBytes": 44764
+          "generatedAt": "2026-11-24T16:07:15.923Z",
+          "model": "eleven_multilingual_v2",
+          "profile": "stable-short-v1",
+          "seed": 1449866720,
+          "attempt": 1
         },
         "el_co_71": {
           "bytes": 15408,
@@ -2460,10 +2464,14 @@
           "sourceBytes": 13835
         },
         "el_slang_ton_forty_": {
-          "bytes": 5280,
-          "chars": 10,
-          "generatedAt": "2026-11-22T05:54:19.085Z",
-          "sourceBytes": 16761
+          "bytes": 10032,
+          "sourceBytes": 25538,
+          "chars": 23,
+          "generatedAt": "2026-11-24T16:07:16.615Z",
+          "model": "eleven_multilingual_v2",
+          "profile": "stable-short-v1",
+          "seed": 2479353827,
+          "attempt": 1
         },
         "el_pct_0": {
           "bytes": 7896,
@@ -5214,8 +5222,8 @@
     },
     "haseeb": {
       "name": "Haseeb",
-      "generatedAt": "2026-11-23T14:43:17.238Z",
-      "charsSent": 33044,
+      "generatedAt": "2026-11-24T16:12:28.427Z",
+      "charsSent": 33067,
       "files": {
         "el_co_10": {
           "bytes": 8232,
@@ -10458,14 +10466,14 @@
           "attempt": 0
         },
         "el_slang_ton_forty_": {
-          "bytes": 5232,
-          "sourceBytes": 17597,
-          "chars": 10,
-          "generatedAt": "2026-11-23T14:43:16.585Z",
+          "bytes": 8136,
+          "sourceBytes": 23448,
+          "chars": 23,
+          "generatedAt": "2026-11-24T16:12:28.426Z",
           "model": "eleven_multilingual_v2",
           "profile": "stable-short-v1",
-          "seed": 2479377584,
-          "attempt": 4
+          "seed": 2479385503,
+          "attempt": 5
         },
         "el_pct_0": {
           "bytes": 6960,
@@ -14432,8 +14440,8 @@
     },
     "jerry": {
       "name": "Jerry B",
-      "generatedAt": "2026-11-23T14:47:30.767Z",
-      "charsSent": 16602,
+      "generatedAt": "2026-11-24T16:12:53.336Z",
+      "charsSent": 16625,
       "files": {
         "el_co_10": {
           "bytes": 10848,
@@ -17604,10 +17612,14 @@
           "sourceBytes": 15925
         },
         "el_slang_ton_forty_": {
-          "bytes": 8520,
-          "chars": 10,
-          "generatedAt": "2026-11-22T06:28:27.596Z",
-          "sourceBytes": 22612
+          "bytes": 10080,
+          "sourceBytes": 30972,
+          "chars": 23,
+          "generatedAt": "2026-11-24T16:12:53.335Z",
+          "model": "eleven_multilingual_v2",
+          "profile": "stable-short-v1",
+          "seed": 2479353827,
+          "attempt": 1
         },
         "el_pct_0": {
           "bytes": 7656,
@@ -20014,8 +20026,8 @@
     },
     "guy": {
       "name": "Guy",
-      "generatedAt": "2026-11-23T14:49:21.822Z",
-      "charsSent": 16764,
+      "generatedAt": "2026-11-24T16:13:17.372Z",
+      "charsSent": 16787,
       "files": {
         "el_co_10": {
           "bytes": 11760,
@@ -23190,10 +23202,14 @@
           "sourceBytes": 13835
         },
         "el_slang_ton_forty_": {
-          "bytes": 6816,
-          "chars": 10,
-          "generatedAt": "2026-11-22T06:39:43.996Z",
-          "sourceBytes": 19687
+          "bytes": 9984,
+          "sourceBytes": 29300,
+          "chars": 23,
+          "generatedAt": "2026-11-24T16:13:17.372Z",
+          "model": "eleven_multilingual_v2",
+          "profile": "stable-short-v1",
+          "seed": 2479353827,
+          "attempt": 1
         },
         "el_pct_0": {
           "bytes": 9336,

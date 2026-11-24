@@ -5,6 +5,12 @@
  *
  *   ELEVENLABS_API_KEY=… node scripts/repair-voice-clips.js --voice=haseeb
  *        [--max-attempts=4] [--include-doubtful] [--dry-run]
+ *        [--only=k1,k2]   check + regenerate ONLY these keys (other flagged
+ *                         clips of the voice stay untouched)
+ *        [--force-regen]  with --only: regenerate the listed keys in round 1
+ *                         even if the check doesn't flag them (a mistake the
+ *                         ear caught but the STT excuses, e.g. a digit run),
+ *                         then continue with the normal check loop
  *
  * Per round: scripts/check-voice-clips.js (cached by SHA-1 → only changed
  * clips are transcribed again), then every clip with status "error" (and with
@@ -28,6 +34,9 @@ const INCLUDE_DOUBTFUL = !!args["include-doubtful"];
 const DRY = !!args["dry-run"];
 const voices = String(args.voice || "").split(",").filter(Boolean);
 if (!voices.length) { console.error("--voice=<id>[,<id>] required"); process.exit(1); }
+const ONLY = args.only ? new Set(String(args.only).split(",").map(s => s.trim()).filter(Boolean)) : null;
+const FORCE = !!args["force-regen"];
+if (FORCE && !ONLY) { console.error("--force-regen needs --only=<keys>"); process.exit(1); }
 
 function needsRegen(c) {
   if (c.status === "error") return true;
@@ -41,10 +50,10 @@ function needsRegen(c) {
 async function main() {
   for (const voice of voices) {
     for (let round = 1; ; round++) {
-      await runCheck({ voice });
+      await runCheck(ONLY ? { voice, only: [...ONLY].join(",") } : { voice });
       const results = loadJSON(RESULTS_PATH, { voices: {} });
       const clips = results.voices[voice].clips;
-      const failing = Object.entries(clips).filter(([, c]) => needsRegen(c));
+      const failing = Object.entries(clips).filter(([k, c]) => (!ONLY || ONLY.has(k)) && ((FORCE && round === 1) || needsRegen(c)));
       const stuck = failing.filter(([, c]) => (c.attempts || 0) >= MAX).map(([k]) => k);
       const todo = failing.filter(([, c]) => (c.attempts || 0) < MAX);
       const s = summarize(Object.values(clips));

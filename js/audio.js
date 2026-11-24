@@ -358,6 +358,12 @@ function scoreAnnouncement(score, hitBull=false){
  * @param {Array} throws current turn throws from state.x01.throws
  * @returns {string|null}
  */
+// 140 with slang on is announced like the plain 140 score (2026-11-24, the old
+// slang phrase was misheard). Its clip keeps the historic key, so the key can't
+// be derived from the text — see "el_slang_ton_forty_" in scripts/build-vocabulary.js.
+const SLANG_140_TEXT="One hundred, and forty!";
+const SLANG_KEY_OVERRIDE={[SLANG_140_TEXT]:"el_slang_ton_forty_"};
+
 function detectDartSlang(score, throws){
   if(score===180) return null;
   if(!throws||!throws.length) return null;
@@ -388,7 +394,7 @@ function detectDartSlang(score, throws){
   }
   // Score-based slang (any combination)
   if(score===100) return "Ton!";
-  if(score===140) return "Ton Forty!";
+  if(score===140) return SLANG_140_TEXT;
   if(score>=100) return "Good Darts!";
   return null;
 }
@@ -403,7 +409,7 @@ export async function speakScoreWithCustom(score, hitBull=false){
   const slangText=slangOn?detectDartSlang(score,state.x01?.throws):null;
   const plain=scoreAnnouncement(score,hitBull);
   const text=slangText??plain.text;
-  const slangKey=slangText?`el_slang_${slangText.replace(/[\s!]/g,"_").toLowerCase()}`:null;
+  const slangKey=slangText?(SLANG_KEY_OVERRIDE[slangText]??`el_slang_${slangText.replace(/[\s!]/g,"_").toLowerCase()}`):null;
   const key=slangKey??plain.key;
   await queueAudio(text,key);
 }

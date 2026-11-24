@@ -26,11 +26,18 @@ Die verbleibenden „zweifelhaft“-Clips sind fast ausschließlich **Grenzen de
 
 | Stimme | Key | Soll | erkannt (alle Takes ähnlich) | Einschätzung |
 |---|---|---|---|---|
-| Haseeb | `el_slang_ton_forty_` | Ton Forty! | „Don't forte!“, „Tone 4T!“, „Don't for tea!“ | „Ton“ wird wie „Tone/Don“ ausgesprochen; „Don't forget to subscribe“ im 4. Take ist eine bekannte Whisper-Halluzination, nicht Clip-Inhalt |
+| Haseeb | `el_slang_ton_forty_` | (alter Slang-Text für 140) | „Don't forte!“, „Tone 4T!“, „Don't for tea!“ | **erledigt 2026-11-24:** Text in allen 4 Stimmen auf „One hundred, and forty!“ umgestellt und neu erzeugt (s. u.) |
 | Haseeb | `name_amelie` | Amelie. | „I'm Lee.“ / „I'm Ali.“ | vermutlich „A-me-lie“ englisch betont |
 | Guy | `el_co_3`, `el_co_5` | Checkout: One, Double One/Two. | „Check out 1, double 1“ | inhaltlich korrekt, nur langsam |
 
-**Haseeb:** nach Neugenerierung mit stabilem Profil nicht mehr nennenswert fehlerhaft (1 statt 60 eindeutige Fehler; der verbleibende ist ein Aussprache-/Erkennungsfall). **Empfehlung: Stimme behalten.** Vor Freigabe einmal die 20 auffälligen Clips nachhören (`qa/voice-review.html?filter=flagged`, Stimme Haseeb) — besonders „Ton Forty!“ und die deutschen Namen, weil Haseebs Akzent dort am ehesten falsch klingen kann.
+**Haseeb:** nach Neugenerierung mit stabilem Profil nicht mehr nennenswert fehlerhaft (1 statt 60 eindeutige Fehler; der verbleibende ist ein Aussprache-/Erkennungsfall). **Empfehlung: Stimme behalten.** Vor Freigabe einmal die 20 auffälligen Clips nachhören (`qa/voice-review.html?filter=flagged`, Stimme Haseeb) — besonders die deutschen Namen, weil Haseebs Akzent dort am ehesten falsch klingen kann.
+
+## Nachträge 2026-11-24 (per Gehör von Daniel bestätigt)
+
+- **George `el_co_7`** („Checkout: Triple One, Double Two.“): der alte Take (noch aus dem turbo-Profil vom 22.11.) sprach eine Zahl statt des Segments; Whisper hatte ihn nur als Ziffernfolge „1111022“ (small.en: „triple one, ten double two“) und damit als STT-Grenze eingestuft. Der Text war korrekt (Wörter, keine Ziffern). Neu erzeugt (stable-short-v1, Versuch 1): small.en „Check out triple one double two.“, medium.en „check out 11122“ (= 1-1-1, 2-2), kein „hundred“.
+- **`el_slang_ton_forty_`** (alle 4 Stimmen, nur bei Dart-Slang an): Slang für 140 wird jetzt wie die normale 140-Ansage gesprochen, „One hundred, and forty!“ (= `el_score_140`). Key bleibt unverändert (Hash-URL ersetzt gecachte Kopien; ältere App-Versionen holen denselben Key aus Storage). Quelle `scripts/build-vocabulary.js`, App `SLANG_KEY_OVERRIDE` in `js/audio.js`.
+- `report-2-nachher.md` und `qa/voice-qa-vorher.json` sind eingefrorene Stände vom 23.11. und enthalten den alten Text weiterhin.
+- Einzelne Clips gezielt: `repair-voice-clips.js --voice=<v> --only=<keys> [--force-regen]` (nur diese Keys; `--force-regen` erzeugt sie in Runde 1 auch dann neu, wenn die STT sie entschuldigt).
 
 ## Ursache (belegt)
 
@@ -82,6 +89,7 @@ export HF_HOME=/var/tmp/hf FFMPEG=$(/var/tmp/whisper-venv/bin/python -c 'import 
 
 node scripts/check-voice-clips.js [--voice=haseeb] [--only=k1,k2] [--report=<label>]   # prüfen (Exit 1 bei Fehlern)
 ELEVENLABS_API_KEY=… node scripts/repair-voice-clips.js --voice=<v> --include-doubtful   # prüfen → neu erzeugen → prüfen
+ELEVENLABS_API_KEY=… node scripts/repair-voice-clips.js --voice=<v> --only=<keys> --force-regen   # nur diese Clips (per Gehör beanstandet)
 node scripts/check-central-names.js [--delete-bad]                                       # dart_voice_names/ prüfen
 node scripts/upload-voice-assets.js --voice=<v> --only=<keys> | --bulk && bash scripts/verify-voice-upload.sh <v>
 ```

@@ -2,7 +2,7 @@
 
 GENERATED FILE — do not hand-edit. Regenerate with `node scripts/build-vocabulary.js`.
 
-Total entries: **627**, total characters (per voice): **14531**.
+Total entries: **627**, total characters (per voice): **14544**.
 
 Every entry here must exist as a local audio clip for every bundled voice
 before the app ever needs it — see scripts/gen-voice-assets.js.
@@ -545,7 +545,7 @@ before the app ever needs it — see scripts/gen-voice-assets.js.
 | `el_score_98` | Ninety Eight! |
 | `el_score_99` | Ninety Nine! |
 
-## slang (12 entries, 161 chars)
+## slang (12 entries, 174 chars)
 
 | key | text |
 |---|---|
@@ -560,7 +560,7 @@ before the app ever needs it — see scripts/gen-voice-assets.js.
 | `el_slang_slightly_more_than_breakfast_` | Slightly more than breakfast! |
 | `el_slang_three_in_a_bed_` | Three in a Bed! |
 | `el_slang_ton_` | Ton! |
-| `el_slang_ton_forty_` | Ton Forty! |
+| `el_slang_ton_forty_` | One hundred, and forty! |
 
 ## training_pct (102 entries, 1868 chars)
 
