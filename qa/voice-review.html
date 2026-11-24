@@ -52,7 +52,7 @@
 <div id="list"></div>
 
 <script>
-let vocabulary = [], names = [], voices = [], currentVoice = null, qa = null;
+let vocabulary = [], names = [], voices = [], currentVoice = null, qa = null, onlyKeys = null;
 let playQueue = [], playIdx = -1, playing = false;
 
 async function loadData(){
@@ -64,13 +64,17 @@ async function loadData(){
   // Result of scripts/check-voice-clips.js (Whisper transcript vs. target text).
   try { qa = await fetch('voice-qa.json', {cache:'no-cache'}).then(r=>r.ok?r.json():null); } catch(_) { qa = null; }
   const filterSel = document.getElementById('filterSel');
-  const wanted = new URLSearchParams(location.search).get('filter');
+  const qs = new URLSearchParams(location.search);
+  const wanted = qs.get('filter');
+  // Direct links: ?voice=<id>&keys=k1,k2 → only these clips of that voice
+  onlyKeys = qs.get('keys') ? new Set(qs.get('keys').split(',').map(k=>k.trim()).filter(Boolean)) : null;
   if (wanted && [...filterSel.options].some(o=>o.value===wanted)) filterSel.value = wanted;
   filterSel.addEventListener('change', ()=>renderList(currentVoice));
   const sel = document.getElementById('voiceSel');
   sel.innerHTML = voices.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   sel.addEventListener('change', ()=>renderList(sel.value));
-  currentVoice = voices[0].id;
+  currentVoice = voices.some(v=>v.id===qs.get('voice')) ? qs.get('voice') : voices[0].id;
+  sel.value = currentVoice;
   renderList(currentVoice);
 }
 
@@ -91,13 +95,16 @@ async function renderList(voiceId){
     : s ? `Automatische Prüfung (${qa.voices[voiceId].checkedAt?.slice(0,16).replace('T',' ')}): ${s.ok} korrekt · ${s.doubtful} zweifelhaft · ${s.error} fehlerhaft von ${s.total}` : 'Diese Stimme wurde noch nicht geprüft.';
   const entries = allEntries().filter(e=>{
     const st = clipsQA[e.key]?.status;
+    if (onlyKeys) return onlyKeys.has(e.key);
     if (filter === 'all') return true;
     if (filter === 'flagged') return st === 'error' || st === 'doubtful';
     return st === filter;
   });
   window._entries = entries;
   const rows = await Promise.all(entries.map(async (e)=>{
-    const url = `../assets/voice/${voiceId}/${e.file}`;
+    // ?h=<sha1 of the checked file> — a regenerated take gets a new URL (no stale HTTP cache)
+    const h = clipsQA[e.key]?.sha1;
+    const url = `../assets/voice/${voiceId}/${e.file}` + (h ? `?h=${h}` : '');
     let exists = false;
     try { const r = await fetch(url, {method:'HEAD'}); exists = r.ok; } catch(_){}
     return {...e, url, exists};
