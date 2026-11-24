@@ -26,6 +26,9 @@ export function setPartyBoard(svgEl){ boardSVGparty = svgEl; }
  * Starts a new party game.
  */
 const BOB27_SEQ=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,25];
+/** Points of a Bob's 27 target: the double's value (D1 = 2 … D20 = 40, double bull = 50). */
+export const bob27Value=(field)=>field===25?50:field*2;
+const bob27Label=(field)=>field===25?"Bull":`D${field}`;
 
 export function startParty(){
   const n=state.cfg.players.length;
@@ -57,6 +60,7 @@ export function startParty(){
     bob27Score: state.cfg.players.map(()=>27),
     bob27Round: 0,
     bob27Out: state.cfg.players.map(()=>false),
+    bob27Log: state.cfg.players.map(()=>[]),   // per round: {field, hits, delta}
     pendingAdvance: false,
     coTargets,
     coRound: 0,
@@ -203,7 +207,7 @@ export function renderPartyScoreboard(){
     box.innerHTML=`<div class="panel-label">BOB'S 27 · ${t('ziel').toUpperCase()} ${fieldLabel} (${state.pg.bob27Round+1}/21)</div>`+
       state.cfg.players.map((p,i)=>`<div style="margin-bottom:4px;display:flex;justify-content:space-between">
         <span style="font-size:13px;color:${i===state.pg.current?"var(--dart-text)":"var(--dart-text-sec)"}">${escapeHtml(p)}</span>
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${i===state.pg.current?"var(--dart-gold)":"var(--dart-text-muted)"}">${state.pg.bob27Score[i]}</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${state.pg.bob27Out[i]?"var(--dart-danger)":i===state.pg.current?"var(--dart-gold)":"var(--dart-text-muted)"}">${state.pg.bob27Score[i]}${state.pg.bob27Out[i]?" · OUT":""}</span>
       </div>`).join("");
   } else if(state.pg.mode==="CheckoutTraining"){
     const target=state.pg.coTargets[state.pg.coRound];
@@ -234,7 +238,7 @@ export function renderParty(){
   else if(state.pg.mode==="Highscore") info.textContent=t('highscore_info').replace('{n}',state.pg.hsMaxRounds);
   else if(state.pg.mode==="Killer") info.textContent=t('killer_info');
   else if(state.pg.mode==="Elimination") info.textContent=t('elimination_info');
-  else if(state.pg.mode==="Bob27"){ const f=BOB27_SEQ[state.pg.bob27Round]; const fL=f===25?"Bull":`D${f}`; info.textContent=t('bob27_info').replace('{f}',fL).replace('{plus}',f===25?50:f*2).replace('{minus}',f===25?25:f); }
+  else if(state.pg.mode==="Bob27"){ const f=BOB27_SEQ[state.pg.bob27Round]; const fL=f===25?"Bull":`D${f}`; info.textContent=t('bob27_info').replace('{f}',fL).replace('{plus}',bob27Value(f)).replace('{minus}',bob27Value(f)); }
   else if(state.pg.mode==="CheckoutTraining") info.textContent=t('checkout_training_info');
 
   const modeNames={AtC:"Around the Clock",Shanghai:"Shanghai",Highscore:"Highscore",Killer:"Killer",Elimination:"Elimination",Bob27:"Bob's 27",CheckoutTraining:"Checkout-Training"};
@@ -265,7 +269,7 @@ export function handlePartyClick(e){
     hsScores:[...state.pg.hsScores],hsRound:state.pg.hsRound,
     killerIsKiller:[...state.pg.killerIsKiller],killerLives:[...state.pg.killerLives],killerEliminated:[...state.pg.killerEliminated],
     elimScores:[...state.pg.elimScores],
-    bob27Score:[...state.pg.bob27Score],bob27Round:state.pg.bob27Round,bob27Out:[...state.pg.bob27Out],
+    bob27Score:[...state.pg.bob27Score],bob27Round:state.pg.bob27Round,bob27Out:[...state.pg.bob27Out],bob27Log:state.pg.bob27Log,
     coRound:state.pg.coRound,coScore:state.pg.coScore,coHits:state.pg.coHits,coAttempts:state.pg.coAttempts,
     historicLens:state.pg.historicThrows.map(a=>a.length)
   })));
@@ -408,16 +412,16 @@ export function advanceParty(){
   }
 
   if(state.pg.mode==="Bob27"){
+    // Standard Bob's 27: every hit on the target double scores its value
+    // (2×field, double bull 50); only if ALL three darts miss it, that value
+    // is deducted once. 0 or less = game over for this player.
     const field=BOB27_SEQ[state.pg.bob27Round];
-    const fieldVal=field===25?25:field;
-    const hits=state.pg.throws.filter(t=>
-      field===25?(t.label==="Bull"):(t.label===`D${field}`)
-    ).length;
-    // A turn is always 3 darts — darts not thrown (turn ended early via the
-    // "next" button) count as misses.
-    const misses=3-hits;
-    state.pg.bob27Score[pi]+=hits*(fieldVal*2)-misses*fieldVal;
-    if(state.pg.bob27Score[pi]<0){ state.pg.bob27Out[pi]=true; queueAudio("Game Over!","el_bob27_over"); }
+    const value=bob27Value(field);
+    const hits=state.pg.throws.filter(t=>t.label===bob27Label(field)).length;
+    const delta=hits>0?hits*value:-value;
+    state.pg.bob27Score[pi]+=delta;
+    state.pg.bob27Log=state.pg.bob27Log.map((l,i)=>i===pi?[...l,{field,hits,delta}]:l);
+    if(state.pg.bob27Score[pi]<=0){ state.pg.bob27Out[pi]=true; queueAudio("Game Over!","el_bob27_over"); }
     // Next player still in the game; wrapping around = next double.
     const n=state.cfg.players.length;
     let next=-1;
@@ -468,5 +472,27 @@ export function advanceParty(){
 export function partyWin(winnerIdx){
   state.pg.winner=winnerIdx;
   if(window._showWinner) window._showWinner(state.cfg.players[winnerIdx],0);
+  if(state.pg.mode==="Bob27") renderBob27Result();
   if(window._saveGameToFirebase) window._saveGameToFirebase(winnerIdx);
+}
+
+/** Bob's 27 result in the winner overlay: points, hits, how far each player got. */
+function renderBob27Result(){
+  const el=document.getElementById("winner-summary");
+  if(!el) return;
+  const rows=state.cfg.players.map((p,i)=>{
+    const log=state.pg.bob27Log[i]||[];
+    const hits=log.reduce((a,r)=>a+r.hits,0);
+    const last=log[log.length-1];
+    const status=state.pg.bob27Out[i]&&last?t('bob27_out_at').replace('{f}',bob27Label(last.field)):log.length===BOB27_SEQ.length?t('bob27_finished'):"";
+    return `<tr data-bob27-row="${i}">
+      <td style="text-align:left;padding:6px 8px">${escapeHtml(p)}</td>
+      <td style="padding:6px 8px;font-family:'Bebas Neue',sans-serif;font-size:22px;color:${state.pg.bob27Score[i]>0?"var(--dart-gold)":"var(--dart-danger)"}" data-bob27="score">${state.pg.bob27Score[i]}</td>
+      <td style="padding:6px 8px" data-bob27="hits">${hits}/${log.length*3}</td>
+      <td style="padding:6px 8px;color:var(--dart-text-sec)" data-bob27="status">${status}</td></tr>`;
+  }).join("");
+  el.innerHTML=`<div class="panel-label" style="margin:8px 0;color:var(--dart-text-sec);letter-spacing:.12em;font-size:11px">${t('bob27_result')}</div>
+    <table style="width:100%;border-collapse:collapse;color:var(--dart-text);text-align:center"><thead><tr style="color:var(--dart-text-sec);font-size:11px">
+      <th></th><th>${t('bob27_score')}</th><th>${t('bob27_hits')}</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  el.style.display="";
 }

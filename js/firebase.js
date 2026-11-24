@@ -18,7 +18,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, listAll }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
 import { initializeAppCheck, CustomProvider, ReCaptchaV3Provider, getToken }
   from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-check.js";
-import { loadAllGames, markGamesDirty, clearGamesCache } from "./gamesCache.js";
+import { loadAllGames, markGamesDirty, clearGamesCache, isStatsGame } from "./gamesCache.js";
 
 const fbCfg = window.FIREBASE_CONFIG;
 const app     = initializeApp(fbCfg);
@@ -30,26 +30,42 @@ const gProvider = new GoogleAuthProvider();
 const isNative = window.Capacitor?.isNativePlatform() === true;
 
 // ── Firebase App Check ────────────────────────────────────────────────────────
-// Android native (Capacitor): bridged to Play Integrity via AndroidBridge
-// Web (GitHub Pages): set window.FIREBASE_APP_CHECK_RECAPTCHA_KEY in index.html
-// Enable enforcement in Firebase Console → App Check once all clients are updated.
+// Android native (Capacitor): Play Integrity via the AppCheckBridge plugin
+// (android/…/AppCheckBridgePlugin.java), legacy AndroidBridge interface as
+// fallback. NEVER reCAPTCHA inside the app: its origin is https://localhost,
+// which the reCAPTCHA key doesn't allow, so that could only ever fail.
+// Web: reCAPTCHA v3 (window.FIREBASE_APP_CHECK_RECAPTCHA_KEY in index.html).
+// The functions verify + count every token (functions/appCheckGate.js);
+// enforcement is switched per function in Firestore dart_config/appcheck.
 let _appCheck = null;
+let _appCheckError = null;   // last token error (sent as X-DT-AppCheck-Error for diagnosis)
+const nativeAppCheck = () => window.Capacitor?.Plugins?.AppCheckBridge;
+function nativeTokenViaLegacyBridge() {
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    (function waitForBridge() {
+      if (window.AndroidBridge?.getAppCheckToken) {
+        window._appCheckCallbacks = window._appCheckCallbacks || {};
+        const cbId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+        window._appCheckCallbacks[cbId] = { resolve, reject };
+        window.AndroidBridge.getAppCheckToken(cbId);
+        setTimeout(() => {
+          if (window._appCheckCallbacks[cbId]) { delete window._appCheckCallbacks[cbId]; reject(new Error("App Check token timeout")); }
+        }, 10000);
+      } else if (Date.now() - t0 < 5000) setTimeout(waitForBridge, 100);
+      else reject(new Error("no native App Check bridge"));
+    })();
+  });
+}
 (function _initAppCheck() {
-  if (isNative && window.AndroidBridge?.getAppCheckToken) {
-    window._appCheckCallbacks = {};
+  if (isNative) {
     _appCheck = initializeAppCheck(app, {
       provider: new CustomProvider({
-        getToken: () => new Promise((resolve, reject) => {
-          const cbId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-          window._appCheckCallbacks[cbId] = { resolve, reject };
-          window.AndroidBridge.getAppCheckToken(cbId);
-          setTimeout(() => {
-            if (window._appCheckCallbacks[cbId]) {
-              delete window._appCheckCallbacks[cbId];
-              reject(new Error("App Check token timeout"));
-            }
-          }, 10000);
-        })
+        getToken: async () => {
+          const plugin = nativeAppCheck();
+          const r = plugin ? await plugin.getToken({ forceRefresh: false }) : await nativeTokenViaLegacyBridge();
+          return { token: r.token, expireTimeMillis: r.expireTimeMillis };
+        }
       }),
       isTokenAutoRefreshEnabled: true
     });
@@ -63,23 +79,56 @@ let _appCheck = null;
 
 /**
  * Fetches the current Firebase App Check token, or null if App Check isn't
- * initialized or the token can't be obtained. Never throws — during the
- * enforcement transition phase callers attach the "X-Firebase-AppCheck" header
- * when a token is available and proceed without it otherwise, so a token
- * hiccup doesn't break the Coach/TTS/feedback endpoints.
+ * initialized or the token can't be obtained. Never throws — while
+ * enforcement is off, callers attach the "X-Firebase-AppCheck" header when a
+ * token is available and proceed without it otherwise.
  * @returns {Promise<string|null>}
  */
 async function fetchAppCheckToken() {
-  if (!_appCheck) return null;
+  if (!_appCheck) { _appCheckError = isNative ? "not initialized" : "no reCAPTCHA key"; return null; }
   try {
     const { token } = await getToken(_appCheck, /* forceRefresh */ false);
+    _appCheckError = null;
     return token || null;
   } catch (e) {
-    console.warn("App Check token fetch failed:", e.message);
+    _appCheckError = String(e?.message || e).slice(0, 200);
+    console.warn("App Check token fetch failed:", _appCheckError);
     return null;
   }
 }
 window.getAppCheckToken = fetchAppCheckToken;
+
+// "android/1.3.0 (13)" or "web" — lets the functions count tokens per
+// platform even when a token is missing/invalid (functions/appCheckGate.js).
+let _clientId = isNative ? "android" : "web";
+if (isNative) {
+  try { window.Capacitor?.Plugins?.App?.getInfo?.().then(i => { if (i?.version) _clientId = `android/${i.version} (${i.build})`; }).catch(() => {}); } catch (e) {}
+}
+
+/**
+ * Headers for calls to our Cloud Functions: App Check token (if any), client
+ * platform/version, and — if the token couldn't be fetched — the reason.
+ * @returns {Promise<Record<string,string>>}
+ */
+window.appCheckHeaders = async function appCheckHeaders() {
+  const h = { "X-DT-Client": _clientId };
+  const tok = await fetchAppCheckToken();
+  if (tok) h["X-Firebase-AppCheck"] = tok;
+  else if (_appCheckError) h["X-DT-AppCheck-Error"] = _appCheckError.replace(/[^\x20-\x7e]/g, "?");
+  return h;
+};
+
+// Measurement ping, at most once a day per device, a while after start-up.
+const APPCHECK_PING_URL = "https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartAppCheckPing";
+setTimeout(async () => {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem("dart_appcheck_ping") === today || !navigator.onLine) return;
+    const headers = await window.appCheckHeaders();
+    const r = await fetch(APPCHECK_PING_URL, { method: "POST", headers });
+    if (r.ok) { localStorage.setItem("dart_appcheck_ping", today); window.__appCheckPing = await r.json(); }
+  } catch (e) { /* offline etc. — next start */ }
+}, 8000);
 
 // ── Auth state ────────────────────────────────────────────────────
 window.currentUser = null;
@@ -139,8 +188,9 @@ function initDartDB(){
       const uid = auth.currentUser?.uid;
       if(!uid) return [];
       const {games, info} = await loadAllGames({db, collection, query, where, orderBy, limit, startAfter, getDocs}, uid);
-      window.dartDB.lastStatsLoad = info;
-      return games;
+      const statsGames = games.filter(isStatsGame); // party/training docs from old app versions never count
+      window.dartDB.lastStatsLoad = {...info, excluded: games.length - statsGames.length};
+      return statsGames;
     },
     // Players
     async loadPlayers(){

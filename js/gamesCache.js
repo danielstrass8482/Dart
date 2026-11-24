@@ -134,3 +134,21 @@ export async function loadAllGames(fs, uid) {
   const games = [...mem.byId.values()].sort((a, b) => (b.ts || 0) - (a.ts || 0));
   return { games, info: { mode, reads, ms: Math.round(performance.now() - t0), total: games.length } };
 }
+
+/**
+ * Which dart_games docs count for statistics (stats KPIs, history, coach
+ * prompts, player profile — everything that goes through dartDB.loadStats()).
+ * Only real X01 legs (501/301; old docs without a mode) and Cricket. Party/
+ * training modes must never count: app versions before 1.3.0 saved them here
+ * with the PREVIOUS X01 game's numbers (AtC, Shanghai, Highscore, Killer,
+ * Elimination) or as mislabeled 501 legs ("Bob27"/"CheckoutTraining" started
+ * a plain 501 there) — and old versions stay in use for a while. A whitelist
+ * also keeps any future mode out until it is handled on purpose. Applied on
+ * output, so copies already in this device's IndexedDB cache are covered too.
+ * @param {{mode?:string}} g
+ */
+export function isStatsGame(g) {
+  const m = g?.mode;
+  return m == null || m === "501" || m === "301" || m === "Cricket";
+}
+

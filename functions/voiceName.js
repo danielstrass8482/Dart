@@ -87,6 +87,8 @@ function buildDownloadURL(bucket, filePath, token) {
   return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(filePath)}?alt=media&token=${token}`;
 }
 
+const { appCheckGate } = require("./appCheckGate");
+
 exports.dartVoiceName = onRequest(
   {
     secrets: [ELEVENLABS_API_KEY],
@@ -96,6 +98,9 @@ exports.dartVoiceName = onRequest(
   },
   async (req, res) => {
     if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
+
+    // App Check (measured; enforcement per function via dart_config/appcheck)
+    if (!(await appCheckGate("dartVoiceName", req, res))) return;
 
     try {
       const config = (await getFirestore().collection("dart_config").doc("limits").get()).data();

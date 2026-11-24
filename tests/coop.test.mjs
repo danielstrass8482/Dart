@@ -443,7 +443,7 @@ async function testVoice(browser) {
     const u = r.url();
     const m = u.match(/\/assets\/voice\/([^/]+)\/([^/?]+)\.mp3/);
     if (m) clips.push(`${m[1]}/${m[2]}`);
-    else if (/cloudfunctions|run\.app|firebasestorage|elevenlabs/.test(u)) foreign.push(u);
+    else if (/cloudfunctions|run\.app|firebasestorage|elevenlabs/.test(u) && !/dartAppCheckPing/.test(u)) foreign.push(u); // App Check measurement ping (js/firebase.js) is not audio
   });
   await page.addInitScript(() => {
     localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_lang", "de");

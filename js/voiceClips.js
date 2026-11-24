@@ -261,7 +261,7 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
       try { const user = window.fbAuth?.currentUser; if (user) authToken = await user.getIdToken(); } catch (e) {}
       const resp = await fetch(NAME_VOICE_FN_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + authToken },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + authToken, ...(window.appCheckHeaders ? await window.appCheckHeaders() : {}) },
         body: JSON.stringify({ name: opts.rawName, voiceId }),
       });
       if (resp.ok) {

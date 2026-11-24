@@ -245,7 +245,12 @@ export const translations = {
     highscore_info: "{n} Runden · Höchste Gesamtpunktzahl gewinnt",
     killer_info: "Erst eigene Zahl per Double treffen, dann andere eliminieren",
     elimination_info: "501 · Triffst du exakt den Score eines Gegners → er startet neu",
-    bob27_info: "Treffe {f} · Treffer: +{plus} · Daneben: -{minus}",
+    bob27_info: "Ziel {f} · je Treffer +{plus} · alle 3 daneben −{minus} · bei 0 oder weniger ist Schluss",
+    bob27_score: "Punkte",
+    bob27_hits: "Treffer",
+    bob27_out_at: "Aus bei {f}",
+    bob27_finished: "Bis Bull durchgespielt",
+    bob27_result: "BOB'S 27 · ERGEBNIS",
     checkout_training_info: "Checkout in max. 3 Darts",
 
     // Bot
@@ -851,7 +856,12 @@ export const translations = {
     highscore_info: "{n} Rounds · Highest total score wins",
     killer_info: "Hit your number on Double first, then eliminate others",
     elimination_info: "501 · Match an opponent's exact score to reset theirs",
-    bob27_info: "Hit {f} · Hit: +{plus} · Miss: -{minus}",
+    bob27_info: "Target {f} · each hit +{plus} · all 3 missed −{minus} · 0 or less ends the game",
+    bob27_score: "Points",
+    bob27_hits: "Hits",
+    bob27_out_at: "Out at {f}",
+    bob27_finished: "Completed through Bull",
+    bob27_result: "BOB'S 27 · RESULT",
     checkout_training_info: "Checkout in max. 3 darts",
 
     // Bot

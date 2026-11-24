@@ -5,10 +5,12 @@
  *
  * Everything goes through the real UI: setup buttons → btn-start, darts are
  * real mouse clicks on the party board's SVG segments, "next"/undo buttons.
- *   1. Bob's 27 solo: party screen, title, 27 points, target D1; hit/miss
- *      scoring per the in-app rule (+2×field per hit, −field per miss/not
- *      thrown dart); score below 0 = game over → result overlay; nothing is
- *      saved to dart_games.
+ *   1. Bob's 27 (standard rule) solo: party screen, title, 27 points, D1;
+ *      every hit on the target double +double value, partial hits, all three
+ *      missed = −double value once (darts not thrown = missed); 0 or less =
+ *      game over (below 0 by play, exactly 0 with a preset score) → result
+ *      overlay with points/hits/"out at"; undo; nothing saved to dart_games.
+ *      Full run D1…D20 + Bull (one hit each) → 497 points, "completed".
  *   2. Bob's 27, 2 players: turns alternate, the double only advances after
  *      both; an eliminated player is skipped.
  *   3. Checkout-Training: party screen, 10 targets from the checkout table;
@@ -117,7 +119,7 @@ async function pg(page) {
 async function run() {
   const browser = await chromium.launch();
 
-  // ── 1. Bob's 27 solo
+  // ── 1. Bob's 27 solo (standard rule)
   console.log("Bob's 27 solo");
   let page = await openApp(browser);
   await startMode(page, "Bob27", ["Anna"]);
@@ -126,35 +128,76 @@ async function run() {
   check(s.title === "Bob's 27", `title "Bob's 27" (got "${s.title}")`);
   check(s.mode === "Bob27" && s.bob[0] === 27 && s.bobRound === 0, `starts with 27 points on D1 (${s.bob}, round ${s.bobRound})`);
   check(s.x01Scores === null, "no X01 game was started (no 501)");
-  check(/D1/.test(s.info) && /D1/.test(s.scoreboard), `info/scoreboard show target D1 ("${s.info}")`);
-  await throwAt(page, "D1"); await throwAt(page, "Miss"); await throwAt(page, "Miss");
+  check(/D1/.test(s.info) && /\+2/.test(s.info) && /−2/.test(s.info) && /D1/.test(s.scoreboard), `info shows target D1, +2 per hit, −2 if all miss ("${s.info}")`);
+  // partial hit: 1 of 3
+  await throwAt(page, "D1"); await throwAt(page, "Miss"); await throwAt(page, "1");
   await wait(page, 600);
   s = await pg(page);
-  check(s.bob[0] === 27 && s.bobRound === 1 && s.throws.length === 0, `D1: 1 hit 2 miss → 27+2−2 = 27, next D2 (${s.bob[0]}, round ${s.bobRound})`);
+  check(s.bob[0] === 29 && s.bobRound === 1 && s.throws.length === 0, `D1: 1 hit, 2 miss → 27+2 = 29 (no deduction), next D2 (${s.bob[0]}, round ${s.bobRound})`);
+  // two hits, third dart not thrown
   await throwAt(page, "D2"); await throwAt(page, "D2");
-  await page.click("#party-next"); // third dart not thrown = miss
+  await page.click("#party-next");
   await wait(page, 200);
   s = await pg(page);
-  check(s.bob[0] === 33 && s.bobRound === 2, `D2: 2 hits + early "next" → 27+8−2 = 33, next D3 (${s.bob[0]}, round ${s.bobRound})`);
-  for (const _ of [3, 4]) { await throwAt(page, "Miss"); await throwAt(page, "Miss"); await throwAt(page, "Miss"); await wait(page, 600); }
+  check(s.bob[0] === 37 && s.bobRound === 2, `D2: 2 hits + early "next" → 29+8 = 37 (${s.bob[0]})`);
+  // all three miss: deduct the double value once
+  await throwAt(page, "T3"); await throwAt(page, "3"); await throwAt(page, "Miss"); await wait(page, 600);
   s = await pg(page);
-  check(s.bob[0] === 33 - 9 - 12 && s.bobRound === 4 && s.winner == null, `D3/D4 all missed → 12, game continues (${s.bob[0]})`);
-  // D5: −15 → below zero = game over
+  check(s.bob[0] === 31 && s.bobRound === 3, `D3: all three miss (T3, S3, miss) → 37−6 = 31 (${s.bob[0]})`);
+  check(/D4/.test(s.info) && /\+8/.test(s.info) && /−8/.test(s.info), `info updates to D4 ±8 ("${s.info}")`);
+  // three hits
+  await throwAt(page, "D4"); await throwAt(page, "D4"); await throwAt(page, "D4"); await wait(page, 600);
+  s = await pg(page);
+  check(s.bob[0] === 55 && s.bobRound === 4, `D4: 3 hits → 31+24 = 55 (${s.bob[0]})`);
+  // drive below zero: misses on D5..D9 → 55−10−12−14−16 = 3, D9 −18 → −15
+  for (let r = 0; r < 4; r++) { await throwAt(page, "Miss"); await throwAt(page, "Miss"); await throwAt(page, "Miss"); await wait(page, 600); }
+  s = await pg(page);
+  check(s.bob[0] === 3 && s.winner == null, `D5–D8 all missed → 3, game continues (${s.bob[0]})`);
   await throwAt(page, "Miss"); await throwAt(page, "Miss"); await throwAt(page, "Miss"); await wait(page, 600);
   s = await pg(page);
-  check(s.bob[0] === -3 && s.bobOut[0] === true, `D5 all missed → −3, player out (${s.bob[0]})`);
+  check(s.bob[0] === -15 && s.bobOut[0] === true, `D9 all missed → −15, game over (${s.bob[0]})`);
   check(s.winner === 0 && s.overlay, "game over → result overlay shown");
+  const res = await page.evaluate(() => ({ score: document.querySelector('[data-bob27-row="0"] [data-bob27="score"]')?.textContent, hits: document.querySelector('[data-bob27-row="0"] [data-bob27="hits"]')?.textContent, status: document.querySelector('[data-bob27-row="0"] [data-bob27="status"]')?.textContent, shown: document.getElementById("winner-summary").style.display !== "none" }));
+  check(res.shown && res.score === "-15" && res.hits === "6/27" && res.status === "Aus bei D9", `result: −15 points, 6/27 hits, "Aus bei D9" (${JSON.stringify(res)})`);
   // dispatch straight to the board (the result overlay would swallow a real click)
   const p6 = await boardPoint(page, "D6");
   await page.evaluate((p) => document.getElementById("board-svg-party").dispatchEvent(new PointerEvent("pointerup", { clientX: p.x, clientY: p.y, bubbles: true, pointerType: "touch" })), p6);
   const after = await pg(page);
-  check(after.throws.join() === s.throws.join() && after.bob[0] === -3, "board locked after game over (winner index 0)");
+  check(after.throws.join() === s.throws.join() && after.bob[0] === -15, "board locked after game over (winner index 0)");
   check(s.saved === 0, `party game not saved to dart_games (${s.saved} docs)`);
   // undo brings the player back into the game
   await page.evaluate(() => document.getElementById("party-undo").click());
   await wait(page, 100);
   s = await pg(page);
-  check(s.winner == null && s.bobOut[0] === false && s.bob[0] === 12 && s.throws.length === 2, `undo reverts game over (${s.bob[0]}, throws ${s.throws})`);
+  check(s.winner == null && s.bobOut[0] === false && s.bob[0] === 3 && s.throws.length === 2, `undo reverts game over (${s.bob[0]}, throws ${s.throws})`);
+  check(page.__errors.length === 0, `no page errors (${page.__errors.join(" | ")})`);
+  await page.close();
+
+  // exactly 0 also ends the game (27 + even values can't reach 0 in play → preset score)
+  console.log("Bob's 27: exactly 0");
+  page = await openApp(browser);
+  await startMode(page, "Bob27", ["Anna"]);
+  await page.evaluate(() => { window.__state.pg.bob27Score[0] = 2; });
+  await throwAt(page, "Miss"); await throwAt(page, "Miss"); await throwAt(page, "Miss"); await wait(page, 600);
+  s = await pg(page);
+  check(s.bob[0] === 0 && s.bobOut[0] === true && s.winner === 0 && s.overlay, `2 − 2 = 0 → game over (${s.bob[0]}, out ${s.bobOut[0]})`);
+  await page.close();
+
+  // full run to Bull: one hit per double → 27 + 2·(1+…+20) + 50 = 497
+  console.log("Bob's 27: full run D1…Bull");
+  page = await openApp(browser);
+  await startMode(page, "Bob27", ["Anna"]);
+  const fields = [...Array(20)].map((_, i) => `D${i + 1}`).concat("Bull");
+  for (const f of fields) {
+    const cur = await pg(page);
+    const target = cur.bobRound === 20 ? "Bull" : `D${cur.bobRound + 1}`;
+    check(target === f, `round ${cur.bobRound + 1}: target ${f}`);
+    await throwAt(page, f); await throwAt(page, "Miss"); await throwAt(page, "Miss"); await wait(page, 600);
+  }
+  s = await pg(page);
+  check(s.bob[0] === 497 && s.winner === 0 && s.overlay && !s.bobOut[0], `completed through Bull with 497 points (${s.bob[0]})`);
+  const res2 = await page.evaluate(() => ({ score: document.querySelector('[data-bob27-row="0"] [data-bob27="score"]')?.textContent, hits: document.querySelector('[data-bob27-row="0"] [data-bob27="hits"]')?.textContent, status: document.querySelector('[data-bob27-row="0"] [data-bob27="status"]')?.textContent }));
+  check(res2.score === "497" && res2.hits === "21/63" && res2.status === "Bis Bull durchgespielt", `result: 497, 21/63 hits, completed (${JSON.stringify(res2)})`);
   check(page.__errors.length === 0, `no page errors (${page.__errors.join(" | ")})`);
   await page.close();
 
@@ -164,23 +207,24 @@ async function run() {
   await startMode(page, "Bob27", ["Anna", "Ben"]);
   await throwAt(page, "D1"); await throwAt(page, "D1"); await throwAt(page, "D1"); await wait(page, 600);
   s = await pg(page);
-  check(s.current === 1 && s.bobRound === 0 && s.bob[0] === 33, `after Anna: Ben's turn, still D1 (current ${s.current}, round ${s.bobRound}, ${s.bob})`);
+  check(s.current === 1 && s.bobRound === 0 && s.bob[0] === 33, `after Anna (3×D1): Ben's turn, still D1 (current ${s.current}, round ${s.bobRound}, ${s.bob})`);
   await throwAt(page, "Miss"); await throwAt(page, "Miss"); await throwAt(page, "Miss"); await wait(page, 600);
   s = await pg(page);
-  check(s.current === 0 && s.bobRound === 1 && s.bob[1] === 24, `after Ben: Anna on D2 (current ${s.current}, round ${s.bobRound}, ${s.bob})`);
-  // Drive Ben below zero: skip ahead by playing misses for both
+  check(s.current === 0 && s.bobRound === 1 && s.bob[1] === 25, `after Ben (all missed −2): Anna on D2 (current ${s.current}, round ${s.bobRound}, ${s.bob})`);
+  // Ben keeps missing: 25 −4 −6 −8 = 7, −10 → −3 (out at D5)
   for (let r = 0; r < 6 && !(await pg(page)).bobOut[1]; r++) {
     for (let k = 0; k < 2; k++) {
       const cur = await pg(page);
       if (cur.bobOut[cur.current] || cur.winner != null) break;
-      const field = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10][cur.bobRound];
-      if (cur.current === 0) { await throwAt(page, `D${field}`); await throwAt(page, `D${field}`); await throwAt(page, `D${field}`); }
+      const field = `D${cur.bobRound + 1}`;
+      if (cur.current === 0) { await throwAt(page, field); await throwAt(page, "Miss"); await throwAt(page, "Miss"); }
       else { await throwAt(page, "Miss"); await throwAt(page, "Miss"); await throwAt(page, "Miss"); }
       await wait(page, 600);
     }
   }
   s = await pg(page);
-  check(s.bobOut[1] === true && s.bobOut[0] === false && s.winner == null, `Ben out, Anna continues (${s.bob}, out ${s.bobOut})`);
+  check(s.bobOut[1] === true && s.bob[1] === -3 && s.bobOut[0] === false && s.winner == null, `Ben out at D5 with −3, Anna continues (${s.bob}, out ${s.bobOut})`);
+  check(/OUT/.test(s.scoreboard), `scoreboard marks Ben OUT ("${s.scoreboard}")`);
   const roundBefore = s.bobRound;
   check(s.current === 0, "turn stays with Anna");
   await throwAt(page, "Miss"); await throwAt(page, "Miss"); await throwAt(page, "Miss"); await wait(page, 600);

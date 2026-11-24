@@ -252,9 +252,7 @@ export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
     const user=window.fbAuth?.currentUser;
     if(user) authToken=await user.getIdToken();
   }catch(e){}
-  const headers={"Content-Type":"application/json","Authorization":"Bearer "+authToken};
-  const acToken=window.getAppCheckToken?await window.getAppCheckToken():null;
-  if(acToken) headers["X-Firebase-AppCheck"]=acToken;
+  const headers={"Content-Type":"application/json","Authorization":"Bearer "+authToken,...(window.appCheckHeaders?await window.appCheckHeaders():{})};
   const controller=new AbortController();
   const timeoutId=setTimeout(()=>controller.abort(),5000);
   let resp;

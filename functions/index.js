@@ -3,25 +3,19 @@
 // firebase deploy --only functions:dartTTS,dartCoach,budgetCheck
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
-const { initializeApp } = require("firebase-admin/app");
+const { getApps, initializeApp } = require("firebase-admin/app");
 const { getStorage } = require("firebase-admin/storage");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAuth } = require("firebase-admin/auth");
-const { getAppCheck } = require("firebase-admin/app-check");
 const { randomUUID } = require("crypto");
 
-// Set to true to hard-enforce App Check (after all clients carry tokens).
-// 2026-08-17: confirmed via production logs that the real Play Store Android
-// app (versionCode 12) gets a 401 on every single dartTTS call — the native
-// Play Integrity bridge (MainActivity.getAppCheckToken) never produces a
-// token FirebaseAppCheck.verifyToken() accepts, so the request never reaches
-// the TTS generation code below at all and the app silently falls back to
-// flat browser/Android TTS for every announcement. Soft-enforcing until the
-// Play Integrity setup is fixed on the Play Console side (needs access this
-// environment doesn't have).
-const ENFORCE_APP_CHECK = false;
+// App Check: see appCheckGate.js — verified + counted on every request,
+// enforcement switchable per function in Firestore dart_config/appcheck
+// (no deploy). History: Aug 2026 the Play Store app (vc12) got 401 on every
+// call under hard enforcement, so enforcement has been off since then.
+const { appCheckGate } = require("./appCheckGate");
 
-initializeApp();
+if (!getApps().length) initializeApp();
 
 const ELEVENLABS_API_KEY = defineSecret("ELEVENLABS_API_KEY");
 
@@ -87,22 +81,8 @@ exports.dartTTS = onRequest(
       return;
     }
 
-    // ── App Check verification ────────────────────────────────────
-    const appCheckToken = req.headers["x-firebase-appcheck"];
-    if (appCheckToken) {
-      try {
-        await getAppCheck().verifyToken(appCheckToken);
-      } catch (e) {
-        if (ENFORCE_APP_CHECK) {
-          res.status(401).json({ error: "App Check verification failed" });
-          return;
-        }
-        console.warn("App Check token invalid:", e.message);
-      }
-    } else if (ENFORCE_APP_CHECK) {
-      res.status(401).json({ error: "App Check token required" });
-      return;
-    }
+    // ── App Check (measured; enforcement per function via dart_config/appcheck) ──
+    if (!(await appCheckGate("dartTTS", req, res))) return;
 
     // ── Kill-switch ──────────────────────────────────────────────
     try {
@@ -238,3 +218,4 @@ Object.assign(exports, require("./dartCoach"));
 Object.assign(exports, require("./budgetCheck"));
 Object.assign(exports, require("./feedback"));
 Object.assign(exports, require("./voiceName"));
+Object.assign(exports, require("./appCheckPing"));

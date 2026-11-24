@@ -55,12 +55,23 @@ storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
 | `dart_rooms` | Online-Multiplayer Räume |
 | `dart_coach_analyses` | Gespeicherte KI-Coach-Analysen pro Spieler |
 | `dart_coop_games` | Co-op-Checkout-Spiele (bewusst NICHT in `dart_games`, s. „Co-op Checkout“) |
+| `dart_appcheck_stats` | App-Check-Zähler pro Tag (`<YYYY-MM-DD>` → `<fn>.<plattform>.<valid|invalid|missing>`), nur Admin/Functions |
+| `dart_config/appcheck` | App-Check-Erzwingung pro Function (`enforce.dartCoach|dartVoiceName|dartTTS|dartAppCheckPing`), Clients nur lesen |
 
 ## Firebase Storage
 - `dart_voice/score_0.webm` bis `dart_voice/score_180.webm` — Custom Voice Samples (Daniel's Stimme)
 - `dart_voice/bust.webm`, `dart_voice/no_score.webm`, `dart_voice/game_on.webm`, `dart_voice/requires.webm`
 
+## App Check (Stand 2026-11-24) — `functions/appCheckGate.js`
+- Jede Anfrage an `dartCoach`, `dartVoiceName` (vorher ganz ohne Prüfung), `dartTTS`, `dartAppCheckPing` wird verifiziert + gezählt (Plattform aus der verifizierten App-ID, sonst `X-DT-Client`-Header bzw. User-Agent `DartTrainerApp` = Android vor 1.3.0 → `android-old`; `test` = eigene Live-Tests). Log-Zeile `jsonPayload.appCheck` inkl. Client-Fehlertext (`X-DT-AppCheck-Error`)
+- **Erzwingung ohne Deploy:** Firestore `dart_config/appcheck` → `enforce.<fn> = true` (wirkt nach ≤ 60 s, Cache pro Instanz). Stand: alles **false**. Kill-Switch/Tageslimits/budgetCheck unverändert
+- **Messung:** `node scripts/appcheck-report.js [--days=7]` (Tabelle pro Function/Plattform + Ja/Nein je Function). Kriterium: android und web je ≥ 98 % gültig aus ≥ 30 Anfragen, kein Tag < 95 %, und alte App (`android-old`) < 2 % der Nutzeranfragen der Function. Messquelle auch ohne Coach-Nutzung: `dartAppCheckPing` (App ruft ihn max. 1×/Tag/Gerät, 8 s nach Start)
+- Client: `window.appCheckHeaders()` (js/firebase.js) für alle Function-Aufrufe. Android: Play Integrity über Capacitor-Plugin `AppCheckBridge` (`AppCheckBridgePlugin.java`, vor `super.onCreate` registriert); alte `AndroidBridge`-JS-Schnittstelle nur noch Fallback (wird nach Ladebeginn eingehängt → Race); in der App nie reCAPTCHA (Origin `https://localhost` ist für den Key nicht zugelassen)
+- Geprüft 2026-11-24: Play Integrity API aktiv, Play-Integrity-Provider in App Check registriert, SHA-256 des App-Signaturschlüssels (`63d119…`) in Firebase, neuer Upload-Key B3:FF (SHA-1+256) ergänzt. Web: reCAPTCHA-Key erlaubt play.darttrainer.app, Siteverify mit Key-Secret ok, echte Browser Score ≥ 0,9 (Headless = 0 → 403, erwartbar). Live-Test: `node tests/appcheck-gate.live.mjs` (temporäres Debug-Token, Schalter an/aus am Ping)
+- Android-Tokens gibt es nur für Play-installierte Builds (interner Test reicht). Vor dem Einschalten Gerätetest + Report
+
 ## Cloud Functions
+- **`dartAppCheckPing`** — nur Messung (s. App Check), `maxInstances: 2`
 - **`dartCoach`** — Anthropic API Proxy (verhindert CORS)
   - URL: `https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartCoach`
   - Secret: `ANTHROPIC_API_KEY` (Firebase Secret Manager)
@@ -154,7 +165,7 @@ service cloud.firestore {
 | Highscore | X Runden, höchste Punktzahl |
 | Killer | Eigene Zahl per Double, dann andere eliminieren |
 | Elimination | 501 + Eliminierung bei gleichem Score |
-| Bob's 27 | Party-Screen: D1…D20, Bull; +2×Feld je Treffer, −Feld je Fehlwurf/nicht geworfenem Dart; unter 0 = raus |
+| Bob's 27 | Party-Screen, Standardregel (seit 2026-11-24): Start 27, D1…D20, dann Doppel-Bull; je Treffer +Doppelwert, nur wenn alle 3 daneben −Doppelwert einmal; ≤ 0 = Spielende (aus); Ergebnis-Tabelle im Overlay |
 | Checkout-Training | Party-Screen: 10 zufällige Checkout-Werte (40–170), Double-Out, Single auf 0 = Bust |
 | Co-op Checkout | 2+ Spieler spielen gemeinsam eine Leiter von Checkout-Werten (z. B. 80–90), Rest wird weitergereicht |
 
@@ -162,7 +173,9 @@ service cloud.firestore {
 - `PARTY_MODES`/`isPartyMode()` in `party.js` ist die einzige Liste (app.js, tournament.js, setup.js, x01.js). Vorher fehlten Bob27/CheckoutTraining in den Kopien → starteten still ein 501
 - Party-Spiele werden NICHT in `dart_games` gespeichert (`saveGameToFirebase` bricht ab) — vorher wurde dort das letzte X01-Spiel unter dem Party-Modus-Namen gespeichert bzw. es gab einen TypeError; Gewinner-Overlay zeigt keine alten X01-Stats mehr
 - Rechtes Panel (Würfe, Punktestand inkl. Ziel, Weiter-Button) war seit dem Modul-Refactor per `.side-panel{display:none}` unsichtbar → `#party .side-panel` in `game.css` wieder sichtbar; Farben an dunkles Theme angepasst; `winner` 0 (Spieler 1) wird überall als Gewinner erkannt; Turn-Ende nach Checkout/Bust sperrt Board + Weiter, Undo bricht es ab
-- Test: `node tests/party-modes.test.mjs` (echte Setup-Buttons + Board-Klicks)
+- Test: `node tests/party-modes.test.mjs` (echte Setup-Buttons + Board-Klicks; Bob's 27: Teiltreffer, alle daneben, genau 0, Durchlauf bis Bull = 497)
+- **Statistik-Whitelist (seit 2026-11-24):** `dartDB.loadStats()` liefert nur Legs mit `mode` 501/301/Cricket (oder ohne `mode`) — `isStatsGame()` in `gamesCache.js`, greift auch auf gecachte Kopien. Grund: App-Versionen < 1.3.0 (Play Store vc12) speichern Party-Spiele weiter in `dart_games`. Test: `node tests/party-docs-stats.live.mjs`
+- Produktions-DB 2026-11-24: 2 Docs `mode:"Bob27"` (29.07.2026, Matze/Daniel) waren echte 501-Legs (Bob27-Button startete damals 501) → `mode` auf `"501"` korrigiert, `modeCorrectedFrom:"Bob27"`; Backup `~/backups/dart-games-mislabeled-2026-11-24/`. Keine Docs mit kopierten X01-Zahlen gefunden. Geräte-Caches sehen die Korrektur erst beim 30-Tage-Voll-Resync (bis dahin per Whitelist ausgeblendet)
 
 ### Co-op Checkout (seit 2026-11-23) — `js/coop.js`, `css/coop.css`
 - Setup: „Weitere Modi“ → „Co-op Checkout“; Start-/Endwert per Stepper (2–170). Nicht auscheckbare Werte (159, 162, 163, 165, 166, 168, 169) sind als Start/Ende nicht wählbar (Stepper/Eingabe springen weiter) und werden in der Leiter übersprungen (Hinweis im Setup) — ohne 3-Dart-Finish wären sie keine Checkout-Werte. Mind. 2 Spieler, kein Bot; Sets/Legs/Bot im Setup ausgeblendet
@@ -257,7 +270,7 @@ Live unter: `https://danielstrass8482.github.io/Dart/`
 
 ### Android Release (AAB)
 - Version in `android/app/build.gradle` (`versionCode`/`versionName`) — aktuell 13 / 1.3.0
-- **Release-Build 2026-11-24 (auf Auftrag Daniel):** `~/darttrainer-1.3.0-vc13.aab` (SHA-256 `35be9f94…27068b`, Commit 826c36a), vc13 / 1.3.0, neuer Upload-Key (B3:FF, per bundletool/jarsigner geprüft; Web-Inhalt = Commit, 921 George-Clips prüfsummengleich mit Repo); altes `~/darttrainer-1.2.0-vc13.aab` (alter Key A3:56) gelöscht. bundletool liegt (flüchtig) in `/var/tmp/bundletool.jar`. Upload in die Play Console steht bei Daniel aus. Nächster Build: versionCode 14
+- **Release-Build 2026-11-24 (auf Auftrag Daniel, 2. Build mit App Check/Bob's 27/Whitelist ersetzt den ersten):** `~/darttrainer-1.3.0-vc13.aab` (Prüfsumme s. Abschnitt unten/Commit-Log; erster Build `35be9f94…` gelöscht), vc13 / 1.3.0, neuer Upload-Key (B3:FF, per bundletool/jarsigner geprüft; Web-Inhalt = Commit, 921 George-Clips prüfsummengleich mit Repo); altes `~/darttrainer-1.2.0-vc13.aab` (alter Key A3:56) gelöscht. bundletool liegt (flüchtig) in `/var/tmp/bundletool.jar`. Upload in die Play Console steht bei Daniel aus. Nächster Build: versionCode 14
 - **(Erledigt 2026-11-24, s. o.) Festlegung Daniel, 2026-11-23:** Das bisher gebaute `~/darttrainer-1.2.0-vc13.aab` (alter Key) wird NICHT hochgeladen. Ab **2026-11-24 gilt der neue Upload-Key**. Der nächste Build bleibt **versionCode 13 / 1.2.0** (vc13 wurde nie hochgeladen), wird **erst nach Abschluss des Voice-QA-Auftrags** und **mit dem neuen Key** (`signing-new.properties`) gebaut und enthält alle bis dahin gemachten Änderungen (u. a. ggf. korrigierte George-Clips). Claude baut ihn nicht selbst — Build durch Daniel bzw. nur auf ausdrücklichen Auftrag
 - Android-SDK liegt auf dem flüchtigen Overlay `/var/tmp/android-sdk` (Symlink `~/android-sdk`, s. `android/local.properties`), Gradle-Cache in `/var/tmp/gradle-home` — /home ist nur 4,8 GB groß. Nach Cloud-Shell-Neustart neu installieren: cmdline-tools → `sdkmanager "platforms;android-36" "build-tools;35.0.0" "build-tools;34.0.0" platform-tools`
 - Build: `npm run build && cd android && JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 GRADLE_USER_HOME=/var/tmp/gradle-home ./gradlew --no-daemon bundleRelease` → `android/app/build/outputs/bundle/release/app-release.aab`

@@ -3,7 +3,6 @@ const { defineSecret } = require("firebase-functions/params");
 const { getApps, initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { getAuth } = require("firebase-admin/auth");
-const { getAppCheck } = require("firebase-admin/app-check");
 
 if (!getApps().length) initializeApp();
 
@@ -11,12 +10,8 @@ const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 
 const DAILY_LIMITS = { coach: 10, video: 3 };
 
-// Set to true to hard-enforce App Check (after all clients carry tokens).
-// 2026-08-17: same App Check bug class as dartTTS (see functions/index.js) —
-// the production Android app's Play Integrity token never verifies, so this
-// was also silently 401ing every real request. Soft-enforcing until the Play
-// Integrity setup is fixed on the Play Console side.
-const ENFORCE_APP_CHECK = false;
+// App Check: see appCheckGate.js (enforcement per function via dart_config/appcheck).
+const { appCheckGate } = require("./appCheckGate");
 
 exports.dartCoach = onRequest(
   {
@@ -31,22 +26,8 @@ exports.dartCoach = onRequest(
       return;
     }
 
-    // ── App Check verification ────────────────────────────────────
-    const appCheckToken = req.headers["x-firebase-appcheck"];
-    if (appCheckToken) {
-      try {
-        await getAppCheck().verifyToken(appCheckToken);
-      } catch (e) {
-        if (ENFORCE_APP_CHECK) {
-          res.status(401).json({ error: "App Check verification failed" });
-          return;
-        }
-        console.warn("App Check token invalid:", e.message);
-      }
-    } else if (ENFORCE_APP_CHECK) {
-      res.status(401).json({ error: "App Check token required" });
-      return;
-    }
+    // ── App Check (measured; enforcement per function via dart_config/appcheck) ──
+    if (!(await appCheckGate("dartCoach", req, res))) return;
 
     const db = getFirestore();
 
