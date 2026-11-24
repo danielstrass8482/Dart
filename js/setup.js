@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { startX01, legDarts } from './x01.js?v=2';
 import { startCricket } from './cricket.js';
-import { startParty } from './party.js';
+import { startParty, isPartyMode } from './party.js';
 import { collectHealthData } from './coach.js';
 import { BOT_PERSONALITIES } from './bot.js';
 import { t } from './i18n.js?v=3';
@@ -237,6 +237,11 @@ export function showSpielenSection(section){
 /** Saves game data to Firebase and updates player stats. */
 export async function saveGameToFirebase(winnerIdx){
   if(!window.dartDB) return;
+  // Party/training modes (js/party.js) have no X01/Cricket leg data. Everything
+  // that reads dart_games (stats, coach, player profile, older app versions)
+  // treats a non-Cricket doc as an X01 leg — saving them here used to write the
+  // PREVIOUS X01 game's numbers under the party mode's name (or throw if none).
+  if(isPartyMode(state.cfg.mode)) return;
   const isX01 = state.cfg.mode!=="Cricket";
   const players = state.cfg.players.map((name,i)=>{
     if(isX01){

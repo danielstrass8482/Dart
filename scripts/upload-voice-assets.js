@@ -27,6 +27,13 @@
  *                         full re-uploads, e.g. after scripts/transcode-voice-assets.js);
  *                         always overwrites, and all clips of a voice share one download
  *                         token (reads are auth-gated by storage.rules regardless).
+ *     --index-only        only (re)upload dart_voice_pkg/<voice>/index.json
+ *
+ * After the clips of a voice, its assets/voice/<voice>/index.json (clip keys +
+ * per-clip content hashes) is uploaded LAST as dart_voice_pkg/<voice>/index.json
+ * (Cache-Control: no-cache). The app compares its local copies against these
+ * hashes (js/voiceClips.js) — uploading the index last means it never points
+ * at bytes that aren't in Storage yet.
  */
 "use strict";
 const fs = require("fs");
@@ -44,6 +51,7 @@ const ONLY_VOICE = args.voice || null;
 const FORCE = !!args.force;
 const CONCURRENCY = parseInt(args.concurrency) || 5;
 const BULK = !!args.bulk;
+const INDEX_ONLY = !!args["index-only"];
 const ONLY = args.only ? new Set(String(args.only).split(",").map(s => s.trim()).filter(Boolean)) : null;
 
 function sh(cmd, cmdArgs) {
@@ -72,6 +80,18 @@ async function uploadOne(voiceId, key, localPath) {
   return token;
 }
 
+async function uploadIndex(voiceId, dir) {
+  const p = path.join(dir, "index.json");
+  if (!fs.existsSync(p)) { console.warn(`  ${voiceId}: no index.json — run scripts/voice-format.js writeVoiceIndex first`); return; }
+  await sh("gcloud", [
+    "storage", "cp", p, `gs://${BUCKET}/dart_voice_pkg/${voiceId}/index.json`,
+    "--custom-metadata", `firebaseStorageDownloadTokens=${crypto.randomUUID()}`,
+    "--content-type", "application/json",
+    "--cache-control", "no-cache",
+  ]);
+  console.log(`  ${voiceId}: index.json uploaded`);
+}
+
 async function runPool(items, worker, concurrency) {
   let i = 0, active = 0;
   return new Promise((resolve) => {
@@ -98,6 +118,7 @@ async function main() {
     const dir = path.join(ROOT, "assets", "voice", voiceId);
     const files = fs.readdirSync(dir).filter(f => f.endsWith(".mp3") && (!ONLY || ONLY.has(f.slice(0, -4))));
     console.log(`\n=== ${voiceId}: ${files.length} local files ===`);
+    if (INDEX_ONLY) { await uploadIndex(voiceId, dir); continue; }
 
     if (BULK) {
       const token = crypto.randomUUID();
@@ -108,6 +129,7 @@ async function main() {
         "--content-type", "audio/mpeg",
       ]);
       console.log(`  ${voiceId}: bulk-uploaded ${files.length} files in ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+      await uploadIndex(voiceId, dir);
       continue;
     }
     const jobs = files.map(f => ({ voiceId, key: f.replace(/\.mp3$/, ""), localPath: path.join(dir, f) }));
@@ -129,6 +151,8 @@ async function main() {
     }, CONCURRENCY);
 
     console.log(`  ${voiceId}: uploaded=${uploaded} skipped(existing)=${skipped} failed=${failed}`);
+    if (failed) console.warn(`  ${voiceId}: index.json NOT uploaded because uploads failed — rerun`);
+    else await uploadIndex(voiceId, dir);
   }
 }
 

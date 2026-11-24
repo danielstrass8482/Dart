@@ -13,9 +13,10 @@
  *   - App shell (same-origin html/js/css/json/icons): network-first, cache
  *     fallback → online behaviour is unchanged (always current deploy),
  *     offline the last-seen version is served.
- *   - Voice clips (same-origin assets/voice/**.mp3): cache-first — clips are
- *     immutable per voice revision; js/voiceClips.js clears this cache when
- *     the voice's index.json `rev` changes (regenerated/re-encoded clips).
+ *   - Voice clips (same-origin assets/voice/**.mp3): cache-first, keyed by
+ *     the full URL. The app requests <key>.mp3?h=<content hash> (from the
+ *     voice's index.json), so a regenerated clip is a new URL and never hits
+ *     an old entry; js/voiceClips.js warmDefaultVoice() prunes superseded ones.
  *   - Pinned CDN libs (Firebase SDK, Google Fonts, lucide): stale-while-revalidate.
  *   - Everything else (Firestore, Storage, Cloud Functions, auth, POSTs,
  *     media Range requests, /qa/, /tests/): not touched at all.
@@ -103,7 +104,8 @@ self.addEventListener("fetch", (event) => {
 // The first visit's resources load BEFORE this worker controls the page, so
 // the page hands over its resource list once (js/pwa.js) and they are copied
 // into the caches here — normally straight from the browser's HTTP cache.
-// "clear-voice" wipes the clip cache after a voice revision change.
+// "clear-voice" wipes the clip cache (sent by app versions before the
+// per-clip ?h= URLs; kept so an old open tab still works with this worker).
 self.addEventListener("message", (event) => {
   const msg = event.data || {};
   if (msg.type === "cache-urls" && Array.isArray(msg.urls)) {

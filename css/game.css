@@ -159,3 +159,18 @@
 .cricket-legend { font-size: 11px; color: var(--dart-text-sec); line-height: 1.7; }
 
 .landscape-panel { width: 100% !important; min-width: 0 !important; max-width: 100% !important; flex: 1 1 auto !important; }
+
+/* ── Party/training screen: its side panel (throws, scoreboard incl. the
+   current target, "next" button) is the only place these modes show their
+   state — keep it visible even though .side-panel is hidden elsewhere. ── */
+#party .side-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px; box-sizing: border-box; min-height: 0; overflow: hidden; }
+#party .panel-box { background: #101013; border: 1px solid rgba(212,175,55,.15); border-radius: 12px; padding: 10px 12px; color: var(--dart-text); }
+#party .panel-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; color: var(--dart-text-sec); margin-bottom: 8px; }
+#party .throw-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+#party .throw-slot { border-radius: 10px; padding: 10px 0; text-align: center; }
+#party .btn-next { width: 100%; flex-shrink: 0; cursor: pointer; }
+@media not all and (min-width: 768px) and (orientation: landscape) {
+  #party .game-body { overflow-y: auto; }
+  #party .board-wrap { flex: 0 0 auto; height: min(62vh, 100vw); }
+  #party .side-panel { flex: 0 0 auto; overflow: visible; }
+}

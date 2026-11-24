@@ -10,6 +10,7 @@ import { runBotTurn } from './bot.js';
 import { getCheckoutPath } from './checkout.js';
 import { t } from './i18n.js?v=3';
 import { escapeHtml } from './util.js';
+import { isPartyMode } from './party.js';
 import { createCoopState, coopOnCheckout, renderCoop, hideCoopUI, hideCoopResult } from './coop.js';
 
 /**
@@ -916,7 +917,7 @@ export function showWinner(name, round, isLeg=false, legLabel=null){
   const sumEl=document.getElementById(isLeg?'leg-stats-summary':'winner-summary');
   const legSelectorBar=document.getElementById("winner-leg-selector");
 
-  if(sumEl&&state.cfg.mode!=="Cricket"&&state.x01.turnScores){
+  if(sumEl&&state.cfg.mode!=="Cricket"&&!isPartyMode(state.cfg.mode)&&state.x01.turnScores){
     if(isLeg){
       const perPlayer=state.cfg.players.map((_,i)=>({
         turns: state.x01.turnScores[i]||[],

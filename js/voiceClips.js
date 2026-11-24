@@ -16,6 +16,23 @@
  * If none of these produce audio (fully offline + never-seen-before name,
  * or a genuinely missing vocabulary clip), playback of THAT item is simply
  * skipped — see js/audio.js's queueAudio()/playAudioQueue().
+ *
+ * Freshness (clips are regenerated under the SAME file name): every voice
+ * publishes an index (assets/voice/<v>/index.json, mirrored to
+ * dart_voice_pkg/<v>/index.json) with a content hash per clip. A clip's
+ * identity is (voice, key, hash):
+ *   - bundled clips are requested as <key>.mp3?h=<hash> — a new hash is a
+ *     new URL, so neither the HTTP cache (force-cache) nor the service
+ *     worker's cache-first clip cache can answer with the old bytes, while
+ *     an unchanged clip is still served from cache without any request;
+ *   - IndexedDB copies store the hash they were downloaded with; a copy
+ *     whose hash no longer matches the index is replaced on its next play
+ *     (only that clip — not the whole voice);
+ *   - downloads are hashed on arrival, so a copy only counts as current if
+ *     its bytes really are the published ones.
+ * The index is read once per session (revalidated, normally a 304). Offline
+ * or without an index, whatever is stored locally is played — a stale clip
+ * beats silence, and it is replaced on the next online session.
  */
 
 // Mirrors data/voices.json — duplicated here (not imported) so this module
@@ -83,16 +100,80 @@ async function idbGet(key) {
     });
   } catch (e) { return null; }
 }
-async function idbPut(key, blob) {
+/** Stored clip → { blob, h } (h = content hash; null for copies stored before hashes existed). */
+function asEntry(v) {
+  if (!v) return null;
+  if (v instanceof Blob) return { blob: v, h: null };
+  return v.blob ? { blob: v.blob, h: v.h || null } : null;
+}
+async function idbPut(key, blob, h) {
   try {
     const db = await openDB();
     await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE, "readwrite");
-      tx.objectStore(STORE).put(blob, key);
+      tx.objectStore(STORE).put({ blob, h: h || null }, key);
       tx.oncomplete = resolve;
       tx.onerror = () => reject(tx.error);
     });
   } catch (e) { /* IndexedDB unavailable (private mode etc.) — caller re-fetches next time */ }
+}
+
+/** First 10 hex chars of SHA-1 over the bytes (same as scripts/voice-format.js clipHash). */
+async function hashBlob(blob) {
+  try {
+    const buf = await crypto.subtle.digest("SHA-1", await blob.arrayBuffer());
+    return Array.from(new Uint8Array(buf).slice(0, 5), b => b.toString(16).padStart(2, "0")).join("");
+  } catch (e) { return null; } // no WebCrypto (insecure context) — can't verify
+}
+
+// ── Per-voice clip index (key → content hash), loaded once per session ──
+const indexMemo = {};      // voiceId -> Promise<index|null> (only successful loads stay memoized)
+const indexRetryAt = {};   // voiceId -> earliest next attempt after a failed load
+const INDEX_TIMEOUT_MS = 4000, INDEX_RETRY_MS = 15000;
+
+async function fetchJSON(url, init) {
+  const ctl = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = ctl && setTimeout(() => ctl.abort(), INDEX_TIMEOUT_MS);
+  try {
+    const r = await fetch(url, { ...init, signal: ctl?.signal });
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; } finally { if (timer) clearTimeout(timer); }
+}
+
+async function loadIndex(voiceId) {
+  // Non-default voices are served from the Storage package, so its own index
+  // (uploaded after the clips) is authoritative; it needs a signed-in user.
+  if (voiceId !== DEFAULT_VOICE_ID && window.dartDB?.getVoicePkgFileURL) {
+    const url = await window.dartDB.getVoicePkgFileURL(voiceId, "index.json").catch(() => null);
+    const idx = url && await fetchJSON(url, { cache: "no-store" });
+    if (idx?.hashes) return idx;
+  }
+  // Default voice (bundled with the app / same origin on the web), and the
+  // web fallback for other voices: revalidated, normally a 304.
+  const idx = await fetchJSON(`assets/voice/${voiceId}/index.json`, { cache: "no-cache" });
+  return idx?.keys ? idx : null;
+}
+
+/**
+ * The voice's published clip index ({keys, hashes, rev}), or null if it
+ * can't be loaded right now (offline, signed out, …). Successful loads are
+ * kept for the session; failures are retried after a short pause.
+ * @param {string} voiceId
+ */
+export function voiceIndex(voiceId) {
+  if (indexMemo[voiceId]) return indexMemo[voiceId];
+  if (indexRetryAt[voiceId] && Date.now() < indexRetryAt[voiceId]) return Promise.resolve(null);
+  const p = loadIndex(voiceId).catch(() => null).then(idx => {
+    if (!idx) { delete indexMemo[voiceId]; indexRetryAt[voiceId] = Date.now() + INDEX_RETRY_MS; }
+    return idx;
+  });
+  indexMemo[voiceId] = p;
+  return p;
+}
+
+/** URL of a bundled clip; with its content hash when known (cache key = content). */
+function bundledClipURL(voiceId, key, h) {
+  return `assets/voice/${voiceId}/${key}.mp3` + (h ? `?h=${h}` : "");
 }
 
 // In-memory object-URL cache so repeated plays of the same clip within a
@@ -114,50 +195,62 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
   const cacheKey = `${voiceId}::${key}`;
   if (objectUrlCache[cacheKey]) return objectUrlCache[cacheKey];
 
+  const index = await voiceIndex(voiceId);
+  const want = index?.hashes?.[key] || null; // null: unknown (no index / central name clip)
+  const remember = (blob) => { const url = URL.createObjectURL(blob); objectUrlCache[cacheKey] = url; return url; };
+  /** Stores a downloaded clip with the hash of its ACTUAL bytes; false if they aren't the published ones. */
+  const store = async (blob) => {
+    const got = await hashBlob(blob);
+    await idbPut(cacheKey, blob, got || want);
+    return !want || !got || got === want;
+  };
+
   // 1) IndexedDB (downloaded/generated earlier this device, any time, offline-safe)
-  const cached = await idbGet(cacheKey);
-  if (cached) {
-    const url = URL.createObjectURL(cached);
-    objectUrlCache[cacheKey] = url;
-    return url;
-  }
+  const cached = asEntry(await idbGet(cacheKey));
+  if (cached && (!want || cached.h === want)) return remember(cached.blob);
+  // cached but outdated → try to replace it below; play the old copy only if that fails
 
   // 2) Default voice ships its clips as static files bundled with the app —
   // zero network, works offline by construction (same origin as the app
-  // itself / inside the Android package).
+  // itself / inside the Android package). The ?h= URL is immutable per
+  // content, so force-cache can never return a superseded version.
   if (voiceId === DEFAULT_VOICE_ID && !notBundled.has(cacheKey)) {
+    const url = bundledClipURL(voiceId, key, want);
     try {
-      const resp = await fetch(`assets/voice/${voiceId}/${key}.mp3`, { cache: "force-cache" });
+      const resp = await fetch(url, { cache: want ? "force-cache" : "no-cache" });
       if (resp.status === 404) notBundled.add(cacheKey); // definitively not in the bundle (e.g. a name outside the library) — don't ask again this session
       if (resp.ok) {
         const blob = await resp.blob();
-        idbPut(cacheKey, blob);
-        const url = URL.createObjectURL(blob);
-        objectUrlCache[cacheKey] = url;
-        return url;
+        if (!(await store(blob))) {
+          // Bytes don't match the index (deploy still propagating): don't let
+          // the service worker keep them under the new URL; retried next session.
+          try { if (typeof caches !== "undefined") await (await caches.open(VOICE_CACHE)).delete(new URL(url, location.href).href); } catch (e) {}
+        }
+        return remember(blob);
       }
     } catch (e) { /* offline + not yet cached locally — fall through */ }
   }
 
-  if (!navigator.onLine) return null;
+  if (!navigator.onLine) return cached ? remember(cached.blob) : null;
 
   // 3) Non-default voice (or default-voice fallback): one-time download from
   // the pre-produced package in Firebase Storage, then cache locally.
+  // no-store: the copy lives in IndexedDB, the HTTP cache must never answer.
   try {
     if (window.dartDB?.getVoicePkgURL) {
       const url = await window.dartDB.getVoicePkgURL(voiceId, key);
       if (url) {
-        const resp = await fetch(url);
+        const resp = await fetch(url, { cache: "no-store" });
         if (resp.ok) {
           const blob = await resp.blob();
-          idbPut(cacheKey, blob);
-          const objUrl = URL.createObjectURL(blob);
-          objectUrlCache[cacheKey] = objUrl;
-          return objUrl;
+          await store(blob);
+          return remember(blob);
         }
       }
     }
   } catch (e) { /* not in the package (e.g. a not-yet-seeded name) — fall through */ }
+
+  if (cached) return remember(cached.blob); // outdated, but better than silence
 
   // 4) Name clips only: not in the pre-produced library — generate once,
   // cache centrally server-side (by normalized name, not uid), cache
@@ -166,7 +259,6 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
     try {
       let authToken = "anonymous";
       try { const user = window.fbAuth?.currentUser; if (user) authToken = await user.getIdToken(); } catch (e) {}
-      const elevenLabsId = VOICES.find(v => v.id === voiceId)?.elevenLabsId;
       const resp = await fetch(NAME_VOICE_FN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + authToken },
@@ -175,13 +267,11 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
       if (resp.ok) {
         const { url } = await resp.json();
         if (url) {
-          const audioResp = await fetch(url);
+          const audioResp = await fetch(url, { cache: "no-store" });
           if (audioResp.ok) {
             const blob = await audioResp.blob();
-            idbPut(cacheKey, blob);
-            const objUrl = URL.createObjectURL(blob);
-            objectUrlCache[cacheKey] = objUrl;
-            return objUrl;
+            await store(blob);
+            return remember(blob);
           }
         }
       }
@@ -201,57 +291,23 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
 // stops when the device goes offline, and resumes (skipping cached clips)
 // on the next start.
 
-/** Deletes every IndexedDB clip whose key starts with `${voiceId}::`. */
-async function idbDeleteVoice(voiceId) {
-  try {
-    const db = await openDB();
-    await new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, "readwrite");
-      const range = IDBKeyRange.bound(`${voiceId}::`, `${voiceId}::￿`);
-      tx.objectStore(STORE).delete(range);
-      tx.oncomplete = resolve;
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch (e) {}
-  for (const k of Object.keys(objectUrlCache)) if (k.startsWith(`${voiceId}::`)) delete objectUrlCache[k];
-}
-
-function swMessage(msg) {
-  const ctl = navigator.serviceWorker?.controller;
-  if (!ctl) return Promise.resolve(null);
-  return new Promise((resolve) => {
-    const ch = new MessageChannel();
-    ch.port1.onmessage = (e) => resolve(e.data);
-    ctl.postMessage(msg, [ch.port2]);
-    setTimeout(() => resolve(null), 30000);
-  });
-}
+const VOICE_CACHE = "dt-voice-v1"; // must match sw.js
 
 /**
- * Compares the voice's published content revision (assets/voice/<v>/index.json
- * `rev`, written by scripts/transcode-voice-assets.js / gen-voice-assets.js)
- * with the one this device last saw; on change, drops this voice's stale local
- * copies (IndexedDB + service-worker clip cache) so re-encoded/regenerated
- * clips replace them. Returns the index (or null if unavailable).
+ * Drops service-worker clip-cache entries that are no longer current: a
+ * superseded ?h= version or a pre-hash URL. Keeps the offline cache from
+ * growing with every regeneration.
  */
-export async function syncVoiceRevision(voiceId) {
-  let index = null;
+async function pruneVoiceCache(currentUrls) {
   try {
-    const r = await fetch(`assets/voice/${voiceId}/index.json`, { cache: "no-cache" });
-    if (r.ok) index = await r.json();
-  } catch (e) {}
-  if (!index?.rev) return index;
-  const lsKey = `dart_voice_rev_${voiceId}`;
-  let seen = null; try { seen = localStorage.getItem(lsKey); } catch (e) {}
-  // First sighting on this device: just record it — whatever is cached
-  // locally is a valid clip, and purging here could pull clips out from
-  // under a game that's already running.
-  if (seen && seen !== index.rev) {
-    await idbDeleteVoice(voiceId);
-    if (voiceId === DEFAULT_VOICE_ID) await swMessage({ type: "clear-voice" });
-  }
-  if (seen !== index.rev) { try { localStorage.setItem(lsKey, index.rev); } catch (e) {} }
-  return index;
+    const c = await caches.open(VOICE_CACHE);
+    const keep = new Set(currentUrls);
+    let removed = 0;
+    for (const req of await c.keys()) {
+      if (req.url.includes(`/assets/voice/${DEFAULT_VOICE_ID}/`) && !keep.has(req.url)) { await c.delete(req); removed++; }
+    }
+    return removed;
+  } catch (e) { return 0; }
 }
 
 // Announcement-critical clips first, then checkout paths, names last.
@@ -261,13 +317,14 @@ function warmPriority(key) {
   return 1;
 }
 
-export const warmStatus = { state: "idle", total: 0, cached: 0, fetched: 0, failed: 0, ms: 0 };
+export const warmStatus = { state: "idle", total: 0, cached: 0, fetched: 0, failed: 0, pruned: 0, ms: 0 };
 if (typeof window !== "undefined") window.__voiceWarm = warmStatus;
 
 /**
  * Background-fills the service worker's clip cache with every clip of the
- * default voice. Requires an active service-worker controller (otherwise
- * the downloads would only land in the HTTP cache and not survive offline).
+ * default voice (current version, ?h= URLs) and removes superseded versions.
+ * Requires an active service-worker controller (otherwise the downloads
+ * would only land in the HTTP cache and not survive offline).
  * @param {{concurrency?:number}} [opts]
  */
 export async function warmDefaultVoice({ concurrency = 2 } = {}) {
@@ -275,13 +332,14 @@ export async function warmDefaultVoice({ concurrency = 2 } = {}) {
   if (!navigator.serviceWorker?.controller || typeof caches === "undefined") { warmStatus.state = "skipped"; return warmStatus; }
   if (navigator.connection?.saveData) { warmStatus.state = "skipped-savedata"; return warmStatus; }
   const t0 = performance.now();
-  Object.assign(warmStatus, { state: "running", total: 0, cached: 0, fetched: 0, failed: 0, ms: 0 });
-  const index = await syncVoiceRevision(DEFAULT_VOICE_ID);
+  Object.assign(warmStatus, { state: "running", total: 0, cached: 0, fetched: 0, failed: 0, pruned: 0, ms: 0 });
+  const index = await voiceIndex(DEFAULT_VOICE_ID);
   if (!index?.keys?.length) { warmStatus.state = "no-index"; return warmStatus; }
   const urls = index.keys.slice()
     .sort((a, b) => warmPriority(a) - warmPriority(b))
-    .map(k => new URL(`assets/voice/${DEFAULT_VOICE_ID}/${k}.mp3`, location.href).href);
+    .map(k => new URL(bundledClipURL(DEFAULT_VOICE_ID, k, index.hashes?.[k]), location.href).href);
   warmStatus.total = urls.length;
+  if (index.hashes) warmStatus.pruned = await pruneVoiceCache(urls);
   let i = 0;
   const worker = async () => {
     while (i < urls.length) {

@@ -10,7 +10,7 @@
  * ~7 MB default-voice warm-up never compete with the app's own startup
  * downloads. See sw.js for the caching strategies.
  */
-import { warmDefaultVoice, syncVoiceRevision, voiceKeyFor, DEFAULT_VOICE_ID } from './voiceClips.js';
+import { warmDefaultVoice } from './voiceClips.js';
 
 const isNative = () => !!window.Capacitor?.isNativePlatform?.();
 
@@ -46,11 +46,8 @@ export async function initPWA() {
     setTimeout(() => {
       warmDefaultVoice().catch(e => console.warn("voice warm-up:", e.message));
     }, 3000);
-    // Non-default voices are cached clip-by-clip in IndexedDB; drop stale
-    // copies there too if that voice's clips were regenerated/re-encoded.
-    let active = DEFAULT_VOICE_ID;
-    try { active = voiceKeyFor(localStorage.getItem("dart_active_voice_id")); } catch (e) {}
-    if (active !== DEFAULT_VOICE_ID) syncVoiceRevision(active).catch(() => {});
+    // Stale clips of any voice (IndexedDB copies, older ?h= versions) are
+    // detected per clip against the voice's index — see js/voiceClips.js.
     // Resume an interrupted warm-up when the connection comes back.
     window.addEventListener("online", () => setTimeout(() => warmDefaultVoice().catch(() => {}), 3000));
   } catch (e) { console.warn("Service worker:", e.message); }

@@ -133,6 +133,7 @@ service cloud.firestore {
 - Inhaltsprüfung nach JEDER (Neu-)Generierung: `node scripts/check-voice-clips.js --voice=<v>` (s. `docs/voice-qa/README.md`); Profil `data/tts-settings.json`
 - Format: `data/voice-format.json` — MP3 mono 24 kHz LAME VBR V6 (~1/3 von ElevenLabs' mp3_44100_128). Generierung (`scripts/gen-voice-assets.js`) und `dartVoiceName` (ffmpeg-static) wandeln automatisch um; Bestand: `FFMPEG=… node scripts/transcode-voice-assets.js` (idempotent, schreibt `assets/voice/<v>/index.json` mit `rev`)
 - Storage-Pakete: `node scripts/upload-voice-assets.js --bulk`; Android-Bundle (nur George): `npm run build`
+- **Aktualität nach Neugenerierung (seit 2026-11-24):** `index.json` enthält pro Clip einen Inhalts-Hash (`hashes`, SHA-1/10 hex, `writeVoiceIndex`/`clipHash` in `scripts/voice-format.js`). Identität eines Clips = (Stimme, Key, Hash): gebündelte Clips werden als `<key>.mp3?h=<hash>` geladen (neue Bytes = neue URL → weder HTTP-Cache/`force-cache` noch SW-Cache liefern die alte Version), IndexedDB-Kopien speichern ihren Hash und werden beim nächsten Abspielen einzeln ersetzt, Downloads werden beim Eintreffen gehasht. Index pro Sitzung einmal (`no-cache`, i. d. R. 304); Nicht-Standard-Stimmen lesen `dart_voice_pkg/<v>/index.json` (Upload-Skript lädt es NACH den Clips hoch, `--index-only` nur Index). Offline/ohne Index wird gespielt, was lokal liegt. Warm-up räumt veraltete SW-Einträge ab. Test: `node tests/voice-freshness.test.mjs` (eigener Server, Phasen: alt → veröffentlichen → Reload → neu, genau 1 Download je geändertem Clip, 0 für unveränderte, offline, ohne SW; gegen alten Code 13 Fehler)
 - Web/PWA: `sw.js` + `js/pwa.js` — Service Worker erst nach App-Start registriert, George-Clips danach im Hintergrund in den SW-Cache (offline nach erstem Besuch). In Capacitor nicht aktiv. Tests: `tests/offline-leg.test.mjs`, `tests/pwa-offline.test.mjs`, Messung: `tests/pwa-load.measure.mjs`
 - Installierbar via `manifest.webmanifest` (Icons `icons/icon-192.png`, `icon-512.png` = any+maskable, `apple-touch-icon.png`; Theme `#08080A`). Playwright ist devDependency (1.65.1 ↔ chromium-1255); Tests brauchen `python3 -m http.server 8973` im Repo-Root
 
@@ -153,7 +154,15 @@ service cloud.firestore {
 | Highscore | X Runden, höchste Punktzahl |
 | Killer | Eigene Zahl per Double, dann andere eliminieren |
 | Elimination | 501 + Eliminierung bei gleichem Score |
+| Bob's 27 | Party-Screen: D1…D20, Bull; +2×Feld je Treffer, −Feld je Fehlwurf/nicht geworfenem Dart; unter 0 = raus |
+| Checkout-Training | Party-Screen: 10 zufällige Checkout-Werte (40–170), Double-Out, Single auf 0 = Bust |
 | Co-op Checkout | 2+ Spieler spielen gemeinsam eine Leiter von Checkout-Werten (z. B. 80–90), Rest wird weitergereicht |
+
+### Party-/Trainingsmodi (`js/party.js`) — Stand 2026-11-24
+- `PARTY_MODES`/`isPartyMode()` in `party.js` ist die einzige Liste (app.js, tournament.js, setup.js, x01.js). Vorher fehlten Bob27/CheckoutTraining in den Kopien → starteten still ein 501
+- Party-Spiele werden NICHT in `dart_games` gespeichert (`saveGameToFirebase` bricht ab) — vorher wurde dort das letzte X01-Spiel unter dem Party-Modus-Namen gespeichert bzw. es gab einen TypeError; Gewinner-Overlay zeigt keine alten X01-Stats mehr
+- Rechtes Panel (Würfe, Punktestand inkl. Ziel, Weiter-Button) war seit dem Modul-Refactor per `.side-panel{display:none}` unsichtbar → `#party .side-panel` in `game.css` wieder sichtbar; Farben an dunkles Theme angepasst; `winner` 0 (Spieler 1) wird überall als Gewinner erkannt; Turn-Ende nach Checkout/Bust sperrt Board + Weiter, Undo bricht es ab
+- Test: `node tests/party-modes.test.mjs` (echte Setup-Buttons + Board-Klicks)
 
 ### Co-op Checkout (seit 2026-11-23) — `js/coop.js`, `css/coop.css`
 - Setup: „Weitere Modi“ → „Co-op Checkout“; Start-/Endwert per Stepper (2–170). Nicht auscheckbare Werte (159, 162, 163, 165, 166, 168, 169) sind als Start/Ende nicht wählbar (Stepper/Eingabe springen weiter) und werden in der Leiter übersprungen (Hinweis im Setup) — ohne 3-Dart-Finish wären sie keine Checkout-Werte. Mind. 2 Spieler, kein Bot; Sets/Legs/Bot im Setup ausgeblendet
@@ -186,7 +195,7 @@ service cloud.firestore {
 - **Laden (seit 2026-11-22, `js/gamesCache.js`):** `dartDB.loadStats()` liefert ALLE Legs des Nutzers (vorher `limit(200)` → „Alles“ zeigte still nur 200). Spieler/Zeitraum/Modus filtert `js/stats.js` im Browser; Verlauf/Sessions, Coach-Prompts und Spielerprofil-Stats brauchen ohnehin die volle Liste.
   - Lesevorgänge: Erstladen pro Gerät = alle Legs (Seiten à 500) · danach IndexedDB-Kopie (pro uid) + Nachladen `ts ≥ neuestes − 7 Tage` = Legs der letzten 7 Tage (min. 1) · in derselben Sitzung < 30 s und nichts gespeichert = 0 · Voll-Resync wenn Kopie > 30 Tage alt. 7-Tage-Überlappung fängt Uhr-Abweichung/verspätete Offline-Saves anderer Geräte
   - Gemessen (650 Legs, echte DB): erstes Laden 650 Reads / 1,3 s, neue Sitzung 12 Reads / 0,57 s, Filterwechsel 0 Reads. Offline: Nachladen schlägt fehl → lokale Kopie wird angezeigt
-  - `saveGame` markiert den Cache als veraltet; `signOutUser` und `deleteUserAccount` löschen die Kopie (geteilte Geräte). Spiele werden nie bearbeitet/gelöscht (append-only) — falls das je kommt, muss `gamesCache.js` das berücksichtigen
+  - `saveGame` markiert den Cache als veraltet; `signOutUser` und `deleteUserAccount` löschen die Kopie (geteilte Geräte). Spiele werden nie bearbeitet/gelöscht (append-only) — falls das je kommt, muss `gamesCache.js` das berücksichtigen. Geprüft 2026-11-24: einziger Lösch-/Änderungspfad für `dart_games` ist „Konto löschen“ (alle Daten, Konto weg) — keine Spiel-Bearbeitung/-Löschung in der App, daher keine Änderung nötig
   - Index: nur `userId ↑, ts ↓` nötig (Gleichheit + Bereich/Sortierung auf ts). `firestore.indexes.json` == Projekt (5 Indexe, alle READY). Neue serverseitige Filter brauchen einen neuen Index + `firebase deploy --only firestore:indexes`
 - **Ø Darts pro Leg:** exakt aus `players[].darts` über die Legs, die das Feld haben (Untertitel „exakt aus N von M Legs“); nur wenn kein Leg der Auswahl es hat: alte Schätzung Runden × 3 („geschätzt“). Nie gemischt in einer Zahl. Cricket weiter geschätzt
 - Test viele Legs: `node tests/stats-many-legs.live.mjs` (Gast + 650 Legs per Batch, prüft Anzahl/Reads/Ladezeit/Ø Darts, löscht alles; `BASE=http://localhost:8973` für lokal)
@@ -231,7 +240,7 @@ service cloud.firestore {
 
 ### Firebase Hosting (NICHT deployt — Cache-Header für einen späteren Umzug, `firebase.json`)
 - `no-cache` für `/`, endungslose Routen (`**/!(*.*)`, SPA-Rewrite) und `html|js|mjs|css|json|webmanifest|txt|map` (deckt `sw.js`, `manifest.webmanifest`, `assets/voice/*/index.json`, `data/*.json` ab): Browser darf cachen, fragt aber jedes Mal per ETag nach → Updates kommen sofort an, unverändert = 304. Die JS-Module haben keine Content-Hashes in den URLs (nur `?v=2`), daher wäre jedes `max-age` ein Risiko
-- `assets/voice/**/*.mp3`: `public, max-age=86400` (1 Tag) — Clips werden bei Neugenerierung unter DERSELBEN URL überschrieben (kein Hash/rev in der URL), daher kein `immutable`. Achtung: `js/voiceClips.js` lädt Clips mit `cache: "force-cache"` → ein HTTP-gecachter alter Clip wird auch nach Ablauf genutzt; der `rev`-Wechsel leert nur den SW-Cache
+- `assets/voice/**/*.mp3`: `public, max-age=86400` (1 Tag) — Dateien werden bei Neugenerierung überschrieben; die App fragt sie aber seit 2026-11-24 als `?h=<Inhalts-Hash>` an (s. „Aktualität nach Neugenerierung“), `force-cache` ist damit unkritisch
 - Bilder/Icons (`png|webp|svg|ico|jpg|jpeg|gif|woff2`): `public, max-age=2592000` (30 Tage) — ändern sich praktisch nie, ebenfalls ohne Hash
 - Geprüft mit `firebase emulators:start --only hosting` + curl (2026-11-22)
 
@@ -247,8 +256,9 @@ git push
 Live unter: `https://danielstrass8482.github.io/Dart/`
 
 ### Android Release (AAB)
-- Version in `android/app/build.gradle` (`versionCode`/`versionName`) — aktuell 13 / 1.2.0
-- **Nächster Release-Build (Festlegung Daniel, 2026-11-23):** Das bisher gebaute `~/darttrainer-1.2.0-vc13.aab` (alter Key) wird NICHT hochgeladen. Ab **2026-11-24 gilt der neue Upload-Key**. Der nächste Build bleibt **versionCode 13 / 1.2.0** (vc13 wurde nie hochgeladen), wird **erst nach Abschluss des Voice-QA-Auftrags** und **mit dem neuen Key** (`signing-new.properties`) gebaut und enthält alle bis dahin gemachten Änderungen (u. a. ggf. korrigierte George-Clips). Claude baut ihn nicht selbst — Build durch Daniel bzw. nur auf ausdrücklichen Auftrag
+- Version in `android/app/build.gradle` (`versionCode`/`versionName`) — aktuell 13 / 1.3.0
+- **Release-Build 2026-11-24 (auf Auftrag Daniel):** `~/darttrainer-1.3.0-vc13.aab`, vc13 / 1.3.0, neuer Upload-Key (B3:FF); altes `~/darttrainer-1.2.0-vc13.aab` (alter Key) gelöscht. Upload in die Play Console steht bei Daniel aus. Nächster Build: versionCode 14
+- **(Erledigt 2026-11-24, s. o.) Festlegung Daniel, 2026-11-23:** Das bisher gebaute `~/darttrainer-1.2.0-vc13.aab` (alter Key) wird NICHT hochgeladen. Ab **2026-11-24 gilt der neue Upload-Key**. Der nächste Build bleibt **versionCode 13 / 1.2.0** (vc13 wurde nie hochgeladen), wird **erst nach Abschluss des Voice-QA-Auftrags** und **mit dem neuen Key** (`signing-new.properties`) gebaut und enthält alle bis dahin gemachten Änderungen (u. a. ggf. korrigierte George-Clips). Claude baut ihn nicht selbst — Build durch Daniel bzw. nur auf ausdrücklichen Auftrag
 - Android-SDK liegt auf dem flüchtigen Overlay `/var/tmp/android-sdk` (Symlink `~/android-sdk`, s. `android/local.properties`), Gradle-Cache in `/var/tmp/gradle-home` — /home ist nur 4,8 GB groß. Nach Cloud-Shell-Neustart neu installieren: cmdline-tools → `sdkmanager "platforms;android-36" "build-tools;35.0.0" "build-tools;34.0.0" platform-tools`
 - Build: `npm run build && cd android && JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 GRADLE_USER_HOME=/var/tmp/gradle-home ./gradlew --no-daemon bundleRelease` → `android/app/build/outputs/bundle/release/app-release.aab`
 - **Signatur (seit 2026-11-22 NICHT mehr im Repo):** `android/app/build.gradle` liest Keystore/Alias/Passwörter aus `android/signing.properties` (gitignored, Symlink) bzw. `DT_SIGNING_PROPERTIES=<pfad>` bzw. `DT_STORE_FILE`/`DT_STORE_PASSWORD`/`DT_KEY_ALIAS`/`DT_KEY_PASSWORD`. Ohne Quelle bricht `bundleRelease` mit klarer Meldung ab. Vorlage: `android/signing.properties.example`
@@ -263,7 +273,7 @@ Live unter: `https://danielstrass8482.github.io/Dart/`
   - [x] Build liest Signatur aus nicht versionierter Quelle (Gradle-Check 2026-11-22 bestanden: ohne Quelle Abbruch, alt → A3:56, neu → B3:FF)
   - [x] Historie bereinigt (git-filter-repo 10:44, Force-Push); Voll-Backup vorher: `~/backups/dart-repo-2026-11-22/` (Bundle + 2 Mirrors, enthält die alten Secrets!)
   - [ ] **GitHub hält die alten Commits/Blobs weiter per SHA abrufbar** (z. B. alter Commit `107a555f…`, Keystore-Blob `bf7643d9…` → HTTP 200). Nur GitHub Support kann das löschen: support.github.com → „Remove sensitive data“, Liste: `~/backups/dart-repo-2026-11-22/affected-old-commits.txt`
-  - [ ] Upload-Key-Reset in der Play Console beantragen (PEM hochladen) → nach Freigabe Symlink auf `signing-new.properties`
+  - [ ] Upload-Key-Reset in der Play Console beantragen (PEM hochladen) — Symlink steht seit 2026-11-24 auf `signing-new.properties`
   - [ ] Optional: Offline-Kopie von `~/secure/darttrainer/` (Passwortmanager/USB); „Enforce HTTPS“ für Pages aktivieren
 - Prüfen: `java -jar bundletool.jar dump manifest --bundle=… --xpath=/manifest/@android:versionCode`, `jarsigner -verify -certs …`
 

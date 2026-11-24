@@ -67,19 +67,30 @@ function isTargetFormat(buf) {
 }
 
 /**
- * (Re)writes assets/voice/<voice>/index.json: the clip key list plus a
- * content revision (hash over every clip's bytes). The web app warms the
- * default voice from this list and, when `rev` changes (clip regenerated or
- * re-encoded), drops its stale offline copies — see js/voiceClips.js.
+ * (Re)writes assets/voice/<voice>/index.json: the clip key list, a content
+ * hash per clip (`hashes`, first 10 hex chars of SHA-1 over the file bytes)
+ * and a content revision over all of them (`rev`, kept for older app
+ * versions). The app treats (voice, key, hash) as a clip's identity: bundled
+ * clips are requested as <key>.mp3?h=<hash>, locally stored copies carry the
+ * hash they were downloaded with — so a regenerated clip (same file name,
+ * new bytes) can never be answered from a stale cache. See js/voiceClips.js.
  */
+function clipHash(buf) {
+  return require("crypto").createHash("sha1").update(buf).digest("hex").slice(0, 10);
+}
 function writeVoiceIndex(voiceDir) {
   const crypto = require("crypto");
   const keys = fs.readdirSync(voiceDir).filter(f => f.endsWith(".mp3")).map(f => f.slice(0, -4)).sort();
   const h = crypto.createHash("sha1");
-  for (const k of keys) h.update(k).update(crypto.createHash("sha1").update(fs.readFileSync(path.join(voiceDir, k + ".mp3"))).digest());
-  const index = { format: FORMAT.id, rev: h.digest("hex").slice(0, 16), keys };
+  const hashes = {};
+  for (const k of keys) {
+    const buf = fs.readFileSync(path.join(voiceDir, k + ".mp3"));
+    h.update(k).update(crypto.createHash("sha1").update(buf).digest());
+    hashes[k] = clipHash(buf);
+  }
+  const index = { format: FORMAT.id, rev: h.digest("hex").slice(0, 16), keys, hashes };
   fs.writeFileSync(path.join(voiceDir, "index.json"), JSON.stringify(index) + "\n");
   return index;
 }
 
-module.exports = { FORMAT, findFfmpeg, transcode, mp3Info, isTargetFormat, writeVoiceIndex };
+module.exports = { FORMAT, findFfmpeg, transcode, mp3Info, isTargetFormat, writeVoiceIndex, clipHash };

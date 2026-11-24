@@ -228,6 +228,11 @@ function initDartDB(){
       try{ return await getDownloadURL(ref(storage,`dart_voice_pkg/${voiceId}/${key}.mp3`)); }
       catch(e){ return null; }
     },
+    // e.g. "index.json" — the package's clip index with per-clip content hashes
+    async getVoicePkgFileURL(voiceId, file){
+      try{ return await getDownloadURL(ref(storage,`dart_voice_pkg/${voiceId}/${file}`)); }
+      catch(e){ return null; }
+    },
     async listVoiceSamples(){
       try{
         const list=await listAll(ref(storage,"dart_voice"));

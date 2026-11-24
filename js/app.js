@@ -79,7 +79,7 @@ import { startX01, renderX01, handleX01Click, processX01Hit, advanceX01, handleL
 import { startCricket, renderCricket, handleCricketClick, advanceCricket, setCricketBoard } from './cricket.js';
 
 // ── Party ────────────────────────────────────────────────────────
-import { startParty, renderParty, handlePartyClick, advanceParty, partyWin, setPartyBoard } from './party.js';
+import { startParty, renderParty, handlePartyClick, advanceParty, partyWin, setPartyBoard, isPartyMode, cancelPendingAdvance } from './party.js';
 
 // ── Setup ────────────────────────────────────────────────────────
 import {
@@ -250,7 +250,7 @@ function isUnfinishedGameActive(){
   if(!active) return false;
   if(active.id==="x01") return !state.x01.winner;
   if(active.id==="cricket") return !state.cr.winner;
-  if(active.id==="party") return !state.pg.winner;
+  if(active.id==="party") return state.pg.winner==null;
   return false;
 }
 function confirmLeaveGame(){
@@ -332,6 +332,7 @@ document.getElementById("party-next").addEventListener("click", advanceParty);
 document.getElementById("party-undo").addEventListener("click",()=>{
   if(state.pg.history.length===0) return;
   clearAudioQueue();
+  cancelPendingAdvance();
   const last=state.pg.history.pop();
   Object.assign(state.pg,last);
   state.pg.historicThrows=state.pg.historicThrows.map((a,i)=>a.slice(0,last.historicLens[i]||0));
@@ -684,9 +685,8 @@ document.getElementById("btn-start").addEventListener("click",async()=>{
     state.cfg.isBot=state.cfg.players.map(()=>false);
     state.cfg.totalSets=1; state.cfg.setsToWin=1; state.cfg.totalLegs=1; state.cfg.legsToWin=1;
   }
-  const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
   if(state.cfg.mode==="Cricket") startCricket();
-  else if(partyModes.includes(state.cfg.mode)) startParty();
+  else if(isPartyMode(state.cfg.mode)) startParty();
   else startX01();
   // Re-apply translations after game screen renders
   setTimeout(() => applyTranslations(), 50);

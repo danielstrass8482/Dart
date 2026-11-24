@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { startX01, handleLegWin } from './x01.js?v=2';
 import { startCricket } from './cricket.js';
-import { startParty } from './party.js';
+import { startParty, isPartyMode } from './party.js';
 import { showScreen } from './setup.js?v=2';
 import { t as tr } from './i18n.js?v=3';
 import { escapeHtml } from './util.js';
@@ -193,9 +193,8 @@ export function startTournamentMatch(tournament, matchId){
     totalLegs:tournament.legs||1, legsToWin:Math.ceil((tournament.legs||1)/2), legWins:[0,0], currentLeg:1,
     rounds:0, healthData:null, tournamentId:tournament.id, matchId:matchId
   };
-  const partyModes=["AtC","Shanghai","Highscore","Killer","Elimination"];
   if(state.cfg.mode==="Cricket") startCricket();
-  else if(partyModes.includes(state.cfg.mode)) startParty();
+  else if(isPartyMode(state.cfg.mode)) startParty();
   else startX01();
 }
 
