@@ -75,6 +75,11 @@ async function main() {
   }
   add("el_requires", "Requires", "requires_number");
 
+  // Player call-outs for "{Player N} requires {number}." — players are
+  // announced by their position in the throwing order (P1…P8 badge on
+  // screen), never by name. See announceRequires() in js/speech.js.
+  for (let n = 1; n <= 8; n++) add(`el_player_${n}`, `Player ${numToWords(n)}.`, "player");
+
   // ── 3) Fixed keyed phrases (game flow) ──────────────────────────────
   // Text matches the ElevenLabs-proven phrasing from functions/index.js
   // SPECIAL_TEXTS where one existed (periods, not exclamation marks — that

@@ -4,7 +4,6 @@
 
 import { state } from './state.js';
 import { numToWords, speakKeyWithCustom, speakScoreWithCustom, queueAudio } from './audio.js';
-import { nameClipKey } from './voiceClips.js';
 import { flashSegment } from './board.js?v=2';
 import { requiresDelay, x01Snapshot } from './x01.js?v=2';
 import { t } from './i18n.js?v=3';
@@ -182,12 +181,11 @@ export function setVoiceFeedback(text){
  * Only announces in multi-player games and when remaining ≤170.
  *
  * Composed from three pre-produced local clips played back-to-back through
- * the audio queue — [player name] → "requires" → [number] — rather than one
- * clip per name, since names can't all be known in advance (see Part B of
- * the voice-clip migration). If the name clip isn't available (never seen
- * before, and offline, or central generation fails), that one clip is
- * skipped and only "requires {number}." plays — never a browser-voice
- * fallback. See queueAudio()'s nameHint param / js/voiceClips.js.
+ * the audio queue — "Player N" → "requires" → [number]. Players are never
+ * announced by name: N is the position in the throwing order of the running
+ * game (state.cfg.players index + 1, shown on screen as the P1…P8 badge, see
+ * playerBadge() in js/x01.js). Beyond 8 players only "requires {number}."
+ * plays.
  */
 export function announceRequires(){
   if(!state.x01||!state.cfg||!state.cfg.players) return;
@@ -195,15 +193,18 @@ export function announceRequires(){
   if(state.cfg.isBot?.[idx]) return;
   const score = state.x01.scores[idx];
   if(score < 2 || score > 170) return;
-  const name = state.cfg.players[idx];
   // Stale as soon as idx's remaining score no longer matches what this
   // announcement was built for — i.e. their turn already completed while
   // this was still queued/playing. See invalidateStaleAnnouncements().
   const isStale=()=>state.x01?.scores?.[idx]!==score;
-  queueAudio(name, nameClipKey(name), isStale, name);
+  const n=idx+1;
+  if(n<=MAX_ANNOUNCED_PLAYERS) queueAudio(`Player ${numToWords(n)}`, `el_player_${n}`, isStale);
   queueAudio("requires", "el_requires", isStale);
   queueAudio(numToWords(score)+".", `el_num_${score}`, isStale);
 }
+
+/** Player call-out clips el_player_1 … el_player_8 exist (data/vocabulary.json). */
+export const MAX_ANNOUNCED_PLAYERS=8;
 
 
 /** Restarts mic after player advance if user has mic enabled. */

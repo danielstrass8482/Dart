@@ -1,5 +1,5 @@
 {
-  "_comment": "Generation profile for ALL pre-produced voice clips (scripts/gen-voice-assets.js) and on-demand name clips (functions/voiceName.js MODEL_ID/VOICE_SETTINGS, mirrored there + in functions/index.js because functions/ deploys standalone — keep all three in sync). History + evidence: docs/voice-qa/README.md.",
+  "_comment": "Generation profile for ALL pre-produced voice clips (scripts/gen-voice-assets.js; MODEL_ID/VOICE_SETTINGS mirrored in functions/index.js because functions/ deploys standalone — keep both in sync). History + evidence: docs/voice-qa/README.md.",
   "profile": "stable-short-v1",
   "modelId": "eleven_multilingual_v2",
   "voiceSettings": { "stability": 0.75, "similarity_boost": 0.80, "style": 0.00, "use_speaker_boost": true, "speed": 1.00 },

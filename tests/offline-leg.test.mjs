@@ -1,10 +1,9 @@
 /**
  * offline-leg.test.mjs — Proves the core requirement of the TTS rebuild:
  * once a leg's clips have been resolved once (online), the same leg replays
- * fully offline with zero network requests to Storage/ElevenLabs/the
- * dartVoiceName function and zero browser-speechSynthesis fallback, for
- * both a name from the library (data/names.json) and a name that is NOT in
- * it (announced without the name, per spec, never via the browser voice).
+ * fully offline with zero network requests to Storage/ElevenLabs and zero
+ * browser-speechSynthesis fallback. Players are announced as "Player 1/2"
+ * (el_player_<n>), never by name — any name works offline.
  *
  * Usage:
  *   npm install playwright --no-save   # one-time, not a runtime dependency
@@ -14,18 +13,16 @@
  *
  * Exit code 0 = passed (no offline network requests — responses served from
  * the web build's service-worker cache count as local — and no
- * speechSynthesis calls). The unknown name's bundle 404 from the online pass
- * is remembered per session (js/voiceClips.js notBundled), so it isn't
- * re-requested offline. Exit code 1 = failed, offending requests printed.
+ * speechSynthesis calls). Exit code 1 = failed, offending requests printed.
  */
 import { chromium } from "playwright";
 
 const BASE = "http://localhost:8973";
-const KNOWN_NAME = "Daniel";
-const UNKNOWN_NAME = "Zbigniewxyzunseen";
+const NAME_1 = "Daniel";
+const NAME_2 = "Zbigniewxyzunseen";
 
 function buildCfg() {
-  const players = [KNOWN_NAME, UNKNOWN_NAME];
+  const players = [NAME_1, NAME_2];
   return {
     mode: "501", startScore: 140,
     players, playerIds: players.map(() => null), isBot: players.map(() => false),
@@ -37,10 +34,10 @@ function buildCfg() {
   };
 }
 
-// player0 (KNOWN_NAME) misses 3x -> advance to player1 (UNKNOWN_NAME,
-// remaining 140) -> fires requires+checkout-path for the UNKNOWN name.
+// player0 misses 3x -> advance to player1 (remaining 140) -> fires
+// "Player Two requires 140" + checkout path.
 // player1 scores 60 (20,20,20) -> advance back to player0 (remaining still
-// 140, untouched) -> fires requires+checkout-path for the KNOWN name, and
+// 140, untouched) -> fires "Player One requires 140" + checkout path, and
 // the 60-score announcement fires for player1's turn too.
 async function playLeg(page) {
   await page.evaluate(async () => {

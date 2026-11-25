@@ -855,6 +855,46 @@
     "category": "party"
   },
   {
+    "key": "el_player_1",
+    "text": "Player One.",
+    "category": "player"
+  },
+  {
+    "key": "el_player_2",
+    "text": "Player Two.",
+    "category": "player"
+  },
+  {
+    "key": "el_player_3",
+    "text": "Player Three.",
+    "category": "player"
+  },
+  {
+    "key": "el_player_4",
+    "text": "Player Four.",
+    "category": "player"
+  },
+  {
+    "key": "el_player_5",
+    "text": "Player Five.",
+    "category": "player"
+  },
+  {
+    "key": "el_player_6",
+    "text": "Player Six.",
+    "category": "player"
+  },
+  {
+    "key": "el_player_7",
+    "text": "Player Seven.",
+    "category": "player"
+  },
+  {
+    "key": "el_player_8",
+    "text": "Player Eight.",
+    "category": "player"
+  },
+  {
     "key": "el_num_10",
     "text": "Ten.",
     "category": "requires_number"

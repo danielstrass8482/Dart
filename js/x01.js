@@ -9,7 +9,7 @@ import { announceRequires } from './speech.js';
 import { runBotTurn } from './bot.js';
 import { getCheckoutPath } from './checkout.js';
 import { t } from './i18n.js?v=3';
-import { escapeHtml } from './util.js';
+import { escapeHtml, playerBadge } from './util.js';
 import { isPartyMode } from './party.js';
 import { createCoopState, coopOnCheckout, renderCoop, hideCoopUI, hideCoopResult } from './coop.js';
 
@@ -152,7 +152,7 @@ export function renderX01(){
             :`<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F4D77E,#C9A227);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#0c0b08;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
           }
           <div style="min-width:0">
-            <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</div>
+            <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${playerBadge(i)}${displayName}</div>
             <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">${t('am_zug')}</div>
           </div>
         </div>`
@@ -162,7 +162,7 @@ export function renderX01(){
             :`<div style="width:26px;height:26px;border-radius:50%;background:#1C1C21;border:1px solid #303038;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#9A9AA2;flex-shrink:0">${displayName.slice(0,2).toUpperCase()}</div>`
           }
           <div style="min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#C9C9D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${legInfo}${displayName}</div>
+            <div style="font-size:13px;font-weight:700;color:#C9C9D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${playerBadge(i)}${legInfo}${displayName}</div>
           </div>
         </div>`;
       return `<div class="score-cell${isActive?" active":""}">
@@ -221,7 +221,7 @@ export function renderX01(){
             }
           </div>
           <div style="width:60%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;min-width:0">
-            <div style="font-size:13px;font-weight:800;color:#D4AF37;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;width:100%">${displayName}</div>
+            <div style="font-size:13px;font-weight:800;color:#D4AF37;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;width:100%">${playerBadge(i)}${displayName}</div>
             <div style="font-size:9px;font-weight:700;color:#D4AF37;letter-spacing:.1em">${t('am_zug')}</div>
             <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
           </div>
@@ -235,7 +235,7 @@ export function renderX01(){
             }
           </div>
           <div style="width:60%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;min-width:0">
-            <div style="font-size:12px;font-weight:700;color:#9A9AA2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;width:100%">${setDots}${legDots}${displayName}</div>
+            <div style="font-size:12px;font-weight:700;color:#9A9AA2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;width:100%">${playerBadge(i)}${setDots}${legDots}${displayName}</div>
             <div class="lp-score" style="${lpScoreStyle}">${lpRemaining}</div>
             ${avgVal?`<div style="font-size:10px;font-weight:700;color:#6E6E78;margin-top:2px">Ø ${avgVal}${f9?` · F9 ${f9}`:""}</div>`:""}
           </div>

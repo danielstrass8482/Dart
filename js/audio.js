@@ -121,7 +121,7 @@ let currentAbortPlayback=null;
 // app. Every item plays from a LOCAL clip (bundled with the app, or
 // downloaded once and cached in IndexedDB — see js/voiceClips.js) for the
 // active voice; if no local clip is or can be made available (fully
-// offline + a never-seen player name), that one item is silently skipped —
+// offline + a clip that was never cached), that one item is silently skipped —
 // this never falls back to a live ElevenLabs/dartTTS call or the browser
 // voice. audioPlaying gates strict one-at-a-time playback: the next item
 // only starts once the previous one has fully resolved, so calls fired in
@@ -142,10 +142,10 @@ async function playAudioQueue(){
   audioPlaying=true;
   const item=audioQueue.shift();
   currentQueueItem=item;
-  const {key,resolve,isName,rawName}=item;
+  const {key,resolve}=item;
   try{
     const voiceId=voiceKeyFor(getVoiceId());
-    const url=await resolveClipURL(voiceId,key,{isName,rawName});
+    const url=await resolveClipURL(voiceId,key);
     if(url){
       await new Promise(res=>{
         if(currentAudio){ try{ currentAudio.pause(); }catch(e){} currentAudio=null; }
@@ -159,7 +159,7 @@ async function playAudioQueue(){
       });
     }
     // else: no local clip available for this key in the active voice (e.g.
-    // offline and this exact name/clip was never cached) — skip silently.
+    // offline and this clip was never cached) — skip silently.
   }catch(e){ console.warn("local clip playback:",key,e.message); }
   currentAbortPlayback=null;
   currentQueueItem=null;
@@ -171,22 +171,18 @@ async function playAudioQueue(){
 /**
  * Queues a spoken announcement, played from a local pre-produced clip.
  * @param {string} text human-readable label for this clip (not spoken directly — the real audio is the pre-produced clip matching `key`)
- * @param {string} key cache key — must match a key in data/vocabulary.json (or `name_<normalized>` for a player name)
+ * @param {string} key cache key — must match a key in data/vocabulary.json
  * @param {(()=>boolean)|null} [isStale] optional — checked right before this
  *   item would start playing (drops it silently if already stale) and again
  *   by invalidateStaleAnnouncements() while it's queued or actively playing.
  *   Omit for announcements that are always still accurate once queued (score
  *   confirmations, bust, game-on) — only state-snapshot announcements like a
  *   checkout path or "requires N" need this.
- * @param {string|null} [nameHint] pass the raw (un-normalized) player name
- *   when `key` is a name clip, so a cache-miss can fall through to the
- *   central on-demand name generator (functions/voiceName.js). Omit for
- *   every non-name clip.
  */
-export function queueAudio(text,key,isStale=null,nameHint=null){
+export function queueAudio(text,key,isStale=null){
   if(localStorage.getItem("dart_tts_enabled")==="false") return Promise.resolve();
   return new Promise(resolve=>{
-    audioQueue.push({text,key,resolve,isStale,isName:!!nameHint,rawName:nameHint||null});
+    audioQueue.push({text,key,resolve,isStale});
     playAudioQueue();
   });
 }
@@ -196,7 +192,7 @@ export function queueAudio(text,key,isStale=null,nameHint=null){
  * isStale() now reports true — e.g. a checkout-path or "requires N"
  * announcement whose target player's remaining score has since changed
  * because a later turn already completed while the old announcement was
- * still queued or speaking. Fixes the "Daniel requires one hundred and
+ * still queued or speaking. Fixes the "Player One requires one hundred and
  * fifty-one" bug: previously such an announcement always played to the end
  * even after the game state had moved on past it, because the queue only
  * ever guaranteed *ordering*, never *relevance*. Queued items are dropped

@@ -1,20 +1,18 @@
 /**
- * voiceClips.js — Local-first playback source for ALL fixed-vocabulary and
- * player-name audio clips. Replaces runtime ElevenLabs/dartTTS calls for
+ * voiceClips.js — Local-first playback source for ALL pre-produced
+ * (fixed-vocabulary) audio clips. Replaces runtime ElevenLabs/dartTTS calls for
  * everything that used to go through speakElevenLabs()/fetchTTSUrl().
  *
- * Three sources, tried in this order, NEVER falling through to a live TTS
+ * Two sources, tried in this order, NEVER falling through to a live TTS
  * call or the browser voice for a clip that simply isn't available yet:
  *   1. The active voice's locally bundled/cached clip (IndexedDB blob, or —
  *      for the default voice — a static file shipped with the app).
  *   2. A one-time download of that single clip from the pre-produced
  *      package in Firebase Storage (dart_voice_pkg/<voice>/<key>.mp3),
  *      cached into IndexedDB so it's never fetched again.
- *   3. For NAME clips only, not already in the pre-produced library: the
- *      dartVoiceName Cloud Function (central cache keyed by normalized
- *      name — see functions/voiceName.js), also cached into IndexedDB.
- * If none of these produce audio (fully offline + never-seen-before name,
- * or a genuinely missing vocabulary clip), playback of THAT item is simply
+ * Players are announced as "Player 1…8" (el_player_<n>), never by name.
+ * If neither produces audio (fully offline + never cached, or a genuinely
+ * missing vocabulary clip), playback of THAT item is simply
  * skipped — see js/audio.js's queueAudio()/playAudioQueue().
  *
  * Freshness (clips are regenerated under the SAME file name): every voice
@@ -50,28 +48,6 @@ export const DEFAULT_VOICE_ID = "george";
 export function voiceKeyFor(elevenLabsId) {
   return VOICES.find(v => v.elevenLabsId === elevenLabsId)?.id || DEFAULT_VOICE_ID;
 }
-
-const NAME_VOICE_FN_URL = "https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartVoiceName";
-
-/**
- * Normalizes a player-entered name for lookup against the pre-produced
- * library / the central generated-names store: lowercase, trimmed, internal
- * whitespace collapsed, umlauts folded to ASCII digraphs, ß folded to ss —
- * so "Jürgen", "JÜRGEN", " juergen ", "Juergen" all resolve to one clip.
- * Mirrors scripts/build-names.js normalizeName() and functions/voiceName.js.
- * @param {string} raw
- * @returns {string}
- */
-export function normalizeName(raw) {
-  return String(raw || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
-}
-
-/** @param {string} name @returns {string} the clip key for this normalized name */
-export function nameClipKey(name) { return `name_${normalizeName(name)}`; }
 
 // ── IndexedDB blob cache (persists across sessions/offline; survives a
 // browser restart unlike an in-memory Map) ──────────────────────────────
@@ -183,20 +159,19 @@ const notBundled = new Set(); // `${voiceId}::${key}` the bundle answered 404 fo
 
 /**
  * Resolves a playable URL for (voiceId, key), trying local bundle → cached
- * download → (name clips only) central generation, in that order. Returns
+ * download, in that order. Returns
  * null if nothing is available (caller must skip this clip, never fall back
  * to a live TTS call or the browser voice).
  * @param {string} voiceId short voice key, e.g. "george" (see voiceKeyFor())
- * @param {string} key clip key, e.g. "el_score_100" or "name_daniel"
- * @param {{isName?:boolean, rawName?:string}} [opts]
+ * @param {string} key clip key, e.g. "el_score_100" or "el_player_1"
  * @returns {Promise<string|null>}
  */
-export async function resolveClipURL(voiceId, key, opts = {}) {
+export async function resolveClipURL(voiceId, key) {
   const cacheKey = `${voiceId}::${key}`;
   if (objectUrlCache[cacheKey]) return objectUrlCache[cacheKey];
 
   const index = await voiceIndex(voiceId);
-  const want = index?.hashes?.[key] || null; // null: unknown (no index / central name clip)
+  const want = index?.hashes?.[key] || null; // null: unknown (no index)
   const remember = (blob) => { const url = URL.createObjectURL(blob); objectUrlCache[cacheKey] = url; return url; };
   /** Stores a downloaded clip with the hash of its ACTUAL bytes; false if they aren't the published ones. */
   const store = async (blob) => {
@@ -205,7 +180,7 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
     return !want || !got || got === want;
   };
 
-  // 1) IndexedDB (downloaded/generated earlier this device, any time, offline-safe)
+  // 1) IndexedDB (downloaded earlier on this device, any time, offline-safe)
   const cached = asEntry(await idbGet(cacheKey));
   if (cached && (!want || cached.h === want)) return remember(cached.blob);
   // cached but outdated → try to replace it below; play the old copy only if that fails
@@ -218,7 +193,7 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
     const url = bundledClipURL(voiceId, key, want);
     try {
       const resp = await fetch(url, { cache: want ? "force-cache" : "no-cache" });
-      if (resp.status === 404) notBundled.add(cacheKey); // definitively not in the bundle (e.g. a name outside the library) — don't ask again this session
+      if (resp.status === 404) notBundled.add(cacheKey); // definitively not in the bundle — don't ask again this session
       if (resp.ok) {
         const blob = await resp.blob();
         if (!(await store(blob))) {
@@ -248,35 +223,9 @@ export async function resolveClipURL(voiceId, key, opts = {}) {
         }
       }
     }
-  } catch (e) { /* not in the package (e.g. a not-yet-seeded name) — fall through */ }
+  } catch (e) { /* not in the package — fall through */ }
 
   if (cached) return remember(cached.blob); // outdated, but better than silence
-
-  // 4) Name clips only: not in the pre-produced library — generate once,
-  // cache centrally server-side (by normalized name, not uid), cache
-  // locally here too so this device never asks again.
-  if (opts.isName && opts.rawName) {
-    try {
-      let authToken = "anonymous";
-      try { const user = window.fbAuth?.currentUser; if (user) authToken = await user.getIdToken(); } catch (e) {}
-      const resp = await fetch(NAME_VOICE_FN_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + authToken, ...(window.appCheckHeaders ? await window.appCheckHeaders() : {}) },
-        body: JSON.stringify({ name: opts.rawName, voiceId }),
-      });
-      if (resp.ok) {
-        const { url } = await resp.json();
-        if (url) {
-          const audioResp = await fetch(url, { cache: "no-store" });
-          if (audioResp.ok) {
-            const blob = await audioResp.blob();
-            await store(blob);
-            return remember(blob);
-          }
-        }
-      }
-    } catch (e) { console.warn("dartVoiceName:", e.message); }
-  }
 
   return null;
 }
@@ -310,10 +259,9 @@ async function pruneVoiceCache(currentUrls) {
   } catch (e) { return 0; }
 }
 
-// Announcement-critical clips first, then checkout paths, names last.
+// Announcement-critical clips first, then the rest (checkout paths, …).
 function warmPriority(key) {
-  if (/^el_(score_|game_on|bust|no_score|game_shot|requires)/.test(key)) return 0;
-  if (key.startsWith("name_")) return 2;
+  if (/^el_(score_|game_on|bust|no_score|game_shot|requires|player_)/.test(key)) return 0;
   return 1;
 }
 

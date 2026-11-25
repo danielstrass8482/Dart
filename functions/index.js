@@ -39,8 +39,8 @@ const DEFAULT_VOICE_ID = VOICE_IDS.george;
 // branch left anywhere in this file for a future change to scramble. If
 // per-score modulation is ever wanted again, treat it as a new feature with
 // its own live-audio verification loop, not a revival of this one.
-// Stable short-text profile (2026-11-23) — mirrors data/tts-settings.json and
-// functions/voiceName.js. eleven_turbo_v2_5 (stability 0.50, style 0.35)
+// Stable short-text profile (2026-11-23) — mirrors data/tts-settings.json.
+// eleven_turbo_v2_5 (stability 0.50, style 0.35)
 // hallucinated extra words/sentences on short announcements; evidence in
 // docs/voice-qa/README.md. The former system_prompt field was dropped: it is
 // not an ElevenLabs TTS parameter and had no effect.
@@ -217,5 +217,4 @@ function buildDownloadURL(bucket, path, token) {
 Object.assign(exports, require("./dartCoach"));
 Object.assign(exports, require("./budgetCheck"));
 Object.assign(exports, require("./feedback"));
-Object.assign(exports, require("./voiceName"));
 Object.assign(exports, require("./appCheckPing"));

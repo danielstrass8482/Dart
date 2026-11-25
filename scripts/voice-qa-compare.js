@@ -100,32 +100,6 @@ function align(exp, got) {
 
 const isNum = t => /^\d+$/.test(t);
 
-/** Crude phonetic key for first names (spelling-agnostic). */
-function nameKey(s) {
-  let k = stripDiacritics(s).toLowerCase().replace(/[^a-z]/g, "");
-  k = k.replace(/ph/g, "f").replace(/th/g, "t").replace(/ck|q|c/g, "k").replace(/ie\b|ee|ea|y/g, "i")
-       .replace(/z/g, "s").replace(/w/g, "v").replace(/(?!^)h/g, "").replace(/(.)\1+/g, "$1").replace(/e$/, "");
-  return k;
-}
-
-function compareName(expectedText, transcript) {
-  const exp = rawTokens(expectedText), got = rawTokens(transcript);
-  const reasons = [];
-  if (!got.length) return { verdict: "error", reasons: ["kein Wort erkannt"] };
-  const extra = got.length - exp.length;
-  if (extra >= 2) return { verdict: "error", reasons: [`${extra} zusätzliche Wörter`] };
-  const e = exp.join(""), g = got.join("");
-  if (e === g || nameKey(e) === nameKey(g)) {
-    if (extra === 1) return { verdict: "doubtful", reasons: ["1 zusätzliches Wort"] };
-    return { verdict: "ok", reasons };
-  }
-  const sim = Math.max(strSim(e, g), strSim(nameKey(e), nameKey(g)));
-  if (extra === 1) reasons.push("1 zusätzliches Wort");
-  if (sim >= 0.75 && !extra) return { verdict: "ok", reasons: [] };
-  reasons.push(`Name abweichend erkannt (Ähnlichkeit ${sim.toFixed(2)})`);
-  return { verdict: "doubtful", reasons };
-}
-
 /**
  * Whisper writes "double eight" as "88" and "triple one" as "111" (phone-
  * number style), and drops separators: "Seven, Double Eight" → "788",
@@ -178,11 +152,10 @@ function compareText(expectedText, transcript) {
   return { verdict, reasons };
 }
 
-/** kind: "name" | "vocab" */
-function compare(expectedText, transcript, kind) {
-  return kind === "name" ? compareName(expectedText, transcript) : compareText(expectedText, transcript);
+function compare(expectedText, transcript) {
+  return compareText(expectedText, transcript);
 }
 
 const RANK = { ok: 0, doubtful: 1, error: 2 };
 
-module.exports = { compare, normalizeTokens, rawTokens, nameKey, RANK };
+module.exports = { compare, normalizeTokens, rawTokens, RANK };

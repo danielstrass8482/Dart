@@ -67,7 +67,7 @@ async function run() {
     let okCount = 0; const missing = [];
     for (const k of keys) { (await vc.resolveClipURL("george", k)) ? okCount++ : missing.push(k); }
     // decode-check a sample: real audio with a sane duration
-    const sample = ["el_score_180b", "el_game_on", "el_bust", "el_co_170", "name_daniel"];
+    const sample = ["el_score_180b", "el_game_on", "el_bust", "el_co_170", "el_player_1"];
     const durations = {};
     for (const k of sample) {
       const url = await vc.resolveClipURL("george", k);

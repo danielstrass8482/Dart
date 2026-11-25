@@ -29,7 +29,7 @@
 import { state } from './state.js';
 import { CHECKOUT_TABLE } from './checkout.js';
 import { t } from './i18n.js?v=3';
-import { escapeHtml } from './util.js';
+import { escapeHtml, playerBadge } from './util.js';
 import { queueAudio, invalidateStaleAnnouncements } from './audio.js';
 import { clearCheckout, redrawAllHits, disableBoard } from './board.js?v=2';
 import { legDarts, recordTurnDarts, scheduleNextPlayerAnnounce } from './x01.js?v=2';
@@ -205,13 +205,13 @@ export function renderCoop(remaining) {
       const stats = `${legDarts(i) || 0} ${t('darts_kurz')} · ${c.checkouts[i]} CO`;
       return active
         ? `<div class="score-cell active" data-coop-player="${i}">
-            <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div style="font-size:15px;font-weight:800;color:#FBFBF8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${playerBadge(i)}${name}</div>
             <div style="font-size:10px;font-weight:700;color:#C9A227;letter-spacing:.12em">${t('am_zug')}</div>
             <div class="sc-score" data-coop="rest" style="font-family:'Manrope',sans-serif;font-size:56px;font-weight:800;line-height:.9;letter-spacing:-0.04em;color:#FBFBF8;display:inline-block;${restStyle}">${remaining}</div>
             <div class="coop-pstats">${stats}</div>
           </div>`
         : `<div class="score-cell" data-coop-player="${i}">
-            <div style="font-size:13px;font-weight:700;color:#C9C9D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div style="font-size:13px;font-weight:700;color:#C9C9D1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${playerBadge(i)}${name}</div>
             <div class="coop-pstats">${stats}</div>
           </div>`;
     }).join("");
@@ -224,7 +224,7 @@ export function renderCoop(remaining) {
       const active = i === x.current && !done;
       return `<div class="lp-player${active ? " active" : ""} coop-lp-player" data-coop-player="${i}">
         <div style="width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;min-width:0">
-          <div style="font-size:13px;font-weight:800;color:${active ? "#D4AF37" : "#9A9AA2"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${displayName(i)}</div>
+          <div style="font-size:13px;font-weight:800;color:${active ? "#D4AF37" : "#9A9AA2"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${playerBadge(i)}${displayName(i)}</div>
           ${active ? `<div style="font-size:9px;font-weight:700;color:#D4AF37;letter-spacing:.1em">${t('am_zug')}</div>
             <div class="lp-score" style="font-family:'Manrope',sans-serif;font-size:3rem;font-weight:800;line-height:1;letter-spacing:-0.04em;color:#FBFBF8;display:inline-block;${restStyle}">${remaining}</div>` : ""}
           <div class="coop-pstats">${legDarts(i) || 0} ${t('darts_kurz')} · ${c.checkouts[i]} CO</div>

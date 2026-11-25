@@ -25,7 +25,7 @@ const { execSync } = require("child_process");
 const PROJECT = "darttrainer-app-fed88";
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--([^=]+)(?:=(.*))?$/); return m ? [m[1], m[2] ?? true] : [a, true]; }));
 const DAYS = parseInt(args.days) || 7;
-const FNS = ["dartCoach", "dartVoiceName", "dartTTS", "dartAppCheckPing"];
+const FNS = ["dartCoach", "dartTTS", "dartAppCheckPing"];
 const PLATFORMS = ["android", "web", "android-old", "unknown"];
 
 function fromValue(v) {
@@ -78,7 +78,7 @@ async function main() {
   }
 
   console.log("\nEinschalten (dart_config/appcheck → enforce.<fn> = true)?");
-  for (const fn of ["dartCoach", "dartVoiceName", "dartTTS"]) {
+  for (const fn of ["dartCoach", "dartTTS"]) {
     const users = ["android", "web", "android-old"].reduce((a, pf) => a + tot(sum(fn, pf)), 0);
     const old = tot(sum(fn, "android-old"));
     const oldShare = users ? old / users : 0;

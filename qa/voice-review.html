@@ -52,13 +52,12 @@
 <div id="list"></div>
 
 <script>
-let vocabulary = [], names = [], voices = [], currentVoice = null, qa = null, onlyKeys = null;
+let vocabulary = [], voices = [], currentVoice = null, qa = null, onlyKeys = null;
 let playQueue = [], playIdx = -1, playing = false;
 
 async function loadData(){
-  [vocabulary, names, voices] = await Promise.all([
+  [vocabulary, voices] = await Promise.all([
     fetch('../data/vocabulary.json').then(r=>r.json()),
-    fetch('../data/names.json').then(r=>r.json()),
     fetch('../data/voices.json').then(r=>r.json().then(d=>d.voices)),
   ]);
   // Result of scripts/check-voice-clips.js (Whisper transcript vs. target text).
@@ -79,9 +78,7 @@ async function loadData(){
 }
 
 function allEntries(){
-  const vocab = vocabulary.map(v=>({key:v.key, text:v.text, file:`${v.key}.mp3`}));
-  const nameEntries = names.map(n=>({key:`name_${n.norm}`, text:n.text, file:`name_${n.norm}.mp3`}));
-  return vocab.concat(nameEntries);
+  return vocabulary.map(v=>({key:v.key, text:v.text, file:`${v.key}.mp3`}));
 }
 
 async function renderList(voiceId){

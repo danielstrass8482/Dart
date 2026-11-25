@@ -1,10 +1,11 @@
 # Voice-QA: automatische Prüfung der vorproduzierten Sprachclips
 
-Stand: 2026-11-23 · 4 Stimmen × 921 Clips (627 Vokabular + 294 Namen)
+Stand: 2026-11-25 · 4 Stimmen × 635 Clips (Vokabular inkl. 8 Spieler-Ansagen `el_player_1…8`)
+
+> **2026-11-25: Namensansagen abgeschafft.** Die Ansage nennt Spieler nach Wurfreihenfolge „Player 1“ … „Player 8“ (Badge P1…P8 am Bildschirm). Die 294 Namens-Clips je Stimme, die On-Demand-Namens-Function und ihr zentraler Storage-Cache sind entfernt (Backup `~/backups/dart-voice-names-removal-2026-11-25/`). Berichte und Tabellen unten vom 23./24.11. sind eingefrorene Stände und zählen die Namen noch mit.
 
 - Bericht vorher (Originalclips): [report-1-vorher.md](report-1-vorher.md)
 - Bericht nachher (nach Neugenerierung/Reparatur): [report-2-nachher.md](report-2-nachher.md)
-- Zentrale On-demand-Namen (`dart_voice_names/`): [report-central-names.md](report-central-names.md)
 - Maschinenlesbar: `qa/voice-qa.json` (aktuell), `qa/voice-qa-vorher.json` (eingefrorener Ausgangsstand)
 - Nachhören: `qa/voice-review.html?filter=flagged` (Filter „Nur auffällige / fehlerhaft / zweifelhaft“, mit Grund + erkanntem Text)
 
@@ -27,10 +28,10 @@ Die verbleibenden „zweifelhaft“-Clips sind fast ausschließlich **Grenzen de
 | Stimme | Key | Soll | erkannt (alle Takes ähnlich) | Einschätzung |
 |---|---|---|---|---|
 | Haseeb | `el_slang_ton_forty_` | (alter Slang-Text für 140) | „Don't forte!“, „Tone 4T!“, „Don't for tea!“ | **erledigt 2026-11-24:** Text in allen 4 Stimmen auf „One hundred, and forty!“ umgestellt und neu erzeugt (s. u.) |
-| Haseeb | `name_amelie` | Amelie. | „I'm Lee.“ / „I'm Ali.“ | vermutlich „A-me-lie“ englisch betont |
+| Haseeb | `name_amelie` | Amelie. | „I'm Lee.“ / „I'm Ali.“ | vermutlich „A-me-lie“ englisch betont — **entfällt 2026-11-25** (Namens-Clips entfernt) |
 | Guy | `el_co_3`, `el_co_5` | Checkout: One, Double One/Two. | „Check out 1, double 1“ | inhaltlich korrekt, nur langsam |
 
-**Haseeb:** nach Neugenerierung mit stabilem Profil nicht mehr nennenswert fehlerhaft (1 statt 60 eindeutige Fehler; der verbleibende ist ein Aussprache-/Erkennungsfall). **Empfehlung: Stimme behalten.** Vor Freigabe einmal die 20 auffälligen Clips nachhören (`qa/voice-review.html?filter=flagged`, Stimme Haseeb) — besonders die deutschen Namen, weil Haseebs Akzent dort am ehesten falsch klingen kann.
+**Haseeb:** nach Neugenerierung mit stabilem Profil nicht mehr nennenswert fehlerhaft (1 statt 60 eindeutige Fehler; der verbleibende ist ein Aussprache-/Erkennungsfall). **Empfehlung: Stimme behalten.** Seit dem Wegfall der Namens-Clips (2026-11-25) bleibt bei Haseeb 1 zweifelhafter Clip (`qa/voice-review.html?filter=flagged`, Stimme Haseeb).
 
 ## Nachträge 2026-11-24 (per Gehör von Daniel bestätigt)
 
@@ -57,7 +58,7 @@ Gegenprobe (12 problematische Keys × 2 Takes je Profil, per Whisper geprüft):
 
 → Das Modell `eleven_turbo_v2_5` ist bei sehr kurzen Texten die Hauptursache: Es hängt Wörter/ganze Sätze an („Check out Double 20 in this Toyota“) und driftet im Akzent — bei Haseeb stark, bei den anderen Stimmen selten. Höhere stability allein (C) reicht nicht. `system_prompt` ist kein dokumentierter ElevenLabs-TTS-Parameter; A ohne ihn reproduziert die Fehler → nicht ursächlich, entfernt.
 
-**Neues Profil `stable-short-v1`** (`data/tts-settings.json`, gespiegelt in `functions/voiceName.js` und `functions/index.js`): `eleven_multilingual_v2`, stability 0.75, similarity_boost 0.80, style 0, speaker_boost, speed 1.0. Begründung: multilingual_v2 ist bei kurzen Texten stabil (Gegenprobe 0/48); style 0 schaltet die Stil-Übersteigerung ab, die laut ElevenLabs die Stabilität senkt; stability 0.75 hält die Vortragsweise über 921 Clips gleichmäßig. Kosten: 1 Credit/Zeichen statt 0,5 bei turbo — für Einmal-Generierung unerheblich. Jeder Clip bekommt einen deterministischen Seed pro Key + Versuch (reproduzierbar, jede Wiederholung ist ein neuer Take). Modell/Profil/Seed stehen pro Clip in `assets/voice/manifest.json`.
+**Neues Profil `stable-short-v1`** (`data/tts-settings.json`, gespiegelt in `functions/index.js`): `eleven_multilingual_v2`, stability 0.75, similarity_boost 0.80, style 0, speaker_boost, speed 1.0. Begründung: multilingual_v2 ist bei kurzen Texten stabil (Gegenprobe 0/48); style 0 schaltet die Stil-Übersteigerung ab, die laut ElevenLabs die Stabilität senkt; stability 0.75 hält die Vortragsweise über 921 Clips gleichmäßig. Kosten: 1 Credit/Zeichen statt 0,5 bei turbo — für Einmal-Generierung unerheblich. Jeder Clip bekommt einen deterministischen Seed pro Key + Versuch (reproduzierbar, jede Wiederholung ist ein neuer Take). Modell/Profil/Seed stehen pro Clip in `assets/voice/manifest.json`.
 
 Hinweis: George, Jerry B und Guy bestehen jetzt aus 909–916 Clips mit altem und 5–12 mit neuem Profil (Klang leicht ruhiger, style 0). Falls das beim Nachhören stört: `node scripts/gen-voice-assets.js --voice=<v> --upgrade-profile` erzeugt die Stimme komplett im neuen Profil (~16.450 Credits pro Stimme), danach `repair-voice-clips.js`.
 
@@ -68,18 +69,19 @@ Hinweis: George, Jerry B und Guy bestehen jetzt aus 909–916 Clips mit altem un
 | Profil-Gegenprobe 2026-11-22 (A/C turbo = 0,5 Credit/Zeichen) | 3.804 Zeichen |
 | Haseeb komplett neu | 16.447 |
 | Reparaturen George/Jerry/Guy/Haseeb (alle Runden) | 701 |
-| Live-Probe dartVoiceName („Zebulon“) | 8 |
+| Live-Probe der (inzwischen entfernten) Namens-Function | 8 |
+| Spieler-Ansagen `el_player_1…8`, 4 Stimmen (2026-11-25) | 384 |
 
 Kontostand nicht abfragbar: der ElevenLabs-Key hat weder `user_read` noch `speech_to_text`. Deshalb läuft die Spracherkennung lokal (Whisper) — **0 € pro Prüflauf**.
 
 ## Verfahren
 
 - **Spracherkennung:** faster-whisper (CPU, int8), Erstmodell `small.en` für jeden Clip, Zweitmeinung `medium.en` für alles, was nicht passt; das bessere Urteil zählt. Bewusst **ohne** Soll-Text als Prompt (würde Halluzinationen verdecken).
-- **Vergleich** (`scripts/voice-qa-compare.js`): tolerant gegenüber Ziffern/Zahlwörtern („one hundred and one“ = „101“), Homophonen („won“ = „one“), Groß/Klein, Satzzeichen, „check out“/„checkout“, „bull's eye“/„bullseye“, „10%“, Komposita, Füllern; Whispers Telefonnummern-Schreibweise („seven double eight“ → „788“) wird erkannt. Namen phonetisch.
+- **Vergleich** (`scripts/voice-qa-compare.js`): tolerant gegenüber Ziffern/Zahlwörtern („one hundred and one“ = „101“), Homophonen („won“ = „one“), Groß/Klein, Satzzeichen, „check out“/„checkout“, „bull's eye“/„bullseye“, „10%“, Komposita, Füllern; Whispers Telefonnummern-Schreibweise („seven double eight“ → „788“) wird erkannt.
   - **fehlerhaft:** andere/fehlende/zusätzliche Zahl, ≥ 2 zusätzliche/fehlende Wörter
-  - **zweifelhaft:** ein Wort abweichend, Name nicht eindeutig, zusammengezogene Ziffernfolge, Dauer auffällig
-- **Dauer:** pro Stimme/Kategorie lineares Modell Dauer ≈ a + b·Buchstaben (robust, Namen: Median); markiert ab ×1,6 (Namen ×1,8) bzw. unter ×0,55 **und** ≥ 0,5 s Abstand.
-- **Reparatur:** fehlerhafte + zweifelhafte Clips (außer reinen STT-Grenzen: Namensschreibung, Ziffernfolge) werden mit neuem Seed neu erzeugt und erneut geprüft, max. 4 Versuche.
+  - **zweifelhaft:** ein Wort abweichend, zusammengezogene Ziffernfolge, Dauer auffällig
+- **Dauer:** pro Stimme/Kategorie lineares Modell Dauer ≈ a + b·Buchstaben (robust; Kategorien < 10 Clips wie `player`: Median); markiert ab ×1,6 bzw. unter ×0,55 **und** ≥ 0,5 s Abstand.
+- **Reparatur:** fehlerhafte + zweifelhafte Clips (außer reiner STT-Grenze Ziffernfolge) werden mit neuem Seed neu erzeugt und erneut geprüft, max. 4 Versuche.
 
 ## Benutzung
 
@@ -90,10 +92,9 @@ export HF_HOME=/var/tmp/hf FFMPEG=$(/var/tmp/whisper-venv/bin/python -c 'import 
 node scripts/check-voice-clips.js [--voice=haseeb] [--only=k1,k2] [--report=<label>]   # prüfen (Exit 1 bei Fehlern)
 ELEVENLABS_API_KEY=… node scripts/repair-voice-clips.js --voice=<v> --include-doubtful   # prüfen → neu erzeugen → prüfen
 ELEVENLABS_API_KEY=… node scripts/repair-voice-clips.js --voice=<v> --only=<keys> --force-regen   # nur diese Clips (per Gehör beanstandet)
-node scripts/check-central-names.js [--delete-bad]                                       # dart_voice_names/ prüfen
 node scripts/upload-voice-assets.js --voice=<v> --only=<keys> | --bulk && bash scripts/verify-voice-upload.sh <v>
 ```
 
 - Transkripte werden sofort pro Clip in `qa/.stt-cache.jsonl` (gitignored) angehängt, Schlüssel = SHA-1 der Datei + Modell → ein abgebrochener Lauf setzt fort, neu erzeugte Clips werden automatisch neu geprüft. Geschwindigkeit (4 CPU): ~17–20 Clips/min erste Stufe, ~6 Clips/min Zweitmeinung → eine Stimme ≈ 55–60 min, nach Reparatur Sekunden bis Minuten.
-- Neue Namen in `data/names.json`: generieren (`gen-voice-assets.js --kind=name`), dann `check-voice-clips.js --kind=name` und ggf. `repair-voice-clips.js`.
-- `dartVoiceName` erzeugt unbekannte Namen mit demselben stabilen Profil (deployt 2026-11-23); Stichprobe regelmäßig mit `check-central-names.js`.
+- Neue Vokabel-Clips: in `scripts/build-vocabulary.js` ergänzen → `node scripts/build-vocabulary.js` → `gen-voice-assets.js --only=<keys>` → `check-voice-clips.js --only=<keys>` → `upload-voice-assets.js --only=<keys>` → `verify-voice-upload.sh <v>`.
+- `check-voice-clips.js` entfernt beim Speichern Ergebnisse von Keys, die nicht mehr im Vokabular stehen.

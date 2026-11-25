@@ -41,9 +41,9 @@ if (FORCE && !ONLY) { console.error("--force-regen needs --only=<keys>"); proces
 function needsRegen(c) {
   if (c.status === "error") return true;
   if (!INCLUDE_DOUBTFUL || c.status !== "doubtful") return false;
-  // Findings a new take can't resolve for the STT (it can't spell unusual
-  // names; it writes "seven double eight" as "788") → human ear, not credits.
-  const sttLimit = (c.reasons || []).every(r => r.startsWith("Name abweichend") || r.startsWith("Zahlen nur als Ziffernfolge"));
+  // Findings a new take can't resolve for the STT (it writes "seven double
+  // eight" as "788") → human ear, not credits.
+  const sttLimit = (c.reasons || []).every(r => r.startsWith("Zahlen nur als Ziffernfolge"));
   return !sttLimit;
 }
 

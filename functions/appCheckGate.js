@@ -1,6 +1,6 @@
 /**
  * appCheckGate.js — Shared Firebase App Check handling for the HTTP functions
- * (dartCoach, dartVoiceName, dartTTS, dartAppCheckPing).
+ * (dartCoach, dartTTS, dartAppCheckPing).
  *
  * 1. Verifies the X-Firebase-AppCheck header (if any) → status
  *    "valid" | "invalid" | "missing".
@@ -13,8 +13,8 @@
  *    plus one structured log line (jsonPayload.appCheck) for Logs Explorer.
  *    Report: node scripts/appcheck-report.js [--days=14]
  * 4. Enforcement — switchable per function WITHOUT a deploy, in Firestore
- *    dart_config/appcheck:  { enforce: { dartCoach: false, dartVoiceName:
- *    false, dartTTS: false } }. Read with a 60 s in-memory cache, so a
+ *    dart_config/appcheck:  { enforce: { dartCoach: false, dartTTS: false,
+ *    dartAppCheckPing: false } }. Read with a 60 s in-memory cache, so a
  *    change takes effect within about a minute. Missing doc/field = not
  *    enforced. If the doc can't be read, the last known value is kept.
  *    When enforced, anything but a valid token gets 401.

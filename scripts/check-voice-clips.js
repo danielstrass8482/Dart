@@ -2,7 +2,7 @@
 /**
  * check-voice-clips.js — automatic content QA of pre-produced voice clips.
  *
- * Every clip (vocabulary + names, all voices from data/voices.json, or a
+ * Every clip (data/vocabulary.json, all voices from data/voices.json, or a
  * subset) is transcribed by a local Whisper model (scripts/voice-stt.py) and
  * compared tolerantly with its target text (scripts/voice-qa-compare.js).
  * Clips whose duration deviates strongly from comparable clips of the same
@@ -19,12 +19,12 @@
  * costs nothing (local model) and takes seconds for a handful of clips.
  *
  * Usage:
- *   node scripts/check-voice-clips.js [--voice=haseeb] [--only=k1,k2] [--kind=vocab|name]
+ *   node scripts/check-voice-clips.js [--voice=haseeb] [--only=k1,k2]
  *        [--dir=<clip dir with <voice>/<key>.mp3>, default assets/voice]
  *        [--report=<label>]        also write docs/voice-qa/report-<label>.md
  *        [--model=small.en] [--second=medium.en|none] [--workers=2]
  *        [--no-save]               don't update qa/voice-qa.json (e.g. checking
- *                                  a single central name clip from Storage)
+ *                                  clips downloaded from Storage via --dir)
  *   Env: VOICE_STT_PYTHON (default /var/tmp/whisper-venv/bin/python), HF_HOME.
  * Exit code: 0 = no "error" clip in the checked set, 1 = at least one error.
  */
@@ -64,13 +64,9 @@ function parseArgs(argv) {
 
 function loadJSON(p, fallback) { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch (e) { return fallback; } }
 
-function entriesFor(kind) {
+function entriesFor() {
   const vocabulary = loadJSON(path.join(ROOT, "data", "vocabulary.json"), []);
-  const names = loadJSON(path.join(ROOT, "data", "names.json"), []);
-  let e = [];
-  if (kind !== "name") e = e.concat(vocabulary.map(v => ({ key: v.key, text: v.text, kind: "vocab", category: v.category })));
-  if (kind !== "vocab") e = e.concat(names.map(n => ({ key: `name_${n.norm}`, text: n.text, kind: "name", category: "name" })));
-  return e;
+  return vocabulary.map(v => ({ key: v.key, text: v.text, kind: "vocab", category: v.category }));
 }
 
 function sttPython() {
@@ -116,8 +112,9 @@ function median(a) { if (!a.length) return NaN; const s = [...a].sort((x, y) => 
  * Duration outliers per (voice, category). Vocabulary: robust linear model
  * duration ≈ a + b·letters (least squares, then refit without the worst 10 %)
  * — a flat seconds-per-letter ratio wrongly flagged every one-word number,
- * because every clip has a fixed lead-in/out. Names: category median.
- * Flag only if BOTH the ratio (long > 1.6×, names 1.8×; short < 0.55×) and
+ * because every clip has a fixed lead-in/out. Small categories (< 10 clips,
+ * e.g. the 8 player call-outs): category median.
+ * Flag only if BOTH the ratio (long > 1.6×; short < 0.55×) and
  * the absolute gap (> 0.5 s) are exceeded — inserted words add ≥ 0.5 s.
  */
 function letters(t) { return t.replace(/[^A-Za-z]/g, "").length; }
@@ -133,7 +130,7 @@ function durationFlags(clips) {
   for (const c of clips) if (c.duration) (byCat[c.category] = byCat[c.category] || []).push(c);
   for (const [cat, list] of Object.entries(byCat)) {
     let predict;
-    if (cat === "name" || list.length < 10) {
+    if (list.length < 10) {
       const med = median(list.map(c => c.duration));
       predict = () => med;
     } else {
@@ -143,7 +140,7 @@ function durationFlags(clips) {
       [a, b] = fitLine(pts);
       predict = c => Math.max(0.3, a + b * letters(c.text));
     }
-    const hi = cat === "name" ? 1.8 : 1.6;
+    const hi = 1.6;
     for (const c of list) {
       const exp = predict(c), r = c.duration / exp;
       c.expectedDuration = +exp.toFixed(2);
@@ -190,7 +187,7 @@ async function runCheck(opts = {}) {
   let voices = voicesCfg.voices;
   if (opts.voice) voices = voices.filter(v => String(opts.voice).split(",").includes(v.id));
   const results = loadJSON(RESULTS_PATH, { voices: {} });
-  const baseEntries = entriesFor(opts.kind).filter(e => !onlyKeys || onlyKeys.has(e.key));
+  const baseEntries = entriesFor().filter(e => !onlyKeys || onlyKeys.has(e.key));
   const entriesOf = vid => (opts.entries ? opts.entries(vid) : baseEntries);
 
   const toCheck = []; // per-voice clip records (fresh objects, cached STT reused by sha1)
@@ -262,6 +259,9 @@ async function runCheck(opts = {}) {
         const { voice, file, missing, key, ...keep } = r;
         vr.clips[r.key] = missing ? { text: r.text, kind: r.kind, category: r.category, status: "error", reasons: r.reasons } : keep;
       }
+      // drop results of clips that are no longer part of the vocabulary
+      const known = new Set(entriesFor().map(e => e.key));
+      for (const k of Object.keys(vr.clips)) if (!known.has(k)) delete vr.clips[k];
       // refresh status of clips not in this subset (duration baseline may have moved)
       const all = Object.values(vr.clips).filter(c => c.duration);
       durationFlags(all);

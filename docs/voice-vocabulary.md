@@ -2,7 +2,7 @@
 
 GENERATED FILE — do not hand-edit. Regenerate with `node scripts/build-vocabulary.js`.
 
-Total entries: **627**, total characters (per voice): **14544**.
+Total entries: **635**, total characters (per voice): **14640**.
 
 Every entry here must exist as a local audio clip for every bundled voice
 before the app ever needs it — see scripts/gen-voice-assets.js.
@@ -192,6 +192,19 @@ before the app ever needs it — see scripts/gen-voice-assets.js.
 | `el_out` | Out! |
 | `el_party_checkout` | Checkout! |
 | `el_shanghai_win` | Shanghai! |
+
+## player (8 entries, 96 chars)
+
+| key | text |
+|---|---|
+| `el_player_1` | Player One. |
+| `el_player_2` | Player Two. |
+| `el_player_3` | Player Three. |
+| `el_player_4` | Player Four. |
+| `el_player_5` | Player Five. |
+| `el_player_6` | Player Six. |
+| `el_player_7` | Player Seven. |
+| `el_player_8` | Player Eight. |
 
 ## requires_number (170 entries, 2839 chars)
 

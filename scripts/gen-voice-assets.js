@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * gen-voice-assets.js — ONE-TIME generation of every pre-produced voice clip
- * (fixed vocabulary + name library) directly against the ElevenLabs API.
+ * (fixed vocabulary, data/vocabulary.json) directly against the ElevenLabs API.
  *
  * This does NOT go through the app, the dartTTS Cloud Function, or the
  * app's per-user daily TTS quota (dart_usage/TTS_DAILY_LIMIT=200) — it's a
@@ -12,9 +12,8 @@
  *   ELEVENLABS_API_KEY=sk_... node scripts/gen-voice-assets.js [options]
  *     --dry-run            only print the character budget, generate nothing
  *     --voice=<id>          only this voice (id from data/voices.json), default: all
- *     --only=<key1,key2>    only these vocabulary/name keys (QA single-clip regen)
+ *     --only=<key1,key2>    only these vocabulary keys (QA single-clip regen)
  *     --force               regenerate even if the local file already exists
- *     --kind=<vocab|name>   restrict to one source (default: both)
  *     --from-qa[=error,doubtful]  only keys the last QA run (qa/voice-qa.json,
  *                          scripts/check-voice-clips.js) marked with these statuses
  *                          (default: error) — implies --force
@@ -32,11 +31,10 @@
  * After any (re)generation run: node scripts/check-voice-clips.js --voice=<id>
  *
  * Numbers are always sent to ElevenLabs as written-out words (via
- * numToWords()/numToWords in data/vocabulary.json and data/names.json),
+ * numToWords() in data/vocabulary.json),
  * never digits, for stable pronunciation.
  *
- * Output: assets/voice/<voiceId>/<key>.mp3 (vocabulary) and
- * assets/voice/<voiceId>/name_<norm>.mp3 (names), plus
+ * Output: assets/voice/<voiceId>/<key>.mp3, plus
  * assets/voice/manifest.json recording what was generated, when, and how
  * many characters each voice actually consumed (for cost auditing).
  *
@@ -59,7 +57,6 @@ const DRY_RUN = !!args["dry-run"];
 const ONLY_VOICE = args.voice || null;
 const ONLY_KEYS = args.only ? String(args.only).split(",").map(s => s.trim()) : null;
 const FORCE = !!args.force;
-const ONLY_KIND = args.kind || null;
 const FROM_QA = args["from-qa"] ? (args["from-qa"] === true ? ["error"] : String(args["from-qa"]).split(",")) : null;
 const ATTEMPT = parseInt(args.attempt || "0", 10) || 0;
 const UPGRADE = !!args["upgrade-profile"];
@@ -67,7 +64,6 @@ const UPGRADE = !!args["upgrade-profile"];
 const voicesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "voices.json"), "utf8"));
 const ttsCfg = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "tts-settings.json"), "utf8"));
 const vocabulary = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "vocabulary.json"), "utf8"));
-const names = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "names.json"), "utf8"));
 
 let voicesToRun = voicesCfg.voices;
 if (ONLY_VOICE) {
@@ -76,9 +72,7 @@ if (ONLY_VOICE) {
 }
 
 function buildJobs() {
-  let jobs = [];
-  if (ONLY_KIND !== "name") jobs = jobs.concat(vocabulary.map(v => ({ key: v.key, text: v.text, file: `${v.key}.mp3` })));
-  if (ONLY_KIND !== "vocab") jobs = jobs.concat(names.map(n => ({ key: `name_${n.norm}`, text: n.text, file: `name_${n.norm}.mp3` })));
+  let jobs = vocabulary.map(v => ({ key: v.key, text: v.text, file: `${v.key}.mp3` }));
   if (ONLY_KEYS) jobs = jobs.filter(j => ONLY_KEYS.includes(j.key));
   return jobs;
 }

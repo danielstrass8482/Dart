@@ -78,10 +78,10 @@ async function originRun(root, port) {
   await page.waitForFunction(usable, null, { timeout: 300000, polling: 100 });
   const usableMs = Date.now() - t0;
   await page.waitForTimeout(10000); // warm-up (if any) is in full swing now
-  // Announcement needed right now for a clip the warm-up hasn't reached (names are warmed last):
+  // Announcement needed right now for a clip the warm-up likely hasn't reached yet (checkout paths are warmed after the priority clips):
   const announceMs = await page.evaluate(async () => {
     const vc = await import("./js/voiceClips.js");
-    const t = performance.now(); const u = await vc.resolveClipURL("george", "name_yvonne");
+    const t = performance.now(); const u = await vc.resolveClipURL("george", "el_co_99");
     return u ? Math.round(performance.now() - t) : null;
   });
   let warm = null, warmDoneS = null;

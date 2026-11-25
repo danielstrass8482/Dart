@@ -461,7 +461,7 @@ async function testVoice(browser) {
   await play(page, [["h", "20", 20], ["h", "20", 20], ["h", "20", 20], ["w", 3800], ["h", "D10", 20], ["w", 3500],
     ["h", "T19", 57], ["h", "D12", 24], ["w", 1500]]);
   const keys = clips.filter((c) => c.startsWith("george/")).map((c) => c.slice(7));
-  const order = ["el_game_on", "name_anna", "el_requires", "el_num_80", "el_co_80", "el_score_60", "name_ben", "el_num_20", "el_co_20",
+  const order = ["el_game_on", "el_player_1", "el_requires", "el_num_80", "el_co_80", "el_score_60", "el_player_2", "el_num_20", "el_co_20",
     "el_party_checkout", "el_num_81", "el_co_81", "el_slang_game_shot_"];
   const first = order.map((k) => keys.indexOf(k));
   check(first.every((i) => i >= 0) && first.every((i, j) => j === 0 || i > first[j - 1]),
