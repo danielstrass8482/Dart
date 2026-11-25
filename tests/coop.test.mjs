@@ -23,7 +23,9 @@
  *   node tests/coop.test.mjs        → exit 0 = all assertions passed
  *   BASE=https://play.darttrainer.app node tests/coop.test.mjs   (live)
  */
-import { chromium } from "playwright";
+import { chromium as _chromium, webkit } from "playwright";
+// BROWSER=webkit runs the same test in the Safari engine (Chromium-only launch args are dropped).
+const chromium = process.env.BROWSER === "webkit" ? { launch: (o = {}) => webkit.launch({ ...o, args: undefined }) } : _chromium;
 
 const BASE = process.env.BASE || "http://localhost:8973";
 const SHOTS = process.env.SHOTS || null;
@@ -38,13 +40,14 @@ const check = (cond, msg) => { if (!cond) failures.push(msg); };
 
 async function openApp(browser, vp, lang = "de", tts = false) {
   const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+  await page.route(/recaptcha/, (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" })); // irrelevant here; its script can hang and hold back "load"
   await page.addInitScript((l) => {
     localStorage.setItem("dart_onboarding_done", "true");
     localStorage.setItem("dart_lang", l.l);
     if (!l.tts) localStorage.setItem("dart_tts_enabled", "false"); // no clip downloads needed for logic tests
   }, { l: lang, tts });
   const errors = [];
-  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("pageerror", (e) => { if (!/due to access control checks|^no recaptcha$/.test(e.message)) errors.push(e.message); }); // WebKit reports blocked/cancelled loads (local AppCheck ping) as page errors
   page.__errors = errors;
   await page.goto(`${BASE}/index.html`, { waitUntil: "load" });
   await page.evaluate(() => window.splashPromise); // splash covers the screen for ~2.5 s
@@ -438,6 +441,7 @@ async function testVoice(browser) {
   // is a clip the game actually asked for (first use; fresh IndexedDB).
   const ctx = await browser.newContext({ viewport: { width: 1180, height: 820 }, serviceWorkers: "block" });
   const page = await ctx.newPage();
+  await page.route(/recaptcha/, (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" })); // irrelevant here; its script can hang and hold back "load"
   const clips = [], foreign = [];
   page.on("request", (r) => {
     const u = r.url();

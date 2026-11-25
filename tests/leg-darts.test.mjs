@@ -20,7 +20,9 @@
  *   node tests/leg-darts.test.mjs            → exit 0 = all assertions passed
  *   node tests/leg-darts.test.mjs --layout   → also print layout metrics JSON
  */
-import { chromium } from "playwright";
+import { chromium as _chromium, webkit } from "playwright";
+// BROWSER=webkit runs the same test in the Safari engine (Chromium-only launch args are dropped).
+const chromium = process.env.BROWSER === "webkit" ? { launch: (o = {}) => webkit.launch({ ...o, args: undefined }) } : _chromium;
 
 const BASE = process.env.BASE || "http://localhost:8973"; // BASE=https://play.darttrainer.app for the live site
 const VIEWPORTS = [

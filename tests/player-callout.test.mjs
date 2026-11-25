@@ -26,7 +26,9 @@
  *   BASE=https://play.darttrainer.app node tests/player-callout.test.mjs   (live)
  * Exit 0 = all assertions passed. SHOTS=<dir> writes screenshots.
  */
-import { chromium } from "playwright";
+import { chromium as _chromium, webkit } from "playwright";
+// BROWSER=webkit runs the same test in the Safari engine (Chromium-only launch args are dropped).
+const chromium = process.env.BROWSER === "webkit" ? { launch: (o = {}) => webkit.launch({ ...o, args: undefined }) } : _chromium;
 
 const BASE = process.env.BASE || "http://localhost:8973";
 const SHOTS = process.env.SHOTS || null;
@@ -50,8 +52,9 @@ function cfgFor(mode, players, extra = {}) {
 async function openApp(browser, viewport) {
   const ctx = await browser.newContext({ viewport, serviceWorkers: "block" });
   const page = await ctx.newPage();
+  await page.route(/recaptcha/, (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" })); // irrelevant here; its script can hang and hold back "load"
   const requests = [], foreign = [], errors = [];
-  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("pageerror", (e) => { if (!/due to access control checks|^no recaptcha$/.test(e.message)) errors.push(e.message); }); // WebKit reports blocked/cancelled loads (local AppCheck ping) as page errors
   page.on("request", (r) => {
     const u = r.url();
     if (/\/assets\/voice\/[^/]+\/[^/?]+\.mp3/.test(u)) requests.push(u);

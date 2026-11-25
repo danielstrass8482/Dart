@@ -1,0 +1,15 @@
+[
+  {
+    "origin": [
+      "https://play.darttrainer.app",
+      "https://darttrainer.app",
+      "https://danielstrass8482.github.io",
+      "https://localhost",
+      "capacitor://localhost",
+      "http://localhost:8973"
+    ],
+    "method": ["GET", "HEAD"],
+    "responseHeader": ["Content-Type", "Content-Length", "Cache-Control", "ETag"],
+    "maxAgeSeconds": 3600
+  }
+]

@@ -15,7 +15,9 @@
  * the web build's service-worker cache count as local — and no
  * speechSynthesis calls). Exit code 1 = failed, offending requests printed.
  */
-import { chromium } from "playwright";
+import { chromium as _chromium, webkit } from "playwright";
+// BROWSER=webkit runs the same test in the Safari engine (Chromium-only launch args are dropped).
+const chromium = process.env.BROWSER === "webkit" ? { launch: (o = {}) => webkit.launch({ ...o, args: undefined }) } : _chromium;
 
 const BASE = "http://localhost:8973";
 const NAME_1 = "Daniel";
@@ -63,6 +65,7 @@ async function playLeg(page) {
 async function run() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
+  await page.route(/recaptcha/, (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" })); // irrelevant here; its script can hang and hold back "load"
 
   let currentPass = "init";
   const requestsByPass = { online: [], offline: [] };

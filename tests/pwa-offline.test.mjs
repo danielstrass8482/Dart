@@ -17,7 +17,9 @@
  *   python3 -m http.server 8973 &   # serve the repo root
  *   node tests/pwa-offline.test.mjs
  */
-import { chromium } from "playwright";
+import { chromium as _chromium, webkit } from "playwright";
+// BROWSER=webkit runs the same test in the Safari engine (Chromium-only launch args are dropped).
+const chromium = process.env.BROWSER === "webkit" ? { launch: (o = {}) => webkit.launch({ ...o, args: undefined }) } : _chromium;
 
 const BASE = process.env.BASE || "http://localhost:8973";
 const ready = () => {

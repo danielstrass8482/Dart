@@ -27,7 +27,9 @@
  * Usage: node tests/voice-freshness.test.mjs      (no external server needed)
  *        SRC=<dir> to serve another checkout's js/ (e.g. to show the old code fails)
  */
-import { chromium } from "playwright";
+import { chromium as _chromium, webkit } from "playwright";
+// BROWSER=webkit runs the same test in the Safari engine (Chromium-only launch args are dropped).
+const chromium = process.env.BROWSER === "webkit" ? { launch: (o = {}) => webkit.launch({ ...o, args: undefined }) } : _chromium;
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -94,7 +96,11 @@ const ready = () => {
 };
 
 async function newContext(browser, { sw }) {
-  const ctx = await browser.newContext({ serviceWorkers: sw ? "allow" : "block" });
+  // WebKit: persistent profile — its ephemeral contexts (like a private
+  // window) can't store Blobs in IndexedDB; a home-screen PWA is persistent.
+  const ctx = process.env.BROWSER === "webkit"
+    ? await webkit.launchPersistentContext(fs.mkdtempSync(path.join(os.tmpdir(), "wk-profile-")), { serviceWorkers: sw ? "allow" : "block" })
+    : await browser.newContext({ serviceWorkers: sw ? "allow" : "block" });
   await ctx.addInitScript((base) => {
     try { localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_tts_enabled", "true"); } catch (e) {}
     window.__played = [];
@@ -164,7 +170,7 @@ async function run() {
   // ── Publish version B
   const { NEW, NEW_SHOT, NEW_HASEEB } = publish();
   console.log(`Publish — el_bust ${OLD}→${NEW}, el_party_checkout ${OLD_SHOT}→${NEW_SHOT}, haseeb el_bust ${OLD_HASEEB}→${NEW_HASEEB}`);
-  const before = { bust: countHits("/george/el_bust.mp3"), shot: countHits("/george/el_party_checkout.mp3"), gameOn: countHits("/george/el_game_on.mp3"), haseeb: countHits("/pkg/haseeb/el_bust.mp3"), all: hits.filter((h) => h.endsWith(".mp3") || h.includes(".mp3?")).length };
+  const before = { bust: countHits("/george/el_bust.mp3"), shot: countHits("/george/el_party_checkout.mp3"), gameOn: countHits("/george/el_game_on.mp3"), haseeb: countHits("/pkg/haseeb/el_bust.mp3"), all: hits.filter((h) => (h.endsWith(".mp3") || h.includes(".mp3?")) && !h.startsWith("/assets/voice/haseeb/")).length };
 
   // ── Phase 2: reload
   console.log("Phase 2 — reload after publish");
@@ -180,7 +186,9 @@ async function run() {
   check(countHits("/george/el_party_checkout.mp3") - before.shot === 1, `el_party_checkout downloaded exactly once (${countHits("/george/el_party_checkout.mp3") - before.shot})`);
   check(countHits("/pkg/haseeb/el_bust.mp3") - before.haseeb === 1, `haseeb el_bust downloaded exactly once (${countHits("/pkg/haseeb/el_bust.mp3") - before.haseeb})`);
   check(countHits("/george/el_game_on.mp3") === before.gameOn, "unchanged clip not downloaded again");
-  const mp3After = hits.filter((h) => h.endsWith(".mp3") || h.includes(".mp3?")).length - before.all;
+  // (the web app first asks for non-default voices same-origin — this copy
+  // has haseeb only as the fake package, so that lookup is a 404 and doesn't count)
+  const mp3After = hits.filter((h) => (h.endsWith(".mp3") || h.includes(".mp3?")) && !h.startsWith("/assets/voice/haseeb/")).length - before.all;
   check(mp3After === 3, `only the 3 changed clips were requested after publish (${mp3After} mp3 requests, warm-up fetched ${warm2.fetched}, cached ${warm2.cached})`);
   const swBust = await swVoiceEntries(page, "el_bust"), swShot = await swVoiceEntries(page, "el_party_checkout");
   check(swBust.length === 1 && swBust[0].endsWith(`?h=${NEW}`), `SW clip cache holds only the new el_bust (${swBust})`);

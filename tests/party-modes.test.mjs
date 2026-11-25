@@ -21,7 +21,9 @@
  *
  * Usage: python3 -m http.server 8973 &  then  node tests/party-modes.test.mjs
  */
-import { chromium } from "playwright";
+import { chromium as _chromium, webkit } from "playwright";
+// BROWSER=webkit runs the same test in the Safari engine (Chromium-only launch args are dropped).
+const chromium = process.env.BROWSER === "webkit" ? { launch: (o = {}) => webkit.launch({ ...o, args: undefined }) } : _chromium;
 
 const BASE = process.env.BASE || "http://localhost:8973";
 const failures = [];
@@ -29,13 +31,14 @@ const check = (cond, msg) => { if (!cond) failures.push(msg); else console.log("
 
 async function openApp(browser) {
   const page = await browser.newPage({ viewport: { width: 1180, height: 820 } });
+  await page.route(/recaptcha/, (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" })); // irrelevant here; its script can hang and hold back "load"
   await page.addInitScript(() => {
     localStorage.setItem("dart_onboarding_done", "true");
     localStorage.setItem("dart_lang", "de");
     localStorage.setItem("dart_tts_enabled", "false");
   });
   const errors = [];
-  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("pageerror", (e) => { if (!/due to access control checks|^no recaptcha$/.test(e.message)) errors.push(e.message); }); // WebKit reports blocked/cancelled loads (local AppCheck ping) as page errors
   page.__errors = errors;
   await page.goto(`${BASE}/index.html`, { waitUntil: "load" });
   await page.evaluate(() => window.splashPromise);

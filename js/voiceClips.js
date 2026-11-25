@@ -5,8 +5,9 @@
  *
  * Two sources, tried in this order, NEVER falling through to a live TTS
  * call or the browser voice for a clip that simply isn't available yet:
- *   1. The active voice's locally bundled/cached clip (IndexedDB blob, or —
- *      for the default voice — a static file shipped with the app).
+ *   1. The active voice's locally bundled/cached clip (IndexedDB blob, or a
+ *      same-origin static file: the default voice everywhere, on the web
+ *      every voice — see servedSameOrigin()).
  *   2. A one-time download of that single clip from the pre-produced
  *      package in Firebase Storage (dart_voice_pkg/<voice>/<key>.mp3),
  *      cached into IndexedDB so it's never fetched again.
@@ -43,6 +44,40 @@ export const VOICES = [
   { id: "guy",    elevenLabsId: "34lPwSZ54D8fWbX1aHzk", free: false },
 ];
 export const DEFAULT_VOICE_ID = "george";
+
+/** Capacitor app (ships only the default voice) vs. web/PWA (serves every voice same-origin). */
+const isNative = () => typeof window !== "undefined" && !!window.Capacitor?.isNativePlatform?.();
+
+/**
+ * Whether this voice's clips are served next to the app: the default voice
+ * everywhere (bundled in the Android package too); on the web every voice,
+ * because the GitHub Pages deploy contains assets/voice/<v>/ for all four.
+ * Same-origin never depends on Firebase Storage (auth, CORS — until
+ * 2026-11-25 the bucket had no CORS rule, so every Storage download failed
+ * in the browser and non-default voices were silent on the web).
+ */
+function servedSameOrigin(voiceId) { return voiceId === DEFAULT_VOICE_ID || !isNative(); }
+
+// Firebase Storage URL lookups (getDownloadURL) wait for the App Check
+// token; on the web that means reCAPTCHA, whose script can hang for 30 s+ on
+// a bad connection (measured 2026-11-25: getDownloadURL never returned while
+// reCAPTCHA hung, and the old code waited on it for EVERY clip → silent game
+// until reCAPTCHA loaded). Announcements must not depend on App Check: each
+// lookup gets a short limit, and after a timeout Storage is skipped for a
+// while so the next clips don't each wait again.
+const STORAGE_TIMEOUT_MS = 4000, STORAGE_BACKOFF_MS = 60000;
+let storageDownUntil = 0;
+async function storageURL(lookup, what) {
+  if (Date.now() < storageDownUntil) return null;
+  let timer;
+  try {
+    return await Promise.race([lookup(), new Promise((_, rej) => { timer = setTimeout(() => rej(new Error(`timed out after ${STORAGE_TIMEOUT_MS} ms`)), STORAGE_TIMEOUT_MS); })]);
+  } catch (e) {
+    storageDownUntil = Date.now() + STORAGE_BACKOFF_MS;
+    console.warn(`voice package (Storage) ${what}: ${e.message} — Storage skipped for ${STORAGE_BACKOFF_MS / 1000} s`);
+    return null;
+  } finally { clearTimeout(timer); }
+}
 
 /** Maps the ElevenLabs voice id (as stored in dart_active_voice_id) to our short voice key. */
 export function voiceKeyFor(elevenLabsId) {
@@ -117,17 +152,22 @@ async function fetchJSON(url, init) {
 }
 
 async function loadIndex(voiceId) {
-  // Non-default voices are served from the Storage package, so its own index
-  // (uploaded after the clips) is authoritative; it needs a signed-in user.
-  if (voiceId !== DEFAULT_VOICE_ID && window.dartDB?.getVoicePkgFileURL) {
-    const url = await window.dartDB.getVoicePkgFileURL(voiceId, "index.json").catch(() => null);
+  // Storage package index (uploaded after the clips → authoritative for
+  // clips downloaded from there; needs a signed-in user).
+  const pkgIndex = async () => {
+    if (voiceId === DEFAULT_VOICE_ID || !window.dartDB?.getVoicePkgFileURL) return null;
+    const url = await storageURL(() => window.dartDB.getVoicePkgFileURL(voiceId, "index.json").catch(() => null), `${voiceId}/index.json`);
     const idx = url && await fetchJSON(url, { cache: "no-store" });
-    if (idx?.hashes) return idx;
-  }
-  // Default voice (bundled with the app / same origin on the web), and the
-  // web fallback for other voices: revalidated, normally a 304.
-  const idx = await fetchJSON(`assets/voice/${voiceId}/index.json`, { cache: "no-cache" });
-  return idx?.keys ? idx : null;
+    return idx?.hashes ? idx : null;
+  };
+  // Same-origin index (bundled with the app / next to it on the web):
+  // revalidated, normally a 304.
+  const localIndex = async () => {
+    const idx = await fetchJSON(`assets/voice/${voiceId}/index.json`, { cache: "no-cache" });
+    return idx?.keys ? idx : null;
+  };
+  // The index must describe the source the clips come from (see servedSameOrigin).
+  return servedSameOrigin(voiceId) ? ((await localIndex()) || (await pkgIndex())) : ((await pkgIndex()) || (await localIndex()));
 }
 
 /**
@@ -185,15 +225,16 @@ export async function resolveClipURL(voiceId, key) {
   if (cached && (!want || cached.h === want)) return remember(cached.blob);
   // cached but outdated → try to replace it below; play the old copy only if that fails
 
-  // 2) Default voice ships its clips as static files bundled with the app —
-  // zero network, works offline by construction (same origin as the app
-  // itself / inside the Android package). The ?h= URL is immutable per
-  // content, so force-cache can never return a superseded version.
-  if (voiceId === DEFAULT_VOICE_ID && !notBundled.has(cacheKey)) {
+  // 2) Same-origin clip: the default voice is bundled with the app (inside
+  // the Android package / next to the web app), on the web every voice is
+  // (see servedSameOrigin). The ?h= URL is immutable per content, so
+  // force-cache can never return a superseded version; the service worker
+  // keeps played clips for offline use.
+  if (servedSameOrigin(voiceId) && !notBundled.has(cacheKey)) {
     const url = bundledClipURL(voiceId, key, want);
     try {
       const resp = await fetch(url, { cache: want ? "force-cache" : "no-cache" });
-      if (resp.status === 404) notBundled.add(cacheKey); // definitively not in the bundle — don't ask again this session
+      if (resp.status === 404) { notBundled.add(cacheKey); console.warn(`voice clip ${voiceId}/${key}: not in the bundle (404)`); } // don't ask again this session
       if (resp.ok) {
         const blob = await resp.blob();
         if (!(await store(blob))) {
@@ -203,7 +244,7 @@ export async function resolveClipURL(voiceId, key) {
         }
         return remember(blob);
       }
-    } catch (e) { /* offline + not yet cached locally — fall through */ }
+    } catch (e) { console.warn(`voice clip ${voiceId}/${key}: bundle fetch failed:`, e.message); } // offline + not cached — fall through
   }
 
   if (!navigator.onLine) return cached ? remember(cached.blob) : null;
@@ -213,7 +254,7 @@ export async function resolveClipURL(voiceId, key) {
   // no-store: the copy lives in IndexedDB, the HTTP cache must never answer.
   try {
     if (window.dartDB?.getVoicePkgURL) {
-      const url = await window.dartDB.getVoicePkgURL(voiceId, key);
+      const url = await storageURL(() => window.dartDB.getVoicePkgURL(voiceId, key), `${voiceId}/${key}`);
       if (url) {
         const resp = await fetch(url, { cache: "no-store" });
         if (resp.ok) {
@@ -221,9 +262,10 @@ export async function resolveClipURL(voiceId, key) {
           await store(blob);
           return remember(blob);
         }
-      }
+        console.warn(`voice clip ${voiceId}/${key}: package download HTTP ${resp.status}`);
+      } else console.warn(`voice clip ${voiceId}/${key}: no package URL (not in the package, not signed in or Storage unreachable)`);
     }
-  } catch (e) { /* not in the package — fall through */ }
+  } catch (e) { console.warn(`voice clip ${voiceId}/${key}: package download failed:`, e.message); } // e.g. CORS/offline — fall through
 
   if (cached) return remember(cached.blob); // outdated, but better than silence
 

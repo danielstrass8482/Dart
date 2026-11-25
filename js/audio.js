@@ -58,10 +58,25 @@ export function numToWords(n){
 }
 
 // ── Audio unlock for mobile ───────────────────────────────────────
+// iOS/iPadOS WebKit allows play() on a media element outside a user gesture
+// only once THAT element has played inside one. Announcements start after
+// awaits (IndexedDB, fetch) — long after the tap — so the queue plays every
+// clip through one shared element that is unlocked here on the first tap
+// (a fresh `new Audio()` per clip could be refused with NotAllowedError).
+const SILENT_WAV="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+let queueEl=null;
+function queueElement(){
+  if(!queueEl){ queueEl=new Audio(); queueEl.preload="auto"; }
+  return queueEl;
+}
 let audioUnlocked=false;
 export async function unlockAudio(){
   if(audioUnlocked) return;
   audioUnlocked=true;
+  try{
+    const el=queueElement();
+    if(!audioPlaying){ el.src=SILENT_WAV; const p=el.play(); if(p&&p.catch) p.catch(()=>{}); }
+  }catch(e){}
   try{
     const ctx=getAudio();
     if(ctx.state==="suspended") await ctx.resume();
@@ -130,6 +145,43 @@ const audioQueue=[];
 let audioPlaying=false;
 let currentQueueItem=null;
 
+// Watchdogs: one clip must never stall the queue (and with it every later
+// announcement of the session) — e.g. a hanging IndexedDB/Storage request or
+// a media element that never fires ended/error.
+const RESOLVE_TIMEOUT_MS=8000;
+const PLAY_START_TIMEOUT_MS=4000;   // until metadata/duration is known
+const PLAY_MAX_MS=15000;            // longest clip is ~5 s
+const withTimeout=(p,ms,what)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(what+" timed out after "+ms+" ms")),ms))]);
+
+/** Plays one clip URL on the shared element; resolves when it ended, failed or was aborted — never hangs. */
+function playClip(url,key){
+  return new Promise(res=>{
+    let done=false, timer=null;
+    const el=queueElement();
+    const finish=(why)=>{
+      if(done) return; done=true; clearTimeout(timer);
+      el.onended=el.onerror=el.onloadedmetadata=null;
+      if(why) console.warn("voice clip skipped:",key,"-",why);
+      res();
+    };
+    const arm=(ms,why)=>{ clearTimeout(timer); timer=setTimeout(()=>{ try{ el.pause(); }catch(e){} finish(why); },ms); };
+    if(currentAudio&&currentAudio!==el){ try{ currentAudio.pause(); }catch(e){} }
+    currentAudio=el;
+    el.onended=()=>finish(null);
+    el.onerror=()=>finish("media error "+(el.error?.code??"")+" "+(el.error?.message||""));
+    el.onloadedmetadata=()=>{ const d=el.duration; if(isFinite(d)&&d>0) arm(Math.min(PLAY_MAX_MS,d*1000+2500),"playback did not end"); };
+    // Lets invalidateStaleAnnouncements() cut this clip off mid-playback
+    // instead of only being able to stop *future* queue items.
+    currentAbortPlayback=()=>{ try{ el.pause(); }catch(e){} finish(null); };
+    arm(PLAY_START_TIMEOUT_MS+PLAY_MAX_MS,"playback did not end");
+    try{
+      el.src=url;
+      const p=el.play();
+      if(p&&p.catch) p.catch(e=>finish("play() rejected: "+(e?.name||"")+" "+(e?.message||"")));
+    }catch(e){ finish("play() threw: "+e.message); }
+  });
+}
+
 async function playAudioQueue(){
   if(audioPlaying||audioQueue.length===0) return;
   // Drop anything that's already stale before ever starting it — no point
@@ -143,24 +195,21 @@ async function playAudioQueue(){
   const item=audioQueue.shift();
   currentQueueItem=item;
   const {key,resolve}=item;
+  // Any failure only skips THIS item — the rest of the announcement
+  // ("Player 2" missing → "requires" + number still play) and every later
+  // one carry on. Each skip is logged.
+  let voiceId="?";
   try{
-    const voiceId=voiceKeyFor(getVoiceId());
-    const url=await resolveClipURL(voiceId,key);
+    voiceId=voiceKeyFor(getVoiceId());
+    const url=await withTimeout(resolveClipURL(voiceId,key),RESOLVE_TIMEOUT_MS,"clip lookup");
     if(url){
-      await new Promise(res=>{
-        if(currentAudio){ try{ currentAudio.pause(); }catch(e){} currentAudio=null; }
-        currentAudio=new Audio(url);
-        currentAudio.onended=res;
-        currentAudio.onerror=res;
-        // Lets invalidateStaleAnnouncements() cut this clip off mid-playback
-        // instead of only being able to stop *future* queue items.
-        currentAbortPlayback=()=>{ try{ currentAudio.pause(); }catch(e){} res(); };
-        currentAudio.play().catch(res);
-      });
+      if(!item.isStale?.()) await playClip(url,key);
+    } else {
+      // no clip available for this key in the active voice (e.g. offline
+      // and never cached, or genuinely missing)
+      console.warn("voice clip skipped:",key,"- not available for voice",voiceId);
     }
-    // else: no local clip available for this key in the active voice (e.g.
-    // offline and this clip was never cached) — skip silently.
-  }catch(e){ console.warn("local clip playback:",key,e.message); }
+  }catch(e){ console.warn("voice clip skipped:",key,"(voice "+voiceId+") -",e.message); }
   currentAbortPlayback=null;
   currentQueueItem=null;
   audioPlaying=false;
@@ -219,7 +268,7 @@ export function clearAudioQueue(){
   audioPlaying=false;
   currentQueueItem=null;
   if(currentAbortPlayback){ try{ currentAbortPlayback(); }catch(e){} currentAbortPlayback=null; }
-  if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; }
+  if(currentAudio){ try{ currentAudio.pause(); currentAudio.currentTime=0; }catch(e){} currentAudio=null; }
 }
 
 const COACH_FUNCTION_URL="https://dartcoach-dxa2kmdyca-ew.a.run.app";

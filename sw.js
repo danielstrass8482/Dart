@@ -10,9 +10,12 @@
  * (js/voiceClips.js warmDefaultVoice()).
  *
  * Strategies:
- *   - App shell (same-origin html/js/css/json/icons): network-first, cache
- *     fallback → online behaviour is unchanged (always current deploy),
- *     offline the last-seen version is served.
+ *   - App shell (same-origin html/js/css/json/icons): network-first with
+ *     forced revalidation (cache: "no-cache" → 304 when unchanged), cache
+ *     fallback → online always the current deploy, never a copy from the
+ *     browser's HTTP cache (GitHub Pages sends max-age=600, which used to
+ *     mix old and new modules for up to 10 minutes after a deploy); offline
+ *     the last-seen version is served.
  *   - Voice clips (same-origin assets/voice/**.mp3): cache-first, keyed by
  *     the full URL. The app requests <key>.mp3?h=<content hash> (from the
  *     voice's index.json), so a regenerated clip is a new URL and never hits
@@ -21,6 +24,10 @@
  *   - Everything else (Firestore, Storage, Cloud Functions, auth, POSTs,
  *     media Range requests, /qa/, /tests/): not touched at all.
  */
+// Bump SW_VERSION with every deploy that changes app code: a byte change in
+// this file is what makes browsers install the new worker, and js/pwa.js
+// reloads an idle app (home screen) once the new worker has taken over.
+const SW_VERSION = "2026-11-25.1";
 const SHELL_CACHE = "dt-shell-v1";
 const CDN_CACHE = "dt-cdn-v1";
 const VOICE_CACHE = "dt-voice-v1";
@@ -63,7 +70,8 @@ async function put(cacheName, req, resp) {
 
 async function networkFirst(req) {
   try {
-    const resp = await fetch(req);
+    // Navigations keep their own request (mode "navigate" can't be re-created).
+    const resp = await fetch(req.mode === "navigate" ? req : new Request(req, { cache: "no-cache" }));
     if (resp.ok) put(SHELL_CACHE, req, resp.clone());
     return resp;
   } catch (e) {
@@ -125,6 +133,12 @@ self.addEventListener("message", (event) => {
       }
       event.ports[0]?.postMessage({ ok: true });
     })());
+  } else if (msg.type === "skip-waiting") {
+    // Belt and braces next to skipWaiting() in install: js/pwa.js asks an
+    // installed-but-waiting update to take over (harmless if already active).
+    self.skipWaiting();
+  } else if (msg.type === "version") {
+    event.ports[0]?.postMessage({ version: SW_VERSION });
   } else if (msg.type === "clear-voice") {
     event.waitUntil(caches.delete(VOICE_CACHE).then(() => event.ports[0]?.postMessage({ ok: true })));
   }
