@@ -75,7 +75,7 @@ export async function startX01(starter=0){
   clearAudioQueue();
   // Co-op Checkout (js/coop.js): all players share one rest, starting at the
   // first value of the ladder.
-  const _coop=state.cfg.coop?createCoopState(state.cfg):null;
+  const _coop=state.cfg.coop?createCoopState(state.cfg,Date.now(),starter):null;
   state.x01={
     scores: state.cfg.players.map(()=>_coop?_coop.values[0]:state.cfg.startScore),
     current: starter,

@@ -248,8 +248,9 @@ window.matchMedia("(orientation:portrait)").addEventListener("change", updateRot
 function isUnfinishedGameActive(){
   const active = document.querySelector(".screen.active");
   if(!active) return false;
-  if(active.id==="x01") return !state.x01.winner;
-  if(active.id==="cricket") return !state.cr.winner;
+  // winner is a player INDEX — 0 (Player 1) is a winner too
+  if(active.id==="x01") return state.x01.winner==null;
+  if(active.id==="cricket") return state.cr.winner==null;
   if(active.id==="party") return state.pg.winner==null;
   return false;
 }

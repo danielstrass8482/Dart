@@ -8,7 +8,8 @@
  *   2. full run 80–82 with 2 players (one dart via a real board tap):
  *      darts per value 4/3/2, total 9, Ø 3, darts/checkouts per player,
  *      game time, result overlay, saved ONLY via saveCoopGame (never saveGame)
- *   3. rest hand-over 80 → 73 scored → player 2 checks out 7
+ *   3. rest hand-over 80 → 73 scored → player 2 checks out 7; the player
+ *      who starts a value rotates (P1, P2, P1 …) — details tests/coop-starter.test.mjs
  *   4. bust (rest 1 and overshoot): visit void, rest unchanged, next player,
  *      bust darts count
  *   5. undo inside a value + undo across a checkout (back to previous value,
@@ -42,7 +43,7 @@ async function openApp(browser, vp, lang = "de", tts = false) {
   const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
   await page.route(/recaptcha/, (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" })); // irrelevant here; its script can hang and hold back "load"
   await page.addInitScript((l) => {
-    localStorage.setItem("dart_onboarding_done", "true");
+    localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_audio_engine", "element"); // observes playback on the media element (Web Audio engine: tests/voice-flow.test.mjs)
     localStorage.setItem("dart_lang", l.l);
     if (!l.tts) localStorage.setItem("dart_tts_enabled", "false"); // no clip downloads needed for logic tests
   }, { l: lang, tts });
@@ -237,18 +238,18 @@ async function testFullRun(browser) {
   check(eq(tapped.throws, ["20"]) && tapped.rest === 60, `run: board tap ${JSON.stringify(tapped)}`);
   await play(page, [["h", "20", 20], ["h", "20", 20], ["w", 1100], ["h", "D10", 20], ["w", 50]]);
   const s1 = await snap(page);
-  check(s1.value === 81 && s1.current === 0 && eq(s1.scores, [81, 81]) && eq(s1.results, [[80, 4, 1]]) && s1.shownTarget === "81" && s1.shownRest === "81",
-    `run: after 80 (next player after finisher Ben = Anna starts 81) ${JSON.stringify(s1)}`);
-  // 81: Anna T19 4 D10 → 3 darts
+  check(s1.value === 81 && s1.current === 1 && eq(s1.scores, [81, 81]) && eq(s1.results, [[80, 4, 1]]) && s1.shownTarget === "81" && s1.shownRest === "81",
+    `run: after 80 (starter rotates per value: Ben starts 81) ${JSON.stringify(s1)}`);
+  // 81: Ben T19 4 D10 → 3 darts
   await play(page, [["h", "T19", 57], ["h", "4", 4], ["h", "D10", 20], ["w", 50]]);
   const s2 = await snap(page);
-  check(s2.value === 82 && s2.current === 1 && eq(s2.results, [[80, 4, 1], [81, 3, 0]]), `run: after 81 ${JSON.stringify(s2)}`);
+  check(s2.value === 82 && s2.current === 0 && eq(s2.results, [[80, 4, 1], [81, 3, 1]]), `run: after 81 (Anna starts 82) ${JSON.stringify(s2)}`);
   await page.waitForTimeout(700); // measurable game time
-  // 82: Ben Bull D16 → 2 darts, game over
+  // 82: Anna Bull D16 → 2 darts, game over
   await play(page, [["h", "Bull", 50], ["h", "D16", 32], ["w", 300]]);
   const elapsed = (Date.now() - t0) / 1000;
   const s3 = await snap(page);
-  check(s3.overlay && s3.winner === 1 && eq(s3.results, [[80, 4, 1], [81, 3, 0], [82, 2, 1]]), `run: end ${JSON.stringify(s3)}`);
+  check(s3.overlay && s3.winner === 0 && eq(s3.results, [[80, 4, 1], [81, 3, 1], [82, 2, 0]]), `run: end ${JSON.stringify(s3)}`);
   const res = await page.evaluate(() => ({
     total: document.querySelector('[data-coop-kpi="total"]')?.textContent,
     avg: document.querySelector('[data-coop-kpi="avg"]')?.textContent,
@@ -261,14 +262,14 @@ async function testFullRun(browser) {
   }));
   check(res.total === "9" && res.avg === "3", `result: total/avg ${res.total}/${res.avg}`);
   check(eq(res.values, [["80", "4"], ["81", "3"], ["82", "2"]]), `result: per value ${JSON.stringify(res.values)}`);
-  check(eq(res.players, [["Anna", "6", "1"], ["Ben", "3", "2"]]), `result: per player ${JSON.stringify(res.players)}`);
+  check(eq(res.players, [["Anna", "5", "1"], ["Ben", "4", "2"]]), `result: per player ${JSON.stringify(res.players)}`);
   // startTs is taken before the (here silent) Game-on clip; allow ±2 s
   check(Math.abs(res.sec - elapsed) <= 2 && /^\d+:\d\d$/.test(res.time), `result: game time ${res.sec}s (${res.time}) vs measured ${elapsed.toFixed(1)}s`);
   check(res.saved.x01.length === 0, `save: co-op must not use saveGame (dart_games), got ${res.saved.x01.length}`);
   check(res.saved.coop.length === 1, `save: expected 1 saveCoopGame, got ${res.saved.coop.length}`);
   const doc = res.saved.coop[0] || {};
-  check(doc.mode === "Coop" && doc.totalDarts === 9 && doc.avgDarts === 3 && eq(doc.values?.map((v) => [v.value, v.darts, v.by]), [[80, 4, "Ben"], [81, 3, "Anna"], [82, 2, "Ben"]])
-    && eq(doc.players?.map((p) => [p.name, p.darts, p.checkouts]), [["Anna", 6, 1], ["Ben", 3, 2]]) && Math.abs(doc.durationSec - elapsed) <= 2
+  check(doc.mode === "Coop" && doc.totalDarts === 9 && doc.avgDarts === 3 && eq(doc.values?.map((v) => [v.value, v.darts, v.by]), [[80, 4, "Ben"], [81, 3, "Ben"], [82, 2, "Anna"]])
+    && eq(doc.players?.map((p) => [p.name, p.darts, p.checkouts]), [["Anna", 5, 1], ["Ben", 4, 2]]) && Math.abs(doc.durationSec - elapsed) <= 2
     && doc.avg3 === undefined && !doc.players?.some((p) => "avg3" in p || "checkoutAtt" in p),
   `save: doc ${JSON.stringify(doc)}`);
   // back button after the end: no confirmation
@@ -294,49 +295,49 @@ async function testHandoverBustUndoBouncer(browser) {
   check(h1.current === 1 && h1.rest === 7 && eq(h1.scores, [7, 7]) && h1.shownRest === "7" && h1.value === 80, `handover: Ben must face 7 ${JSON.stringify(h1)}`);
   await play(page, [["h", "3", 3], ["h", "D2", 4], ["w", 50]]);
   const h2 = await snap(page);
-  check(eq(h2.results, [[80, 5, 1]]) && h2.value === 81 && h2.current === 0, `handover: checkout 7 ${JSON.stringify(h2)}`);
+  check(eq(h2.results, [[80, 5, 1]]) && h2.value === 81 && h2.current === 1, `handover: checkout 7, Ben starts value 2 ${JSON.stringify(h2)}`);
 
-  // Bust (rest 1): 81 Anna 20,20,20 → 21 | Ben 20 → 1 = bust → rest stays 21, Anna next
+  // Bust (rest 1): 81 Ben 20,20,20 → 21 | Anna 20 → 1 = bust → rest stays 21, Ben next
   await play(page, [["h", "20", 20], ["h", "20", 20], ["h", "20", 20], ["w", 1000], ["h", "20", 20], ["w", 1800]]);
   const b1 = await snap(page);
-  check(b1.current === 0 && b1.rest === 21 && eq(b1.scores, [21, 21]) && b1.value === 81, `bust(1): rest must stay 21 ${JSON.stringify(b1)}`);
-  // Bust (overshoot): Anna T20 → bust → Ben with 21
+  check(b1.current === 1 && b1.rest === 21 && eq(b1.scores, [21, 21]) && b1.value === 81, `bust(1): rest must stay 21 ${JSON.stringify(b1)}`);
+  // Bust (overshoot): Ben T20 → bust → Anna with 21
   await play(page, [["h", "T20", 60], ["w", 1800]]);
   const b2 = await snap(page);
-  check(b2.current === 1 && b2.rest === 21 && b2.value === 81, `bust(over): ${JSON.stringify(b2)}`);
-  // Bust (no double): Ben 1 then 20 → 0 with a single = bust
+  check(b2.current === 0 && b2.rest === 21 && b2.value === 81, `bust(over): ${JSON.stringify(b2)}`);
+  // Bust (no double): Anna 1 then 20 → 0 with a single = bust
   await play(page, [["h", "1", 1], ["h", "20", 20], ["w", 1800]]);
   const b3 = await snap(page);
-  check(b3.current === 0 && b3.rest === 21, `bust(single out): ${JSON.stringify(b3)}`);
-  // Darts so far in 81: Anna 3 + Ben 1 (bust) + Anna 1 (bust) + Ben 2 (bust) = 7
-  // Undo inside a value: Anna 5 → undo → rest 21 again, dart not counted
+  check(b3.current === 1 && b3.rest === 21, `bust(single out): ${JSON.stringify(b3)}`);
+  // Darts so far in 81: Ben 3 + Anna 1 (bust) + Ben 1 (bust) + Anna 2 (bust) = 7
+  // Undo inside a value: Ben 5 → undo → rest 21 again, dart not counted
   await play(page, [["h", "5", 5], ["u"]]);
   const u1 = await snap(page);
-  check(u1.rest === 21 && eq(u1.throws, []) && u1.current === 0, `undo in value: ${JSON.stringify(u1)}`);
-  // Bouncer counts as a dart: Anna bouncer, 1, D10 → checkout 81 with 3 darts this visit
+  check(u1.rest === 21 && eq(u1.throws, []) && u1.current === 1, `undo in value: ${JSON.stringify(u1)}`);
+  // Bouncer counts as a dart: Ben bouncer, 1, D10 → checkout 81 with 3 darts this visit
   await play(page, [["b"], ["h", "1", 1], ["h", "D10", 20], ["w", 50]]);
   const c81 = await snap(page);
-  check(eq(c81.results, [[80, 5, 1], [81, 10, 0]]) && c81.value === 82 && c81.current === 1 && c81.rest === 82,
+  check(eq(c81.results, [[80, 5, 1], [81, 10, 1]]) && c81.value === 82 && c81.current === 0 && c81.rest === 82,
     `bouncer + checkout 81 (3+1+1+2+3 = 10 darts) ${JSON.stringify(c81)}`);
   const dartsBefore = c81.darts;
-  // Undo across the checkout → back to 81, Anna, rest 20 after bouncer+1, results without 81
+  // Undo across the checkout → back to 81, Ben, rest 20 after bouncer+1, results without 81
   await play(page, [["u"]]);
   const x1 = await snap(page);
-  check(x1.value === 81 && x1.current === 0 && x1.rest === 20 && eq(x1.throws, ["↩", "1"]) && eq(x1.results, [[80, 5, 1]]) && eq(x1.checkouts, [0, 1])
+  check(x1.value === 81 && x1.current === 1 && x1.rest === 20 && eq(x1.throws, ["↩", "1"]) && eq(x1.results, [[80, 5, 1]]) && eq(x1.checkouts, [0, 1])
     && x1.shownTarget === "81" && x1.shownRest === "20", `undo across checkout: ${JSON.stringify(x1)}`);
   // second undo removes the "1", third the bouncer (bouncer is undoable too)
   await play(page, [["u"], ["u"]]);
   const x2 = await snap(page);
   check(x2.rest === 21 && eq(x2.throws, []) && x2.value === 81, `undo bouncer: ${JSON.stringify(x2)}`);
-  // continue: Anna D... 21 → 1, D10 (3 darts: 1, D10 = 2 darts) → 81 needs 7+2 = 9
+  // continue: Ben 21 → 1, D10 (2 darts) → 81 needs 7+2 = 9; Anna starts 82 again
   await play(page, [["h", "1", 1], ["h", "D10", 20], ["w", 50]]);
   const x3 = await snap(page);
-  check(eq(x3.results, [[80, 5, 1], [81, 9, 0]]) && x3.value === 82 && x3.current === 1, `after undo continue: ${JSON.stringify(x3)}`);
-  check(x3.darts[0] === dartsBefore[0] - 1, `after undo: Anna darts ${x3.darts[0]} should be one less than ${dartsBefore[0]} (bouncer undone)`);
+  check(eq(x3.results, [[80, 5, 1], [81, 9, 1]]) && x3.value === 82 && x3.current === 0, `after undo continue: ${JSON.stringify(x3)}`);
+  check(x3.darts[1] === dartsBefore[1] - 1, `after undo: Ben darts ${x3.darts[1]} should be one less than ${dartsBefore[1]} (bouncer undone)`);
   // Undo across checkout twice in a row back into the previous value, then redo the checkout
   await play(page, [["h", "Bull", 50], ["h", "D16", 32], ["w", 300]]);
   const end = await snap(page);
-  check(end.overlay && eq(end.results, [[80, 5, 1], [81, 9, 0], [82, 2, 1]]), `end: ${JSON.stringify(end)}`);
+  check(end.overlay && eq(end.results, [[80, 5, 1], [81, 9, 1], [82, 2, 0]]), `end: ${JSON.stringify(end)}`);
   const saved = await page.evaluate(() => window.__saved);
   check(saved.x01.length === 0 && saved.coop.length === 1 && saved.coop[0].totalDarts === 16, `save after undo run: ${JSON.stringify(saved.coop[0]?.values)}`);
   check(!page.__errors.length, `handover/bust/undo: page errors ${page.__errors.join(" | ")}`);
@@ -450,7 +451,7 @@ async function testVoice(browser) {
     else if (/cloudfunctions|run\.app|firebasestorage|elevenlabs/.test(u) && !/dartAppCheckPing/.test(u)) foreign.push(u); // App Check measurement ping (js/firebase.js) is not audio
   });
   await page.addInitScript(() => {
-    localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_lang", "de");
+    localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_lang", "de"); localStorage.setItem("dart_audio_engine", "element"); // observes playback on the media element (Web Audio engine: tests/voice-flow.test.mjs)
     window.Audio = class { constructor(u) { this.src = u; } play() { setTimeout(() => this.onended?.(), 15); return Promise.resolve(); } pause() {} };
   });
   await page.goto(`${BASE}/index.html`, { waitUntil: "load" });

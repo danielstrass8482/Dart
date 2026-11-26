@@ -3,8 +3,10 @@
  * values together (e.g. 80 → 90). Everyone plays the SAME remaining score;
  * players throw one visit each in turn and the rest carries over to the next
  * player (80: A scores 73 → B has to check out 7). Bust = X01 rule (visit
- * void, rest unchanged, next player). No dart limit per value. After a
- * checkout the next value starts with the player after the finisher.
+ * void, rest unchanged, next player). No dart limit per value. The player
+ * who STARTS a value rotates with the value (2026-11-26): value 1 Player 1,
+ * value 2 Player 2, value 3 Player 1 … (3+ players: round robin) — no matter
+ * who checked out, missed or bust. coopStarter(idx).
  *
  * The mode runs on the X01 engine and screen (js/x01.js with
  * state.cfg.coop set): board, keypad/voice input, bouncer, Undo (x01Snapshot
@@ -75,15 +77,20 @@ export function coopRangeError(from, to) {
   return null;
 }
 
-/** Fresh co-op state for state.x01.coop. */
-export function createCoopState(cfg, now = Date.now()) {
+/** Fresh co-op state for state.x01.coop. `starter` = player who starts value 1 (startX01's starter, 0 = Player 1). */
+export function createCoopState(cfg, now = Date.now(), starter = 0) {
   const values = coopLadder(cfg.coop.from, cfg.coop.to);
   return {
-    from: cfg.coop.from, to: cfg.coop.to, values, idx: 0,
+    from: cfg.coop.from, to: cfg.coop.to, values, idx: 0, starter,
     results: [],                  // [{value, darts, ms, by}] per checked-out value
     checkouts: cfg.players.map(() => 0),
     valueStartDarts: 0, valueStartTs: now, startTs: now, endTs: null,
   };
+}
+
+/** Player who starts value number `idx` (0-based) of the ladder: rotates by one per value. */
+export function coopStarter(idx, c = state.x01?.coop, n = state.cfg?.players?.length || 1) {
+  return (((c?.starter || 0) + idx) % n + n) % n;
 }
 
 /** Team darts so far (all players, completed visits + the visit in progress). */
@@ -120,7 +127,7 @@ export function coopOnCheckout(pi) {
     return;
   }
 
-  // Next value: finisher's visit is complete, next player in order starts.
+  // Next value: finisher's visit is complete; the starter rotates per value.
   recordTurnDarts(pi);
   x.lastTurnThrows[pi] = [...x.throws];
   x.historicThrows[pi].push(...x.throws.filter(th => th.svgX != null));
@@ -129,7 +136,7 @@ export function coopOnCheckout(pi) {
   c.valueStartDarts = dartsNow;
   c.valueStartTs = now;
   x.scores.fill(c.values[c.idx]);
-  const next = (pi + 1) % state.cfg.players.length;
+  const next = coopStarter(c.idx, c);
   x.current = next;
   if (next === 0) x.round++;
   invalidateStaleAnnouncements();
