@@ -190,7 +190,9 @@ function playClip(url,key,item){
       if(done) return; done=true; clearTimeout(timer);
       el.onended=el.onerror=el.onloadedmetadata=null;
       if(why) console.warn("voice clip skipped:",key,"-",why);
-      res();
+      // next clip only after this "ended" event has reached every listener
+      // (resolving inside the handler would swap el.src before the others run)
+      setTimeout(res,0);
     };
     const arm=(ms,why)=>{ clearTimeout(timer); timer=setTimeout(()=>{ try{ el.pause(); }catch(e){} finish(why); },ms); };
     if(currentAudio&&currentAudio!==el){ try{ currentAudio.pause(); }catch(e){} }
