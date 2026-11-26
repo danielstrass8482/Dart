@@ -6,7 +6,7 @@
 import { state } from './state.js';
 import { SECTORS, R, CX, CY, slicePath, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard } from './board.js?v=2';
 import { speakScoreWithCustom, queueAudio } from './audio.js';
-import { getCheckoutPath } from './checkout.js';
+import { getTurnCheckoutPath } from './checkout.js';
 import { t } from './i18n.js?v=3';
 import { escapeHtml } from './util.js';
 
@@ -113,14 +113,14 @@ export function partyTargetHighlight(){
     if(target&&window._CHECKOUTS?.[target]){
       const coSpent=state.pg.throws.reduce((s,t)=>s+t.score,0);
       const remaining=target-coSpent;
-      const dartsLeft=3-state.pg.throws.length;
-      const path=getCheckoutPath(remaining,dartsLeft);
+      // same logic as X01: the turn's path, kept while the darts follow it
+      const path=getTurnCheckoutPath(target,state.pg.throws);
       if(remaining>0&&remaining<=170&&path){
         const nextPart=path.split(" ")[0];
         const isT=nextPart.startsWith("T"); const isD=nextPart.startsWith("D");
-        const isBull=nextPart==="Bull"||nextPart==="D25";
+        const isBull=nextPart==="Bull"||nextPart==="D25"||nextPart==="S25";
         const num=isBull?25:parseInt(nextPart.replace(/[TDS]/,""))||0;
-        if(isBull){ mkCircle(isT?R.bull:R.bull25); }
+        if(isBull){ mkCircle(nextPart==="S25"?R.bull25:R.bull); }
         else if(num>=1&&num<=20){ const idx=SECTORS.indexOf(num); if(idx>=0){ const r1=isT?R.triIn:isD?R.dblIn:R.bull25; const r2=isT?R.triOut:isD?R.dblOut:R.dblIn; mkPath(slicePath(r1,r2,idx)); } }
       }
     }

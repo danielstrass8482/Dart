@@ -11,57 +11,57 @@
   },
   {
     "key": "el_co_101",
-    "text": "Checkout: Triple Seventeen, Bullseye.",
+    "text": "Checkout: Triple Twenty, Nine, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_102",
-    "text": "Checkout: Triple Twenty, Double One, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Ten, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_103",
-    "text": "Checkout: Triple Twenty, Triple One, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Fourteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_104",
-    "text": "Checkout: Triple Eighteen, Bullseye.",
+    "text": "Checkout: Triple Eighteen, Eighteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_105",
-    "text": "Checkout: Triple Twenty, Five, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Thirteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_106",
-    "text": "Checkout: Triple Twenty, Triple Two, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Fourteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_107",
-    "text": "Checkout: Triple Nineteen, Bullseye.",
+    "text": "Checkout: Triple Nineteen, Eighteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_108",
-    "text": "Checkout: Triple Twenty, Double Four, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Sixteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_109",
-    "text": "Checkout: Triple Twenty, Triple Three, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Nine, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_11",
-    "text": "Checkout: Triple One, Double Four.",
+    "text": "Checkout: Three, Double Four.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_110",
-    "text": "Checkout: Triple Twenty, Bullseye.",
+    "text": "Checkout: Triple Twenty, Ten, Double Twenty.",
     "category": "checkout_path"
   },
   {
@@ -71,27 +71,27 @@
   },
   {
     "key": "el_co_112",
-    "text": "Checkout: Triple Twenty, Triple Four, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Twelve, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_113",
-    "text": "Checkout: Triple Twenty, Thirteen, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Sixteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_114",
-    "text": "Checkout: Triple Twenty, Double Seven, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Fourteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_115",
-    "text": "Checkout: Triple Twenty, Triple Five, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Fifteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_116",
-    "text": "Checkout: Triple Twenty, Double Eight, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Sixteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
@@ -101,12 +101,12 @@
   },
   {
     "key": "el_co_118",
-    "text": "Checkout: Triple Twenty, Triple Six, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Eighteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_119",
-    "text": "Checkout: Triple Twenty, Nineteen, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Triple Twelve, Double Thirteen.",
     "category": "checkout_path"
   },
   {
@@ -116,52 +116,52 @@
   },
   {
     "key": "el_co_120",
-    "text": "Checkout: Triple Twenty, Double Ten, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Twenty, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_121",
-    "text": "Checkout: Triple Twenty, Triple Seven, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Eleven, Double Fourteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_122",
-    "text": "Checkout: Triple Twenty, Double Eleven, Double Twenty.",
+    "text": "Checkout: Triple Eighteen, Triple Eighteen, Double Seven.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_123",
-    "text": "Checkout: Triple Nineteen, Double Thirteen, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Triple Sixteen, Double Nine.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_124",
-    "text": "Checkout: Triple Twenty, Triple Eight, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Sixteen, Double Eight.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_125",
-    "text": "Checkout: Triple Twenty, Twenty Five, Double Twenty.",
+    "text": "Checkout: Bullseye, Triple Seventeen, Double Twelve.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_126",
-    "text": "Checkout: Triple Twenty, Double Thirteen, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Triple Nineteen, Double Six.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_127",
-    "text": "Checkout: Triple Twenty, Triple Nine, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Seventeen, Double Eight.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_128",
-    "text": "Checkout: Triple Twenty, Double Fourteen, Double Twenty.",
+    "text": "Checkout: Triple Eighteen, Triple Fourteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_129",
-    "text": "Checkout: Triple Nineteen, Double Sixteen, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Triple Sixteen, Double Twelve.",
     "category": "checkout_path"
   },
   {
@@ -171,17 +171,17 @@
   },
   {
     "key": "el_co_130",
-    "text": "Checkout: Triple Twenty, Triple Ten, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Double Five.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_131",
-    "text": "Checkout: Triple Nineteen, Double Seventeen, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Thirteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_132",
-    "text": "Checkout: Triple Twenty, Double Sixteen, Double Twenty.",
+    "text": "Checkout: Bullseye, Triple Fourteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
@@ -191,32 +191,32 @@
   },
   {
     "key": "el_co_134",
-    "text": "Checkout: Triple Twenty, Double Seventeen, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Fourteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_135",
-    "text": "Checkout: Triple Nineteen, Double Nineteen, Double Twenty.",
+    "text": "Checkout: Twenty Five, Triple Twenty, Bullseye.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_136",
-    "text": "Checkout: Triple Twenty, Triple Twelve, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Double Eight.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_137",
-    "text": "Checkout: Triple Nineteen, Double Twenty, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Fifteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_138",
-    "text": "Checkout: Triple Twenty, Double Nineteen, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Eighteen, Double Twelve.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_139",
-    "text": "Checkout: Triple Twenty, Triple Thirteen, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Triple Fourteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
@@ -226,7 +226,7 @@
   },
   {
     "key": "el_co_140",
-    "text": "Checkout: Triple Twenty, Double Twenty, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Triple Twenty, Double Ten.",
     "category": "checkout_path"
   },
   {
@@ -236,7 +236,7 @@
   },
   {
     "key": "el_co_142",
-    "text": "Checkout: Triple Twenty, Triple Fourteen, Double Twenty.",
+    "text": "Checkout: Triple Eighteen, Triple Twenty, Double Fourteen.",
     "category": "checkout_path"
   },
   {
@@ -251,12 +251,12 @@
   },
   {
     "key": "el_co_145",
-    "text": "Checkout: Triple Twenty, Triple Fifteen, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Triple Twenty, Double Fourteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_146",
-    "text": "Checkout: Triple Twenty, Triple Eighteen, Double Sixteen.",
+    "text": "Checkout: Triple Nineteen, Triple Nineteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
@@ -366,7 +366,7 @@
   },
   {
     "key": "el_co_19",
-    "text": "Checkout: Triple One, Double Eight.",
+    "text": "Checkout: Three, Double Eight.",
     "category": "checkout_path"
   },
   {
@@ -401,7 +401,7 @@
   },
   {
     "key": "el_co_25",
-    "text": "Checkout: Triple Three, Double Eight.",
+    "text": "Checkout: Nine, Double Eight.",
     "category": "checkout_path"
   },
   {
@@ -436,7 +436,7 @@
   },
   {
     "key": "el_co_31",
-    "text": "Checkout: Triple Five, Double Eight.",
+    "text": "Checkout: Fifteen, Double Eight.",
     "category": "checkout_path"
   },
   {
@@ -456,7 +456,7 @@
   },
   {
     "key": "el_co_35",
-    "text": "Checkout: Triple One, Double Sixteen.",
+    "text": "Checkout: Three, Double Sixteen.",
     "category": "checkout_path"
   },
   {
@@ -491,47 +491,47 @@
   },
   {
     "key": "el_co_41",
-    "text": "Checkout: One, Double Twenty.",
+    "text": "Checkout: Nine, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_42",
-    "text": "Checkout: Double One, Double Twenty.",
+    "text": "Checkout: Ten, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_43",
-    "text": "Checkout: Triple One, Double Twenty.",
+    "text": "Checkout: Eleven, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_44",
-    "text": "Checkout: Double Two, Double Twenty.",
+    "text": "Checkout: Twelve, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_45",
-    "text": "Checkout: Five, Double Twenty.",
+    "text": "Checkout: Thirteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_46",
-    "text": "Checkout: Triple Two, Double Twenty.",
+    "text": "Checkout: Fourteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_47",
-    "text": "Checkout: Seven, Double Twenty.",
+    "text": "Checkout: Fifteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_48",
-    "text": "Checkout: Double Four, Double Twenty.",
+    "text": "Checkout: Sixteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_49",
-    "text": "Checkout: Triple Three, Double Twenty.",
+    "text": "Checkout: Nine, Double Twenty.",
     "category": "checkout_path"
   },
   {
@@ -541,17 +541,17 @@
   },
   {
     "key": "el_co_50",
-    "text": "Checkout: Bullseye.",
+    "text": "Checkout: Eighteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_51",
-    "text": "Checkout: Eleven, Double Twenty.",
+    "text": "Checkout: Nineteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_52",
-    "text": "Checkout: Triple Four, Double Twenty.",
+    "text": "Checkout: Twelve, Double Twenty.",
     "category": "checkout_path"
   },
   {
@@ -561,17 +561,17 @@
   },
   {
     "key": "el_co_54",
-    "text": "Checkout: Double Seven, Double Twenty.",
+    "text": "Checkout: Fourteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_55",
-    "text": "Checkout: Triple Five, Double Twenty.",
+    "text": "Checkout: Fifteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_56",
-    "text": "Checkout: Double Eight, Double Twenty.",
+    "text": "Checkout: Sixteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
@@ -581,7 +581,7 @@
   },
   {
     "key": "el_co_58",
-    "text": "Checkout: Triple Six, Double Twenty.",
+    "text": "Checkout: Eighteen, Double Twenty.",
     "category": "checkout_path"
   },
   {
@@ -596,17 +596,17 @@
   },
   {
     "key": "el_co_60",
-    "text": "Checkout: Double Ten, Double Twenty.",
+    "text": "Checkout: Twenty, Double Twenty.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_61",
-    "text": "Checkout: Triple Seven, Double Twenty.",
+    "text": "Checkout: Triple Fifteen, Double Eight.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_62",
-    "text": "Checkout: Double Eleven, Double Twenty.",
+    "text": "Checkout: Triple Ten, Double Sixteen.",
     "category": "checkout_path"
   },
   {
@@ -616,27 +616,27 @@
   },
   {
     "key": "el_co_64",
-    "text": "Checkout: Triple Eight, Double Twenty.",
+    "text": "Checkout: Triple Sixteen, Double Eight.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_65",
-    "text": "Checkout: Twenty Five, Double Twenty.",
+    "text": "Checkout: Triple Eleven, Double Sixteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_66",
-    "text": "Checkout: Double Thirteen, Double Twenty.",
+    "text": "Checkout: Triple Ten, Double Eighteen.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_67",
-    "text": "Checkout: Triple Nine, Double Twenty.",
+    "text": "Checkout: Triple Seventeen, Double Eight.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_68",
-    "text": "Checkout: Double Fourteen, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Double Four.",
     "category": "checkout_path"
   },
   {
@@ -646,12 +646,12 @@
   },
   {
     "key": "el_co_7",
-    "text": "Checkout: Triple One, Double Two.",
+    "text": "Checkout: Three, Double Two.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_70",
-    "text": "Checkout: Triple Ten, Double Twenty.",
+    "text": "Checkout: Triple Eighteen, Double Eight.",
     "category": "checkout_path"
   },
   {
@@ -661,17 +661,17 @@
   },
   {
     "key": "el_co_72",
-    "text": "Checkout: Double Sixteen, Double Twenty.",
+    "text": "Checkout: Triple Sixteen, Double Twelve.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_73",
-    "text": "Checkout: Triple Eleven, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Double Eight.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_74",
-    "text": "Checkout: Double Seventeen, Double Twenty.",
+    "text": "Checkout: Triple Fourteen, Double Sixteen.",
     "category": "checkout_path"
   },
   {
@@ -681,22 +681,22 @@
   },
   {
     "key": "el_co_76",
-    "text": "Checkout: Triple Twelve, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Double Eight.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_77",
-    "text": "Checkout: Triple Fifteen, Double Sixteen.",
+    "text": "Checkout: Triple Nineteen, Double Ten.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_78",
-    "text": "Checkout: Double Nineteen, Double Twenty.",
+    "text": "Checkout: Triple Eighteen, Double Twelve.",
     "category": "checkout_path"
   },
   {
     "key": "el_co_79",
-    "text": "Checkout: Triple Thirteen, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Double Eleven.",
     "category": "checkout_path"
   },
   {
@@ -706,7 +706,7 @@
   },
   {
     "key": "el_co_80",
-    "text": "Checkout: Double Twenty, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Double Ten.",
     "category": "checkout_path"
   },
   {
@@ -716,7 +716,7 @@
   },
   {
     "key": "el_co_82",
-    "text": "Checkout: Triple Fourteen, Double Twenty.",
+    "text": "Checkout: Bullseye, Double Sixteen.",
     "category": "checkout_path"
   },
   {
@@ -746,7 +746,7 @@
   },
   {
     "key": "el_co_88",
-    "text": "Checkout: Triple Sixteen, Double Twenty.",
+    "text": "Checkout: Triple Twenty, Double Fourteen.",
     "category": "checkout_path"
   },
   {
@@ -761,7 +761,7 @@
   },
   {
     "key": "el_co_90",
-    "text": "Checkout: Triple Eighteen, Double Eighteen.",
+    "text": "Checkout: Triple Twenty, Double Fifteen.",
     "category": "checkout_path"
   },
   {
@@ -806,7 +806,7 @@
   },
   {
     "key": "el_co_99",
-    "text": "Checkout: Triple Nineteen, Double One, Double Twenty.",
+    "text": "Checkout: Triple Nineteen, Ten, Double Sixteen.",
     "category": "checkout_path"
   },
   {

@@ -7,48 +7,11 @@ import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearChecko
 import { speakKeyWithCustom, speakScoreWithCustom, getAudio, queueAudio, clearAudioQueue, invalidateStaleAnnouncements } from './audio.js';
 import { announceRequires } from './speech.js';
 import { runBotTurn } from './bot.js';
-import { getCheckoutPath } from './checkout.js';
+import { getTurnCheckoutPath, getPreferredCheckoutPath } from './checkout.js';
 import { t } from './i18n.js?v=3';
 import { escapeHtml, playerBadge } from './util.js';
 import { isPartyMode } from './party.js';
 import { createCoopState, coopOnCheckout, renderCoop, hideCoopUI, hideCoopResult } from './coop.js';
-
-/**
- * Computes a checkout path ending in one of the preferred doubles.
- * Returns null if no path found or no preferences set.
- * @param {number} remaining
- * @param {number[]} prefDoubles e.g. [20, 16, 8]
- * @returns {string|null}
- */
-function findPreferredCheckout(remaining, prefDoubles){
-  if(!prefDoubles?.length) return null;
-  const throws=[];
-  for(let n=1;n<=20;n++){
-    throws.push({v:n,s:`${n}`},{v:n*2,s:`D${n}`});
-    if(n*3<=60) throws.push({v:n*3,s:`T${n}`});
-  }
-  throws.push({v:25,s:"25"});
-  for(const pd of prefDoubles){
-    const finVal=pd===25?50:2*pd;
-    const finStr=pd===25?"Bull":`D${pd}`;
-    if(remaining===finVal) return finStr;
-    const r2=remaining-finVal;
-    if(r2>0&&r2<=60){
-      const d1=throws.find(t=>t.v===r2);
-      if(d1) return `${d1.s} ${finStr}`;
-    }
-    if(r2>0&&r2<=120){
-      for(const t1 of throws.filter(t=>t.v<=60)){
-        const r3=r2-t1.v;
-        if(r3>0&&r3<=60){
-          const t2=throws.find(t=>t.v===r3&&t.s!==t1.s);
-          if(t2) return `${t1.s} ${t2.s} ${finStr}`;
-        }
-      }
-    }
-  }
-  return null;
-}
 
 /**
  * Returns appropriate delay (ms) before announcing "requires" based on turn score.
@@ -128,9 +91,12 @@ export function renderX01(){
   const dartsLeft=3-state.x01.throws.length;
   const _coActive=remaining<=170&&remaining>1&&!state.x01.bust;
   const _prefDoubles=(()=>{ if(!_coActive) return []; const pid=state.cfg.playerIds?.[state.x01.current]; const pl=state.allPlayers?.find(p=>p.id===pid); return pl?.prefDoubles||[]; })();
-  const _optPath=_coActive?(getCheckoutPath(remaining,dartsLeft)||""):"";
-  const _prefPathRaw=_coActive?findPreferredCheckout(remaining,_prefDoubles):null;
-  const _prefPath=(_prefPathRaw&&_optPath&&_prefPathRaw.split(" ").length===_optPath.split(" ").length)?_prefPathRaw:null;
+  // One checkout logic (js/checkout.js): the turn's path, kept while the darts
+  // follow it. A player's preferred doubles (profile) only change the shown
+  // finish when a path of the same length exists — the voice always says the
+  // standard turn-start path.
+  const _optPath=_coActive?(getTurnCheckoutPath(state.x01.scores[state.x01.current],state.x01.throws)||""):"";
+  const _prefPath=_coActive&&_optPath?getPreferredCheckoutPath(remaining,_optPath.split(" ").length,_prefDoubles):null;
   const co=_coActive?(_prefPath||_optPath||null):null;
   const isBust=state.x01.bust;
 
@@ -282,7 +248,7 @@ export function renderX01(){
   }
 
   if(_coActive){
-    highlightCheckout(state.boardSVG,remaining,_prefPath);
+    highlightCheckout(state.boardSVG,remaining,co);
   } else clearCheckout(state.boardSVG);
   disableBoard(state.boardSVG,!!state.x01.winner||state.x01.bust);
 

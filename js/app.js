@@ -130,12 +130,11 @@ import { initStudio, wireStudioButtons } from './studio.js';
 import { elTTSCache as _elTTSCache } from './audio.js';
 
 // ══════════════════════════════════════════════════════════════════
-// CHECKOUT TABLE — canonical table lives in checkout.js (CHECKOUT_TABLE +
-// getCheckoutPath()); exposed here as a flat {remaining: path} map for call
-// sites that always want the full standard path regardless of how many
-// darts are left in the turn (bot aiming, party checkout-training display).
-// Sites that must respect darts-left feasibility import getCheckoutPath()
-// directly instead (x01.js, board.js, audio.js, party.js live highlighting).
+// CHECKOUT TABLE — the one checkout logic lives in checkout.js
+// (getCheckoutPath / getTurnCheckoutPath, CHECKOUT_TABLE = turn-start paths);
+// exposed here as a flat {remaining: turn-start path} map for the
+// checkout-training target list/panel. Live paths (display, board, voice,
+// bot, training highlight) call checkout.js directly.
 // ══════════════════════════════════════════════════════════════════
 window._CHECKOUTS = Object.fromEntries(
   Object.entries(CHECKOUT_TABLE).map(([remaining, e]) => [remaining, e.path])

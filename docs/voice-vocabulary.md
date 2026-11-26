@@ -2,67 +2,67 @@
 
 GENERATED FILE — do not hand-edit. Regenerate with `node scripts/build-vocabulary.js`.
 
-Total entries: **635**, total characters (per voice): **14640**.
+Total entries: **635**, total characters (per voice): **14597**.
 
 Every entry here must exist as a local audio clip for every bundled voice
 before the app ever needs it — see scripts/gen-voice-assets.js.
 
-## checkout_path (162 entries, 6710 chars)
+## checkout_path (162 entries, 6667 chars)
 
 | key | text |
 |---|---|
 | `el_co_10` | Checkout: Double Five. |
 | `el_co_100` | Checkout: Triple Twenty, Double Twenty. |
-| `el_co_101` | Checkout: Triple Seventeen, Bullseye. |
-| `el_co_102` | Checkout: Triple Twenty, Double One, Double Twenty. |
-| `el_co_103` | Checkout: Triple Twenty, Triple One, Double Twenty. |
-| `el_co_104` | Checkout: Triple Eighteen, Bullseye. |
-| `el_co_105` | Checkout: Triple Twenty, Five, Double Twenty. |
-| `el_co_106` | Checkout: Triple Twenty, Triple Two, Double Twenty. |
-| `el_co_107` | Checkout: Triple Nineteen, Bullseye. |
-| `el_co_108` | Checkout: Triple Twenty, Double Four, Double Twenty. |
-| `el_co_109` | Checkout: Triple Twenty, Triple Three, Double Twenty. |
-| `el_co_11` | Checkout: Triple One, Double Four. |
-| `el_co_110` | Checkout: Triple Twenty, Bullseye. |
+| `el_co_101` | Checkout: Triple Twenty, Nine, Double Sixteen. |
+| `el_co_102` | Checkout: Triple Twenty, Ten, Double Sixteen. |
+| `el_co_103` | Checkout: Triple Nineteen, Fourteen, Double Sixteen. |
+| `el_co_104` | Checkout: Triple Eighteen, Eighteen, Double Sixteen. |
+| `el_co_105` | Checkout: Triple Twenty, Thirteen, Double Sixteen. |
+| `el_co_106` | Checkout: Triple Twenty, Fourteen, Double Sixteen. |
+| `el_co_107` | Checkout: Triple Nineteen, Eighteen, Double Sixteen. |
+| `el_co_108` | Checkout: Triple Twenty, Sixteen, Double Sixteen. |
+| `el_co_109` | Checkout: Triple Twenty, Nine, Double Twenty. |
+| `el_co_11` | Checkout: Three, Double Four. |
+| `el_co_110` | Checkout: Triple Twenty, Ten, Double Twenty. |
 | `el_co_111` | Checkout: Triple Twenty, Eleven, Double Twenty. |
-| `el_co_112` | Checkout: Triple Twenty, Triple Four, Double Twenty. |
-| `el_co_113` | Checkout: Triple Twenty, Thirteen, Double Twenty. |
-| `el_co_114` | Checkout: Triple Twenty, Double Seven, Double Twenty. |
-| `el_co_115` | Checkout: Triple Twenty, Triple Five, Double Twenty. |
-| `el_co_116` | Checkout: Triple Twenty, Double Eight, Double Twenty. |
+| `el_co_112` | Checkout: Triple Twenty, Twelve, Double Twenty. |
+| `el_co_113` | Checkout: Triple Nineteen, Sixteen, Double Twenty. |
+| `el_co_114` | Checkout: Triple Twenty, Fourteen, Double Twenty. |
+| `el_co_115` | Checkout: Triple Twenty, Fifteen, Double Twenty. |
+| `el_co_116` | Checkout: Triple Twenty, Sixteen, Double Twenty. |
 | `el_co_117` | Checkout: Triple Twenty, Seventeen, Double Twenty. |
-| `el_co_118` | Checkout: Triple Twenty, Triple Six, Double Twenty. |
-| `el_co_119` | Checkout: Triple Twenty, Nineteen, Double Twenty. |
+| `el_co_118` | Checkout: Triple Twenty, Eighteen, Double Twenty. |
+| `el_co_119` | Checkout: Triple Nineteen, Triple Twelve, Double Thirteen. |
 | `el_co_12` | Checkout: Double Six. |
-| `el_co_120` | Checkout: Triple Twenty, Double Ten, Double Twenty. |
-| `el_co_121` | Checkout: Triple Twenty, Triple Seven, Double Twenty. |
-| `el_co_122` | Checkout: Triple Twenty, Double Eleven, Double Twenty. |
-| `el_co_123` | Checkout: Triple Nineteen, Double Thirteen, Double Twenty. |
-| `el_co_124` | Checkout: Triple Twenty, Triple Eight, Double Twenty. |
-| `el_co_125` | Checkout: Triple Twenty, Twenty Five, Double Twenty. |
-| `el_co_126` | Checkout: Triple Twenty, Double Thirteen, Double Twenty. |
-| `el_co_127` | Checkout: Triple Twenty, Triple Nine, Double Twenty. |
-| `el_co_128` | Checkout: Triple Twenty, Double Fourteen, Double Twenty. |
-| `el_co_129` | Checkout: Triple Nineteen, Double Sixteen, Double Twenty. |
+| `el_co_120` | Checkout: Triple Twenty, Twenty, Double Twenty. |
+| `el_co_121` | Checkout: Triple Twenty, Triple Eleven, Double Fourteen. |
+| `el_co_122` | Checkout: Triple Eighteen, Triple Eighteen, Double Seven. |
+| `el_co_123` | Checkout: Triple Nineteen, Triple Sixteen, Double Nine. |
+| `el_co_124` | Checkout: Triple Twenty, Triple Sixteen, Double Eight. |
+| `el_co_125` | Checkout: Bullseye, Triple Seventeen, Double Twelve. |
+| `el_co_126` | Checkout: Triple Nineteen, Triple Nineteen, Double Six. |
+| `el_co_127` | Checkout: Triple Twenty, Triple Seventeen, Double Eight. |
+| `el_co_128` | Checkout: Triple Eighteen, Triple Fourteen, Double Sixteen. |
+| `el_co_129` | Checkout: Triple Nineteen, Triple Sixteen, Double Twelve. |
 | `el_co_13` | Checkout: Five, Double Four. |
-| `el_co_130` | Checkout: Triple Twenty, Triple Ten, Double Twenty. |
-| `el_co_131` | Checkout: Triple Nineteen, Double Seventeen, Double Twenty. |
-| `el_co_132` | Checkout: Triple Twenty, Double Sixteen, Double Twenty. |
+| `el_co_130` | Checkout: Triple Twenty, Triple Twenty, Double Five. |
+| `el_co_131` | Checkout: Triple Twenty, Triple Thirteen, Double Sixteen. |
+| `el_co_132` | Checkout: Bullseye, Triple Fourteen, Double Twenty. |
 | `el_co_133` | Checkout: Triple Twenty, Triple Eleven, Double Twenty. |
-| `el_co_134` | Checkout: Triple Twenty, Double Seventeen, Double Twenty. |
-| `el_co_135` | Checkout: Triple Nineteen, Double Nineteen, Double Twenty. |
-| `el_co_136` | Checkout: Triple Twenty, Triple Twelve, Double Twenty. |
-| `el_co_137` | Checkout: Triple Nineteen, Double Twenty, Double Twenty. |
-| `el_co_138` | Checkout: Triple Twenty, Double Nineteen, Double Twenty. |
-| `el_co_139` | Checkout: Triple Twenty, Triple Thirteen, Double Twenty. |
+| `el_co_134` | Checkout: Triple Twenty, Triple Fourteen, Double Sixteen. |
+| `el_co_135` | Checkout: Twenty Five, Triple Twenty, Bullseye. |
+| `el_co_136` | Checkout: Triple Twenty, Triple Twenty, Double Eight. |
+| `el_co_137` | Checkout: Triple Twenty, Triple Fifteen, Double Sixteen. |
+| `el_co_138` | Checkout: Triple Twenty, Triple Eighteen, Double Twelve. |
+| `el_co_139` | Checkout: Triple Nineteen, Triple Fourteen, Double Twenty. |
 | `el_co_14` | Checkout: Double Seven. |
-| `el_co_140` | Checkout: Triple Twenty, Double Twenty, Double Twenty. |
+| `el_co_140` | Checkout: Triple Twenty, Triple Twenty, Double Ten. |
 | `el_co_141` | Checkout: Triple Twenty, Triple Nineteen, Double Twelve. |
-| `el_co_142` | Checkout: Triple Twenty, Triple Fourteen, Double Twenty. |
+| `el_co_142` | Checkout: Triple Eighteen, Triple Twenty, Double Fourteen. |
 | `el_co_143` | Checkout: Triple Twenty, Triple Seventeen, Double Sixteen. |
 | `el_co_144` | Checkout: Triple Twenty, Triple Twenty, Double Twelve. |
-| `el_co_145` | Checkout: Triple Twenty, Triple Fifteen, Double Twenty. |
-| `el_co_146` | Checkout: Triple Twenty, Triple Eighteen, Double Sixteen. |
+| `el_co_145` | Checkout: Triple Nineteen, Triple Twenty, Double Fourteen. |
+| `el_co_146` | Checkout: Triple Nineteen, Triple Nineteen, Double Sixteen. |
 | `el_co_147` | Checkout: Triple Twenty, Triple Seventeen, Double Eighteen. |
 | `el_co_148` | Checkout: Triple Twenty, Triple Sixteen, Double Twenty. |
 | `el_co_149` | Checkout: Triple Twenty, Triple Nineteen, Double Sixteen. |
@@ -84,86 +84,86 @@ before the app ever needs it — see scripts/gen-voice-assets.js.
 | `el_co_17` | Checkout: One, Double Eight. |
 | `el_co_170` | Checkout: Triple Twenty, Triple Twenty, Bullseye. |
 | `el_co_18` | Checkout: Double Nine. |
-| `el_co_19` | Checkout: Triple One, Double Eight. |
+| `el_co_19` | Checkout: Three, Double Eight. |
 | `el_co_2` | Checkout: Double One. |
 | `el_co_20` | Checkout: Double Ten. |
 | `el_co_21` | Checkout: Five, Double Eight. |
 | `el_co_22` | Checkout: Double Eleven. |
 | `el_co_23` | Checkout: Seven, Double Eight. |
 | `el_co_24` | Checkout: Double Twelve. |
-| `el_co_25` | Checkout: Triple Three, Double Eight. |
+| `el_co_25` | Checkout: Nine, Double Eight. |
 | `el_co_26` | Checkout: Double Thirteen. |
 | `el_co_27` | Checkout: Eleven, Double Eight. |
 | `el_co_28` | Checkout: Double Fourteen. |
 | `el_co_29` | Checkout: Thirteen, Double Eight. |
 | `el_co_3` | Checkout: One, Double One. |
 | `el_co_30` | Checkout: Double Fifteen. |
-| `el_co_31` | Checkout: Triple Five, Double Eight. |
+| `el_co_31` | Checkout: Fifteen, Double Eight. |
 | `el_co_32` | Checkout: Double Sixteen. |
 | `el_co_33` | Checkout: One, Double Sixteen. |
 | `el_co_34` | Checkout: Double Seventeen. |
-| `el_co_35` | Checkout: Triple One, Double Sixteen. |
+| `el_co_35` | Checkout: Three, Double Sixteen. |
 | `el_co_36` | Checkout: Double Eighteen. |
 | `el_co_37` | Checkout: Five, Double Sixteen. |
 | `el_co_38` | Checkout: Double Nineteen. |
 | `el_co_39` | Checkout: Seven, Double Sixteen. |
 | `el_co_4` | Checkout: Double Two. |
 | `el_co_40` | Checkout: Double Twenty. |
-| `el_co_41` | Checkout: One, Double Twenty. |
-| `el_co_42` | Checkout: Double One, Double Twenty. |
-| `el_co_43` | Checkout: Triple One, Double Twenty. |
-| `el_co_44` | Checkout: Double Two, Double Twenty. |
-| `el_co_45` | Checkout: Five, Double Twenty. |
-| `el_co_46` | Checkout: Triple Two, Double Twenty. |
-| `el_co_47` | Checkout: Seven, Double Twenty. |
-| `el_co_48` | Checkout: Double Four, Double Twenty. |
-| `el_co_49` | Checkout: Triple Three, Double Twenty. |
+| `el_co_41` | Checkout: Nine, Double Sixteen. |
+| `el_co_42` | Checkout: Ten, Double Sixteen. |
+| `el_co_43` | Checkout: Eleven, Double Sixteen. |
+| `el_co_44` | Checkout: Twelve, Double Sixteen. |
+| `el_co_45` | Checkout: Thirteen, Double Sixteen. |
+| `el_co_46` | Checkout: Fourteen, Double Sixteen. |
+| `el_co_47` | Checkout: Fifteen, Double Sixteen. |
+| `el_co_48` | Checkout: Sixteen, Double Sixteen. |
+| `el_co_49` | Checkout: Nine, Double Twenty. |
 | `el_co_5` | Checkout: One, Double Two. |
-| `el_co_50` | Checkout: Bullseye. |
-| `el_co_51` | Checkout: Eleven, Double Twenty. |
-| `el_co_52` | Checkout: Triple Four, Double Twenty. |
+| `el_co_50` | Checkout: Eighteen, Double Sixteen. |
+| `el_co_51` | Checkout: Nineteen, Double Sixteen. |
+| `el_co_52` | Checkout: Twelve, Double Twenty. |
 | `el_co_53` | Checkout: Thirteen, Double Twenty. |
-| `el_co_54` | Checkout: Double Seven, Double Twenty. |
-| `el_co_55` | Checkout: Triple Five, Double Twenty. |
-| `el_co_56` | Checkout: Double Eight, Double Twenty. |
+| `el_co_54` | Checkout: Fourteen, Double Twenty. |
+| `el_co_55` | Checkout: Fifteen, Double Twenty. |
+| `el_co_56` | Checkout: Sixteen, Double Twenty. |
 | `el_co_57` | Checkout: Seventeen, Double Twenty. |
-| `el_co_58` | Checkout: Triple Six, Double Twenty. |
+| `el_co_58` | Checkout: Eighteen, Double Twenty. |
 | `el_co_59` | Checkout: Nineteen, Double Twenty. |
 | `el_co_6` | Checkout: Double Three. |
-| `el_co_60` | Checkout: Double Ten, Double Twenty. |
-| `el_co_61` | Checkout: Triple Seven, Double Twenty. |
-| `el_co_62` | Checkout: Double Eleven, Double Twenty. |
+| `el_co_60` | Checkout: Twenty, Double Twenty. |
+| `el_co_61` | Checkout: Triple Fifteen, Double Eight. |
+| `el_co_62` | Checkout: Triple Ten, Double Sixteen. |
 | `el_co_63` | Checkout: Triple Thirteen, Double Twelve. |
-| `el_co_64` | Checkout: Triple Eight, Double Twenty. |
-| `el_co_65` | Checkout: Twenty Five, Double Twenty. |
-| `el_co_66` | Checkout: Double Thirteen, Double Twenty. |
-| `el_co_67` | Checkout: Triple Nine, Double Twenty. |
-| `el_co_68` | Checkout: Double Fourteen, Double Twenty. |
+| `el_co_64` | Checkout: Triple Sixteen, Double Eight. |
+| `el_co_65` | Checkout: Triple Eleven, Double Sixteen. |
+| `el_co_66` | Checkout: Triple Ten, Double Eighteen. |
+| `el_co_67` | Checkout: Triple Seventeen, Double Eight. |
+| `el_co_68` | Checkout: Triple Twenty, Double Four. |
 | `el_co_69` | Checkout: Triple Fifteen, Double Twelve. |
-| `el_co_7` | Checkout: Triple One, Double Two. |
-| `el_co_70` | Checkout: Triple Ten, Double Twenty. |
+| `el_co_7` | Checkout: Three, Double Two. |
+| `el_co_70` | Checkout: Triple Eighteen, Double Eight. |
 | `el_co_71` | Checkout: Triple Thirteen, Double Sixteen. |
-| `el_co_72` | Checkout: Double Sixteen, Double Twenty. |
-| `el_co_73` | Checkout: Triple Eleven, Double Twenty. |
-| `el_co_74` | Checkout: Double Seventeen, Double Twenty. |
+| `el_co_72` | Checkout: Triple Sixteen, Double Twelve. |
+| `el_co_73` | Checkout: Triple Nineteen, Double Eight. |
+| `el_co_74` | Checkout: Triple Fourteen, Double Sixteen. |
 | `el_co_75` | Checkout: Triple Seventeen, Double Twelve. |
-| `el_co_76` | Checkout: Triple Twelve, Double Twenty. |
-| `el_co_77` | Checkout: Triple Fifteen, Double Sixteen. |
-| `el_co_78` | Checkout: Double Nineteen, Double Twenty. |
-| `el_co_79` | Checkout: Triple Thirteen, Double Twenty. |
+| `el_co_76` | Checkout: Triple Twenty, Double Eight. |
+| `el_co_77` | Checkout: Triple Nineteen, Double Ten. |
+| `el_co_78` | Checkout: Triple Eighteen, Double Twelve. |
+| `el_co_79` | Checkout: Triple Nineteen, Double Eleven. |
 | `el_co_8` | Checkout: Double Four. |
-| `el_co_80` | Checkout: Double Twenty, Double Twenty. |
+| `el_co_80` | Checkout: Triple Twenty, Double Ten. |
 | `el_co_81` | Checkout: Triple Nineteen, Double Twelve. |
-| `el_co_82` | Checkout: Triple Fourteen, Double Twenty. |
+| `el_co_82` | Checkout: Bullseye, Double Sixteen. |
 | `el_co_83` | Checkout: Triple Seventeen, Double Sixteen. |
 | `el_co_84` | Checkout: Triple Twenty, Double Twelve. |
 | `el_co_85` | Checkout: Triple Fifteen, Double Twenty. |
 | `el_co_86` | Checkout: Triple Eighteen, Double Sixteen. |
 | `el_co_87` | Checkout: Triple Seventeen, Double Eighteen. |
-| `el_co_88` | Checkout: Triple Sixteen, Double Twenty. |
+| `el_co_88` | Checkout: Triple Twenty, Double Fourteen. |
 | `el_co_89` | Checkout: Triple Nineteen, Double Sixteen. |
 | `el_co_9` | Checkout: One, Double Four. |
-| `el_co_90` | Checkout: Triple Eighteen, Double Eighteen. |
+| `el_co_90` | Checkout: Triple Twenty, Double Fifteen. |
 | `el_co_91` | Checkout: Triple Seventeen, Double Twenty. |
 | `el_co_92` | Checkout: Triple Twenty, Double Sixteen. |
 | `el_co_93` | Checkout: Triple Nineteen, Double Eighteen. |
@@ -172,7 +172,7 @@ before the app ever needs it — see scripts/gen-voice-assets.js.
 | `el_co_96` | Checkout: Triple Twenty, Double Eighteen. |
 | `el_co_97` | Checkout: Triple Nineteen, Double Twenty. |
 | `el_co_98` | Checkout: Triple Twenty, Double Nineteen. |
-| `el_co_99` | Checkout: Triple Nineteen, Double One, Double Twenty. |
+| `el_co_99` | Checkout: Triple Nineteen, Ten, Double Sixteen. |
 
 ## fixed (3 entries, 22 chars)
 

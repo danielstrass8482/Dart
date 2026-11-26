@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { speakKeyWithCustom, speakScoreWithCustom } from './audio.js';
 import { SECTORS, R, clearCheckout, disableBoard, redrawAllHits } from './board.js?v=2';
+import { getCheckoutPath, getTurnCheckoutPath } from './checkout.js';
 import { x01Snapshot, recordTurnDarts } from './x01.js?v=2';
 
 export const BOT_ACCURACY={ easy:0.22, medium:0.52, pro:0.82 };
@@ -87,10 +88,14 @@ export const BOT_PERSONALITIES = {
  * @returns {{num:number, ring:string}}
  */
 export function botChooseTarget(remaining, level){
-  const CHECKOUTS = window._CHECKOUTS;
-  if(remaining<=170 && CHECKOUTS[remaining]){
-    const parts=CHECKOUTS[remaining].split(" ");
-    return parseTargetString(parts[0]);
+  // Same checkout logic as the display/voice (js/checkout.js): the turn's
+  // path for the darts still left, kept while the bot's darts follow it.
+  const x=state.x01;
+  const path=(x&&x.scores?.[x.current]-(x.throws||[]).reduce((s,t)=>s+t.score,0)===remaining)
+    ?getTurnCheckoutPath(x.scores[x.current],x.throws||[])
+    :getCheckoutPath(remaining,3);
+  if(remaining<=170 && path){
+    return parseTargetString(path.split(" ")[0]);
   }
   if(level==="pro"){
     if(remaining===85||remaining===87||remaining===89||remaining===91||remaining===93||remaining===95)
@@ -114,6 +119,7 @@ export function botChooseTarget(remaining, level){
  */
 export function parseTargetString(s){
   if(s==="Bull"||s==="D25") return {num:25,ring:"bull"};
+  if(s==="S25") return {num:25,ring:"bull25"};
   if(s.startsWith("T")) return {num:parseInt(s.slice(1)),ring:"triple"};
   if(s.startsWith("D")) return {num:parseInt(s.slice(1)),ring:"double"};
   if(s.startsWith("S")) return {num:parseInt(s.slice(1)),ring:"single"};

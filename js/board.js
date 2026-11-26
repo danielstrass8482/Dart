@@ -209,6 +209,8 @@ export function highlightCheckout(svgEl, remaining, customPath=null){
   g.innerHTML="";
   const throwsArr = (svgEl.id==="board-svg" ? state.x01.throws : state.cr.throws) || [];
   const dartsLeft=3-throwsArr.length;
+  // customPath: the path renderX01()/party computed for this turn (keeps the
+  // turn's path while the darts follow it, see getTurnCheckoutPath()).
   const co=customPath||getCheckoutPath(remaining,dartsLeft);
   if(!co||remaining>170||remaining<=1) return;
 
@@ -219,7 +221,7 @@ export function highlightCheckout(svgEl, remaining, customPath=null){
     const isNext=partIdx===0;
     const isTriple=part.startsWith("T");
     const isDouble=part.startsWith("D");
-    const isBull=part==="Bull"||part==="D25";
+    const isBull=part==="Bull"||part==="D25"||part==="S25";
     const num=isBull?25:parseInt(part.replace(/[TDS]/,""));
 
     const fillColor=isNext?"rgba(212,175,55,0.45)":"rgba(212,175,55,0.20)";
@@ -227,7 +229,7 @@ export function highlightCheckout(svgEl, remaining, customPath=null){
     const strokeWidth=isNext?"3":"1.5";
 
     if(isBull){
-      const r=part==="D25"?R.bull25:R.bull;
+      const r=part==="S25"?R.bull25:R.bull;   // S25 = outer bull ring (circle covers the inner bull too)
       const c=document.createElementNS(ns,"circle");
       c.setAttribute("cx",CX); c.setAttribute("cy",CY); c.setAttribute("r",r);
       c.setAttribute("fill",fillColor);
