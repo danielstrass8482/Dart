@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { buildBoard, hitFromXY, svgCoords, clearHits, redrawAllHits, clearCheckout, disableBoard, highlightCheckout, drawMiniBoard } from './board.js?v=2';
-import { speakKeyWithCustom, speakScoreWithCustom, getAudio, queueAudio, clearAudioQueue, announceCheckoutPath, invalidateStaleAnnouncements } from './audio.js';
+import { speakKeyWithCustom, speakScoreWithCustom, getAudio, queueAudio, clearAudioQueue, invalidateStaleAnnouncements } from './audio.js';
 import { announceRequires } from './speech.js';
 import { runBotTurn } from './bot.js';
 import { getCheckoutPath } from './checkout.js';
@@ -99,7 +99,11 @@ export async function startX01(starter=0){
     // Darts thrown per completed turn (1-3; busts end early). Undo restores it
     // from x01Snapshot(), so retracted darts never count. See legDarts().
     turnDarts: state.cfg.players.map(()=>[]),
-    lastAnnouncedCheckout: state.cfg.players.map(()=>null),
+    // "requires" announcements that were spoken COMPLETELY: {i, score, h, v}
+    // (h = Undo-history length when scheduled, v = co-op value index). See
+    // scheduleNextPlayerAnnounce() / afterUndoAnnouncements().
+    announced: [],
+    announceGen: 0,
     startTime: Date.now(),
     ...(_coop?{coop:_coop}:{})
   };
@@ -459,24 +463,59 @@ export function handleBouncer(){
   }
 }
 
-/** Schedules requires + checkout-path announcement for the next player. */
-export function scheduleNextPlayerAnnounce(nextIdx){
-  if(state.x01.winner) return;
+/**
+ * Turn-start announcement for player nextIdx: "Player N requires X,
+ * Checkout: …" as one sentence (announceRequires() in js/speech.js).
+ *
+ * Rule per player and leg (2026-11-26):
+ *  - first time in checkout range (2–170): requires X + checkout path
+ *  - again only when THIS player's rest has changed since it was last said
+ *    completely (then with the new path)
+ *  - rest unchanged (0 points / bust): NOTHING beyond the visit's own
+ *    "No Score!"/"Bust!" — no "Player N", no "requires", no path
+ * Only a completely played announcement counts as said: one that was cut
+ * off (Undo, stale, TTS off) is said again next time. Undo also takes back
+ * announcements made for the undone states (afterUndoAnnouncements()).
+ * Co-op: every new value of the ladder starts fresh.
+ * @param {number} nextIdx
+ * @param {number} [delay] ms (lets the visit's score call finish first)
+ */
+export function scheduleNextPlayerAnnounce(nextIdx, delay=1500){
+  const x=state.x01;
+  if(!x||x.winner!=null) return;
   if(state.cfg.isBot?.[nextIdx]) return;
-  const score=state.x01.scores[nextIdx];
-  if(score >= 2 && score <= 170){
-    setTimeout(announceRequires, 1500);
-    // Voice always uses the standard table path — only those 162 sentences
-    // are pre-produced as local clips. A per-player preferred-doubles path
-    // (if any) stays visual-only (board highlight in renderX01()).
-    const _optPath=getCheckoutPath(score,3)||null;
-    // Only re-announce when the path actually changed since the last time we told
-    // this player — otherwise every qualifying turn would repeat the same clip.
-    if(_optPath&&state.x01.lastAnnouncedCheckout[nextIdx]!==_optPath){
-      state.x01.lastAnnouncedCheckout[nextIdx]=_optPath;
-      setTimeout(()=>announceCheckoutPath(score,nextIdx),2500);
-    }
-  }
+  const score=x.scores[nextIdx];
+  if(!(score>=2&&score<=170)) return;
+  const v=x.coop?x.coop.idx:0;
+  if(lastAnnouncedScore(nextIdx)===score) return;
+  const gen=x.announceGen, h=x.history.length;
+  setTimeout(()=>{
+    if(state.x01!==x||x.announceGen!==gen||x.winner!=null||x.current!==nextIdx||x.scores[nextIdx]!==score||(x.coop?x.coop.idx:0)!==v) return;
+    if(lastAnnouncedScore(nextIdx)===score) return;
+    Promise.resolve(announceRequires(nextIdx,score)).then(r=>{
+      if(r?.completed&&state.x01===x&&x.announceGen===gen) x.announced.push({i:nextIdx,score,h,v});
+    });
+  },delay);
+}
+
+/** Rest at which player i was last told "requires …" completely in this leg / co-op value, or null. */
+export function lastAnnouncedScore(i){
+  const x=state.x01;
+  const v=x?.coop?x.coop.idx:0;
+  const list=(x?.announced||[]).filter(a=>a.i===i&&a.v===v);
+  return list.length?list[list.length-1].score:null;
+}
+
+/**
+ * After Undo (state.x01.history already popped): forget announcements that
+ * were made for states that no longer exist, invalidate pending timers, and
+ * announce the restored turn if it is at its start and not yet said.
+ */
+export function afterUndoAnnouncements(){
+  const x=state.x01;
+  x.announceGen=(x.announceGen||0)+1;
+  x.announced=(x.announced||[]).filter(a=>a.h<=x.history.length);
+  if(x.winner==null&&x.throws.length===0) scheduleNextPlayerAnnounce(x.current,600);
 }
 
 /**

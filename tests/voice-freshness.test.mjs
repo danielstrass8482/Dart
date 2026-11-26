@@ -102,7 +102,7 @@ async function newContext(browser, { sw }) {
     ? await webkit.launchPersistentContext(fs.mkdtempSync(path.join(os.tmpdir(), "wk-profile-")), { serviceWorkers: sw ? "allow" : "block" })
     : await browser.newContext({ serviceWorkers: sw ? "allow" : "block" });
   await ctx.addInitScript((base) => {
-    try { localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_tts_enabled", "true"); } catch (e) {}
+    try { localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_tts_enabled", "true"); localStorage.setItem("dart_audio_engine", "element"); } catch (e) {} // playback observed on the media element (Web Audio engine: tests/voice-flow.test.mjs)
     window.__played = [];
     const play = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () { window.__played.push(this.src); return play.call(this); };

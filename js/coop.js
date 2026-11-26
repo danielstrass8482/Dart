@@ -129,7 +129,6 @@ export function coopOnCheckout(pi) {
   c.valueStartDarts = dartsNow;
   c.valueStartTs = now;
   x.scores.fill(c.values[c.idx]);
-  x.lastAnnouncedCheckout.fill(null);
   const next = (pi + 1) % state.cfg.players.length;
   x.current = next;
   if (next === 0) x.round++;

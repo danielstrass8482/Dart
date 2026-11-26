@@ -32,7 +32,7 @@ async function run() {
   const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
   const ctx = await browser.newContext();
   await ctx.addInitScript(() => {
-    try { localStorage.setItem("dart_onboarding_done", "true"); } catch (e) {}
+    try { localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_audio_engine", "element"); } catch (e) {} // playback observed on the media element (Web Audio engine: tests/voice-flow.test.mjs)
     window.__speechCalls = []; window.__played = [];
     const ss = window.speechSynthesis;
     if (ss) { const o = ss.speak.bind(ss); ss.speak = (u) => { window.__speechCalls.push(u?.text); return o(u); }; }

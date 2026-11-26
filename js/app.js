@@ -73,7 +73,7 @@ import { runBotTurn, BOT_PERSONALITIES } from './bot.js';
 
 // ── X01 ──────────────────────────────────────────────────────────
 import { COOP_DEFAULT, snapCheckoutable, coopLadder, coopSkipped, coopRangeError, hideCoopResult } from './coop.js';
-import { startX01, renderX01, handleX01Click, processX01Hit, advanceX01, handleLegWin, showWinner, handleBouncer, trackDoubleAttempt, getDoubleStatsForCoach, showTargetOverlay, showTargetFeedback, calcTargetDistance } from './x01.js?v=2';
+import { startX01, renderX01, handleX01Click, processX01Hit, advanceX01, handleLegWin, showWinner, handleBouncer, trackDoubleAttempt, getDoubleStatsForCoach, showTargetOverlay, showTargetFeedback, calcTargetDistance, afterUndoAnnouncements } from './x01.js?v=2';
 
 // ── Cricket ──────────────────────────────────────────────────────
 import { startCricket, renderCricket, handleCricketClick, advanceCricket, setCricketBoard } from './cricket.js';
@@ -308,6 +308,7 @@ document.getElementById("x01-undo").addEventListener("click",()=>{
   document.getElementById("winner-overlay").classList.remove("visible");
   redrawAllHits(state.boardSVG,state.x01.historicThrows[state.x01.current],state.x01.throws);
   renderX01();
+  afterUndoAnnouncements();
 });
 document.getElementById("lp-bouncer").addEventListener("click", handleBouncer);
 document.getElementById("bottom-bouncer").addEventListener("click", handleBouncer);

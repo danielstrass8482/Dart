@@ -27,7 +27,7 @@
 // Bump SW_VERSION with every deploy that changes app code: a byte change in
 // this file is what makes browsers install the new worker, and js/pwa.js
 // reloads an idle app (home screen) once the new worker has taken over.
-const SW_VERSION = "2026-11-25.1";
+const SW_VERSION = "2026-11-26.1";
 const SHELL_CACHE = "dt-shell-v1";
 const CDN_CACHE = "dt-cdn-v1";
 const VOICE_CACHE = "dt-voice-v1";

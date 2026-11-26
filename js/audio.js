@@ -77,6 +77,9 @@ export async function unlockAudio(){
     const el=queueElement();
     if(!audioPlaying){ el.src=SILENT_WAV; const p=el.play(); if(p&&p.catch) p.catch(()=>{}); }
   }catch(e){}
+  // iOS/iPadOS 16.4+: Web Audio plays like media elements (also with the
+  // ring/silent switch on), see the audio queue below.
+  try{ if(navigator.audioSession) navigator.audioSession.type="playback"; }catch(e){}
   try{
     const ctx=getAudio();
     if(ctx.state==="suspended") await ctx.resume();
@@ -133,14 +136,26 @@ let currentAbortPlayback=null;
 
 // ── Audio Queue ───────────────────────────────────────────────────
 // The single canonical entry point for every spoken announcement in the
-// app. Every item plays from a LOCAL clip (bundled with the app, or
+// app. Every clip plays from a LOCAL clip (bundled with the app, or
 // downloaded once and cached in IndexedDB — see js/voiceClips.js) for the
-// active voice; if no local clip is or can be made available (fully
-// offline + a clip that was never cached), that one item is silently skipped —
-// this never falls back to a live ElevenLabs/dartTTS call or the browser
-// voice. audioPlaying gates strict one-at-a-time playback: the next item
-// only starts once the previous one has fully resolved, so calls fired in
-// quick succession queue up in order instead of overlapping or dropping.
+// active voice; a clip that is or can't be made available is skipped (never
+// a live ElevenLabs/dartTTS call or the browser voice).
+//
+// One queue item = one ANNOUNCEMENT, i.e. one or more clips that form a
+// sentence ("Player 2" · "requires" · "121." · "Checkout: …"). Items play
+// strictly one after another, in order.
+//
+// Gapless (2026-11-26): the clips carry ~50–110 ms of silence at the start
+// and ~250–380 ms at the end, and starting each clip on the media element
+// only after the previous one fired "ended" (+ lookup + load) added another
+// ~100–300 ms — a sentence came out word by word. Now every clip of an
+// announcement is fetched + decoded in parallel as soon as it is queued and
+// scheduled back to back on the Web Audio clock, each trimmed to its audible
+// part (−40 dBFS, small pads) — the files themselves are unchanged.
+// Robust as before: a missing/corrupt/hanging clip is skipped with
+// console.warn("voice clip skipped: <key> …") and the rest plays on; if the
+// AudioContext can't run (not unlocked, interrupted, no Web Audio) the
+// announcement falls back to the shared media element, clip by clip.
 const audioQueue=[];
 let audioPlaying=false;
 let currentQueueItem=null;
@@ -148,13 +163,26 @@ let currentQueueItem=null;
 // Watchdogs: one clip must never stall the queue (and with it every later
 // announcement of the session) — e.g. a hanging IndexedDB/Storage request or
 // a media element that never fires ended/error.
-const RESOLVE_TIMEOUT_MS=8000;
-const PLAY_START_TIMEOUT_MS=4000;   // until metadata/duration is known
+const RESOLVE_TIMEOUT_MS=8000;      // clip lookup (URL)
+const DECODE_TIMEOUT_MS=4000;       // fetch + decodeAudioData
+const SLOW_CLIP_GRACE_MS=1500;      // see playWebAudio()
+const PLAY_START_TIMEOUT_MS=4000;   // until metadata/duration is known (element)
 const PLAY_MAX_MS=15000;            // longest clip is ~5 s
 const withTimeout=(p,ms,what)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error(what+" timed out after "+ms+" ms")),ms))]);
 
+// Trimming + spacing of the clips inside one announcement.
+const TRIM_THRESHOLD=0.01;          // −40 dBFS
+const TRIM_PAD_START=0.010;         // s kept before the first audible sample
+const TRIM_PAD_END=0.040;           // s kept after the last one (soft word endings)
+const CLIP_GAP=0.020;               // s inserted between two clips → audible gap ≈ 70 ms
+
+/** Debug/test trace of every clip started (last 300) + idle probe. */
+const voiceTrace=(window.__dtVoiceTrace=window.__dtVoiceTrace||[]);
+window.__dtAudioIdle=()=>!audioPlaying&&audioQueue.length===0;
+function trace(e){ voiceTrace.push({t:performance.now(),...e}); if(voiceTrace.length>300) voiceTrace.shift(); }
+
 /** Plays one clip URL on the shared element; resolves when it ended, failed or was aborted — never hangs. */
-function playClip(url,key){
+function playClip(url,key,item){
   return new Promise(res=>{
     let done=false, timer=null;
     const el=queueElement();
@@ -170,105 +198,215 @@ function playClip(url,key){
     el.onended=()=>finish(null);
     el.onerror=()=>finish("media error "+(el.error?.code??"")+" "+(el.error?.message||""));
     el.onloadedmetadata=()=>{ const d=el.duration; if(isFinite(d)&&d>0) arm(Math.min(PLAY_MAX_MS,d*1000+2500),"playback did not end"); };
-    // Lets invalidateStaleAnnouncements() cut this clip off mid-playback
-    // instead of only being able to stop *future* queue items.
-    currentAbortPlayback=()=>{ try{ el.pause(); }catch(e){} finish(null); };
+    if(item) item.abortPlayback=()=>{ try{ el.pause(); }catch(e){} finish(null); };
     arm(PLAY_START_TIMEOUT_MS+PLAY_MAX_MS,"playback did not end");
     try{
       el.src=url;
+      trace({key,mode:"element",url});
       const p=el.play();
       if(p&&p.catch) p.catch(e=>finish("play() rejected: "+(e?.name||"")+" "+(e?.message||"")));
     }catch(e){ finish("play() threw: "+e.message); }
   });
 }
 
+// Decoded clips by URL (URLs carry the content hash → a new take = a new
+// entry). Small LRU: one decoded clip is ~0.1–1 MB.
+const decodedCache=new Map();
+const DECODED_MAX=80;
+function audibleRange(buf){
+  const d=buf.getChannelData(0), n=d.length;
+  let a=0, b=n-1;
+  while(a<n&&Math.abs(d[a])<TRIM_THRESHOLD) a++;
+  while(b>a&&Math.abs(d[b])<TRIM_THRESHOLD) b--;
+  if(a>=n) return {start:0,end:buf.duration,cs:0,ce:buf.duration};     // all quiet: play as is
+  const sr=buf.sampleRate, cs=a/sr, ce=(b+1)/sr;
+  return {start:Math.max(0,cs-TRIM_PAD_START), end:Math.min(buf.duration,ce+TRIM_PAD_END), cs, ce};
+}
+async function decodeClip(ctx,url){
+  const hit=decodedCache.get(url);
+  if(hit){ decodedCache.delete(url); decodedCache.set(url,hit); return hit; }
+  const p=(async()=>{
+    const r=await fetch(url);
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const ab=await r.arrayBuffer();
+    const buf=await new Promise((res,rej)=>{ const q=ctx.decodeAudioData(ab,res,e=>rej(e||new Error("decode failed"))); if(q&&q.then) q.then(res,rej); });
+    return {buf,...audibleRange(buf)};
+  })();
+  decodedCache.set(url,p);
+  p.catch(()=>decodedCache.delete(url));
+  while(decodedCache.size>DECODED_MAX) decodedCache.delete(decodedCache.keys().next().value);
+  return p;
+}
+
+let masterGain=null;
+function audioOut(ctx){
+  if(!masterGain||masterGain.context!==ctx){ masterGain=ctx.createGain(); masterGain.connect(ctx.destination); window.__dtAudio={ctx,master:masterGain}; }
+  return masterGain;
+}
+
+/** Web Audio usable right now? Tries resume() once (≤ 400 ms). */
+async function webAudioReady(){
+  if(!AudioCtx) return null;
+  try{ if(localStorage.getItem("dart_audio_engine")==="element") return null; }catch(e){}
+  let ctx;
+  try{ ctx=getAudio(); }catch(e){ return null; }
+  if(ctx.state!=="running"){ try{ await withTimeout(ctx.resume(),400,"resume"); }catch(e){} }
+  return ctx.state==="running"?ctx:null;
+}
+
+/** Plays one announcement via Web Audio, gapless. Returns false if it was aborted. */
+async function playWebAudio(ctx,item,loads){
+  const out=audioOut(ctx);
+  const sources=[];
+  let aborted=false, wake=null;
+  item.abortPlayback=()=>{ aborted=true; for(const s of sources){ try{ s.stop(); }catch(e){} } wake?.(); };
+  let nextT=0, endT=0;
+  for(let i=0;i<item.parts.length;i++){
+    const {key}=item.parts[i];
+    let clip;
+    // A clip that is still loading while the REST of the sentence is ready
+    // gets 1.5 s more, then it is skipped (a hanging lookup must not hold the
+    // whole sentence for the full lookup timeout). Last clip: full timeout.
+    const later=loads.slice(i+1);
+    const grace=later.length?Promise.all(later.map(p=>p.then(()=>1,()=>1))).then(()=>new Promise((_,rej)=>setTimeout(()=>rej(new Error("still loading 1.5 s after the rest of the announcement was ready")),SLOW_CLIP_GRACE_MS))):null;
+    try{ clip=await Promise.race([loads[i],item.abortP,...(grace?[grace]:[])]); }catch(e){ console.warn("voice clip skipped:",key,"(voice "+item.voiceId+") -",e.message); continue; }
+    if(aborted||item.isStale?.()){ item.abortPlayback(); return false; }
+    if(!clip) continue;
+    const dur=clip.end-clip.start;
+    const when=Math.max(nextT,ctx.currentTime+0.03);
+    const src=ctx.createBufferSource();
+    src.buffer=clip.buf; src.connect(out);
+    src.start(when,clip.start,dur);
+    sources.push(src);
+    trace({key,mode:"webaudio",url:clip.url,when,offset:clip.start,dur,cs:clip.cs,ce:clip.ce});
+    nextT=when+dur+CLIP_GAP; endT=when+dur;
+  }
+  if(!sources.length) return !aborted;
+  // Wait for the scheduled end on the audio clock; wall-clock watchdog in
+  // case the context gets suspended/interrupted mid-announcement.
+  const deadline=performance.now()+(endT-ctx.currentTime)*1000+2500;
+  while(!aborted&&ctx.currentTime<endT){
+    if(performance.now()>deadline){ console.warn("voice clip skipped:",item.parts.map(p=>p.key).join("+"),"- audio clock stalled ("+ctx.state+")"); item.abortPlayback(); break; }
+    await new Promise(r=>{ wake=r; setTimeout(r,Math.max(20,Math.min(250,(endT-ctx.currentTime)*1000+15))); });
+  }
+  return !aborted;
+}
+
 async function playAudioQueue(){
   if(audioPlaying||audioQueue.length===0) return;
-  // Drop anything that's already stale before ever starting it — no point
-  // resolving/playing a clip for an announcement invalidateStaleAnnouncements()
-  // already knows is wrong by the time we'd reach it.
+  // Drop anything that's already stale before ever starting it.
   while(audioQueue.length && audioQueue[0].isStale?.()){
-    audioQueue.shift().resolve?.();
+    audioQueue.shift().resolve?.({completed:false});
   }
   if(audioQueue.length===0) return;
   audioPlaying=true;
   const item=audioQueue.shift();
   currentQueueItem=item;
-  const {key,resolve}=item;
-  // Any failure only skips THIS item — the rest of the announcement
-  // ("Player 2" missing → "requires" + number still play) and every later
-  // one carry on. Each skip is logged.
-  let voiceId="?";
+  let completed=false;
   try{
-    voiceId=voiceKeyFor(getVoiceId());
-    const url=await withTimeout(resolveClipURL(voiceId,key),RESOLVE_TIMEOUT_MS,"clip lookup");
-    if(url){
-      if(!item.isStale?.()) await playClip(url,key);
-    } else {
-      // no clip available for this key in the active voice (e.g. offline
-      // and never cached, or genuinely missing)
-      console.warn("voice clip skipped:",key,"- not available for voice",voiceId);
+    item.voiceId=item.voiceId||voiceKeyFor(getVoiceId());
+    const urls=item.urls||startLookups(item);
+    const ctx=await webAudioReady();
+    if(ctx&&!item.aborted){
+      const loads=urls.map((u,i)=>u.then(url=>{
+        if(!url) throw new Error("not available for voice "+item.voiceId);
+        return withTimeout(decodeClip(ctx,url),DECODE_TIMEOUT_MS,"decode").then(c=>({...c,url}));
+      }));
+      loads.forEach(p=>p.catch(()=>{}));
+      completed=await playWebAudio(ctx,item,loads);
+    } else if(!item.aborted){
+      // Fallback: shared media element, clip by clip (old path).
+      completed=true;
+      for(let i=0;i<item.parts.length;i++){
+        if(item.aborted||item.isStale?.()){ completed=false; break; }
+        const {key}=item.parts[i];
+        try{
+          const url=await Promise.race([urls[i],item.abortP]);
+          if(item.aborted){ completed=false; break; }
+          if(!url){ console.warn("voice clip skipped:",key,"- not available for voice",item.voiceId); continue; }
+          if(item.aborted||item.isStale?.()){ completed=false; break; }
+          await playClip(url,key,item);
+        }catch(e){ console.warn("voice clip skipped:",key,"(voice "+item.voiceId+") -",e.message); }
+      }
+      if(item.aborted) completed=false;
     }
-  }catch(e){ console.warn("voice clip skipped:",key,"(voice "+voiceId+") -",e.message); }
-  currentAbortPlayback=null;
+  }catch(e){ console.warn("voice announcement failed:",item.parts.map(p=>p.key).join("+"),"-",e.message); }
+  if(item.aborted) completed=false;
   currentQueueItem=null;
   audioPlaying=false;
-  if(resolve) resolve();
-  setTimeout(playAudioQueue,80);
+  item.resolve?.({completed});
+  setTimeout(playAudioQueue,20);
+}
+
+/** Starts the URL lookups of all clips of an announcement (in parallel, each with a timeout). */
+function startLookups(item){
+  item.voiceId=item.voiceId||voiceKeyFor(getVoiceId());
+  item.urls=item.parts.map(({key})=>withTimeout(resolveClipURL(item.voiceId,key),RESOLVE_TIMEOUT_MS,"clip lookup"));
+  item.urls.forEach(p=>p.catch(()=>{}));
+  return item.urls;
 }
 
 /**
- * Queues a spoken announcement, played from a local pre-produced clip.
- * @param {string} text human-readable label for this clip (not spoken directly — the real audio is the pre-produced clip matching `key`)
- * @param {string} key cache key — must match a key in data/vocabulary.json
- * @param {(()=>boolean)|null} [isStale] optional — checked right before this
- *   item would start playing (drops it silently if already stale) and again
- *   by invalidateStaleAnnouncements() while it's queued or actively playing.
- *   Omit for announcements that are always still accurate once queued (score
- *   confirmations, bust, game-on) — only state-snapshot announcements like a
- *   checkout path or "requires N" need this.
+ * Queues one announcement made of one or more pre-produced clips that are
+ * played as one sentence.
+ * @param {Array<{text:string,key:string}>} parts clips in order (`text` is a label only; `key` must exist in data/vocabulary.json)
+ * @param {(()=>boolean)|null} [isStale] checked before the item starts and by
+ *   invalidateStaleAnnouncements() while it is queued or playing — only
+ *   state-snapshot announcements ("requires N", checkout path) need it.
+ * @returns {Promise<{completed:boolean}>} completed=false when it was dropped,
+ *   cut off (stale / Undo) or TTS is off — the caller must then not treat it as "said".
  */
-export function queueAudio(text,key,isStale=null){
-  if(localStorage.getItem("dart_tts_enabled")==="false") return Promise.resolve();
+export function queueAnnouncement(parts,isStale=null){
+  if(localStorage.getItem("dart_tts_enabled")==="false") return Promise.resolve({completed:false});
   return new Promise(resolve=>{
-    audioQueue.push({text,key,resolve,isStale});
+    const item={parts,resolve,isStale,aborted:false};
+    item.abortP=new Promise(r=>{ item.abortResolve=r; });
+    try{ startLookups(item); }catch(e){}
+    audioQueue.push(item);
     playAudioQueue();
   });
 }
 
 /**
+ * Queues a single-clip announcement (see queueAnnouncement()).
+ * @param {string} text human-readable label for this clip
+ * @param {string} key cache key — must match a key in data/vocabulary.json
+ * @param {(()=>boolean)|null} [isStale]
+ */
+export function queueAudio(text,key,isStale=null){
+  return queueAnnouncement([{text,key}],isStale);
+}
+
+/**
  * Cancels queued/currently-playing announcements whose caller-supplied
  * isStale() now reports true — e.g. a checkout-path or "requires N"
- * announcement whose target player's remaining score has since changed
- * because a later turn already completed while the old announcement was
- * still queued or speaking. Fixes the "Player One requires one hundred and
- * fifty-one" bug: previously such an announcement always played to the end
- * even after the game state had moved on past it, because the queue only
- * ever guaranteed *ordering*, never *relevance*. Queued items are dropped
- * silently; a currently-playing one is aborted mid-utterance via
- * currentAbortPlayback rather than left to finish.
+ * announcement whose target player's remaining score has since changed.
+ * Queued items are dropped; a playing one is cut off mid-utterance.
  * Call this whenever a player's remaining score actually changes (see
- * advanceX01() in x01.js) — not on every throw, since state.x01.scores[i]
- * itself only changes at turn end, which is exactly when a
- * previously-scheduled announcement for that player can go stale.
+ * advanceX01() in x01.js).
  */
 export function invalidateStaleAnnouncements(){
   for(let i=audioQueue.length-1;i>=0;i--){
     if(audioQueue[i].isStale?.()){
-      audioQueue.splice(i,1)[0].resolve?.();
+      audioQueue.splice(i,1)[0].resolve?.({completed:false});
     }
   }
-  if(currentQueueItem?.isStale?.() && currentAbortPlayback){
-    currentAbortPlayback();
-  }
+  if(currentQueueItem?.isStale?.()) abortItem(currentQueueItem);
 }
 
+function abortItem(item){
+  item.aborted=true;
+  item.abortResolve?.(null);
+  try{ item.abortPlayback?.(); }catch(e){}
+}
+
+/** Stops everything (Undo, new game): the playing announcement is cut off, queued ones are dropped — all resolve with completed:false. */
 export function clearAudioQueue(){
-  audioQueue.length=0;
-  audioPlaying=false;
-  currentQueueItem=null;
+  const dropped=audioQueue.splice(0);
+  for(const it of dropped) it.resolve?.({completed:false});
+  if(currentQueueItem) abortItem(currentQueueItem);
   if(currentAbortPlayback){ try{ currentAbortPlayback(); }catch(e){} currentAbortPlayback=null; }
-  if(currentAudio){ try{ currentAudio.pause(); currentAudio.currentTime=0; }catch(e){} currentAudio=null; }
+  if(currentAudio){ try{ currentAudio.pause(); currentAudio.currentTime=0; }catch(e){} }
 }
 
 const COACH_FUNCTION_URL="https://dartcoach-dxa2kmdyca-ew.a.run.app";
@@ -460,7 +598,7 @@ export async function speakScoreWithCustom(score, hitBull=false){
 }
 
 function partToReadable(part){
-  if(part==="Bull") return "Bullseye";
+  if(part==="Bull"||part==="D25") return "Bullseye";
   if(part==="D25") return "Double Bull";
   const isT=part.startsWith("T"), isD=part.startsWith("D");
   const n=parseInt(part.replace(/[TDS]/,""));
@@ -468,31 +606,23 @@ function partToReadable(part){
 }
 
 /**
- * Announces the checkout path for the given remaining score.
- * Setting defaults to enabled (SETTING_DEFAULTS.checkout_announce=true in
- * app.js) but the toggle only ever writes localStorage on an explicit user
- * change — so this must default-on (skip only on an explicit "false"), not
- * default-off, or every user who never touched the toggle gets silence.
- * @param {number} remaining
- * @param {number|null} [playerIdx] state.x01.scores index this path was
- *   computed for — when given, the announcement is dropped (queued) or cut
- *   off (already playing) as soon as that player's remaining score no longer
- *   matches `remaining`, i.e. their turn has since moved on. Omit only for
- *   callers with no notion of "the current player's turn" (none today).
+ * The spoken checkout path for a turn start at `remaining` as one clip part
+ * ({text,key} for queueAnnouncement()), or null when there is none or the
+ * user switched the path announcement off. Setting defaults to enabled — skip
+ * only on an explicit "false".
  *
- * Always announces the STANDARD table path (never a per-player
- * preferred-doubles variant) — only the standard 162 checkout sentences are
- * pre-produced as local clips; the preferred-doubles feature remains a
- * visual-only aid on the board (see renderX01()/highlightCheckout()).
+ * Always the STANDARD turn-start path (getCheckoutPath(remaining,3), the same
+ * one the board shows at turn start) — only those 162 sentences exist as
+ * clips (el_co_<remaining>); a per-player preferred-doubles path stays
+ * visual-only.
+ * @param {number} remaining
+ * @returns {{text:string,key:string}|null}
  */
-export async function announceCheckoutPath(remaining, playerIdx=null){
-  if(localStorage.getItem("dart_checkout_announce")==="false") return;
+export function checkoutPathPart(remaining){
+  if(localStorage.getItem("dart_checkout_announce")==="false") return null;
   const co=getCheckoutPath(remaining,3);
-  if(!co) return;
-  const readable=co.split(" ").map(partToReadable).join(", ");
-  const cacheKey=`el_co_${remaining}`;
-  const isStale=playerIdx==null?null:(()=>state.x01?.scores?.[playerIdx]!==remaining);
-  await queueAudio("Checkout: "+readable+".", cacheKey, isStale);
+  if(!co) return null;
+  return {text:"Checkout: "+co.split(" ").map(partToReadable).join(", ")+".", key:`el_co_${remaining}`};
 }
 
 /**

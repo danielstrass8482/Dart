@@ -61,7 +61,7 @@ async function openApp(browser, viewport) {
     else if (/cloudfunctions|run\.app|firebasestorage|elevenlabs/.test(u) && /mp3|dartTTS|darttts|Voice|voice/.test(u)) foreign.push(u);
   });
   await page.addInitScript(() => {
-    localStorage.setItem("dart_onboarding_done", "true");
+    localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_audio_engine", "element"); // observes playback on the media element (Web Audio engine: tests/voice-flow.test.mjs)
     localStorage.setItem("dart_lang", "de");
     const blobKey = new WeakMap();
     window.__urlKey = {}; window.__played = [];

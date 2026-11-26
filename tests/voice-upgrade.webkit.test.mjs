@@ -108,7 +108,7 @@ await ctx.route(/cloudfunctions\.net|run\.app|firebasestorage\.googleapis\.com|e
 let recaptchaHangs = false; // Phase APPCHECK: script never arrives (bad connection) → no load event, no App Check token
 await ctx.route(/recaptcha/, (route) => { if (!recaptchaHangs) route.fulfill({ status: 200, contentType: "text/javascript", body: "" }); });
 await ctx.addInitScript(() => {
-  try { localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_lang", "de"); } catch (e) {}
+  try { localStorage.setItem("dart_onboarding_done", "true"); localStorage.setItem("dart_lang", "de"); localStorage.setItem("dart_audio_engine", "element"); } catch (e) {} // playback observed on the media element (Web Audio engine: tests/voice-flow.test.mjs)
   // Map every played source back to its clip key and record what the media
   // element really did (play resolved / ended / error).
   const keyOf = new WeakMap();

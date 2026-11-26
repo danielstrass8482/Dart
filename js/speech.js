@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { numToWords, speakKeyWithCustom, speakScoreWithCustom, queueAudio } from './audio.js';
+import { numToWords, speakKeyWithCustom, speakScoreWithCustom, queueAnnouncement, checkoutPathPart } from './audio.js';
 import { flashSegment } from './board.js?v=2';
 import { requiresDelay, x01Snapshot } from './x01.js?v=2';
 import { t } from './i18n.js?v=3';
@@ -176,31 +176,34 @@ export function setVoiceFeedback(text){
 }
 
 /**
- * Announces what the current player requires.
- * Called after advanceX01 so state.x01.current is already the next player.
- * Only announces in multi-player games and when remaining ≤170.
- *
- * Composed from three pre-produced local clips played back-to-back through
- * the audio queue — "Player N" → "requires" → [number]. Players are never
+ * Announces what player `idx` requires at the start of their turn, as ONE
+ * sentence: "Player N" → "requires" → [number] → "Checkout: …" (the path only
+ * if one exists and the path announcement is on). Players are never
  * announced by name: N is the position in the throwing order of the running
- * game (state.cfg.players index + 1, shown on screen as the P1…P8 badge, see
- * playerBadge() in js/x01.js). Beyond 8 players only "requires {number}."
- * plays.
+ * game (state.cfg.players index + 1, the P1…P8 badge). Beyond 8 players the
+ * sentence starts with "requires".
+ *
+ * WHEN this is said (only once per player and rest) is decided by
+ * scheduleNextPlayerAnnounce() in js/x01.js.
+ * @param {number} idx player index
+ * @param {number} score rest at turn start (2–170)
+ * @returns {Promise<{completed:boolean}>} completed=false if cut off/dropped
  */
-export function announceRequires(){
-  if(!state.x01||!state.cfg||!state.cfg.players) return;
-  const idx = state.x01.current;
-  if(state.cfg.isBot?.[idx]) return;
-  const score = state.x01.scores[idx];
-  if(score < 2 || score > 170) return;
+export function announceRequires(idx=state.x01?.current, score=state.x01?.scores?.[idx]){
+  if(!state.x01||!state.cfg||!state.cfg.players) return Promise.resolve({completed:false});
+  if(state.cfg.isBot?.[idx]) return Promise.resolve({completed:false});
+  if(!(score>=2&&score<=170)) return Promise.resolve({completed:false});
   // Stale as soon as idx's remaining score no longer matches what this
-  // announcement was built for — i.e. their turn already completed while
-  // this was still queued/playing. See invalidateStaleAnnouncements().
+  // announcement was built for. See invalidateStaleAnnouncements().
   const isStale=()=>state.x01?.scores?.[idx]!==score;
   const n=idx+1;
-  if(n<=MAX_ANNOUNCED_PLAYERS) queueAudio(`Player ${numToWords(n)}`, `el_player_${n}`, isStale);
-  queueAudio("requires", "el_requires", isStale);
-  queueAudio(numToWords(score)+".", `el_num_${score}`, isStale);
+  const parts=[];
+  if(n<=MAX_ANNOUNCED_PLAYERS) parts.push({text:`Player ${numToWords(n)}`, key:`el_player_${n}`});
+  parts.push({text:"requires", key:"el_requires"});
+  parts.push({text:numToWords(score)+".", key:`el_num_${score}`});
+  const co=checkoutPathPart(score);
+  if(co) parts.push(co);
+  return queueAnnouncement(parts,isStale);
 }
 
 /** Player call-out clips el_player_1 … el_player_8 exist (data/vocabulary.json). */
