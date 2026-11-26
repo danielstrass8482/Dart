@@ -16,7 +16,6 @@ export const VIDEO_COACH_LIMIT = 3;
 export const VIDEO_COACH_KEY = "dart_video_coach_usage";
 
 export const COACH_FUNCTION_URL="https://dartcoach-dxa2kmdyca-ew.a.run.app";
-export const TTS_FUNCTION_URL="https://darttts-dxa2kmdyca-ew.a.run.app";
 
 // ── Health Connect (Android) ──────────────────────────────────────
 const HEALTH_CONNECT_ENABLED = false;

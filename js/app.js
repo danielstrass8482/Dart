@@ -60,8 +60,8 @@ import {
 import {
   unlockAudio,
   speakScoreWithCustom, speakKeyWithCustom,
-  numToWords, voiceURLCache, elTTSCache, getVoiceId,
-  fetchTTSUrl, testVoice, speakElevenLabs, queueAudio, clearAudioQueue
+  numToWords, voiceURLCache, getVoiceId,
+  previewVoice, queueAudio, clearAudioQueue
 } from './audio.js';
 
 
@@ -125,9 +125,6 @@ import {
 
 // ── Studio ───────────────────────────────────────────────────────
 import { initStudio, wireStudioButtons } from './studio.js';
-
-// ── Voice settings ───────────────────────────────────────────────
-import { elTTSCache as _elTTSCache } from './audio.js';
 
 // ══════════════════════════════════════════════════════════════════
 // CHECKOUT TABLE — the one checkout logic lives in checkout.js
@@ -1521,23 +1518,22 @@ window.addEventListener("dbReady",async()=>{
 });
 
 function showVoiceConfirm(msg){ const el=document.getElementById("voice-selector-confirm"); if(!el) return; el.textContent=msg; el.style.display=""; clearTimeout(el._t); el._t=setTimeout(()=>el.style.display="none",3000); }
-function activateVoice(voiceId, voiceName){ localStorage.setItem("dart_active_voice_id",voiceId); Object.keys(elTTSCache).forEach(k=>delete elTTSCache[k]); if(window.dartDB) window.dartDB.saveUserVoice(voiceId).catch(e=>console.warn("saveUserVoice:",e)); renderVoiceSelector(); showVoiceConfirm(t('stimme_aktiviert_msg').replace('{name}',voiceName)); }
+function activateVoice(voiceId, voiceName){ localStorage.setItem("dart_active_voice_id",voiceId); if(window.dartDB) window.dartDB.saveUserVoice(voiceId).catch(e=>console.warn("saveUserVoice:",e)); renderVoiceSelector(); showVoiceConfirm(t('stimme_aktiviert_msg').replace('{name}',voiceName)); }
 
 async function renderVoiceSelector(){
   const list=document.getElementById("voice-selector-list"); if(!list) return;
   const activeId=getVoiceId();
   const isPrem=await isPremium();
-  const admin=isAdmin();
   const bS="padding:6px 10px;border:1px solid rgba(212,175,55,.25);border-radius:7px;background:#08080A;font-size:12px;cursor:pointer;color:var(--dart-text-sec);";
   const premBadge=`<span style="background:var(--dart-gold);color:#000;font-size:9px;padding:2px 5px;border-radius:10px;vertical-align:middle;margin-left:5px">PREMIUM</span>`;
   list.innerHTML=BUILTIN_VOICES.map(v=>{
     const isActive=v.id&&v.id===activeId; const hasId=!!v.id; const canActivate=v.free||isPrem;
     const border=isActive?"background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.35);border-left:3px solid var(--dart-gold);":"background:transparent;border:1px solid rgba(212,175,55,.1);";
-    // Test buttons only render when voice has a real ID — prevents null-ID fallback to active voice
+    // Preview buttons play a pre-produced clip of that voice (previewVoice — no network call to a function)
     const testBtns=hasId
-      ?`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_score_180b" data-tv-text="One Hundred and Eighty!">180</button>`
-       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_game_on" data-tv-text="Game on!">Game On</button>`
-       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_bust" data-tv-text="Bust.">Bust</button>`
+      ?`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_score_180b">180</button>`
+       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_game_on">Game On</button>`
+       +`<button style="${bS}" data-tv-id="${v.id}" data-tv-key="el_bust">Bust</button>`
       :"";
     // Tile click: activate if canActivate+hasId, paywall if non-premium, inactive if no ID yet
     let tileData="",tileCursor="default";
@@ -1552,41 +1548,18 @@ async function renderVoiceSelector(){
           <i data-lucide="lock" style="width:12px;height:12px;stroke-width:2;color:var(--dart-gold)"></i>
           <span style="font-size:12px;color:var(--dart-gold)">${t('premium_freischalten_kurz')}</span>
         </div>` :"";
-    // Admin: show voice ID input to set ElevenLabs ID and save to Firestore (Fix 1 — Jerry B)
-    const adminSection=admin
-      ?`<div class="admin-vid-row" style="margin-top:8px;display:flex;gap:6px;align-items:center">
-          <input type="text" value="${v.id||''}" placeholder="ElevenLabs Voice ID…" data-admin-vid-name="${v.name}"
-            style="flex:1;min-width:0;padding:4px 7px;background:#08080A;border:1px solid rgba(212,175,55,.2);border-radius:5px;color:var(--dart-text-sec);font-size:10px;font-family:monospace">
-          <button data-admin-vid-save="${v.name}" style="padding:4px 8px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);border-radius:5px;color:var(--dart-gold);font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0">${t('voice_id_speichern')}</button>
-        </div>` :"";
-    const hasContent=hasId||lockHint||adminSection;
+    const hasContent=hasId||lockHint;
     return `<div style="${border}border-radius:10px;padding:12px;margin-bottom:8px;transition:all .15s;cursor:${tileCursor}" ${tileData}>
       <div style="display:flex;justify-content:space-between;align-items:center;${hasContent?"margin-bottom:8px":""}">
         <span style="font-weight:600;font-size:15px;color:var(--dart-text)"><i data-lucide="mic-2" style="width:14px;height:14px;stroke-width:2;vertical-align:middle"></i> ${v.name}${badge}</span>
         ${isActive?`<span style="background:rgba(212,175,55,.15);color:var(--dart-gold);padding:2px 8px;border-radius:12px;font-size:11px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px">● ${t('aktiv').toUpperCase()}</span>`:""}
       </div>
       ${hasId?`<div style="display:flex;gap:6px;flex-wrap:wrap">${testBtns}</div>`:""}
-      ${lockHint}${adminSection}
+      ${lockHint}
     </div>`;
   }).join("");
-  // stopPropagation prevents tile-click from firing when test buttons or admin inputs are clicked
-  list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();testVoice(btn.dataset.tvId,btn.dataset.tvKey,btn.dataset.tvText);}));
-  list.querySelectorAll(".admin-vid-row input,.admin-vid-row button").forEach(el=>el.addEventListener("click",e=>e.stopPropagation()));
-  list.querySelectorAll("[data-admin-vid-save]").forEach(btn=>btn.addEventListener("click",async()=>{
-    const name=btn.dataset.adminVidSave;
-    const input=btn.closest(".admin-vid-row").querySelector("[data-admin-vid-name]");
-    const newId=(input?.value||"").trim()||null;
-    const bv=BUILTIN_VOICES.find(v=>v.name===name);
-    if(bv) bv.id=newId;
-    if(window.dartDB){
-      const voices=BUILTIN_VOICES.map(v=>({name:v.name,id:v.id})).filter(v=>v.id);
-      try{
-        await window.dartDB.saveGlobalVoices(voices);
-        btn.textContent=t('voice_id_gespeichert');
-        setTimeout(()=>{ btn.textContent=t('voice_id_speichern'); voicesCache=null; renderVoiceSelector(); },1500);
-      }catch(ex){ btn.textContent=t('voice_id_fehler'); console.warn("saveGlobalVoices:",ex); }
-    } else { voicesCache=null; renderVoiceSelector(); }
-  }));
+  // stopPropagation prevents tile-click from firing when a preview button is clicked
+  list.querySelectorAll("[data-tv-id]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();previewVoice(btn.dataset.tvId,btn.dataset.tvKey);}));
   list.querySelectorAll("[data-voice-activate-id]").forEach(tile=>tile.addEventListener("click",()=>activateVoice(tile.dataset.voiceActivateId,tile.dataset.voiceActivateName)));
   list.querySelectorAll("[data-voice-paywall]").forEach(tile=>tile.addEventListener("click",()=>showPremiumOverlay('premiumVoices')));
   window.refreshIcons?.();

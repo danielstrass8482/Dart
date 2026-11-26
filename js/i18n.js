@@ -490,9 +490,6 @@ export const translations = {
     mehr_erfahren: "Mehr erfahren →",
     health_browser_hinweis: "Automatische Verbindung nur in der Android App verfügbar. Im Browser: manuelle Eingabe vor dem Spiel.",
 
-    // ElevenLabs Voice Placeholders
-    el_name_placeholder: "Name (z.B. Meine Stimme)",
-    el_id_placeholder: "ElevenLabs Voice ID",
 
     // Help-Modal Inhalte (showHelp)
     help_coach_analyse_title: "KI-Coach Analyse",
@@ -612,9 +609,6 @@ export const translations = {
     premium_freischalten_kurz: "Jetzt freischalten",
 
     bot_premium_hinweis: "Bot-Gegner ist ein Premium-Feature",
-    voice_id_gespeichert: "✓ Gespeichert",
-    voice_id_fehler: "✗ Fehler",
-    voice_id_speichern: "ID speichern",
 
     // Misc
     anzahl_runden: "ANZAHL RUNDEN",
@@ -1101,9 +1095,6 @@ export const translations = {
     mehr_erfahren: "Learn more →",
     health_browser_hinweis: "Automatic connection only available in Android App. In browser: manual input before game.",
 
-    // ElevenLabs Voice placeholders
-    el_name_placeholder: "Name (e.g. My Voice)",
-    el_id_placeholder: "ElevenLabs Voice ID",
 
     // Help modal content (showHelp)
     help_coach_analyse_title: "AI Coach Analysis",
@@ -1223,9 +1214,6 @@ export const translations = {
     premium_freischalten_kurz: "Unlock now",
 
     bot_premium_hinweis: "Bot opponent is a premium feature",
-    voice_id_gespeichert: "✓ Saved",
-    voice_id_fehler: "✗ Error",
-    voice_id_speichern: "Save ID",
 
     // Misc
     anzahl_runden: "NUMBER OF ROUNDS",

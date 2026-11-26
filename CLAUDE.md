@@ -24,9 +24,9 @@ Deployed auf GitHub Pages: `https://danielstrass8482.github.io/Dart/`
 
 ## Cloud Function URLs (nach Migration)
 - dartCoach: `https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartCoach`
-- dartTTS: `https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/dartTTS`
+- ~~dartTTS~~ — gelöscht 2026-11-26 (s. „Live-TTS stillgelegt“)
 
-In `js/coach.js` die Konstanten `COACH_FUNCTION_URL` und `TTS_FUNCTION_URL` nach erfolgreichem Deploy aktualisieren.
+In `js/coach.js` die Konstante `COACH_FUNCTION_URL` nach erfolgreichem Deploy aktualisieren.
 
 ---
 
@@ -56,14 +56,14 @@ storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
 | `dart_coach_analyses` | Gespeicherte KI-Coach-Analysen pro Spieler |
 | `dart_coop_games` | Co-op-Checkout-Spiele (bewusst NICHT in `dart_games`, s. „Co-op Checkout“) |
 | `dart_appcheck_stats` | App-Check-Zähler pro Tag (`<YYYY-MM-DD>` → `<fn>.<plattform>.<valid|invalid|missing>`), nur Admin/Functions |
-| `dart_config/appcheck` | App-Check-Erzwingung pro Function (`enforce.dartCoach|dartTTS|dartAppCheckPing`), Clients nur lesen |
+| `dart_config/appcheck` | App-Check-Erzwingung pro Function (`enforce.dartCoach|dartAppCheckPing`; `enforce.dartTTS` ist seit 2026-11-26 ohne Wirkung), Clients nur lesen |
 
 ## Firebase Storage
 - `dart_voice/score_0.webm` bis `dart_voice/score_180.webm` — Custom Voice Samples (Daniel's Stimme)
 - `dart_voice/bust.webm`, `dart_voice/no_score.webm`, `dart_voice/game_on.webm`, `dart_voice/requires.webm`
 
 ## App Check (Stand 2026-11-24) — `functions/appCheckGate.js`
-- Jede Anfrage an `dartCoach`, `dartTTS`, `dartAppCheckPing` wird verifiziert + gezählt (Plattform aus der verifizierten App-ID, sonst `X-DT-Client`-Header bzw. User-Agent `DartTrainerApp` = Android vor 1.3.0 → `android-old`; `test` = eigene Live-Tests). Log-Zeile `jsonPayload.appCheck` inkl. Client-Fehlertext (`X-DT-AppCheck-Error`)
+- Jede Anfrage an `dartCoach`, `dartAppCheckPing` (bis 2026-11-26 auch `dartTTS`) wird verifiziert + gezählt (Plattform aus der verifizierten App-ID, sonst `X-DT-Client`-Header bzw. User-Agent `DartTrainerApp` = Android vor 1.3.0 → `android-old`; `test` = eigene Live-Tests). Log-Zeile `jsonPayload.appCheck` inkl. Client-Fehlertext (`X-DT-AppCheck-Error`)
 - **Erzwingung ohne Deploy:** Firestore `dart_config/appcheck` → `enforce.<fn> = true` (wirkt nach ≤ 60 s, Cache pro Instanz). Stand: alles **false**. Kill-Switch/Tageslimits/budgetCheck unverändert
 - **Messung:** `node scripts/appcheck-report.js [--days=7]` (Tabelle pro Function/Plattform + Ja/Nein je Function). Kriterium: android und web je ≥ 98 % gültig aus ≥ 30 Anfragen, kein Tag < 95 %, und alte App (`android-old`) < 2 % der Nutzeranfragen der Function. Messquelle auch ohne Coach-Nutzung: `dartAppCheckPing` (App ruft ihn max. 1×/Tag/Gerät, 8 s nach Start)
 - Client: `window.appCheckHeaders()` (js/firebase.js) für alle Function-Aufrufe. Android: Play Integrity über Capacitor-Plugin `AppCheckBridge` (`AppCheckBridgePlugin.java`, vor `super.onCreate` registriert); alte `AndroidBridge`-JS-Schnittstelle nur noch Fallback (wird nach Ladebeginn eingehängt → Race); in der App nie reCAPTCHA (Origin `https://localhost` ist für den Key nicht zugelassen)
@@ -76,17 +76,13 @@ storageBucket: "fitness-tracker-c6f97.firebasestorage.app"
   - URL: `https://europe-west1-fitness-tracker-c6f97.cloudfunctions.net/dartCoach`
   - Secret: `ANTHROPIC_API_KEY` (Firebase Secret Manager)
   - File: `functions/dartCoach.js`
-- **`dartTTS`** — Google Cloud TTS Proxy (British voice, caching in Firebase Storage)
-  - URL: `https://darttts-64z7naltva-ew.a.run.app`
-  - Auth: Application Default Credentials (kein separater API Key)
+- **`dartTTS`** — **gelöscht 2026-11-26** (war ElevenLabs-Proxy mit Storage-Cache `dart_voice_el/` und 200 TTS-Calls/User/Tag; letzter Quelltext: `functions/index.js` in Commit 83af0ea), s. „Live-TTS stillgelegt“
 - **`sendFeedback`** — Feedback-Formular Mailversand an support@darttrainer.app
   - URL: `https://europe-west1-darttrainer-app-fed88.cloudfunctions.net/sendFeedback`
   - Secrets: `FEEDBACK_SMTP_HOST`, `FEEDBACK_SMTP_USER`, `FEEDBACK_SMTP_PASS` (Firebase Secret Manager — Dogado Mail-Hosting, Port 465/SSL)
   - Speichert zusätzlich in Firestore `dart_feedback` als Fallback
   - File: `functions/feedback.js`
-  - Voice: `en-GB-Neural2-B` (männlich, britisch)
-  - Cache: `dart_voice_el/<key>.mp3` in Firebase Storage
-  - File: `functions/index.js`
+- `functions/index.js` exportiert nur noch die Module oben (+ `budgetCheck`)
 
 ---
 
@@ -133,20 +129,24 @@ service cloud.firestore {
 - Touch-Events: `pointerup` (funktioniert auf iPad/Android)
 
 ### Audio-System
-- **Custom Voice:** `playCustomAudio(key)` → lädt aus Firebase Storage, cached URLs
-- **Google TTS:** `speakElevenLabs(text, key)` → ruft `dartTTS` Cloud Function auf, cached in Storage + Memory
-- **Fallback TTS:** `doSpeak(text, lang)` → Web Speech API
-- **Wrapper:** `speakScoreWithCustom(score)` → Google TTS first, dann Web Speech fallback
+- **Nur vorproduzierte Clips** (`js/audio.js` Queue + `js/voiceClips.js`), keine Live-Sprachsynthese, kein Web-Speech-Fallback (nur leere Utterances zum Entsperren). `speakScoreWithCustom`/`speakKeyWithCustom` → `queueAudio`/`queueAnnouncement`
+- **Hörprobe** in der Stimmenauswahl (Profil): `previewVoice(voiceId, key)` spielt `el_score_180b`/`el_game_on`/`el_bust` der jeweiligen Stimme aus denselben Clips wie im Spiel (auch wenn Ansagen aus sind), ändert die aktive Stimme nicht. Test: `node tests/voice-preview.test.mjs` (`BROWSER=webkit`)
+- **Custom Voice (alt):** `playCustomAudio(key)` → lädt aus Firebase Storage `dart_voice/`
 - **Unlock:** beim ersten `pointerdown` wird AudioContext entsperrt (iOS/Android)
 
 ### Vorproduzierte Voice-Clips (seit 2026-11-22)
-- 4 auswählbare Stimmen (George=Standard, Haseeb, Jerry B, Guy), je 635 Clips (alles Vokabular aus `data/vocabulary.json`, inkl. `el_player_1…8`; keine Namens-Clips mehr, s. „Spieler-Ansage“). Quelle der Wahrheit: `data/voices.json` (+ Spiegel in `js/app.js` BUILTIN_VOICES, `js/voiceClips.js`, `functions/index.js`)
+- 4 auswählbare Stimmen (George=Standard, Haseeb, Jerry B, Guy), je 635 Clips (alles Vokabular aus `data/vocabulary.json`, inkl. `el_player_1…8`; keine Namens-Clips mehr, s. „Spieler-Ansage“). Quelle der Wahrheit: `data/voices.json` (+ Spiegel in `js/app.js` BUILTIN_VOICES, `js/voiceClips.js`)
 - Inhaltsprüfung nach JEDER (Neu-)Generierung: `node scripts/check-voice-clips.js --voice=<v>` (s. `docs/voice-qa/README.md`); Profil `data/tts-settings.json`
 - Format: `data/voice-format.json` — MP3 mono 24 kHz LAME VBR V6 (~1/3 von ElevenLabs' mp3_44100_128). Generierung (`scripts/gen-voice-assets.js`) wandelt automatisch um; Bestand: `FFMPEG=… node scripts/transcode-voice-assets.js` (idempotent, schreibt `assets/voice/<v>/index.json` mit `rev`)
 - Storage-Pakete: `node scripts/upload-voice-assets.js --bulk`; Android-Bundle (nur George): `npm run build`
 - **Aktualität nach Neugenerierung (seit 2026-11-24):** `index.json` enthält pro Clip einen Inhalts-Hash (`hashes`, SHA-1/10 hex, `writeVoiceIndex`/`clipHash` in `scripts/voice-format.js`). Identität eines Clips = (Stimme, Key, Hash): gebündelte Clips werden als `<key>.mp3?h=<hash>` geladen (neue Bytes = neue URL → weder HTTP-Cache/`force-cache` noch SW-Cache liefern die alte Version), IndexedDB-Kopien speichern ihren Hash und werden beim nächsten Abspielen einzeln ersetzt, Downloads werden beim Eintreffen gehasht. Index pro Sitzung einmal (`no-cache`, i. d. R. 304); Nicht-Standard-Stimmen lesen `dart_voice_pkg/<v>/index.json` (Upload-Skript lädt es NACH den Clips hoch, `--index-only` nur Index). Offline/ohne Index wird gespielt, was lokal liegt. Warm-up räumt veraltete SW-Einträge ab. Test: `node tests/voice-freshness.test.mjs` (eigener Server, Phasen: alt → veröffentlichen → Reload → neu, genau 1 Download je geändertem Clip, 0 für unveränderte, offline, ohne SW; gegen alten Code 13 Fehler)
 - Web/PWA: `sw.js` (`SW_VERSION` bei jedem Code-Deploy hochzählen) + `js/pwa.js` — Service Worker erst nach App-Start registriert, George-Clips danach im Hintergrund in den SW-Cache (offline nach erstem Besuch). In Capacitor nicht aktiv. Tests: `tests/offline-leg.test.mjs`, `tests/pwa-offline.test.mjs`, Messung: `tests/pwa-load.measure.mjs`
 - Installierbar via `manifest.webmanifest` (Icons `icons/icon-192.png`, `icon-512.png` = any+maskable, `apple-touch-icon.png`; Theme `#08080A`). Playwright ist devDependency (1.65.1 ↔ chromium-1255); Tests brauchen `python3 -m http.server 8973` im Repo-Root
+
+### Live-TTS stillgelegt (2026-11-26)
+- ElevenLabs und die Function `dartTTS` (europe-west1) sind abgeschaltet: Function gelöscht (letzter Quelltext `functions/index.js` @ 83af0ea), Secret `ELEVENLABS_API_KEY` Versionen 1+2 **deaktiviert** (nicht zerstört), Storage-Cache `dart_voice_el/` gelöscht (512 Dateien, 16,35 MB) samt Storage-Rule, TTS-Anteil aus `budgetCheck`/`init-config.js` entfernt (`dart_usage` + Kill-Switch bleiben, schützen `dartCoach`/Feedback), ungenutzte Abhängigkeit `@google-cloud/text-to-speech` entfernt
+- Frontend: `fetchTTSUrl`/`speakElevenLabs`/`testVoice`/`TTS_FUNCTION_URL`/`elTTSCache` entfernt; Hörprobe = `previewVoice()` (lokaler Clip). Ebenfalls entfernt: Admin-Eingabe „ElevenLabs Voice ID“ in der Stimmenauswahl (war nur für Live-TTS sinnvoll; `dart_config` ist für Clients ohnehin schreibgeschützt). Die ElevenLabs-Voice-IDs bleiben als interne Stimmen-Kennung (`dart_active_voice_id`, `voiceKeyFor()`)
+- Neue Clips: nur mit reaktiviertem/neuem Key über `scripts/gen-voice-assets.js`/`repair-voice-clips.js` (Hinweis im Dateikopf). Datenschutzerklärung Abschnitt 6 (DE/EN, darttrainer-landing) beschreibt vorproduzierte Clips statt ElevenLabs
 
 ### Stumme Ansagen mit Nicht-Standard-Stimme behoben (2026-11-25)
 - Symptom: iPad-PWA sagte im Spiel nichts an, der Stimmentest (Live-TTS über `dartTTS`) lief. Ursache: Konto-Stimme Jerry B (`dart_config/userprefs_<uid>.activeVoiceId`); Nicht-Standard-Stimmen wurden aus Storage `dart_voice_pkg/` per `fetch()` geladen, der Bucket hatte **keine CORS-Regel** → jeder Download scheiterte im Browser, jeder Clip wurde still übersprungen. Browser-unabhängig (WebKit + Chromium), nicht durch e3f293d verursacht; betraf auch die Android-App (Origin `https://localhost`). Tests hatten Storage immer durch Same-Origin-URLs ersetzt
@@ -253,7 +253,7 @@ service cloud.firestore {
 ## Offene Features / TODOs
 
 ### Hohe Priorität
-- [x] **Google Cloud TTS** — `dartTTS` Cloud Function mit `en-GB-Neural2-B`, ADC, Caching in Storage `dart_voice_el/`
+- [x] ~~Live-TTS (`dartTTS`)~~ — 2026-11-26 stillgelegt, nur noch vorproduzierte Clips
 - [ ] **User-Accounts** — Email/Passwort Registration zusätzlich zu Google Login
   - Firebase Auth `createUserWithEmailAndPassword`
   - Spielerprofile an Auth-UID binden
@@ -330,7 +330,7 @@ firebase deploy --only functions:dartCoach
 
 ### API Keys / Secrets
 - `ANTHROPIC_API_KEY` → Firebase Secret Manager
-- ElevenLabs Key (noch einzurichten) → ebenfalls Firebase Secret Manager
+- `ELEVENLABS_API_KEY` → Secret Manager, **alle Versionen deaktiviert** (2026-11-26, nicht zerstört); nur für die Clip-Erzeugungsskripte, Reaktivierung s. Kopf von `scripts/gen-voice-assets.js`
 
 Für App-Store: **Capacitor** verwenden um die Web-App in eine native iOS/Android App zu verpacken.
 
@@ -360,25 +360,23 @@ Firebase Console → Billing → Budget & Alerts:
 ### Ebene 2: Per-User Rate Limiting (Cloud Functions)
 - **Coach-Analysen:** max. 10/User/Tag
 - **Video-Analysen:** max. 3/User/Tag
-- **TTS-Calls:** max. 200/User/Tag (nur uncached)
 - Tracking in Firestore: `dart_usage/{uid}_{YYYY-MM-DD}`
 
 ### Ebene 3: Kill-Switch
 Firestore `dart_config/limits`:
 ```json
-{ "coachEnabled": true, "ttsEnabled": true, "emergencyStop": false }
+{ "coachEnabled": true, "emergencyStop": false }
 ```
 Deaktivieren: Firebase Console → Firestore → `dart_config/limits` → `emergencyStop: true`
 
 ### Ebene 4: Budget-Check Function
-`budgetCheck` Cloud Function schätzt Tageskosten (~€0.02/Coach, ~€0.001/TTS, ~€0.05/Video).
+`budgetCheck` Cloud Function schätzt Tageskosten (~€0.02/Coach, ~€0.05/Video; TTS entfällt seit 2026-11-26).
 Bei Überschreitung von €30/Tag wird `emergencyStop: true` automatisch gesetzt.
 → Via Cloud Scheduler täglich oder manuell aufrufen
 
 ### Ebene 5: Frontend-Feedback
 - **429:** Tageslimit-Anzeige mit verbleibenden/genutzten Calls
 - **503:** "Coach momentan nicht verfügbar" Meldung
-- **TTS 429/503:** Automatisch auf Browser-TTS-Fallback
 
 ### Config initialisieren nach Deploy
 ```bash

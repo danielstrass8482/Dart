@@ -1,5 +1,24 @@
 #!/usr/bin/env node
 /**
+ * ┌─────────────────────────────────────────────────────────────────────┐
+ * │ ELEVENLABS STILLGELEGT seit 2026-11-26 — neue Clips sind derzeit    │
+ * │ nicht möglich. Secret ELEVENLABS_API_KEY (darttrainer-app-fed88):   │
+ * │ alle Versionen DEAKTIVIERT (nicht zerstört); Live-Function dartTTS  │
+ * │ gelöscht, die App spielt nur vorproduzierte Clips.                  │
+ * │ Reaktivieren (nur für die Clip-Erzeugung, keine Function nötig):    │
+ * │  a) alter Key noch gültig (im ElevenLabs-Dashboard nicht widerrufen)│
+ * │     gcloud secrets versions enable 2 --secret=ELEVENLABS_API_KEY \  │
+ * │       --project=darttrainer-app-fed88                               │
+ * │  b) sonst neuen Key im ElevenLabs-Dashboard anlegen (Abo nötig) und │
+ * │     printf %s "sk_…" | gcloud secrets versions add \               │
+ * │       ELEVENLABS_API_KEY --data-file=- --project=darttrainer-app-fed88│
+ * │  dann: ELEVENLABS_API_KEY="$(gcloud secrets versions access latest \│
+ * │    --secret=ELEVENLABS_API_KEY --project=darttrainer-app-fed88)" \  │
+ * │    node scripts/<dieses Skript> …                                   │
+ * │  Danach Version wieder deaktivieren (gcloud secrets versions        │
+ * │  disable <n> …). Vor jeder Erzeugung: --dry-run (Zeichenbudget).    │
+ * └─────────────────────────────────────────────────────────────────────┘
+ *
  * repair-voice-clips.js — check → regenerate failing clips → re-check, until
  * a voice is clean or a clip has used up its attempts.
  *

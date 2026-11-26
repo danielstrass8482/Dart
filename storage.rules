@@ -12,13 +12,6 @@ service firebase.storage {
       allow write: if false;
     }
 
-    // TTS audio cache — read for all authenticated users.
-    // Written exclusively by Cloud Functions via Admin SDK.
-    match /dart_voice_el/{allPaths=**} {
-      allow read: if request.auth != null;
-      allow write: if false;
-    }
-
     // Pre-produced voice packages (fixed vocabulary) per
     // voice — the default voice ships bundled in the app itself; other
     // voices are downloaded from here once, on selection. Uploaded only by

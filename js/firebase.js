@@ -316,9 +316,6 @@ function initDartDB(){
       const snap=await getDoc(doc(db,"dart_config","voices"));
       return snap.exists() ? (snap.data().voices||null) : null;
     },
-    async saveGlobalVoices(voices){
-      await setDoc(doc(db,"dart_config","voices"),{voices});
-    },
     async saveUserVoice(voiceId){
       const uid=auth.currentUser?.uid;
       if(!uid) return;

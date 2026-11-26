@@ -1,10 +1,28 @@
 #!/usr/bin/env node
 /**
+ * ┌─────────────────────────────────────────────────────────────────────┐
+ * │ ELEVENLABS STILLGELEGT seit 2026-11-26 — neue Clips sind derzeit    │
+ * │ nicht möglich. Secret ELEVENLABS_API_KEY (darttrainer-app-fed88):   │
+ * │ alle Versionen DEAKTIVIERT (nicht zerstört); Live-Function dartTTS  │
+ * │ gelöscht, die App spielt nur vorproduzierte Clips.                  │
+ * │ Reaktivieren (nur für die Clip-Erzeugung, keine Function nötig):    │
+ * │  a) alter Key noch gültig (im ElevenLabs-Dashboard nicht widerrufen)│
+ * │     gcloud secrets versions enable 2 --secret=ELEVENLABS_API_KEY \  │
+ * │       --project=darttrainer-app-fed88                               │
+ * │  b) sonst neuen Key im ElevenLabs-Dashboard anlegen (Abo nötig) und │
+ * │     printf %s "sk_…" | gcloud secrets versions add \               │
+ * │       ELEVENLABS_API_KEY --data-file=- --project=darttrainer-app-fed88│
+ * │  dann: ELEVENLABS_API_KEY="$(gcloud secrets versions access latest \│
+ * │    --secret=ELEVENLABS_API_KEY --project=darttrainer-app-fed88)" \  │
+ * │    node scripts/<dieses Skript> …                                   │
+ * │  Danach Version wieder deaktivieren (gcloud secrets versions        │
+ * │  disable <n> …). Vor jeder Erzeugung: --dry-run (Zeichenbudget).    │
+ * └─────────────────────────────────────────────────────────────────────┘
+ *
  * gen-voice-assets.js — ONE-TIME generation of every pre-produced voice clip
  * (fixed vocabulary, data/vocabulary.json) directly against the ElevenLabs API.
  *
- * This does NOT go through the app, the dartTTS Cloud Function, or the
- * app's per-user daily TTS quota (dart_usage/TTS_DAILY_LIMIT=200) — it's a
+ * This does NOT go through the app or any Cloud Function — it's a
  * standalone script run once (and re-run per-key for QA fixes) by whoever
  * holds the ElevenLabs key, producing the files that ship inside the app.
  *

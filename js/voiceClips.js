@@ -1,10 +1,10 @@
 /**
  * voiceClips.js — Local-first playback source for ALL pre-produced
- * (fixed-vocabulary) audio clips. Replaces runtime ElevenLabs/dartTTS calls for
- * everything that used to go through speakElevenLabs()/fetchTTSUrl().
+ * (fixed-vocabulary) audio clips — the app's only voice source (live TTS
+ * was retired 2026-11-26).
  *
- * Two sources, tried in this order, NEVER falling through to a live TTS
- * call or the browser voice for a clip that simply isn't available yet:
+ * Two sources, tried in this order, NEVER falling through to the browser
+ * voice for a clip that simply isn't available yet:
  *   1. The active voice's locally bundled/cached clip (IndexedDB blob, or a
  *      same-origin static file: the default voice everywhere, on the web
  *      every voice — see servedSameOrigin()).

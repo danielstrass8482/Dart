@@ -4,8 +4,8 @@ const { getFirestore } = require("firebase-admin/firestore");
 
 if (!getApps().length) initializeApp();
 
+// Live TTS (former dartTTS, ~€0.001/call) retired 2026-11-26 — only coach/video cost money now.
 const COST_PER_COACH_CALL = 0.02;
-const COST_PER_TTS_CALL   = 0.001;
 const COST_PER_VIDEO_CALL = 0.05;
 const DAILY_BUDGET_EUR    = 30;
 
@@ -23,7 +23,6 @@ exports.budgetCheck = onRequest(
     usageSnap.forEach(doc => {
       const d = doc.data();
       estimatedCost += (d.coach || 0) * COST_PER_COACH_CALL;
-      estimatedCost += (d.tts   || 0) * COST_PER_TTS_CALL;
       estimatedCost += (d.video || 0) * COST_PER_VIDEO_CALL;
     });
 

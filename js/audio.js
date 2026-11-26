@@ -1,6 +1,6 @@
 /**
  * audio.js — Web Audio Engine, speech synthesis, and local pre-produced
- * voice-clip playback (+ ElevenLabs preview for the admin voice picker).
+ * voice-clip playback (incl. the voice-picker preview).
  */
 
 import { state } from './state.js';
@@ -123,12 +123,11 @@ export async function playCustomAudio(key){
   }
 }
 
-// ── ElevenLabs / Google TTS (admin voice-picker preview only — NOT used by
-// the gameplay audio queue below, which plays exclusively local clips) ───
-export const elTTSCache={};
+// There is no live text-to-speech anywhere in the app (ElevenLabs and the
+// dartTTS function were retired 2026-11-26) — every sound is a pre-produced
+// clip, including the voice-picker preview (previewVoice() below).
 let currentAudio=null;
-// Set by whichever playback path currently owns audio (local-clip playback
-// in playAudioQueue, or the admin testVoice() preview) — calling it resolves
+// Set by the media-element playback path (playClip) — calling it resolves
 // that call's own promise immediately (not relying on pause()/ended firing,
 // which isn't guaranteed) so an abort never leaves a caller's await hanging.
 // See invalidateStaleAnnouncements() below.
@@ -139,7 +138,7 @@ let currentAbortPlayback=null;
 // app. Every clip plays from a LOCAL clip (bundled with the app, or
 // downloaded once and cached in IndexedDB — see js/voiceClips.js) for the
 // active voice; a clip that is or can't be made available is skipped (never
-// a live ElevenLabs/dartTTS call or the browser voice).
+// live TTS or the browser voice).
 //
 // One queue item = one ANNOUNCEMENT, i.e. one or more clips that form a
 // sentence ("Player 2" · "requires" · "121." · "Checkout: …"). Items play
@@ -360,8 +359,12 @@ function startLookups(item){
  */
 export function queueAnnouncement(parts,isStale=null){
   if(localStorage.getItem("dart_tts_enabled")==="false") return Promise.resolve({completed:false});
+  return enqueue(parts,isStale,null);
+}
+
+function enqueue(parts,isStale,voiceId){
   return new Promise(resolve=>{
-    const item={parts,resolve,isStale,aborted:false};
+    const item={parts,resolve,isStale,aborted:false,voiceId};
     item.abortP=new Promise(r=>{ item.abortResolve=r; });
     try{ startLookups(item); }catch(e){}
     audioQueue.push(item);
@@ -411,104 +414,24 @@ export function clearAudioQueue(){
   if(currentAudio){ try{ currentAudio.pause(); currentAudio.currentTime=0; }catch(e){} }
 }
 
-const COACH_FUNCTION_URL="https://dartcoach-dxa2kmdyca-ew.a.run.app";
-export const TTS_FUNCTION_URL="https://darttts-dxa2kmdyca-ew.a.run.app";
-
-/** @returns {string} active ElevenLabs voice ID */
+/** @returns {string} active voice ID (ElevenLabs ID as stored in the account; mapped to the clip folder by voiceKeyFor()) */
 export function getVoiceId(){
   return localStorage.getItem("dart_active_voice_id")||"JBFqnCBsd6RMkjVDRZzb";
 }
 
 /**
- * Fetches a TTS audio URL from the cloud function (with caching).
- * Admin voice-picker preview ONLY — gameplay announcements never call this,
- * see the local-clip audio queue above.
- * @param {string} storageKey
- * @param {string} text
- * @param {string} [voiceIdOverride]
- * @returns {Promise<string|null>}
+ * Voice-picker preview: plays one pre-produced clip of the given voice
+ * without changing the active voice (no network call to any function — the
+ * clip comes from the same local/same-origin source as in-game announcements).
+ * Cuts off whatever is playing; plays even when announcements are switched off
+ * (the user explicitly asked to hear it).
+ * @param {string} voiceId ElevenLabs voice ID of the voice to preview
+ * @param {string} key clip key, e.g. "el_score_180b" (must exist in data/vocabulary.json)
+ * @returns {Promise<{completed:boolean}>}
  */
-export async function fetchTTSUrl(storageKey, text, voiceIdOverride){
-  const voiceId=voiceIdOverride||getVoiceId();
-  const cacheKey=voiceId+"_"+storageKey;
-  if(elTTSCache[cacheKey]) return elTTSCache[cacheKey];
-  let authToken="anonymous";
-  try{
-    const user=window.fbAuth?.currentUser;
-    if(user) authToken=await user.getIdToken();
-  }catch(e){}
-  const headers={"Content-Type":"application/json","Authorization":"Bearer "+authToken,...(window.appCheckHeaders?await window.appCheckHeaders():{})};
-  const controller=new AbortController();
-  const timeoutId=setTimeout(()=>controller.abort(),5000);
-  let resp;
-  try{
-    resp=await fetch(TTS_FUNCTION_URL,{
-      method:"POST",
-      headers,
-      body:JSON.stringify({key:storageKey, text, voiceId}),
-      signal:controller.signal
-    });
-  }finally{
-    clearTimeout(timeoutId);
-  }
-  if(resp.status===429){ console.info("TTS limit reached"); return null; }
-  if(resp.status===503){ console.info("TTS unavailable"); return null; }
-  if(!resp.ok) return null;
-  const {url}=await resp.json();
-  if(url) elTTSCache[cacheKey]=url;
-  return url||null;
-}
-
-/**
- * Plays a live ElevenLabs preview via the cloud function. Admin
- * voice-picker preview ONLY (testVoice() below) — not used in gameplay.
- * @param {string} text
- * @param {string} cacheKey
- * @returns {Promise<boolean>}
- */
-export async function speakElevenLabs(text, cacheKey){
-  try{
-    let url=await fetchTTSUrl(cacheKey, text);
-    if(!url) url=await fetchTTSUrl(cacheKey, text);
-    if(!url) return false;
-    if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; currentAudio=null; }
-    currentAudio=new Audio(url);
-    await new Promise((res,rej)=>{
-      currentAudio.onended=res;
-      currentAudio.onerror=rej;
-      currentAbortPlayback=()=>{ try{ currentAudio.pause(); }catch(e){} res(); };
-      currentAudio.play().catch(rej);
-    });
-    return true;
-  }catch(e){
-    console.warn("Google TTS:",e.message);
-    return false;
-  }finally{
-    currentAbortPlayback=null;
-  }
-}
-
-/**
- * Tests a specific voice without changing the active voice (admin
- * voice-picker preview — live ElevenLabs call, independent of the
- * gameplay audio queue/local clips).
- * @param {string} voiceId
- * @param {string} storageKey
- * @param {string} text
- * @returns {Promise<boolean>}
- */
-export async function testVoice(voiceId, storageKey, text){
-  try{
-    const url=await fetchTTSUrl(storageKey, text, voiceId);
-    if(!url) return false;
-    if(currentAudio){ currentAudio.pause(); currentAudio.currentTime=0; }
-    currentAudio=new Audio(url);
-    await currentAudio.play();
-    return true;
-  }catch(e){
-    console.warn("testVoice:",e.message);
-    return false;
-  }
+export function previewVoice(voiceId, key){
+  clearAudioQueue();
+  return enqueue([{text:key,key}],null,voiceKeyFor(voiceId));
 }
 
 /**
